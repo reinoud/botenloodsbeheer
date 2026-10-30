@@ -282,7 +282,8 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 - Gegeven de openbare pagina, wanneer een bezoeker de gegevens bekijkt die de pagina ontvangt, dan staan daar geen adres, telefoonnummer, e-mailadres of lidnummer in.
 - Gegeven de link naar de openbare pagina van een plaats, wanneer iemand die bekijkt, dan bevat die geen plaatscode, volgnummer of andere afleidbare waarde, maar een willekeurige, niet te voorspellen sleutel per plaats. Wie één link kent, kan daaruit de link van een andere plaats niet afleiden (besluit stakeholder 2026-10-30).
 - Gegeven een plaats waarvan de plaatscode wijzigt, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
-- Gegeven een code of link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
+- Gegeven een plaats die alleen via de QR-link op te vragen is, wanneer een bezoeker een plaatscode probeert in te typen of op te zoeken, dan biedt de applicatie daar geen mogelijkheid voor (besluit stakeholder 2026-10-30: anders zijn de namen van leden uit de applicatie te halen).
+- Gegeven een link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
 - Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een clubplaats staan de clubboot en de naam van de vereniging als eigenaar.
 
 #### BLB-021 Kaartjes printen met QR-code

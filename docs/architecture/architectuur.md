@@ -229,9 +229,9 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 
 | # | Vraag | Voor | Prioriteit | Blokkerend |
 |---|-------|------|------------|------------|
-| 1 | Wie maakt back-ups, en hoe lang worden die bewaard ten opzichte van de termijn van 5 jaar? | Stakeholder | M | Nee, wel vóór de eerste productie-installatie |
+| 1 | Wie maakt back-ups, en hoe lang worden die bewaard ten opzichte van de termijn van 5 jaar? | Stakeholder | Besloten | Besluit stakeholder 2026-10-30: back-ups vallen buiten de applicatie en volgen later bij de hosting |
 | 2 | Welke API-velden levert e-boekhouden precies voor leden (adres als één veld of in delen, opzegdatum)? | Oracle of forge, bij de echte koppeling | L | Nee, de stub gebruikt het eigen formaat |
-| 3 | Moet de openbare pagina ook via de plaatscode op te zoeken zijn ("code of link" in BLB-020)? Het ontwerp kent alleen de link. | Apex | L | Nee |
+| 3 | Moet de openbare pagina ook via de plaatscode op te zoeken zijn ("code of link" in BLB-020)? Het ontwerp kent alleen de link. | Apex | Besloten | Besluit stakeholder 2026-10-30: alleen via de QR-link, geen zoeken op plaatscode |
 
 ## 11. Proactieve bevindingen
 
