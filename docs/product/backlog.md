@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.1.0
+**Versie:** v0.2.0
 **Datum:** 2026-10-30
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Open vragen besloten door de stakeholder op 2026-10-30
@@ -27,12 +27,12 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 
 | Meting | Waarde |
 |--------|--------|
-| Aantal stories | 37 |
-| Must | 26 |
+| Aantal stories | 38 |
+| Must | 27 |
 | Should | 10 |
 | Could | 1 |
 | Gereed voor bouw | 0 (wacht op foundation en akkoord stakeholder) |
-| Geblokkeerd door een open vraag | Geen. Alle open vragen zijn op 2026-10-30 besloten (§7). |
+| Geblokkeerd door een open vraag | 1: BLB-038 wacht op vraag 9 (§7). De vragen 1 tot en met 8 zijn op 2026-10-30 besloten. |
 
 ## 2. Epics
 
@@ -322,6 +322,19 @@ Als beheerder wil ik accounts van beheerders aanmaken, blokkeren en verwijderen 
 - Gegeven een geblokkeerd account, wanneer die beheerder nog is ingelogd of wil inloggen, dan eindigt de sessie en lukt inloggen niet.
 - Gegeven een beheerder die zijn inloggegevens kwijt is, wanneer een andere beheerder toegang herstelt, dan kan de eerste weer inloggen zonder dat iemand het wachtwoord ziet.
 
+#### BLB-038 Inlogmethode toevoegen of intrekken
+
+Prioriteit: Must. Bron: intake (besluiten architectuurvragen), ADR-001, issue #2. Afhankelijk van: BLB-022. Open vraag: 9.
+
+Als beheerder wil ik in mijn profiel een inlogmethode toevoegen of intrekken, zodat ik een passkey naast mijn wachtwoord met TOTP gebruik, of omgekeerd. Wachtwoord en TOTP zijn samen één methode.
+
+- Gegeven een beheerder met een wachtwoord en TOTP, wanneer die een passkey toevoegt, dan kan die daarna met de passkey inloggen.
+- Gegeven een beheerder met alleen een passkey, wanneer die een wachtwoord met TOTP instelt, dan werkt de methode pas na één juiste TOTP-code.
+- Gegeven een beheerder met twee methodes, wanneer die er een intrekt, dan werkt de ingetrokken methode niet meer en de andere wel.
+- Gegeven een beheerder met één methode, wanneer die deze wil intrekken, dan weigert de applicatie.
+- Gegeven een beheerder met beide methodes van wie het wachtwoord na vijf mislukte pogingen is vergrendeld, wanneer die binnen 15 minuten met de passkey inlogt, dan slaagt de inlog.
+- Gegeven een toegevoegde of ingetrokken methode, wanneer de beheerder het log bekijkt, dan staat de wijziging erin, zonder wachtwoord of geheim.
+
 ### EP-08 Mutatielog en bewaartermijn
 
 #### BLB-024 Elke mutatie loggen
@@ -482,7 +495,7 @@ Als beheerder wil ik een technische statuspagina zodat ik de toestand van de ins
 | Slice | Stories | Doel |
 |-------|---------|------|
 | 1 | BLB-022, 001, 007, 006, 005, 010, 012, 020, 024, 025 | Een beheerder logt in, legt een rek, een plaats en een boot van een lid uit de ledenbron vast, wijst de plaats toe, en een bezoeker ziet de openbare pagina, met een log |
-| 2 | BLB-002, 003, 004, 008, 011, 023, 036 | De indeling is volledig te beheren, plaatsen zijn vrij te geven, oud-leden worden herkend en meerdere beheerders werken samen |
+| 2 | BLB-002, 003, 004, 008, 011, 023, 038, 036 | De indeling is volledig te beheren, plaatsen zijn vrij te geven, oud-leden worden herkend, meerdere beheerders werken samen en elke beheerder beheert zijn eigen inlogmethodes |
 | 3 | BLB-015, 016, 019, 018, 017, 027 | De beheerder overziet de loods, exporteert naar Excel en stelt naam, kleuren en logo in |
 | 4 | BLB-013, 014 | Boten wachten per bootsoort en de beheerder kiest zelf de plaats |
 | 5 | BLB-021 | Elke plaats krijgt een printbaar kaartje met QR-code |
@@ -519,6 +532,13 @@ De stakeholder heeft deze vragen op 2026-10-30 besloten. Ze staan ook in `docs/b
 | 6 | Hoe vaak synchroniseren we met de ledenbron? | Dagelijks, en handmatig te starten. Een verdwenen lid wordt oud-lid en wordt niet verwijderd. | BLB-006, BLB-008 |
 | 7 | Wanneer begint de termijn van 5 jaar? | Voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log vanaf de mutatie. | BLB-026 |
 | 8 | Welke kolommen staan in de Excel-export? | Rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen. | BLB-017 |
+
+### Open vragen
+
+| Nr | Vraag | Aan | Blokkerend voor slice 2 | Raakt |
+|----|-------|-----|-------------------------|-------|
+| 9 | Moet een beheerder zich opnieuw bewijzen (passkey, of wachtwoord met TOTP) voordat hij een methode toevoegt of intrekt? ADR-001 zegt er niets over. Zonder die stap kan wie een open sessie overneemt een eigen passkey toevoegen. | foundation, aegis | Ja, voor BLB-038 | BLB-038 |
+| 10 | Eindigen lopende sessies als een beheerder een methode intrekt? ADR-001 hoogt de sessieversie alleen op bij blokkeren en herstel. | foundation | Nee | BLB-038 |
 
 ## 8. Aannames
 

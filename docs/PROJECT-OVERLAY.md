@@ -65,6 +65,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Tekstwijzigingen in bestanden met python3, niet met sed (de sed-variant verschilt per omgeving).
 - Migratiecontroles: downgrade en upgrade via `docker compose -f docker-compose.yml -f compose.dev.yml run --rm migrate alembic ...`; databasecontroles in de db-container met `psql -U botenloods -d botenloods`. Controleer na een migratie de rechten in de database.
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
+- Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
+- De backlog heeft geen wijzigingslog; de versie gaat omhoog zonder logregel.
 
 ## 5. Projectcontracten
 
