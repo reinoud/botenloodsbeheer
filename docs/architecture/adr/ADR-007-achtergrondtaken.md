@@ -13,7 +13,7 @@ Twee taken draaien buiten het webproces (overlay §6): de dagelijkse ledensynchr
 De container `worker` draait hetzelfde image als `web` met het commando `flask taken draai`. Dat is een eenvoudige lus in Python:
 
 1. Elke 15 seconden kijken of er werk is.
-2. Werk is: de synchronisatie na het ingestelde tijdstip (`SYNC_TIJDSTIP`, standaard 03:00) als die vandaag nog niet slaagde; de opschoning na `OPSCHOON_TIJDSTIP` (standaard 04:00) als die vandaag nog niet draaide; een openstaand verzoek in `taakrun`.
+2. Werk is: de synchronisatie na het ingestelde tijdstip (`SYNC_TIJDSTIP`, standaard 03:00) als die vandaag nog niet slaagde, na een fout hooguit één nieuwe poging per uur; de opschoning na `OPSCHOON_TIJDSTIP` (standaard 04:00) als die vandaag nog niet draaide; een openstaand verzoek in `taakrun`.
 3. Voor elke taak een PostgreSQL advisory lock nemen, zodat de taak nooit dubbel draait, ook niet bij een tweede worker per ongeluk.
 4. Start, einde, resultaat, aantallen en een foutmelding zonder geheimen vastleggen in `taakrun`.
 5. Na elke ronde de heartbeat bijwerken (een rij in `taakrun` met soort `heartbeat`), voor de healthcheck en de statuspagina.

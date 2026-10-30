@@ -20,6 +20,7 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `TOTP_SLEUTEL` | Omgeving | Geen; de applicatie start niet zonder | Geheim; versleutelt de TOTP-geheimen (ADR-001) |
 | `API_INGESCHAKELD` | Omgeving | `false` | Besluit van de stakeholder: een installatiekeuze; wijzigen vraagt een herstart van `web` |
 | `WEBAUTHN_RP_ID` | Omgeving | Host uit `BASIS_URL` | Hoort bij de domeinnaam (ADR-001) |
+| `DIENST` | Omgeving | `web` | `worker` in de workercontainer; die heeft dan geen `SECRET_KEY` en `TOTP_SLEUTEL` nodig (slice 1b) |
 | `APP_OMGEVING` | Omgeving | `productie` | Seed en debug alleen buiten productie |
 | `PROXY_HOPS` | Omgeving | 1 | Bepaalt het vertrouwde clientadres (ADR-005) |
 | `LEDENBRON` en inloggegevens van de bron | Omgeving | Leeg | Techniek en geheim (ADR-004) |

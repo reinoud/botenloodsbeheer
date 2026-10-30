@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.1
+**Versie:** v0.2.2
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
@@ -131,7 +131,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` maakt een volledige, synthetische loods op de omvang van de vereniging, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 10 rekken met samen 160 plaatsen, waarvan 8 clubplaatsen en een mix van geschikte bootsoorten;
-- 210 leden via de stub-ledenbron uit `tests/fixtures/leden.json`, met 12 oud-leden, waarvan 4 nog een plaats hebben en 2 met een opzegdatum langer dan 5 jaar geleden (voor de opschoning);
+- 210 leden via de stub-ledenbron uit `tests/fixtures/leden.json`, met 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de synchronisatie over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam en kleuren voor een fictieve vereniging en een testlogo.
 
@@ -248,5 +248,6 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.2 | 2026-10-30 | Afwijkingen uit slice 1b: seed volgt ADR-004 (§6.3), `DIENST` (ADR-009), nieuwe poging na een fout (ADR-007) |
 | v0.2.1 | 2026-10-30 | Afwijkingen uit slice 1a: Flask serveert de statische bestanden (§2); per dienst een eigen `DATABASE_URL` (ADR-009) |
 | v0.2.0 | 2026-10-30 | Vijf besluiten van de stakeholder verwerkt. ADR-001 herschreven (passkey of wachtwoord met TOTP). ADR-009: API-schakelaar naar de omgeving, `TOTP_SLEUTEL` toegevoegd. ADR-011: argon2-cffi, pyotp, cryptography. ADR-004 en ADR-006: opschoonregels als besloten. §4, §6, §8 en §9 aangepast; ADR-status Aanvaard |

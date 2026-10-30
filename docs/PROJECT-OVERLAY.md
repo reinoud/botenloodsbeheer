@@ -59,6 +59,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
 - Noem bij een seed of fixture welke regel voorgaat als architectuur §6.3 botst met een ADR (standaard: de ADR).
 - Geef bij een geplande taak aan hoe vaak die na een fout opnieuw mag proberen.
+- Vraagt een domeinfunctie om `FOR UPDATE`, lever dan een test met twee sessies die de race laat zien, of noteer in het issue waarom die test ontbreekt.
+- Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`.
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
