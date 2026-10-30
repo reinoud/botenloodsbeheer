@@ -48,6 +48,9 @@ De regie loopt deze lijst na bij elke agentopdracht.
 
 - Geef de omvang (10 rekken, 160 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
+- Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal.
+- Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
+- Of een instelling in de applicatie (door de beheerder) of in de installatie (omgeving) staat, beslist foundation per instelling in een ADR.
 
 ## 5. Projectcontracten
 
