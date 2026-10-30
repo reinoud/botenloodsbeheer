@@ -85,3 +85,15 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - Er zijn ook robottokens die niet aan een gebruiker gekoppeld zijn.
 - Per token is in te stellen welke rechten het heeft.
 - Per token is een IP-whitelist in te stellen, met IPv4- en IPv6-adressen.
+
+### Besluiten op de open vragen uit de backlog (2026-10-30)
+
+- Een robottoken is hooguit 3 jaar geldig. Een token dat binnen een maand verloopt, geeft een waarschuwing op de technische statuspagina.
+- De API is in de eerste versie alleen-lezen: plaatsen, boten, leden en wachtlijst, met een apart recht voor persoonsgegevens.
+- Alle leden hebben ingestemd met het openbaar tonen van hun naam en de foto van hun boot. Instemming per lid hoeft niet te worden vastgelegd.
+- De wachttijd op de wachtlijst is informatie. De beheerder kiest vrij.
+- Een IP-whitelist is verplicht bij een robottoken en optioneel bij een persoonlijk token.
+- De ledensynchronisatie draait dagelijks en is handmatig te starten. Een lid dat uit de bron verdwijnt, wordt oud-lid en wordt niet verwijderd.
+- De bewaartermijn van 5 jaar begint voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log begint de termijn bij de mutatie.
+- De Excel-export bevat rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen.
+- Er is toegang tot de API van e-boekhouden. Voor nu komt er een stub achter de koppelmodule; de echte koppeling volgt later.

@@ -4,7 +4,7 @@
 **Versie:** v0.1.0
 **Datum:** 2026-10-30
 **Opgesteld door:** Apex, Senior Product Owner
-**Status:** Concept, ter beoordeling door de stakeholder
+**Status:** Open vragen besloten door de stakeholder op 2026-10-30
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`.
 
 ## 1. Uitgangspunten
@@ -32,7 +32,7 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 | Should | 10 |
 | Could | 1 |
 | Gereed voor bouw | 0 (wacht op foundation en akkoord stakeholder) |
-| Geblokkeerd door een open vraag | BLB-006, BLB-017, BLB-020, BLB-026, BLB-031, BLB-032, BLB-033 |
+| Geblokkeerd door een open vraag | Geen. Alle open vragen zijn op 2026-10-30 besloten (§7). |
 
 ## 2. Epics
 
@@ -125,7 +125,7 @@ Als beheerder wil ik een boot met naam, bootsoort, eigenaar en eventueel een fot
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
-Prioriteit: Must. Bron: intake (leden en e-boekhouden), overlay §5. Afhankelijk van: BLB-007. Blokkade: open vraag 6.
+Prioriteit: Must. Bron: intake (leden en e-boekhouden), overlay §5. Afhankelijk van: BLB-007. Besluit: vraag 6.
 
 Als beheerder wil ik dat de ledenlijst regelmatig uit e-boekhouden wordt opgehaald zodat ik leden niet dubbel bijhoud.
 
@@ -245,12 +245,12 @@ Als beheerder wil ik de huidige indeling per rek op het scherm zien zodat ik de 
 
 #### BLB-017 Indeling exporteren naar Excel
 
-Prioriteit: Should. Bron: intake 6. Afhankelijk van: BLB-016. Blokkade: open vraag 8.
+Prioriteit: Should. Bron: intake 6. Afhankelijk van: BLB-016. Besluit: vraag 8.
 
 Als beheerder wil ik de huidige indeling naar Excel exporteren zodat ik die buiten de applicatie kan gebruiken.
 
-- Gegeven de indeling, wanneer de beheerder de export start, dan komt er een Excel-bestand met een rij per plaats met rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer (voorstel, zie vraag 8).
-- Gegeven het bestand, wanneer de beheerder het opent, dan bevat het geen adres, telefoonnummer, e-mailadres of foto, tenzij het besluit op vraag 8 anders luidt.
+- Gegeven de indeling, wanneer de beheerder de export start, dan komt er een Excel-bestand met een rij per plaats met rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer (besluit vraag 8; de kolommen kunnen later veranderen).
+- Gegeven het bestand, wanneer de beheerder het opent, dan bevat het geen adres, telefoonnummer, e-mailadres of foto.
 
 #### BLB-018 Plaatsen van opgezegde leden
 
@@ -274,7 +274,7 @@ Als beheerder wil ik per lid een lijst van de boten in de loods en hun plaats zo
 
 #### BLB-020 Openbare plaatspagina
 
-Prioriteit: Must. Bron: intake 2, 11, overlay §5. Afhankelijk van: BLB-010. Blokkade: open vraag 3.
+Prioriteit: Must. Bron: intake 2, 11, overlay §5. Afhankelijk van: BLB-010. Besluit: vraag 3.
 
 Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de eigenaar is zodat ik kan zien of een boot op de juiste plaats ligt.
 
@@ -282,7 +282,6 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 - Gegeven de openbare pagina, wanneer een bezoeker de gegevens bekijkt die de pagina ontvangt, dan staan daar geen adres, telefoonnummer, e-mailadres of lidnummer in.
 - Gegeven een code of link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
 - Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een clubplaats staan de clubboot en de naam van de vereniging als eigenaar.
-- Gegeven een lid dat niet heeft ingestemd met openbaar tonen van de naam, wanneer een bezoeker de pagina opent, dan staat er geen naam van dat lid (voorstel, zie vraag 3).
 
 #### BLB-021 Kaartjes printen met QR-code
 
@@ -345,7 +344,7 @@ Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zi
 
 #### BLB-026 Bewaartermijn van 5 jaar
 
-Prioriteit: Must. Bron: besluit privacy en bewaren, overlay §5. Afhankelijk van: BLB-008, BLB-024. Blokkade: open vraag 7.
+Prioriteit: Must. Bron: besluit privacy en bewaren, overlay §5. Afhankelijk van: BLB-008, BLB-024. Besluit: vraag 7.
 
 Als beheerder wil ik dat gegevens van oud-leden en het mutatielog na 5 jaar worden verwijderd zodat de vereniging de afgesproken bewaartermijn naleeft.
 
@@ -401,17 +400,17 @@ Als beheerder wil ik een persoonlijk token maken zodat ik de API kan gebruiken z
 
 #### BLB-031 Robottoken maken
 
-Prioriteit: Should. Bron: besluit externe API. Afhankelijk van: BLB-029, BLB-032. Blokkade: open vraag 1.
+Prioriteit: Should. Bron: besluit externe API. Afhankelijk van: BLB-029, BLB-032. Besluit: vraag 1.
 
 Als beheerder wil ik een robottoken maken dat niet aan een persoon hangt zodat koppelingen blijven werken als een beheerder vertrekt.
 
 - Gegeven een ingelogde beheerder, wanneer die een robottoken maakt met naam, geldigheidsduur, rechten en IP-whitelist, dan toont de applicatie de tokenwaarde één keer.
 - Gegeven een robottoken, wanneer de beheerder die het maakte wordt verwijderd, dan blijft het token werken tot het verloopt of wordt ingetrokken.
-- Gegeven een robottoken zonder geldigheidsduur of met een duur boven het maximum uit vraag 1, wanneer de beheerder opslaat, dan weigert de applicatie.
+- Gegeven een robottoken zonder geldigheidsduur of met een duur boven 3 jaar, wanneer de beheerder opslaat, dan weigert de applicatie.
 
 #### BLB-032 Rechten per token
 
-Prioriteit: Should. Bron: besluit externe API, overlay §6. Afhankelijk van: BLB-029. Blokkade: open vraag 2.
+Prioriteit: Should. Bron: besluit externe API, overlay §6. Afhankelijk van: BLB-029. Besluit: vraag 2.
 
 Als beheerder wil ik per token instellen welke rechten het heeft zodat een koppeling niet meer kan dan nodig is.
 
@@ -422,7 +421,7 @@ Als beheerder wil ik per token instellen welke rechten het heeft zodat een koppe
 
 #### BLB-033 IP-whitelist per token
 
-Prioriteit: Should. Bron: besluit externe API, overlay §6. Afhankelijk van: BLB-030, BLB-031. Blokkade: open vraag 5.
+Prioriteit: Should. Bron: besluit externe API, overlay §6. Afhankelijk van: BLB-030, BLB-031. Besluit: vraag 5.
 
 Als beheerder wil ik per token vastleggen vanaf welke IP-adressen het gebruikt mag worden zodat een gestolen token weinig waard is.
 
@@ -471,6 +470,7 @@ Als beheerder wil ik een technische statuspagina zodat ik de toestand van de ins
 - Gegeven een ingelogde beheerder, wanneer die de pagina opent, dan ziet die in leesbare vorm en als JSON de applicatieversie, de databasestatus, de laatste ledensynchronisatie met resultaat, de laatste opschoning, en of de API en het terugschrijven aan of uit staan.
 - Gegeven een mislukte ledensynchronisatie, wanneer de beheerder de pagina opent, dan staat de foutmelding erop, zonder inloggegevens van de bron.
 - Gegeven de statuspagina, wanneer de beheerder die bekijkt, dan staan er geen tokens, wachtwoorden of gegevens van leden op.
+- Gegeven een persoonlijk token of robottoken dat binnen een maand verloopt, wanneer de beheerder de pagina opent, dan staat er een waarschuwing met de naam van het token en de vervaldatum, zonder de tokenwaarde.
 
 ## 5. Voorstel voor de volgorde van slices
 
@@ -500,18 +500,20 @@ Het log uit slice 1 bevat vanaf het begin de datum van elke mutatie, zodat opsch
 | Automatische toewijzing van plaatsen | Besluit stakeholder: de beheerder kiest zelf |
 | Aparte rol voor systeembeheer | Besluit stakeholder: drie gelijke beheerders |
 
-## 7. Open vragen voor de stakeholder
+## 7. Besluiten op de open vragen
 
-| Nr | Vraag | Voorstel | Raakt |
-|----|-------|----------|-------|
-| 1 | Wat is de maximale geldigheid van een robottoken? | Maximaal 1 jaar, met opnieuw aanmaken bij verlopen. Een token zonder einddatum is niet toegestaan. | BLB-031 |
-| 2 | Welke functies biedt de API in de eerste versie, en welke rechten zijn er per token? | Eerst alleen lezen: plaatsen, boten, leden, wachtlijst, met een apart recht voor persoonsgegevens. Schrijven (toewijzen, vrijgeven) volgt in een latere story. | BLB-032, 034 |
-| 3 | Hoe leggen we de instemming per lid vast voor het tonen van naam en foto, en wat zien bezoekers bij een lid zonder instemming? | Een vlag per lid in de applicatie, standaard uit voor nieuwe leden. Bij uit staat op de pagina dat de eigenaar niet openbaar is. De foto van de boot blijft zichtbaar. | BLB-020, 021 |
-| 4 | Telt de volgorde op de wachtlijst mee, of is de wachttijd alleen informatie? | De wachttijd is informatie. De beheerder kiest vrij en de applicatie legt geen reden vast. | BLB-013, 014 |
-| 5 | Is een IP-whitelist verplicht bij een robottoken, en mag een persoonlijk token er zonder? | Verplicht bij een robottoken, optioneel bij een persoonlijk token. Een lege lijst bij een robottoken weigert de applicatie. | BLB-031, 033 |
-| 6 | Hoe vaak synchroniseren we met de ledenbron, en wat gebeurt er met een lid dat uit de bron verdwijnt? | Dagelijks plus handmatig starten. Een verdwenen lid wordt oud-lid en niet verwijderd. | BLB-006, 008 |
-| 7 | Wanneer begint de termijn van 5 jaar voor een oud-lid? | Op de opzegdatum, maar niet zolang het oud-lid nog een plaats of boot in de loods heeft. De termijn voor het log loopt vanaf de mutatie. | BLB-026 |
-| 8 | Welke kolommen staan in de Excel-export? | Rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. | BLB-017 |
+De stakeholder heeft deze vragen op 2026-10-30 besloten. Ze staan ook in `docs/business/intake.md`.
+
+| Nr | Vraag | Besluit | Raakt |
+|----|-------|---------|-------|
+| 1 | Wat is de maximale geldigheid van een robottoken? | 3 jaar. Een token zonder einddatum is niet toegestaan. Een token dat binnen een maand verloopt, geeft een waarschuwing op de technische statuspagina. | BLB-031, BLB-037 |
+| 2 | Welke functies biedt de API in de eerste versie, en welke rechten zijn er per token? | Eerst alleen lezen: plaatsen, boten, leden, wachtlijst, met een apart recht voor persoonsgegevens. Schrijven volgt in een latere story. | BLB-032, BLB-034 |
+| 3 | Moet de instemming per lid worden vastgelegd? | Nee. Alle leden hebben ingestemd met het openbaar tonen van hun naam en de foto van hun boot. | BLB-020, BLB-021 |
+| 4 | Telt de volgorde op de wachtlijst mee? | Nee. De wachttijd is informatie; de beheerder kiest vrij en de applicatie legt geen reden vast. | BLB-013, BLB-014 |
+| 5 | Is een IP-whitelist verplicht? | Verplicht bij een robottoken, optioneel bij een persoonlijk token. Een lege lijst bij een robottoken weigert de applicatie. | BLB-031, BLB-033 |
+| 6 | Hoe vaak synchroniseren we met de ledenbron? | Dagelijks, en handmatig te starten. Een verdwenen lid wordt oud-lid en wordt niet verwijderd. | BLB-006, BLB-008 |
+| 7 | Wanneer begint de termijn van 5 jaar? | Voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log vanaf de mutatie. | BLB-026 |
+| 8 | Welke kolommen staan in de Excel-export? | Rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen. | BLB-017 |
 
 ## 8. Aannames
 
