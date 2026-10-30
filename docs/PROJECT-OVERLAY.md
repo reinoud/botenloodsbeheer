@@ -57,6 +57,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een afwijking van een ADR die alleen namen of de plaats van een instelling raakt (zoals een omgevingsvariabele per dienst), mag het bouwende agent doorvoeren en melden. Foundation werkt de ADR daarna bij.
 - Elke E2E-test draait ook los. Laat de reviewer één test met `-k` draaien als controle op de volgorde.
 - Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
+- Noem bij een seed of fixture welke regel voorgaat als architectuur §6.3 botst met een ADR (standaard: de ADR).
+- Geef bij een geplande taak aan hoe vaak die na een fout opnieuw mag proberen.
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
