@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.2
+**Versie:** v0.2.3
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
@@ -248,6 +248,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.3 | 2026-10-30 | Herstel slice 1b (issue #9): `flask seed` in de worker en `LEDENBRON` standaard leeg (§6.2); webrol alleen SELECT op `lid`; plaatscode uniek zonder onderscheid in hoofdletters |
 | v0.2.2 | 2026-10-30 | Afwijkingen uit slice 1b: seed volgt ADR-004 (§6.3), `DIENST` (ADR-009), nieuwe poging na een fout (ADR-007) |
 | v0.2.1 | 2026-10-30 | Afwijkingen uit slice 1a: Flask serveert de statische bestanden (§2); per dienst een eigen `DATABASE_URL` (ADR-009) |
 | v0.2.0 | 2026-10-30 | Vijf besluiten van de stakeholder verwerkt. ADR-001 herschreven (passkey of wachtwoord met TOTP). ADR-009: API-schakelaar naar de omgeving, `TOTP_SLEUTEL` toegevoegd. ADR-011: argon2-cffi, pyotp, cryptography. ADR-004 en ADR-006: opschoonregels als besloten. §4, §6, §8 en §9 aangepast; ADR-status Aanvaard |
