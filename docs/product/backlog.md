@@ -330,7 +330,7 @@ Prioriteit: Must. Bron: intake (logging), overlay §5. Afhankelijk van: BLB-022.
 Als beheerder wil ik dat elke wijziging wordt vastgelegd zodat ik kan nagaan hoe een situatie is ontstaan.
 
 - Gegeven een wijziging (aanmaken, wijzigen, verwijderen, toewijzen, vrijgeven, wachtlijst, configuratie, accounts, tokens, synchronisatie), wanneer die slaagt, dan staat er een logregel met tijdstip, wie of wat de wijziging deed, wat er veranderde en waar relevant de oude en nieuwe waarde.
-- Gegeven een wijziging via een token, wanneer die slaagt, dan staat de naam van het token in het log.
+- Gegeven een wijziging via een token, wanneer die slaagt, dan staat de naam van het token in het log. Dit geldt pas als de API kan schrijven; in de eerste versie is de API alleen-lezen (besluit 2026-10-30) en logt BLB-034 de aanroepen.
 - Gegeven het log, wanneer een beheerder een regel wil wijzigen of verwijderen, dan kan dat in de applicatie niet.
 - Gegeven het log, wanneer een beheerder het bekijkt, dan staan er geen wachtwoorden, tokenwaarden, adressen, telefoonnummers of e-mailadressen in.
 
@@ -438,7 +438,8 @@ Prioriteit: Should. Bron: overlay §6. Afhankelijk van: BLB-029, BLB-032.
 Als beheerder wil ik dat de API dezelfde bedrijfsregels afdwingt, beperkt wordt en wordt gelogd zodat de API geen omweg is.
 
 - Gegeven een aanroep zonder token of met een ongeldig token, wanneer die binnenkomt, dan weigert de applicatie.
-- Gegeven een wijziging die de webinterface weigert (bijvoorbeeld een boot van een lid op een clubplaats), wanneer die via de API komt, dan weigert de applicatie met dezelfde reden.
+- Gegeven een token zonder het recht op persoonsgegevens, wanneer het leden opvraagt, dan levert de applicatie geen adres, telefoonnummer of e-mailadres, net als de webinterface die gegevens alleen aan beheerders toont.
+- Gegeven een schrijfaanroep (bijvoorbeeld toewijzen), wanneer die binnenkomt, dan weigert de applicatie, want de API is in de eerste versie alleen-lezen. Komt schrijven later, dan gelden dezelfde bedrijfsregels als in de webinterface.
 - Gegeven veel aanroepen van één token in korte tijd, wanneer de grens wordt overschreden, dan beperkt de applicatie dat token en meldt dat.
 - Gegeven een aanroep, wanneer die is afgehandeld, dan staan token, tijdstip en uitkomst in het log, zonder tokenwaarde.
 - Gegeven een ingeschakelde API, wanneer een beheerder de beschrijving opent, dan staan alle beschikbare functies in de beschrijving.

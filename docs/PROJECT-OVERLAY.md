@@ -51,6 +51,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal.
 - Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
 - Of een instelling in de applicatie (door de beheerder) of in de installatie (omgeving) staat, beslist foundation per instelling in een ADR.
+- Laat apex elk acceptatiecriterium toetsen aan de besluiten in de intake; een criterium dat een besluit tegenspreekt, gaat terug als vraag.
+- Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
 
