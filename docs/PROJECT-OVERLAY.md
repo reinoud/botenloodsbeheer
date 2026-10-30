@@ -61,6 +61,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef bij een geplande taak aan hoe vaak die na een fout opnieuw mag proberen.
 - Vraagt een domeinfunctie om `FOR UPDATE`, lever dan een test met twee sessies die de race laat zien, of noteer in het issue waarom die test ontbreekt.
 - Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`.
+- Wijzig je databaserechten, zoek dan eerst welke tests en seedcode als die rol schrijven, en noem in je antwoord welke tests je hebt aangepast.
+- Tekstwijzigingen in bestanden met python3, niet met sed (de sed-variant verschilt per omgeving).
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
