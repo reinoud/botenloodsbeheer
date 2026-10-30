@@ -109,3 +109,4 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - Verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond als opzegdatum.
 - De API wordt aan- en uitgezet in de installatie, via de omgeving. Niet door de beheerder in de applicatie.
 - De ontwerpkeuzes die foundation bij deze besluiten maakte, zijn akkoord: herstel via een andere beheerder trekt alle inlogmethodes en sessies in; na 5 mislukte pogingen 15 minuten geen wachtwoordinlog, passkey blijft werken; geen herstelcodes; TOTP-geheim versleuteld met `TOTP_SLEUTEL`; `API_INGESCHAKELD` standaard uit, wijzigen vraagt een herstart.
+- Twee restrisico's uit de review van slice 1a zijn voor nu aanvaard, tot uiterlijk 2027-04-30 of de eerste uitrol in productie: de uitnodigingscode kan in de foutlogs staan (issue #5), en de WebAuthn-challenge staat in een ondertekende cookie (issue #6).
