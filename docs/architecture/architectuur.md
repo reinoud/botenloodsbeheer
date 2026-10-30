@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.3
+**Versie:** v0.2.4
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
@@ -179,6 +179,7 @@ Slice 1 is groot omdat de basis erin zit: containers, inloggen, mutatielog en de
 | Dreiging | Ingang | Kans | Impact | Maatregel | ADR |
 |----------|--------|------|--------|-----------|-----|
 | Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkey: phishingbestendig. Wachtwoord met TOTP: argon2id, TOTP-code eenmalig bruikbaar, vergrendeling per account na vijf pogingen, rate limit per IP; phishing blijft mogelijk en is door de stakeholder geaccepteerd (restrisico) | 001 |
+| Overgenomen open sessie voegt een eigen passkey toe of trekt een methode in | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
 | Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vier velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
@@ -248,6 +249,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.4 | 2026-10-30 | ADR-001 v1.1.0 (backlog §7, vragen 9 en 10): methode toevoegen of intrekken vraagt een recente inlog, intrekken beëindigt alle sessies; dreiging toegevoegd in §8.1 |
 | v0.2.3 | 2026-10-30 | Herstel slice 1b (issue #9): `flask seed` in de worker en `LEDENBRON` standaard leeg (§6.2); webrol alleen SELECT op `lid`; plaatscode uniek zonder onderscheid in hoofdletters |
 | v0.2.2 | 2026-10-30 | Afwijkingen uit slice 1b: seed volgt ADR-004 (§6.3), `DIENST` (ADR-009), nieuwe poging na een fout (ADR-007) |
 | v0.2.1 | 2026-10-30 | Afwijkingen uit slice 1a: Flask serveert de statische bestanden (§2); per dienst een eigen `DATABASE_URL` (ADR-009) |

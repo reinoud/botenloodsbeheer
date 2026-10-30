@@ -2,7 +2,8 @@
 
 **Status:** Aanvaard, 2026-10-30 (besluit van de stakeholder; architectuur §9, besluit 1)
 **Datum:** 2026-10-30
-**Stories:** BLB-022, BLB-023
+**Versie:** v1.1.0
+**Stories:** BLB-022, BLB-023, BLB-038
 
 ## Context
 
@@ -26,6 +27,10 @@ Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat 
 
 **Sessie.** Ondertekende cookie met beheerder-id en sessieversie (`Secure`, `HttpOnly`, `SameSite=Lax`), 12 uur geldig. Elk verzoek controleert of het account actief is en de versie klopt. Blokkeren en herstel hogen de versie op.
 
+**Methode toevoegen of intrekken (BLB-038, backlog §7, vragen 9 en 10; besluit foundation).** Een beheerder voegt alleen een methode toe of trekt er een in als hij in de afgelopen 10 minuten heeft ingelogd. De webroute toetst dat bij het verzenden van het formulier, met `ingelogd_op` uit de sessie. Is de inlog ouder, dan stuurt de applicatie hem naar het inlogscherm. Hij bewijst zich met een methode die hij al heeft; de vergrendeling geldt gewoon. Wie een open sessie overneemt, kan zo geen eigen passkey toevoegen.
+
+Intrekken hoogt de sessieversie op. Alle sessies van die beheerder eindigen, ook de huidige; hij logt opnieuw in met de methode die overblijft. Toevoegen laat de sessies staan. Sessies van andere beheerders veranderen niet.
+
 ## Alternatieven
 
 | Optie | Reden |
@@ -34,6 +39,8 @@ Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat 
 | Herstelcodes of e-mailreset | Extra opslag, mailserver en aanvalsvlak; een andere beheerder lost het al op |
 | Wachtwoord zonder TOTP | Te zwak voor persoonsgegevens |
 | SMS of push als tweede factor | Externe dienst en kosten per installatie |
+| Aparte herbevestiging zonder nieuwe inlog | Extra scherm en sessieveld; opnieuw inloggen doet hetzelfde met bestaande code |
+| Bij intrekken de huidige sessie houden | Extra code, en die sessie kan met de ingetrokken methode zijn gestart |
 
 ## Gevolgen
 
@@ -42,3 +49,11 @@ Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat 
 - Tabel `beheerder` krijgt wachtwoordhash, versleuteld TOTP-geheim, laatste tijdstap, teller en blokkeertijd (architectuur §4).
 - E2E-tests gebruiken de virtuele authenticator van Chromium en `pyotp` met een testgeheim; er komt geen inlogomweg.
 - Aegis beoordeelt inlog, TOTP, brute-forceregels en herstel vóór de commit (overlay §4).
+- Restrisico: wie binnen 10 minuten na de inlog een open sessie overneemt, kan nog een methode toevoegen. Het log toont dat, en een andere beheerder kan herstellen.
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging |
+|--------|-------|-----------|
+| v1.1.0 | 2026-10-30 | Vragen 9 en 10 uit backlog §7: recente inlog vereist, intrekken beëindigt alle sessies |
+| v1.0.0 | 2026-10-30 | Aanvaard na besluit van de stakeholder |

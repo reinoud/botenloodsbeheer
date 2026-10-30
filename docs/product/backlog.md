@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.0
+**Versie:** v0.2.1
 **Datum:** 2026-10-30
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Open vragen besloten door de stakeholder op 2026-10-30
@@ -32,7 +32,7 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 | Should | 10 |
 | Could | 1 |
 | Gereed voor bouw | 0 (wacht op foundation en akkoord stakeholder) |
-| Geblokkeerd door een open vraag | 1: BLB-038 wacht op vraag 9 (§7). De vragen 1 tot en met 8 zijn op 2026-10-30 besloten. |
+| Geblokkeerd door een open vraag | 0. De vragen 1 tot en met 8 besloot de stakeholder, de vragen 9 en 10 foundation (ADR-001), alle op 2026-10-30. |
 
 ## 2. Epics
 
@@ -324,7 +324,7 @@ Als beheerder wil ik accounts van beheerders aanmaken, blokkeren en verwijderen 
 
 #### BLB-038 Inlogmethode toevoegen of intrekken
 
-Prioriteit: Must. Bron: intake (besluiten architectuurvragen), ADR-001, issue #2. Afhankelijk van: BLB-022. Open vraag: 9.
+Prioriteit: Must. Bron: intake (besluiten architectuurvragen), ADR-001, issue #2. Afhankelijk van: BLB-022. Vragen 9 en 10: besloten in ADR-001.
 
 Als beheerder wil ik in mijn profiel een inlogmethode toevoegen of intrekken, zodat ik een passkey naast mijn wachtwoord met TOTP gebruik, of omgekeerd. Wachtwoord en TOTP zijn samen één methode.
 
@@ -334,6 +334,8 @@ Als beheerder wil ik in mijn profiel een inlogmethode toevoegen of intrekken, zo
 - Gegeven een beheerder met één methode, wanneer die deze wil intrekken, dan weigert de applicatie.
 - Gegeven een beheerder met beide methodes van wie het wachtwoord na vijf mislukte pogingen is vergrendeld, wanneer die binnen 15 minuten met de passkey inlogt, dan slaagt de inlog.
 - Gegeven een toegevoegde of ingetrokken methode, wanneer de beheerder het log bekijkt, dan staat de wijziging erin, zonder wachtwoord of geheim.
+- Gegeven een beheerder die langer dan 10 minuten geleden inlogde, wanneer die een methode toevoegt of intrekt, dan stuurt de applicatie hem eerst naar het inlogscherm (ADR-001).
+- Gegeven een beheerder die een methode intrekt, wanneer de intrekking is opgeslagen, dan eindigen al zijn sessies, ook de huidige (ADR-001).
 
 ### EP-08 Mutatielog en bewaartermijn
 
@@ -533,12 +535,14 @@ De stakeholder heeft deze vragen op 2026-10-30 besloten. Ze staan ook in `docs/b
 | 7 | Wanneer begint de termijn van 5 jaar? | Voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log vanaf de mutatie. | BLB-026 |
 | 8 | Welke kolommen staan in de Excel-export? | Rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen. | BLB-017 |
 
-### Open vragen
+### Vragen besloten door foundation
 
-| Nr | Vraag | Aan | Blokkerend voor slice 2 | Raakt |
-|----|-------|-----|-------------------------|-------|
-| 9 | Moet een beheerder zich opnieuw bewijzen (passkey, of wachtwoord met TOTP) voordat hij een methode toevoegt of intrekt? ADR-001 zegt er niets over. Zonder die stap kan wie een open sessie overneemt een eigen passkey toevoegen. | foundation, aegis | Ja, voor BLB-038 | BLB-038 |
-| 10 | Eindigen lopende sessies als een beheerder een methode intrekt? ADR-001 hoogt de sessieversie alleen op bij blokkeren en herstel. | foundation | Nee | BLB-038 |
+Foundation besloot deze vragen op 2026-10-30 in ADR-001 v1.1.0. Aegis toetst de uitwerking bij de review van BLB-038.
+
+| Nr | Vraag | Besluit | Raakt |
+|----|-------|---------|-------|
+| 9 | Moet een beheerder zich opnieuw bewijzen (passkey, of wachtwoord met TOTP) voordat hij een methode toevoegt of intrekt? | Ja. Toevoegen of intrekken lukt alleen als de beheerder in de afgelopen 10 minuten heeft ingelogd; anders gaat hij eerst naar het inlogscherm (ADR-001). | BLB-038 |
+| 10 | Eindigen lopende sessies als een beheerder een methode intrekt? | Ja. Intrekken hoogt de sessieversie op: alle sessies van die beheerder eindigen, ook de huidige. Toevoegen laat sessies staan (ADR-001). | BLB-038 |
 
 ## 8. Aannames
 
