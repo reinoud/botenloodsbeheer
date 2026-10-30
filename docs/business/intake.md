@@ -108,3 +108,4 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - Een oud-lid wordt opgeschoond 5 jaar na de opzegdatum, zodra geen boot van het oud-lid nog een plaats heeft. De boten en foto's van het oud-lid gaan mee.
 - Verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond als opzegdatum.
 - De API wordt aan- en uitgezet in de installatie, via de omgeving. Niet door de beheerder in de applicatie.
+- De ontwerpkeuzes die foundation bij deze besluiten maakte, zijn akkoord: herstel via een andere beheerder trekt alle inlogmethodes en sessies in; na 5 mislukte pogingen 15 minuten geen wachtwoordinlog, passkey blijft werken; geen herstelcodes; TOTP-geheim versleuteld met `TOTP_SLEUTEL`; `API_INGESCHAKELD` standaard uit, wijzigen vraagt een herstart.
