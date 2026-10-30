@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Leden · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Leden</h1>
+<p>De ledenlijst komt uit de ledenbron. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
+
+<section class="kaart">
+  <h2>Synchronisatie</h2>
+  <form method="post" action="{{ url_for('web.leden_ophalen') }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="knop">Leden nu ophalen</button>
+  </form>
+  {% if runs %}
+  <table>
+    <thead><tr><th>Aangevraagd of gestart</th><th>Status</th><th>Resultaat</th></tr></thead>
+    <tbody>
+    {% for r in runs %}
+      <tr>
+        <td data-label="Tijdstip">{{ (r.gestart_op or r.aangevraagd_op)|tijd }}</td>
+        <td data-label="Status">{{ r.status }}</td>
+        <td data-label="Resultaat">{{ r.foutmelding or '' }}{% for k, v in r.aantallen.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>De synchronisatie heeft nog niet gedraaid.</p>
+  {% endif %}
+</section>
+
+<table>
+  <thead><tr><th>Naam</th><th>Lidnummer</th><th>Lid sinds</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for l in leden %}
+    <tr>
+      <td data-label="Naam">{{ l.naam }}</td>
+      <td data-label="Lidnummer">{{ l.lidnummer }}</td>
+      <td data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') if l.lid_sinds else '' }}</td>
+      <td data-label="Status">{{ 'oud-lid' if is_oud_lid(l) else 'lid' }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">Er zijn nog geen leden.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{{ logtabel(regels) }}
+{% endblock %}

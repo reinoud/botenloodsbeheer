@@ -3,9 +3,12 @@ uitnodigingen aanmaakt met de echte CLI en de links als omgevingsvariabelen door
 
 import os
 
+import pyotp
 import pytest
+from playwright.sync_api import expect
 
 STEMPEL = os.environ["E2E_STEMPEL"]
+WACHTWOORD = "e2e wachtwoord voor de loods"
 
 
 def link(soort):
@@ -30,3 +33,20 @@ def authenticator(page):
         "protocol": "ctap2", "transport": "internal", "hasResidentKey": True,
         "hasUserVerification": True, "isUserVerified": True}})
     return cdp
+
+
+def wachtwoord_instellen(page, soort):
+    """Stelt via de eigen uitnodiging van de test een wachtwoord met TOTP in; daarna ingelogd."""
+    page.goto(link(soort))
+    totp = pyotp.TOTP(page.locator("#totp-geheim").inner_text())
+    page.get_by_label("Wachtwoord (12 tot 128 tekens)").fill(WACHTWOORD)
+    page.get_by_label("Wachtwoord nog een keer").fill(WACHTWOORD)
+    page.get_by_label("Code van zes cijfers uit de app").fill(totp.now())
+    page.get_by_role("button", name="Wachtwoord instellen").click()
+    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    return totp
+
+
+def uitloggen(page):
+    page.get_by_role("button", name="Uitloggen").click()
+    expect(page.get_by_text("Je bent uitgelogd.")).to_be_visible()

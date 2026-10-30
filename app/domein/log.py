@@ -1,6 +1,6 @@
 """Mutatielog (ADR-006). Schrijven gebeurt in de transactie van de mutatie."""
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 
 from app.models import Logregel, db
 
@@ -27,9 +27,12 @@ def schrijf(actor, actie, verwijzingen, gegevens=None, soort="mutatie"):
     )
 
 
-def regels(verwijzing=None, limiet=50):
-    """Nieuwste regels eerst, optioneel gefilterd op één verwijzing zoals 'beheerder:3'."""
+def regels(verwijzingen=None, acties=None, limiet=50):
+    """Nieuwste regels eerst. Filtert op regels met minstens één van de verwijzingen (zoals
+    'plaats:12') en op acties die beginnen met een van de voorvoegsels (zoals 'boot.')."""
     q = select(Logregel).order_by(Logregel.tijdstip.desc(), Logregel.id.desc()).limit(limiet)
-    if verwijzing:
-        q = q.where(Logregel.verwijzingen.contains([verwijzing]))
+    if verwijzingen is not None:
+        q = q.where(Logregel.verwijzingen.overlap(list(verwijzingen)))
+    if acties:
+        q = q.where(or_(*(Logregel.actie.startswith(a, autoescape=True) for a in acties)))
     return db.session.scalars(q).all()

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Plaats {{ plaats.code }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Plaats {{ plaats.code }}</h1>
+<p>{{ plaats.rek.naam }}{% if plaats.is_clubplaats %}, clubplaats{% endif %}. Geschikt voor: {{ plaats.bootsoorten|map(attribute='naam')|join(', ') }}.</p>
+
+{% set boot = plaats.boot %}
+{% if boot %}
+<section class="kaart">
+  <h2>Boot</h2>
+  <dl>
+    <dt>Naam</dt><dd><a href="{{ url_for('web.boot_detail', boot_id=boot.id) }}">{{ boot.naam }}</a></dd>
+    <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
+  </dl>
+  {% if boot.afbeelding %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}">{% endif %}
+</section>
+<section class="kaart">
+  <h2>Eigenaar</h2>
+  {% if boot.lid %}
+  <dl>
+    <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
+    <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
+    <dt>Adres</dt><dd data-veld="adres">{{ boot.lid.adres or '' }}</dd>
+    <dt>Telefoon</dt><dd data-veld="telefoon">{{ boot.lid.telefoon or '' }}</dd>
+    <dt>E-mail</dt><dd data-veld="email">{{ boot.lid.email or '' }}</dd>
+  </dl>
+  {% else %}
+  <p>{{ vereniging }} (clubboot)</p>
+  {% endif %}
+</section>
+{% else %}
+<section class="kaart">
+  <h2>Deze plaats is vrij</h2>
+  {% if boten %}
+  <form method="post" action="{{ url_for('web.plaats_toewijzen', plaats_id=plaats.id) }}">
+    {% include "_csrf.html" %}
+    <label for="boot">Boot zonder plaats</label>
+    <select id="boot" name="boot_id" required>
+      {% for b in boten %}
+      <option value="{{ b.id }}">{{ b.naam }} ({{ b.bootsoort.naam }}, {{ b.lid.naam if b.lid else 'clubboot' }})</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="knop">Plaats toewijzen</button>
+  </form>
+  {% else %}
+  <p>Er zijn geen boten zonder plaats.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('web.plaats_verwijderen', plaats_id=plaats.id) }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="knop knop-gevaar">Plaats {{ plaats.code }} verwijderen</button>
+  </form>
+</section>
+{% endif %}
+
+<section class="kaart">
+  <h2>Openbare pagina</h2>
+  <p>Deze link staat later in de QR-code op het kaartje: <a href="{{ openbare_url }}" id="openbare-link">{{ openbare_url }}</a></p>
+</section>
+
+{{ logtabel(regels) }}
+{% endblock %}

@@ -2,6 +2,6 @@
 {% from "_log.html" import logtabel %}
 {% block inhoud %}
 <h1>Welkom, {{ g.beheerder.naam }}</h1>
-<p>De indeling van de loods volgt in een volgende versie.</p>
+<p>Ga naar de <a href="{{ url_for('web.indeling_overzicht') }}">indeling</a>, de <a href="{{ url_for('web.boten_overzicht') }}">boten</a> of de <a href="{{ url_for('web.leden_overzicht') }}">leden</a>.</p>
 {{ logtabel(regels) }}
 {% endblock %}

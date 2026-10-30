@@ -144,3 +144,11 @@ def test_ongeldige_passkeygegevens_geweigerd(app):
     assert beheerders.uitnodiging(code)  # niet verbruikt
     assert beheerders.passkey_inloggen({"rawId": "AAAA"}, b"challenge") is None
     assert beheerders.passkey_inloggen({}, b"challenge") is None
+
+
+@pytest.mark.parametrize("code", ["１２３４５６", "12345٦", "12 345", "abcdef", "1234567"])
+def test_totp_code_met_andere_tekens_telt_als_poging(app, code):
+    """#3: geen TypeError uit compare_digest, wel een mislukte poging."""
+    b, _geheim = beheerder_met_wachtwoord()
+    assert beheerders.totp_controleren(b.id, code) is None
+    assert db.session.get(Beheerder, b.id).mislukte_pogingen == 1

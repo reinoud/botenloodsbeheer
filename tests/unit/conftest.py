@@ -13,7 +13,9 @@ from cryptography.fernet import Fernet
 from sqlalchemy import create_engine, text
 
 TEST_DB = "botenloods_test"
-TABELLEN = "beheerder, passkey, uitnodiging, logregel, instelling, taakrun"
+# bootsoort niet: de startlijst komt uit de migratie.
+TABELLEN = ("beheerder, passkey, uitnodiging, logregel, instelling, taakrun, rek, plaats, "
+            "plaats_bootsoort, lid, boot, afbeelding")
 
 
 def db_url(gebruiker, wachtwoord, database=TEST_DB):
@@ -30,6 +32,8 @@ os.environ.update(
     TOTP_SLEUTEL=Fernet.generate_key().decode(),
     BASIS_URL="http://localhost:8080",
     DATABASE_URL=WEB,
+    LEDENBRON="stub",
+    LEDENBRON_STUB_BESTAND="tests/fixtures/leden.json",
 )
 
 

@@ -113,3 +113,26 @@ def test_config_weigert_ontbrekende_of_onveilige_waarden(monkeypatch, tmp_path):
     monkeypatch.setenv("TOTP_SLEUTEL", "geen-sleutel")
     with pytest.raises(config.ConfigFout, match="TOTP_SLEUTEL"):
         config.laad()
+
+
+def test_totp_code_met_andere_tekens_geeft_gewone_melding(client):
+    """#3: geen fout 500."""
+    beheerder_met_wachtwoord()
+    client.post("/inloggen", data={"gebruikersnaam": "anna", "wachtwoord": WACHTWOORD})
+    r = client.post("/inloggen/code", data={"code": "１２３４５６"}, follow_redirects=True)
+    assert r.status_code == 200 and b"Inloggen is mislukt." in r.data
+
+
+def test_worker_heeft_geen_sessie_of_totp_sleutel_nodig(monkeypatch):
+    """#7: de worker krijgt alleen de geheimen die hij gebruikt."""
+    monkeypatch.setenv("DIENST", "worker")
+    monkeypatch.delenv("SECRET_KEY")
+    monkeypatch.delenv("TOTP_SLEUTEL")
+    instellingen = config.laad()
+    assert instellingen["SECRET_KEY"] is None and instellingen["TOTP_SLEUTEL"] is None
+    monkeypatch.setenv("DIENST", "web")
+    with pytest.raises(config.ConfigFout, match="TOTP_SLEUTEL"):
+        config.laad()
+    monkeypatch.setenv("LEDENBRON", "eboekhouden")
+    with pytest.raises(config.ConfigFout, match="LEDENBRON"):
+        config.laad()

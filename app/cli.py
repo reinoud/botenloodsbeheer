@@ -1,10 +1,11 @@
-"""Beheercommando's: flask beheerder uitnodigen, flask taken draai en flask taken gezond."""
+"""Beheercommando's: flask beheerder uitnodigen, flask seed, flask taken draai en gezond."""
 
 import sys
 
 import click
 from flask import current_app
 
+from app import seed as seed_module
 from app import taken
 from app.domein import CLI, Regelfout, beheerders
 
@@ -23,6 +24,14 @@ def registreer(app):
         except Regelfout as fout:
             raise click.ClickException(str(fout)) from None
         click.echo(f"{current_app.config['BASIS_URL']}/uitnodiging/{code}")
+
+    @app.cli.command("seed")
+    def seed():
+        """Synthetische loods voor ontwikkeling en tests; weigert in productie."""
+        try:
+            seed_module.seed(click.echo)
+        except seed_module.SeedFout as fout:
+            raise click.ClickException(str(fout)) from None
 
     @app.cli.group("taken")
     def taken_groep():

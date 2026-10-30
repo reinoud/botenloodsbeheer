@@ -34,7 +34,7 @@ def test_uitnodigen_en_instellen_geven_logregels_zonder_geheimen(app):
 def test_log_filtert_op_verwijzing_nieuwste_eerst(app):
     beheerders.uitnodigen("anna", CLI)
     beheerder_met_wachtwoord("bert")
-    regels = log.regels("beheerder:2")
+    regels = log.regels(["beheerder:2"])
     assert [r.actie for r in regels] == ["beheerder.methode_ingesteld", "beheerder.uitgenodigd"]
 
 
@@ -42,7 +42,9 @@ def test_vergrendeling_staat_in_het_log(app):
     beheerder_met_wachtwoord()
     for _ in range(5):
         beheerders.wachtwoord_controleren("anna", "fout wachtwoord!")
-    assert log.regels()[0].actie == "beheerder.vergrendeld"
+    regel = log.regels()[0]
+    assert regel.actie == "beheerder.vergrendeld"
+    assert (regel.actor_soort, regel.actor_naam) == ("systeem", "systeem")  # #7
 
 
 @pytest.mark.parametrize("sql", ["UPDATE logregel SET actie = 'x'", "DELETE FROM logregel"])

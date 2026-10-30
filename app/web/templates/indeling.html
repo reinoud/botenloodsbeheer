@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Indeling · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Indeling</h1>
+
+<section class="kaart">
+  <h2>Nieuw rek</h2>
+  <form method="post" action="{{ url_for('web.rek_aanmaken') }}">
+    {% include "_csrf.html" %}
+    <label for="rek-naam">Naam van het rek</label>
+    <input id="rek-naam" name="naam" maxlength="50" required>
+    <button type="submit" class="knop">Rek aanmaken</button>
+  </form>
+</section>
+
+{% for rek in rekken %}
+<section class="kaart" aria-labelledby="rek-{{ rek.id }}">
+  <h2 id="rek-{{ rek.id }}">{{ rek.naam }}</h2>
+  {% if rek.plaatsen %}
+  <table>
+    <thead><tr><th>Plaats</th><th>Bootsoorten</th><th>Status</th></tr></thead>
+    <tbody>
+    {% for p in rek.plaatsen %}
+      <tr>
+        <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a>{% if p.is_clubplaats %} (clubplaats){% endif %}</td>
+        <td data-label="Bootsoorten">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
+        <td data-label="Status">{% if p.boot %}Bezet: {{ p.boot.naam }}{% else %}Vrij{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>Dit rek heeft nog geen plaatsen.</p>
+  {% endif %}
+
+  <details>
+    <summary>Plaats toevoegen aan {{ rek.naam }}</summary>
+    <form method="post" action="{{ url_for('web.plaats_aanmaken', rek_id=rek.id) }}">
+      {% include "_csrf.html" %}
+      <label for="code-{{ rek.id }}">Plaatscode</label>
+      <input id="code-{{ rek.id }}" name="code" maxlength="20" required>
+      <fieldset>
+        <legend>Geschikt voor</legend>
+        {% for s in bootsoorten %}
+        <label class="keuze"><input type="checkbox" name="bootsoort" value="{{ s.id }}"> {{ s.naam }}</label>
+        {% endfor %}
+      </fieldset>
+      <label class="keuze"><input type="checkbox" name="clubplaats" value="1"> Clubplaats (alleen voor clubboten)</label>
+      <button type="submit" class="knop">Plaats aanmaken</button>
+    </form>
+  </details>
+  <details>
+    <summary>Rek wijzigen of verwijderen</summary>
+    <form method="post" action="{{ url_for('web.rek_wijzigen', rek_id=rek.id) }}">
+      {% include "_csrf.html" %}
+      <label for="naam-{{ rek.id }}">Nieuwe naam</label>
+      <input id="naam-{{ rek.id }}" name="naam" value="{{ rek.naam }}" maxlength="50" required>
+      <button type="submit" class="knop">Naam opslaan</button>
+    </form>
+    <form method="post" action="{{ url_for('web.rek_verwijderen', rek_id=rek.id) }}">
+      {% include "_csrf.html" %}
+      <button type="submit" class="knop knop-gevaar">Rek {{ rek.naam }} verwijderen</button>
+    </form>
+  </details>
+</section>
+{% else %}
+<p>Er zijn nog geen rekken.</p>
+{% endfor %}
+
+{{ logtabel(regels) }}
+{% endblock %}

@@ -48,3 +48,16 @@ th, td { text-align: left; padding: var(--ruimte-2); border-bottom: 1px solid va
   td { border: 0; }
   td::before { content: attr(data-label) ": "; font-weight: 600; }
 }
+
+select { width: 100%; max-width: 24rem; padding: var(--ruimte-2); border: 1px solid var(--kleur-rand); border-radius: var(--radius); font: inherit; background: var(--kleur-vlak); }
+fieldset { border: 1px solid var(--kleur-rand); border-radius: var(--radius); margin-top: var(--ruimte-3); }
+.keuze { display: flex; gap: var(--ruimte-2); align-items: center; font-weight: 400; }
+.keuze input { width: auto; }
+details { margin-top: var(--ruimte-3); }
+summary { cursor: pointer; font-weight: 600; }
+.knop-gevaar { background: var(--kleur-fout); }
+dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--ruimte-1) var(--ruimte-3); }
+dt { font-weight: 600; }
+dd { margin: 0; }
+.foto { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin-top: var(--ruimte-3); }
+.log { margin-top: var(--ruimte-4); }

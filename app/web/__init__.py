@@ -1,12 +1,12 @@
-"""Webinterface. Slice 1a: inloggen, uitnodiging, startpagina en log."""
+"""Webinterface: inloggen, indeling, boten, leden, openbare pagina en log."""
 
 import time
 from functools import wraps
 from zoneinfo import ZoneInfo
 
-from flask import Blueprint, current_app, g, redirect, render_template, session, url_for
+from flask import Blueprint, current_app, flash, g, redirect, render_template, session, url_for
 
-from app.domein import log
+from app.domein import Actor, Regelfout, log
 from app.models import Beheerder, Instelling, db
 
 bp = Blueprint("web", __name__)
@@ -36,7 +36,7 @@ def laad_beheerder():
 @bp.after_request
 def niet_bewaren(response):
     # Beheerpagina's en het TOTP-geheim bij het instellen horen niet in een browsercache.
-    response.headers["Cache-Control"] = "no-store"
+    response.headers.setdefault("Cache-Control", "no-store")
     return response
 
 
@@ -60,6 +60,19 @@ def inloggen_vereist(view):
     return binnen
 
 
+def uitvoeren(functie, *args, gelukt=None):
+    """Roept een wijzigende domeinfunctie aan met de ingelogde beheerder als actor. Een
+    Regelfout wordt een foutmelding (ADR-002); geeft dan None."""
+    try:
+        resultaat = functie(*args, Actor.van(g.beheerder))
+    except Regelfout as fout:
+        flash(str(fout), "fout")
+        return None
+    if gelukt:
+        flash(gelukt, "info")
+    return resultaat
+
+
 @bp.app_context_processor
 def vereniging():
     naam = db.session.get(Instelling, "naam")
@@ -75,7 +88,7 @@ def tijd(waarde):
 @inloggen_vereist
 def start():
     return render_template(
-        "start.html", regels=log.regels(f"beheerder:{g.beheerder.id}", limiet=10)
+        "start.html", regels=log.regels([f"beheerder:{g.beheerder.id}"], limiet=10)
     )
 
 
@@ -85,5 +98,5 @@ def logboek():
     return render_template("log.html", regels=log.regels())
 
 
-from app.web import inloggen  # noqa: F401  routes op bp
+from app.web import beheer, inloggen, openbaar  # noqa: F401  routes op bp
 from app.web.health import health  # noqa: F401

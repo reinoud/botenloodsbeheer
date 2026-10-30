@@ -30,7 +30,7 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from app.domein import Actor, Regelfout, log
+from app.domein import SYSTEEM, Actor, Regelfout, log
 from app.models import Beheerder, Passkey, Uitnodiging, db
 
 UITNODIGING_GELDIG = timedelta(hours=24)
@@ -116,13 +116,17 @@ def totp_uri(geheim, gebruikersnaam):
 
 def totp_stap(geheim, code, laatste_stap):
     """Tijdstap waarbij de code hoort (een stap marge), of None. Een stap wordt maar één keer
-    geaccepteerd: alleen stappen na de laatst gebruikte tellen."""
+    geaccepteerd: alleen stappen na de laatst gebruikte tellen. Alleen zes ASCII-cijfers
+    worden vergeleken; compare_digest weigert andere tekens met een TypeError (#3)."""
+    code = code.strip()
+    if not re.fullmatch(r"\d{6}", code, re.ASCII):
+        return None
     totp = pyotp.TOTP(geheim)
     nu = int(time.time()) // totp.interval
     for stap in (nu - 1, nu, nu + 1):
         if laatste_stap is not None and stap <= laatste_stap:
             continue
-        if hmac.compare_digest(totp.at(stap * totp.interval), code.strip()):
+        if hmac.compare_digest(totp.at(stap * totp.interval), code):
             return stap
     return None
 
@@ -154,7 +158,7 @@ def _mislukt(beheerder):
     if beheerder.mislukte_pogingen >= MAX_POGINGEN:
         beheerder.mislukte_pogingen = 0
         beheerder.geblokkeerd_tot = _nu() + VERGRENDELTIJD
-        log.schrijf(Actor.van(beheerder), "beheerder.vergrendeld", [f"beheerder:{beheerder.id}"],
+        log.schrijf(SYSTEEM, "beheerder.vergrendeld", [f"beheerder:{beheerder.id}"],
                     {"minuten": int(VERGRENDELTIJD.total_seconds() // 60)})
     db.session.commit()
 

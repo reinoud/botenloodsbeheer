@@ -1,16 +1,20 @@
-"""Alle tabellen (architectuur §4). Slice 1a: beheerders, inloggen, log en techniek."""
+"""Alle tabellen (architectuur §4). Slice 1a: beheerders, inloggen, log en techniek.
+Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import (
     BigInteger,
     CheckConstraint,
+    Column,
+    Date,
     DateTime,
     ForeignKey,
     Index,
     LargeBinary,
     String,
+    Table,
     Text,
     func,
     text,
@@ -123,3 +127,105 @@ class Taakrun(db.Model):
     beeindigd_op: Mapped[datetime | None] = mapped_column(Tijdstip)
     aantallen: Mapped[dict] = mapped_column(JSONB, server_default="{}")
     foutmelding: Mapped[str | None] = mapped_column(Text)
+
+
+# Indeling, leden en boten (slice 1b)
+
+
+class Rek(db.Model):
+    __tablename__ = "rek"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    naam: Mapped[str] = mapped_column(String(50))
+    volgorde: Mapped[int] = mapped_column(default=0, server_default=text("0"))
+
+    plaatsen: Mapped[list["Plaats"]] = relationship(
+        back_populates="rek", order_by="Plaats.volgorde, Plaats.id"
+    )
+
+
+class Bootsoort(db.Model):
+    """Een tabel, zodat BLB-028 later geen migratie vraagt. Startlijst in migratie 0002."""
+
+    __tablename__ = "bootsoort"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    naam: Mapped[str] = mapped_column(String(50), unique=True)
+
+
+plaats_bootsoort = Table(
+    "plaats_bootsoort",
+    db.metadata,
+    Column("plaats_id", ForeignKey("plaats.id", ondelete="CASCADE"), primary_key=True),
+    Column("bootsoort_id", ForeignKey("bootsoort.id"), primary_key=True),
+)
+
+
+class Plaats(db.Model):
+    """Drie identiteiten (ADR-003): id intern, publieke_sleutel in de QR-link, code voor mensen."""
+
+    __tablename__ = "plaats"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    rek_id: Mapped[int] = mapped_column(ForeignKey("rek.id"), index=True)
+    code: Mapped[str] = mapped_column(String(20), unique=True)
+    publieke_sleutel: Mapped[str] = mapped_column(String(10), unique=True)
+    is_clubplaats: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    volgorde: Mapped[int] = mapped_column(default=0, server_default=text("0"))
+    boot_id: Mapped[int | None] = mapped_column(ForeignKey("boot.id"), unique=True)
+
+    rek: Mapped[Rek] = relationship(back_populates="plaatsen")
+    bootsoorten: Mapped[list[Bootsoort]] = relationship(
+        secondary=plaats_bootsoort, order_by=Bootsoort.id
+    )
+    boot: Mapped["Boot | None"] = relationship(back_populates="plaats")
+
+
+class Lid(db.Model):
+    """Alleen de synchronisatie wijzigt een lid (ADR-004). Oud-lid is afgeleid (domein/leden)."""
+
+    __tablename__ = "lid"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lidnummer: Mapped[str] = mapped_column(String(20), unique=True)
+    naam: Mapped[str] = mapped_column(String(100))
+    adres: Mapped[str | None] = mapped_column(String(200))
+    telefoon: Mapped[str | None] = mapped_column(String(30))
+    email: Mapped[str | None] = mapped_column(String(254))
+    lid_sinds: Mapped[date | None] = mapped_column(Date)
+    opzegdatum: Mapped[date | None] = mapped_column(Date)
+    uit_bron_op: Mapped[date | None] = mapped_column(Date)
+
+    boten: Mapped[list["Boot"]] = relationship(back_populates="lid", order_by="Boot.naam")
+
+
+class Afbeelding(db.Model):
+    """Foto of logo als bytea (ADR-008). De sleutel staat in de URL en wijzigt per upload."""
+
+    __tablename__ = "afbeelding"
+    __table_args__ = (CheckConstraint("soort IN ('foto', 'logo')", name="soort_geldig"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    soort: Mapped[str] = mapped_column(String(10))
+    mime_type: Mapped[str] = mapped_column(String(20))
+    inhoud: Mapped[bytes] = mapped_column(LargeBinary)
+    breedte: Mapped[int]
+    hoogte: Mapped[int]
+    sleutel: Mapped[str] = mapped_column(String(16), unique=True)
+
+
+class Boot(db.Model):
+    """Een clubboot heeft geen lid."""
+
+    __tablename__ = "boot"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    naam: Mapped[str] = mapped_column(String(100))
+    bootsoort_id: Mapped[int] = mapped_column(ForeignKey("bootsoort.id"))
+    lid_id: Mapped[int | None] = mapped_column(ForeignKey("lid.id"), index=True)
+    afbeelding_id: Mapped[int | None] = mapped_column(ForeignKey("afbeelding.id"), unique=True)
+
+    bootsoort: Mapped[Bootsoort] = relationship()
+    lid: Mapped[Lid | None] = relationship(back_populates="boten")
+    afbeelding: Mapped[Afbeelding | None] = relationship()
+    plaats: Mapped[Plaats | None] = relationship(back_populates="boot")

@@ -12,15 +12,14 @@ x-app: &app
   tmpfs: [/tmp]
   security_opt: [no-new-privileges:true]
 
+# Gedeeld door web en worker. Geheimen krijgt elke dienst apart: alleen wat hij gebruikt.
 x-omgeving: &omgeving
   APP_OMGEVING: ${APP_OMGEVING:-productie}
-  SECRET_KEY: ${SECRET_KEY:?SECRET_KEY ontbreekt in .env}
-  TOTP_SLEUTEL: ${TOTP_SLEUTEL:?TOTP_SLEUTEL ontbreekt in .env}
   BASIS_URL: ${BASIS_URL:?BASIS_URL ontbreekt in .env}
-  WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
-  PROXY_HOPS: ${PROXY_HOPS:-1}
   TZ: ${TZ:-Europe/Amsterdam}
   LOG_NIVEAU: ${LOG_NIVEAU:-INFO}
+  LEDENBRON: ${LEDENBRON:-}
+  LEDENBRON_STUB_BESTAND: ${LEDENBRON_STUB_BESTAND:-tests/fixtures/leden.json}
 
 services:
   db:
@@ -56,6 +55,10 @@ services:
     <<: *app
     environment:
       <<: *omgeving
+      SECRET_KEY: ${SECRET_KEY:?SECRET_KEY ontbreekt in .env}
+      TOTP_SLEUTEL: ${TOTP_SLEUTEL:?TOTP_SLEUTEL ontbreekt in .env}
+      WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
+      PROXY_HOPS: ${PROXY_HOPS:-1}
       DATABASE_URL: postgresql+psycopg://botenloods_web:${DB_WEB_WACHTWOORD}@db/botenloods
     depends_on:
       migrate: {condition: service_completed_successfully}
@@ -70,6 +73,8 @@ services:
     command: ["flask", "taken", "draai"]
     environment:
       <<: *omgeving
+      DIENST: worker
+      SYNC_TIJDSTIP: ${SYNC_TIJDSTIP:-03:00}
       DATABASE_URL: postgresql+psycopg://botenloods_taken:${DB_TAKEN_WACHTWOORD}@db/botenloods
     depends_on:
       migrate: {condition: service_completed_successfully}

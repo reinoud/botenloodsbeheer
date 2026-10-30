@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{# Openbaar: alleen plaatscode, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025). #}
+{% block titel %}{{ 'Plaats ' ~ plaats.code if plaats else 'Niet gevonden' }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+{% if not plaats %}
+<h1>Deze pagina bestaat niet</h1>
+<p>Controleer de link of scan de QR-code opnieuw.</p>
+{% else %}
+<h1>Plaats {{ plaats.code }}</h1>
+{% if plaats.vrij %}
+<p>Deze plaats is vrij.</p>
+{% else %}
+<dl class="kaart">
+  <dt>Boot</dt><dd>{{ plaats.boot }}</dd>
+  <dt>Eigenaar</dt><dd>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</dd>
+</dl>
+{% if plaats.foto %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=plaats.foto) }}" alt="Foto van {{ plaats.boot }}">{% endif %}
+{% endif %}
+{% endif %}
+{% endblock %}

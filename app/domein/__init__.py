@@ -1,6 +1,10 @@
 """Domeinlaag: de enige laag die gegevens wijzigt (architectuur §3)."""
 
 from dataclasses import dataclass
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+from flask import current_app
 
 
 class Regelfout(Exception):
@@ -19,3 +23,10 @@ class Actor:
 
 
 CLI = Actor("systeem", None, "cli")
+SYSTEEM = Actor("systeem", None, "systeem")
+LEDENSYNCHRONISATIE = Actor("taak", None, "ledensynchronisatie")
+
+
+def vandaag():
+    """De datum in de tijdzone van de installatie (TZ)."""
+    return datetime.now(ZoneInfo(current_app.config["TZ"])).date()

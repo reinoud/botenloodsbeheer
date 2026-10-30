@@ -12,6 +12,12 @@ location ~ ^/(inloggen|uitnodiging) {
     proxy_pass http://web:8000;
 }
 
+# Foto's van boten tot 10 MB; de applicatie verkleint ze (ADR-008).
+location /boten {
+    client_max_body_size 10m;
+    proxy_pass http://web:8000;
+}
+
 location / {
     proxy_pass http://web:8000;
 }

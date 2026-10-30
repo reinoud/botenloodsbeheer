@@ -1,0 +1,37 @@
+"""Een boot een plaats geven (BLB-010, ADR-003). Vrijgeven en verplaatsen volgen in slice 2."""
+
+from sqlalchemy import select
+
+from app.domein import Regelfout, leden, log
+from app.models import Boot, Plaats, db
+
+
+def toewijzen(plaats_id, boot_id, actor):
+    """Controleert en wijst toe in één transactie. De plaats wordt eerst vergrendeld en dan de
+    boot, zodat twee beheerders niet tegelijk dezelfde plaats of boot toewijzen."""
+    try:
+        p = db.session.get(Plaats, plaats_id, with_for_update=True)
+        b = db.session.get(Boot, boot_id, with_for_update=True) if boot_id else None
+        if p is None or b is None:
+            raise Regelfout("Kies een bestaande plaats en boot.")
+        if p.boot_id is not None:
+            raise Regelfout(f"Plaats {p.code} is al bezet.")
+        andere = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id))
+        if andere is not None:
+            raise Regelfout(f"Boot {b.naam} heeft al een plaats: {andere.code}.")
+        if p.is_clubplaats and b.lid_id is not None:
+            raise Regelfout(f"Plaats {p.code} is een clubplaats en alleen voor clubboten.")
+        if not p.is_clubplaats and b.lid_id is None:
+            raise Regelfout(f"Boot {b.naam} is een clubboot en hoort op een clubplaats.")
+        if b.bootsoort not in p.bootsoorten:
+            raise Regelfout(f"Plaats {p.code} is niet geschikt voor een {b.bootsoort.naam.lower()}.")
+        if b.lid is not None and leden.is_oud_lid(b.lid):
+            raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats.")
+    except Regelfout:
+        db.session.rollback()
+        raise
+    p.boot = b
+    log.schrijf(actor, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
+                                             *([f"lid:{b.lid_id}"] if b.lid_id else [])],
+                {"plaats": p.code, "boot": b.naam})
+    db.session.commit()

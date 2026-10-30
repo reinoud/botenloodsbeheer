@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}{{ boot.naam }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>{{ boot.naam }}</h1>
+<section class="kaart">
+  <dl>
+    <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
+    <dt>Eigenaar</dt><dd>{{ boot.lid.naam if boot.lid else vereniging ~ ' (clubboot)' }}</dd>
+    <dt>Plaats</dt><dd>{% if boot.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">{{ boot.plaats.code }}</a>{% else %}geen{% endif %}</dd>
+  </dl>
+  {% if boot.afbeelding %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}">{% endif %}
+</section>
+<section class="kaart">
+  <h2>Foto</h2>
+  <form method="post" action="{{ url_for('web.boot_foto', boot_id=boot.id) }}" enctype="multipart/form-data">
+    {% include "_csrf.html" %}
+    <label for="foto">Nieuwe foto (JPEG, PNG of WebP)</label>
+    <input id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" required>
+    <button type="submit" class="knop">Foto opslaan</button>
+  </form>
+</section>
+<form method="post" action="{{ url_for('web.boot_verwijderen', boot_id=boot.id) }}">
+  {% include "_csrf.html" %}
+  <button type="submit" class="knop knop-gevaar">Boot {{ boot.naam }} verwijderen</button>
+</form>
+{{ logtabel(regels) }}
+{% endblock %}
