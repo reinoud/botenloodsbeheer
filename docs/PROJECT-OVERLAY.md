@@ -55,6 +55,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Laat foundation bij een besluit dat een ontwerpdetail openlaat de veiligste eenvoudige variant kiezen en die melden. Nieuwe omgevingsvariabelen en afhankelijkheden die een besluit nodig maakt, mag foundation toevoegen en moet hij melden.
 - Controleer vóór een bouwopdracht of Docker draait, en noem in de opdracht welke images al lokaal staan.
 - Een afwijking van een ADR die alleen namen of de plaats van een instelling raakt (zoals een omgevingsvariabele per dienst), mag het bouwende agent doorvoeren en melden. Foundation werkt de ADR daarna bij.
+- Elke E2E-test draait ook los. Laat de reviewer één test met `-k` draaien als controle op de volgorde.
+- Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
