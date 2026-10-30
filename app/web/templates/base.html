@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block titel %}{{ vereniging }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='stijl.css') }}">
+</head>
+<body>
+  <header class="kop">
+    <a class="kop-naam" href="{{ url_for('web.start') }}">{{ vereniging }}</a>
+    {% if g.beheerder %}
+    <nav class="kop-menu" aria-label="Hoofdmenu">
+      <a href="{{ url_for('web.logboek') }}">Log</a>
+      <form method="post" action="{{ url_for('web.uitloggen') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="knop-link">Uitloggen</button>
+      </form>
+    </nav>
+    {% endif %}
+  </header>
+  <main class="inhoud">
+    {% for soort, bericht in get_flashed_messages(with_categories=true) %}
+    <p class="melding melding-{{ soort }}" role="{{ 'alert' if soort == 'fout' else 'status' }}">{{ bericht }}</p>
+    {% endfor %}
+    {% block inhoud %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

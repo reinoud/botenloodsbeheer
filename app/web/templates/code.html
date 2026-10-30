@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titel %}Code · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Code uit je authenticator-app</h1>
+<form method="post" class="kaart">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label for="code">Code van zes cijfers</label>
+  <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required autofocus>
+  <button type="submit" class="knop">Inloggen</button>
+</form>
+{% endblock %}

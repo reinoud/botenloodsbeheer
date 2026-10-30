@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block titel %}Inloggen · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Inloggen</h1>
+<section class="kaart">
+  <h2>Met een passkey</h2>
+  <button type="button" class="knop" id="passkey-inloggen"
+          data-opties="{{ url_for('web.inloggen_passkey_opties') }}"
+          data-verifieer="{{ url_for('web.inloggen_passkey') }}">Inloggen met passkey</button>
+  <p class="melding melding-fout" id="passkey-fout" role="alert" hidden></p>
+</section>
+<section class="kaart">
+  <h2>Met wachtwoord en code</h2>
+  <form method="post" action="{{ url_for('web.inloggen_wachtwoord') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="gebruikersnaam">Gebruikersnaam</label>
+    <input id="gebruikersnaam" name="gebruikersnaam" autocomplete="username" required>
+    <label for="wachtwoord">Wachtwoord</label>
+    <input id="wachtwoord" name="wachtwoord" type="password" autocomplete="current-password" required>
+    <button type="submit" class="knop">Verder</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='passkey.js') }}"></script>{% endblock %}

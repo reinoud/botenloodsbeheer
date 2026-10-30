@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Log · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Mutatielog</h1>
+<p>De nieuwste 50 mutaties.</p>
+{{ logtabel(regels) }}
+{% endblock %}

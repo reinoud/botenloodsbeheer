@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block inhoud %}
+<h1>Welkom, {{ g.beheerder.naam }}</h1>
+<p>De indeling van de loods volgt in een volgende versie.</p>
+{{ logtabel(regels) }}
+{% endblock %}

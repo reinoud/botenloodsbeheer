@@ -1,0 +1,34 @@
+[project]
+name = "botenloods"
+version = "0.1.0"
+description = "Beheer van de botenloods van een kanovereniging"
+requires-python = ">=3.13"
+dependencies = [
+    "flask>=3.1",
+    "flask-sqlalchemy>=3.1",
+    "flask-wtf>=1.2",
+    "sqlalchemy>=2.0",
+    "psycopg[binary]>=3.2",
+    "alembic>=1.16",
+    "gunicorn>=23.0",
+    "webauthn>=2.7",
+    "argon2-cffi>=25.1",
+    "pyotp>=2.9",
+    "cryptography>=45",
+    "segno>=1.6",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.4", "ruff>=0.13"]
+
+[tool.uv]
+package = false
+# Alleen versies die minstens twee weken uit zijn; ophogen bij elke update van het lockbestand.
+exclude-newer = "2026-10-16T00:00:00Z"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+addopts = "-p no:cacheprovider"
+
+[tool.ruff]
+line-length = 100

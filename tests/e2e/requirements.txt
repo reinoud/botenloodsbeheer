@@ -1,0 +1,5 @@
+# E2E draait in het image van Playwright (eigen Python); daarom buiten uv.lock, met vaste versies.
+playwright==1.55.0
+pytest==8.4.2
+pytest-playwright==0.7.1
+pyotp==2.9.0
