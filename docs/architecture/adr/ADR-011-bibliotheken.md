@@ -1,12 +1,12 @@
 # ADR-011 Keuze van bibliotheken
 
-**Status:** Besloten door Foundation
+**Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
 
-De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die stack zijn keuzes nodig voor de database-laag en migraties, formulieren en CSRF, passkeys, afbeeldingen, Excel, QR-codes, het printen van kaartjes, de OpenAPI-beschrijving en de tests. Elke afhankelijkheid is onderhoud en een mogelijk lek in de toeleveringsketen. De regel is daarom: een bibliotheek alleen als die een echt probleem oplost dat niet in een paar regels code te doen is, en dan een breed gebruikte, onderhouden bibliotheek.
+De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die stack zijn keuzes nodig voor de database-laag en migraties, formulieren en CSRF, inloggen (passkeys, wachtwoordhash, TOTP), afbeeldingen, Excel, QR-codes, het printen van kaartjes, de OpenAPI-beschrijving en de tests. Elke afhankelijkheid is onderhoud en een mogelijk lek in de toeleveringsketen. De regel is daarom: een bibliotheek alleen als die een echt probleem oplost dat niet in een paar regels code te doen is, en dan een breed gebruikte, onderhouden bibliotheek.
 
 ## Besluit
 
@@ -17,6 +17,9 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 | Migraties | Alembic | Standaard bij SQLAlchemy; autogenerate als begin, migraties altijd met de hand nagelopen; elke migratie met een werkende downgrade |
 | Formulieren en CSRF | Flask-WTF | CSRF-bescherming op elk formulier en validatie op vorm in één bibliotheek |
 | Passkeys | `webauthn` (py_webauthn) | Onderhouden implementatie van registratie en verificatie; zelf bouwen van WebAuthn-verificatie is foutgevoelig |
+| Wachtwoordhash | `argon2-cffi` | Argon2id met veilige standaardparameters en herhashen; zelf een hash kiezen of afstellen is foutgevoelig (ADR-001) |
+| TOTP | `pyotp` | Kleine, breed gebruikte RFC 6238-implementatie met vergelijking in constante tijd; de QR-code komt van segno |
+| Versleuteling TOTP-geheim | `cryptography` (Fernet) | Komt al mee als afhankelijkheid van `webauthn`; geen eigen cryptografie |
 | Afbeeldingen | Pillow | Herkennen, verkleinen, metadata verwijderen (ADR-008) |
 | Excel-export | openpyxl | Schrijft `.xlsx` zonder Office; één werkblad met kolombreedtes en een kopregel is genoeg |
 | QR-codes | segno | Pure Python zonder afhankelijkheden, levert SVG die scherp print en direct in HTML past |

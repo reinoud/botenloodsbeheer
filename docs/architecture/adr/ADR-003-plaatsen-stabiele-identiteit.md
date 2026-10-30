@@ -40,7 +40,7 @@ Verwijderen van een rek, een plaats of een geschikte bootsoort met een toegeweze
 ## Gevolgen
 
 - Hernoemen van een plaats raakt niets anders dan het veld `code` en een logregel. Kaartjes blijven werken; alleen de tekst op het kaartje is dan verouderd.
-- Een bezoeker kan een plaats niet op code opzoeken. Wil apex dat toch (open vraag 3 in de architectuur), dan is het een kleine zoekfunctie die alleen exacte codes vindt.
+- Een bezoeker kan een plaats niet op code opzoeken. Dat is besloten: de openbare pagina is alleen via de QR-link te openen (intake, besluit stakeholder 2026-10-30).
 - Een publieke sleutel opnieuw genereren is bewust geen functie. Is een sleutel ooit ongewenst bekend, dan is dat geen probleem: de pagina is openbaar.
 - De openbare pagina gebruikt een eigen leesfunctie die alleen plaatscode, bootnaam, foto-URL en naam van de eigenaar (of de naam van de vereniging bij een clubboot) ophaalt. De E2E-test controleert het volledige antwoord op afwezigheid van adres, telefoon, e-mail en lidnummer.
 - Foto's op de openbare pagina hebben een eigen willekeurige sleutel (ADR-008), zodat ze ook niet op te tellen zijn.

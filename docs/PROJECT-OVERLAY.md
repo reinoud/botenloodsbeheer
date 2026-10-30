@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.1.0
+**Versie overlay:** v0.1.1
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-30
@@ -52,6 +52,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
 - Of een instelling in de applicatie (door de beheerder) of in de installatie (omgeving) staat, beslist foundation per instelling in een ADR.
 - Laat apex elk acceptatiecriterium toetsen aan de besluiten in de intake; een criterium dat een besluit tegenspreekt, gaat terug als vraag.
+- Laat foundation bij een besluit dat een ontwerpdetail openlaat de veiligste eenvoudige variant kiezen en die melden. Nieuwe omgevingsvariabelen en afhankelijkheden die een besluit nodig maakt, mag foundation toevoegen en moet hij melden.
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 
 ## 5. Projectcontracten
@@ -74,8 +75,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 | Tenancy: één vereniging per installatie, geen tenantlaag en geen tenantadministratie | Besluit stakeholder 2026-10-30 | stakeholder |
 | Huisstijl: geen vaste huisstijl. Alle styling via design tokens. Naam, kleuren en logo zijn per installatie in te stellen. | Besluit stakeholder 2026-10-30; de applicatie is voor meerdere verenigingen bedoeld | foundation |
 | Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de ledensynchronisatie) buiten het webproces. | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
-| Externe API `/api/v1` met OpenAPI-specificatie, in de configuratie aan en uit te zetten. Persoonlijke tokens hooguit 3 jaar geldig. Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
-| Inloggen: lokale gebruikers met een moderne, veilige inlogmethode (keuze in ADR door foundation) | Intake | foundation, aegis |
+| Externe API `/api/v1` met OpenAPI-specificatie, aan en uit te zetten in de installatie via de omgeving (`API_INGESCHAKELD`, standaard uit). Persoonlijke tokens hooguit 3 jaar geldig. Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
+| Inloggen: lokale beheerders met een passkey of met wachtwoord plus TOTP, beide beschikbaar (ADR-001) | Intake, besluit stakeholder 2026-10-30 | foundation, aegis |
 | Statusrapportage: `docs/status/status.html` voor de stakeholder; health endpoints en een technische statuspagina (JSON en HTML, na inloggen) | Standaardregel | forge |
 | Locatie code: `/Users/reinoud/git/botenloods`, niet onder `/Users/reinoud/Projects/AI/` | Afwijking van de kickoff, besluit stakeholder 2026-10-30 | stakeholder |
 
@@ -117,4 +118,5 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.1.1 | 2026-10-30 | API-schakelaar en inlogmethode volgens de besluiten op de architectuurvragen; regel in de briefingchecklist uit de terugblik van foundation | Besluiten stakeholder 2026-10-30 |
 | v0.1.0 | 2026-10-30 | Eerste versie | Business outline bevestigd, besluiten stakeholder vastgelegd |

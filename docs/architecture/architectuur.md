@@ -1,19 +1,19 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.1.0
+**Versie:** v0.2.0
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
-**Status:** Concept, wacht op de besluiten in §9
+**Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief beide besluitensecties van 2026-10-30), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
 
 ## 1. Samenvatting
 
 Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 160 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De externe API is een tweede ingang op dezelfde domeinlaag. Achtergrondwerk draait in een eigen container van hetzelfde image.
 
-De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey (ADR-001, besluit van de stakeholder nodig), een plaats heeft een vaste openbare sleutel los van de plaatscode zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
+De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de plaatscode zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
 
-**Architectuurgezondheid:** Sound, met vijf open besluiten voor de stakeholder (§9).
+**Architectuurgezondheid:** Sound. De vijf besluiten van de stakeholder zijn verwerkt (§9).
 
 ## 2. Containers
 
@@ -21,7 +21,7 @@ De installatie bestaat uit vier containers in één `docker-compose.yml`. Ze dra
 
 | Container | Inhoud | Taak | Bereikbaar van buiten |
 |-----------|--------|------|-----------------------|
-| `nginx` | Nginx (officieel image, unprivileged-variant) | TLS (zie §9, besluit 2), statische bestanden, beveiligingsheaders, rate limiting, maximale uploadgrootte, doorsturen naar `web` | Ja, poort 443 (en 80 voor doorverwijzing) |
+| `nginx` | Nginx (officieel image, unprivileged-variant) | TLS (vaste domeinnaam met HTTPS, §9 besluit 2), statische bestanden, beveiligingsheaders, rate limiting, maximale uploadgrootte, doorsturen naar `web` | Ja, poort 443 (en 80 voor doorverwijzing) |
 | `web` | Applicatie-image, Gunicorn met Flask | Webinterface, openbare pagina, API `/api/v1`, health endpoints | Nee, alleen via `nginx` |
 | `worker` | Hetzelfde applicatie-image, ander startcommando | Dagelijkse ledensynchronisatie, handmatig gestarte synchronisatie, dagelijkse opschoning | Nee |
 | `db` | PostgreSQL 17 | Alle gegevens, ook foto's en logo | Nee, alleen intern netwerk |
@@ -64,9 +64,9 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 | `boot` | naam, bootsoort, `lid_id` (leeg voor een clubboot), `afbeelding_id` | Een clubboot heeft geen lid. Een clubboot mag alleen op een clubplaats, een boot van een lid nooit. |
 | `wachtlijst` | boot (uniek), aangemeld_op | De bootsoort volgt uit de boot, dus er is per bootsoort vanzelf een eigen lijst. |
 | `afbeelding` | soort (foto of logo), mime-type, inhoud (bytea), breedte, hoogte, `sleutel` (willekeurig, voor de URL) | ADR-008. |
-| `beheerder` | naam, gebruikersnaam, actief, sessieversie | Drie beheerders met gelijke rechten. |
-| `passkey` | beheerder, credential-id, publieke sleutel, teller, naam, laatst_gebruikt | ADR-001. |
-| `uitnodiging` | beheerder, hash van de eenmalige code, verloopt_op, gebruikt_op | Voor het registreren van een passkey en voor herstel van toegang. |
+| `beheerder` | naam, gebruikersnaam, actief, sessieversie, wachtwoordhash (leeg zonder wachtwoord), versleuteld TOTP-geheim, laatste TOTP-tijdstap, aantal mislukte pogingen, geblokkeerd_tot | Drie beheerders met gelijke rechten. Wachtwoord en TOTP gaan samen (ADR-001). |
+| `passkey` | beheerder, credential-id, publieke sleutel, teller, naam, laatst_gebruikt | ADR-001. Een beheerder heeft nul of meer passkeys. |
+| `uitnodiging` | beheerder, hash van de eenmalige code, verloopt_op, gebruikt_op | Voor het instellen van een inlogmethode en voor herstel van toegang. |
 | `token` | naam, soort (persoonlijk of robot), beheerder (leeg bij robot), prefix, hash, rechten, ip_whitelist, verloopt_op, ingetrokken_op, laatst_gebruikt_op | ADR-005. |
 | `logregel` | tijdstip, soort (mutatie of api), actor_soort, actor_id, actor_naam, actie, verwijzingen, gegevens (JSON) | ADR-006. Alleen toevoegen; de applicatie kent geen wijzigen of verwijderen behalve de opschoning. |
 
@@ -122,7 +122,7 @@ Lokaal start de ontwikkelaar de stack met:
 1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `LEDENBRON=stub` staat standaard aan.
 2. `docker compose -f docker-compose.yml -f compose.dev.yml up --build`.
 3. `docker compose exec web flask seed` voor de synthetische gegevens.
-4. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee registreert de ontwikkelaar een passkey.
+4. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
@@ -139,16 +139,17 @@ Alle namen, adressen en nummers zijn verzonnen; e-mailadressen eindigen op `@exa
 
 ### 6.4 Testaccounts voor E2E
 
-E2E-tests draaien met Playwright (Python) tegen de stack in compose. Inloggen met een passkey gebeurt met de virtuele authenticator van Chromium (WebAuthn via het Chrome DevTools Protocol). Er komt dus geen inlogomweg in de applicatie.
+E2E-tests draaien met Playwright (Python) tegen de stack in compose. Inloggen met een passkey gebeurt met de virtuele authenticator van Chromium (WebAuthn via het Chrome DevTools Protocol), inloggen met een wachtwoord met `pyotp` en een testgeheim. Er komt dus geen inlogomweg in de applicatie.
 
 | Account | Gebruik |
 |---------|---------|
-| `e2e-beheerder-1` | Standaardbeheerder voor alle happy flows |
+| `e2e-beheerder-1` | Standaardbeheerder voor alle happy flows, met passkey |
+| `e2e-beheerder-wachtwoord` | Beheerder met wachtwoord en TOTP: inloggen, vergrendeling na vijf pogingen, herstel door een andere beheerder |
 | `e2e-beheerder-2` | Tweede beheerder: tokens van een ander intrekken, laatste account niet blokkeren |
 | `e2e-geblokkeerd` | Geblokkeerd account: inloggen moet mislukken |
 | bezoeker | Geen account, voor de openbare pagina en de doorverwijzing naar het inlogscherm |
 
-De testfixture roept `flask beheerder uitnodigen` aan, opent de link in Playwright en registreert een passkey bij de virtuele authenticator. Voor de API maakt de fixture een robottoken met whitelist `127.0.0.1/32` en `::1/128`.
+De testfixture roept `flask beheerder uitnodigen` aan, opent de link in Playwright en registreert een passkey bij de virtuele authenticator, of stelt een wachtwoord en TOTP in. Voor de API maakt de fixture een robottoken met whitelist `127.0.0.1/32` en `::1/128`.
 
 ### 6.5 Tests
 
@@ -177,7 +178,7 @@ Slice 1 is groot omdat de basis erin zit: containers, inloggen, mutatielog en de
 
 | Dreiging | Ingang | Kans | Impact | Maatregel | ADR |
 |----------|--------|------|--------|-----------|-----|
-| Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkeys: phishingbestendig, geen wachtwoord om te lekken | 001 |
+| Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkey: phishingbestendig. Wachtwoord met TOTP: argon2id, TOTP-code eenmalig bruikbaar, vergrendeling per account na vijf pogingen, rate limit per IP; phishing blijft mogelijk en is door de stakeholder geaccepteerd (restrisico) | 001 |
 | Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vier velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
@@ -193,24 +194,24 @@ Slice 1 is groot omdat de basis erin zit: containers, inloggen, mutatielog en de
 |----------|--------|-------------|
 | Minimale rechten | Compliant | Containers zonder root; database-account zonder superuser; tokens met losse rechten; persoonsgegevens alleen met apart recht |
 | Gelaagde verdediging | Compliant | Nginx (rate limits, headers, CSP) voor Flask; constraints in de database onder de domeinregels |
-| Veilig falen | Compliant | Synchronisatie breekt af zonder wijziging; API staat standaard uit; terugschrijven staat uit |
+| Veilig falen | Compliant | Synchronisatie breekt af zonder wijziging; API staat standaard uit (`API_INGESCHAKELD=false`); terugschrijven staat uit |
 | Scheiding | Compliant | Eén plek voor regels; ledenbron als enige externe koppeling |
 
 ### 8.3 Bekende restrisico's
 
 Back-ups vallen buiten de applicatie. Een back-up bevat persoonsgegevens en foto's en ook gegevens die de opschoning al heeft verwijderd. Wie de installatie draait, moet de bewaartermijn van back-ups afstemmen op de termijn van 5 jaar. Dit staat als open vraag in §10.
 
-## 9. Besluiten voor de stakeholder
+## 9. Besluiten van de stakeholder
 
-Deze vijf keuzes vragen iets van de beheerders of van de vereniging. Foundation geeft een aanbeveling en kiest niet definitief.
+De stakeholder besloot over deze vijf keuzes op 2026-10-30 (bron: `docs/business/intake.md`, sectie "Besluiten op de architectuurvragen"). Besluit 1 en 5 wijken af van de aanbeveling van foundation en zijn in de ADR's herschreven.
 
-| # | Besluit | Aanbeveling | Gevolg van de aanbeveling |
-|---|---------|-------------|---------------------------|
-| 1 | Inlogmethode voor beheerders (ADR-001) | Alleen passkeys, met een eenmalige uitnodigingslink voor registratie en herstel. Geen wachtwoord, geen TOTP. | Elke beheerder heeft een telefoon of computer met passkey-ondersteuning (vrijwel elk toestel sinds 2023) of een hardwaresleutel. Wie zijn toestel kwijt is, krijgt een nieuwe link van een andere beheerder. |
-| 2 | Vaste domeinnaam en TLS per installatie | Elke installatie krijgt een eigen, blijvende (sub)domeinnaam met HTTPS. Nginx in de compose termineert TLS met een gemount certificaat; vernieuwen (bijvoorbeeld met certbot op de host) hoort bij de hosting. | Passkeys werken alleen op een vaste domeinnaam met HTTPS. De QR-codes op de kaartjes bevatten de domeinnaam: verandert die, dan moeten alle kaartjes opnieuw. |
-| 3 | Wat "een boot in de loods" is voor de bewaartermijn | Een oud-lid valt onder de opschoning zodra 5 jaar na de opzegdatum geen boot van het oud-lid nog een plaats heeft. Bij het opschonen worden ook de boten en foto's van het oud-lid verwijderd. | Een boot zonder plaats houdt het opschonen niet tegen. Wil de vereniging boten zonder plaats als "in de loods" tellen, dan blijven gegevens langer staan. |
-| 4 | Begin van de termijn voor een lid dat uit de bron verdwijnt zonder opzegdatum | De datum waarop de synchronisatie het lid niet meer vond, telt als opzegdatum. | Zonder deze regel begint de termijn van zo'n oud-lid nooit en blijven de gegevens onbeperkt staan. |
-| 5 | Wie de API aan- en uitzet (ADR-009) | De beheerder in de applicatie, standaard uit, met een logregel. | Er is geen systeembeheerrol (intake). Een schakelaar in de omgeving zou iemand met servertoegang vragen voor een gewone beheerkeuze. |
+| # | Besluit | Uitkomst (2026-10-30) | Gevolg |
+|---|---------|-----------------------|--------|
+| 1 | Inlogmethode voor beheerders (ADR-001) | Een beheerder logt in met een passkey of met een wachtwoord plus TOTP; beide zijn beschikbaar. Een eenmalige uitnodigingslink dient voor instellen en herstel. Afwijking van de aanbeveling (alleen passkeys). | De beheerder kiest bij de uitnodiging één of beide methodes. Wachtwoord met TOTP is te phishen; dat restrisico is geaccepteerd. Wie zijn toestel kwijt is, krijgt een herstellink van een andere beheerder. |
+| 2 | Vaste domeinnaam en TLS per installatie | Besloten zoals aanbevolen: elke installatie heeft een eigen, blijvende (sub)domeinnaam met HTTPS. Nginx in de compose termineert TLS met een gemount certificaat; vernieuwen (bijvoorbeeld met certbot op de host) hoort bij de hosting. | Passkeys werken alleen op een vaste domeinnaam met HTTPS. De QR-codes op de kaartjes bevatten de domeinnaam: verandert die, dan moeten alle kaartjes opnieuw. |
+| 3 | Wat "een boot in de loods" is voor de bewaartermijn | Besloten zoals aanbevolen: een oud-lid valt onder de opschoning zodra 5 jaar na de opzegdatum geen boot van het oud-lid nog een plaats heeft. Bij het opschonen worden ook de boten en foto's van het oud-lid verwijderd (ADR-006). | Een boot zonder plaats houdt het opschonen niet tegen. Wil de vereniging boten zonder plaats als "in de loods" tellen, dan blijven gegevens langer staan. |
+| 4 | Begin van de termijn voor een lid dat uit de bron verdwijnt zonder opzegdatum | Besloten zoals aanbevolen: de datum waarop de synchronisatie het lid niet meer vond, telt als opzegdatum (ADR-004, ADR-006). | Zonder deze regel begint de termijn van zo'n oud-lid nooit en blijven de gegevens onbeperkt staan. |
+| 5 | Wie de API aan- en uitzet (ADR-009) | De API gaat aan en uit in de installatie, via de omgevingsvariabele `API_INGESCHAKELD` (standaard `false`), niet door de beheerder in de applicatie. Afwijking van de aanbeveling. | Er komt geen scherm voor de schakelaar. Aanzetten vraagt iemand met servertoegang en een herstart van `web`. |
 
 ## 10. Botsingen tussen bronnen en open vragen
 
@@ -247,3 +248,4 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.0 | 2026-10-30 | Vijf besluiten van de stakeholder verwerkt. ADR-001 herschreven (passkey of wachtwoord met TOTP). ADR-009: API-schakelaar naar de omgeving, `TOTP_SLEUTEL` toegevoegd. ADR-011: argon2-cffi, pyotp, cryptography. ADR-004 en ADR-006: opschoonregels als besloten. §4, §6, §8 en §9 aangepast; ADR-status Aanvaard |

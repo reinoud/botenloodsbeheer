@@ -1,6 +1,6 @@
 # ADR-006 Mutatielog en opschonen
 
-**Status:** Besloten door Foundation
+**Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034
 
@@ -30,7 +30,7 @@ Er is één tabel `logregel`, alleen voor toevoegen.
 **Opschonen.** Een dagelijkse taak (ADR-007) doet in één transactie:
 
 1. Logregels met een tijdstip van meer dan 5 jaar geleden verwijderen.
-2. Oud-leden zoeken waarvan de startdatum (opzegdatum, of `uit_bron_op` als die ontbreekt, zie architectuur §9 besluit 4) meer dan 5 jaar geleden ligt en waarvan geen boot een plaats heeft (besluit 3).
+2. Oud-leden zoeken waarvan de startdatum (opzegdatum, of `uit_bron_op` als die ontbreekt, besloten door de stakeholder op 2026-10-30, architectuur §9 besluit 4) meer dan 5 jaar geleden ligt en waarvan geen boot een plaats heeft (besloten, besluit 3). De boten en foto's van het oud-lid gaan mee.
 3. Van die oud-leden de boten, foto's en het lid zelf verwijderen.
 4. Aantallen vastleggen in `taakrun` en één logregel `opschoning.uitgevoerd` met alleen de aantallen (BLB-026).
 

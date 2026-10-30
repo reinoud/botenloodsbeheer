@@ -309,7 +309,7 @@ Als beheerder wil ik veilig inloggen zodat alleen beheerders persoonsgegevens en
 - Gegeven onjuiste inloggegevens, wanneer iemand probeert in te loggen, dan weigert de applicatie zonder te melden welk deel onjuist is.
 - Gegeven herhaald mislukte pogingen, wanneer iemand blijft proberen, dan beperkt de applicatie verdere pogingen.
 - Gegeven een nieuwe installatie, wanneer de eerste beheerder wordt aangemaakt, dan gebeurt dat zonder vast standaardwachtwoord.
-- De inlogmethode is een keuze van foundation (modern en veilig); de stakeholder keurt die goed via een ADR.
+- Besluit stakeholder 2026-10-30 (ADR-001): een beheerder logt in met een passkey of met een wachtwoord plus TOTP; beide zijn beschikbaar.
 
 #### BLB-023 Beheerders beheren
 
@@ -385,9 +385,10 @@ Als beheerder wil ik de lijst met bootsoorten aanpassen zodat een andere verenig
 
 Prioriteit: Should. Bron: besluit externe API, overlay §6. Afhankelijk van: BLB-022.
 
-Als beheerder wil ik de externe API in de configuratie aan en uit zetten zodat die alleen bereikbaar is als de vereniging hem gebruikt.
+Als beheerder wil ik dat de externe API in de installatie aan en uit gezet kan worden zodat die alleen bereikbaar is als de vereniging hem gebruikt.
 
 - Gegeven een nieuwe installatie, wanneer er een API-aanroep binnenkomt, dan weigert de applicatie, want de API staat standaard uit.
+- Gegeven een installatie waarin de API is aangezet via de omgeving, wanneer een beheerder de applicatie bekijkt, dan is er geen scherm om de API aan of uit te zetten.
 - Gegeven een uitgeschakelde API, wanneer een aanroep binnenkomt met een geldig token, dan weigert de applicatie ook dan.
 - Gegeven een ingeschakelde API, wanneer een aanroep met een geldig token en voldoende rechten binnenkomt, dan beantwoordt de applicatie die.
 
@@ -525,6 +526,6 @@ De stakeholder heeft deze vragen op 2026-10-30 besloten. Ze staan ook in `docs/b
 - Een plaats blijft toegewezen na opzegging van het lid tot de beheerder haar vrijgeeft. De applicatie geeft niet automatisch vrij.
 - Een boot heeft hooguit één foto. De toegestane bestandsgrootte en bestandstypen bepaalt foundation.
 - De vijf bootsoorten uit de intake zijn de startlijst. Aanpassen is BLB-028.
-- "In de configuratie" betekent dat foundation bepaalt of de beheerder het in de applicatie instelt of in de installatie.
+- Besluit stakeholder 2026-10-30: de API gaat aan en uit in de installatie, via een omgevingsvariabele (ADR-009), niet in de applicatie.
 - Een IP-whitelist bevat adressen en adresreeksen, zowel IPv4 als IPv6.
 - Een wachttijd telt vanaf de dag van aanmelding op de wachtlijst.

@@ -1,6 +1,6 @@
 # ADR-004 Interface van de ledenbron en terugschrijven
 
-**Status:** Besloten door Foundation
+**Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
@@ -45,5 +45,5 @@ Terugschrijven: de domeinlaag kan de aantallen per lid per bootsoort berekenen; 
 ## Gevolgen
 
 - Een nieuwe bron is één klasse en een waarde voor `LEDENBRON`. Aegis beoordeelt de echte e-boekhoudenkoppeling vóór de commit.
-- De oud-ledenstatus is afgeleid uit opzegdatum en `uit_bron_op`; architectuur §9 besluit 4 bepaalt welke datum de termijn start.
+- De oud-ledenstatus is afgeleid uit opzegdatum en `uit_bron_op`; verdwijnt een lid zonder opzegdatum uit de bron, dan telt de datum waarop de synchronisatie het lid niet meer vond als opzegdatum (besloten door de stakeholder, 2026-10-30, architectuur §9 besluit 4).
 - De veiligheidsgrens kan een echte massale opzegging tegenhouden. Bij 210 leden is dat onwaarschijnlijk; de beheerder ziet de afbreking op de statuspagina.
