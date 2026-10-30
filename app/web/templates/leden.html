@@ -29,18 +29,24 @@
   {% endif %}
 </section>
 
+<form method="get" action="{{ url_for('web.leden_overzicht') }}" class="kaart" role="search">
+  <label for="zoek">Zoek op naam of lidnummer</label>
+  <input id="zoek" name="zoek" type="search" value="{{ zoek }}" maxlength="100">
+  <button type="submit" class="knop">Zoeken</button>
+</form>
+
 <table>
   <thead><tr><th>Naam</th><th>Lidnummer</th><th>Lid sinds</th><th>Status</th></tr></thead>
   <tbody>
   {% for l in leden %}
     <tr>
-      <td data-label="Naam">{{ l.naam }}</td>
+      <td data-label="Naam"><a href="{{ url_for('web.lid_detail', lid_id=l.id) }}">{{ l.naam }}</a></td>
       <td data-label="Lidnummer">{{ l.lidnummer }}</td>
       <td data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') if l.lid_sinds else '' }}</td>
       <td data-label="Status">{{ 'oud-lid' if is_oud_lid(l) else 'lid' }}</td>
     </tr>
   {% else %}
-    <tr><td colspan="4">Er zijn nog geen leden.</td></tr>
+    <tr><td colspan="4">{{ 'Geen leden gevonden.' if zoek else 'Er zijn nog geen leden.' }}</td></tr>
   {% endfor %}
   </tbody>
 </table>

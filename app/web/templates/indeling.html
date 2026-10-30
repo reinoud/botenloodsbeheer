@@ -3,6 +3,7 @@
 {% block titel %}Indeling · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Indeling</h1>
+<p><a href="{{ url_for('web.indeling_export') }}" download>Indeling exporteren naar Excel</a></p>
 
 <section class="kaart">
   <h2>Nieuw rek</h2>
@@ -19,13 +20,15 @@
   <h2 id="rek-{{ rek.id }}">{{ rek.naam }}</h2>
   {% if rek.plaatsen %}
   <table>
-    <thead><tr><th>Plaats</th><th>Bootsoorten</th><th>Status</th></tr></thead>
+    <thead><tr><th>Plaats</th><th>Status</th><th>Boot</th><th>Eigenaar</th><th>Geschikt voor</th></tr></thead>
     <tbody>
     {% for p in rek.plaatsen %}
       <tr>
-        <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a>{% if p.is_clubplaats %} (clubplaats){% endif %}</td>
-        <td data-label="Bootsoorten">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
-        <td data-label="Status">{% if p.boot %}Bezet: {{ p.boot.naam }}{% else %}Vrij{% endif %}</td>
+        <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+        <td data-label="Status" class="status-{{ status(p) }}">{{ status(p) }}</td>
+        <td data-label="Boot">{{ p.boot.naam if p.boot else '' }}</td>
+        <td data-label="Eigenaar">{% if p.boot %}{{ p.boot.lid.naam if p.boot.lid else vereniging }}{% endif %}</td>
+        <td data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
       </tr>
     {% endfor %}
     </tbody>

@@ -20,7 +20,7 @@ def _of_404(functie, *args):
 @bp.get("/indeling")
 @inloggen_vereist
 def indeling_overzicht():
-    return render_template("indeling.html", rekken=indeling.rekken(),
+    return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
                            bootsoorten=indeling.bootsoorten(),
                            regels=log.regels(acties=("rek.", "plaats.")))
 
@@ -166,9 +166,19 @@ def boot_verwijderen(boot_id):
 @bp.get("/leden")
 @inloggen_vereist
 def leden_overzicht():
-    return render_template("leden.html", leden=leden.alle_leden(), runs=leden.laatste_runs(),
-                           is_oud_lid=leden.is_oud_lid,
+    zoek = request.args.get("zoek", "")
+    return render_template("leden.html", leden=leden.alle_leden(zoek), zoek=zoek,
+                           runs=leden.laatste_runs(), is_oud_lid=leden.is_oud_lid,
                            regels=log.regels(acties=("lid.", "leden.")))
+
+
+@bp.get("/leden/<int:lid_id>")
+@inloggen_vereist
+def lid_detail(lid_id):
+    # BLB-019: boten met plaats. Adres, telefoon en e-mail staan alleen op het plaatsdetail.
+    lid = _of_404(leden.lid, lid_id)
+    return render_template("lid.html", lid=lid, oud_lid=leden.is_oud_lid(lid),
+                           regels=log.regels([f"lid:{lid.id}"]))
 
 
 @bp.post("/leden/ophalen")

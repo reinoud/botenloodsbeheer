@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.5
-**Datum:** 2026-10-30
+**Versie:** v0.2.6
+**Datum:** 2026-10-31
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief beide besluitensecties van 2026-10-30), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -163,7 +163,7 @@ De slices volgen het voorstel in backlog §5.
 |-------|---------|----------------------|-------|
 | 1 | BLB-022, 001, 007, 006, 005, 010, 012, 020, 024, 025 | Alle vier containers, `migrate`, models (rek, plaats, bootsoort, lid, boot, beheerder, passkey, uitnodiging, logregel, afbeelding), `domein/indeling`, `boten`, `toewijzing`, `leden`, `log`, `afbeeldingen`, `ledenbron` met stub, `taken` (alleen synchronisatie), `web` (inloggen, indeling, boten, plaatsdetail, openbare pagina), basistemplate met design tokens, `cli` | 001, 002, 003, 004, 006, 007, 008, 009, 011 |
 | 2 | BLB-002, 003, 004, 008, 011, 023, 038, 036 | `domein/indeling` (`plaats_wijzigen`: bootsoorten, clubplaats en code in één functie met `FOR UPDATE`), `domein/toewijzing` (vrijgeven), `domein/leden` (oud-lid), `domein/beheerders` (beheerders beheren, eigen inlogmethodes), `web` (plaatsdetail, beheerders, profiel), health endpoints | 001, 003, 010 |
-| 3 | BLB-015, 016, 019, 018, 017, 027 | `web` (overzichten, lijst per lid, zoeken), Excel-export, `domein/instellingen`, logo-upload, design tokens uit instellingen | 008, 009, 011 |
+| 3 | BLB-015, 016, 019, 018, 017, 027 | `domein/indeling` (vrije plaatsen, plaatsen van oud-leden, Excel-export met openpyxl), `domein/leden` (zoeken, lid met boten), `domein/instellingen` (naam, kleuren, contrast, logo; rijen vergrendeld met `INSERT ... ON CONFLICT DO NOTHING` en `FOR UPDATE`), `web` (vrije plaatsen, opgezegd, lijst per lid, instellingen); de kleuren komen via de stylesheet `/huisstijl.css` in plaats van een `<style>`-blok met nonce (ADR-002, voorstel aan foundation) | 002, 008, 009, 011 |
 | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
 | 6 | BLB-026, 037, 009 | `domein/opschonen`, `taken` (opschoning), statuspagina, terugschrijven in de ledenbron (uit) | 004, 006, 007, 010 |
@@ -184,6 +184,7 @@ Slice 1 is groot omdat de basis erin zit: containers, inloggen, mutatielog en de
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
 | Kwaadaardig bestand als foto of logo (XSS via SVG, verborgen locatiegegevens) | Upload | M | M | Alleen JPEG, PNG en WebP, opnieuw coderen met Pillow, EXIF verwijderen | 008 |
+| Formule in de Excel-export via een naam uit de ledenbron (bijvoorbeeld `=HYPERLINK(...)`) | Export | L | M | Tekst met `=` vooraan blijft tekst in het bestand; stuurtekens vallen weg | 011 |
 | Ongeldige of gemanipuleerde gegevens uit de ledenbron | Worker | L | M | Validatie per record, afbreken bij een verdachte afname | 004 |
 | CSRF op beheeracties | Webinterface | M | M | CSRF-token op elk formulier, sessiecookie `SameSite=Lax`, `Secure`, `HttpOnly` | 011 |
 | Inloggegevens van e-boekhouden in logs of statuspagina | Worker, statuspagina | L | H | Alleen in de omgeving, nooit in foutmeldingen die worden opgeslagen | 004, 009 |
@@ -249,6 +250,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.6 | 2026-10-31 | Slice 3 (issue #13): componenten in §7, stylesheet voor de kleuren in plaats van een nonce, dreiging formule-injectie in §8.1 |
 | v0.2.5 | 2026-10-30 | Slice 2 (issue #11): BLB-038 in §7; `plaats_wijzigen` en de vergrendelingen in §4; E2E per bestand vanwege de rate limit (§6.5) |
 | v0.2.4 | 2026-10-30 | ADR-001 v1.1.0 (backlog §7, vragen 9 en 10): methode toevoegen of intrekken vraagt een recente inlog, intrekken beëindigt alle sessies; dreiging toegevoegd in §8.1 |
 | v0.2.3 | 2026-10-30 | Herstel slice 1b (issue #9): `flask seed` in de worker en `LEDENBRON` standaard leeg (§6.2); webrol alleen SELECT op `lid`; plaatscode uniek zonder onderscheid in hoofdletters |

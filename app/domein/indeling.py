@@ -1,14 +1,18 @@
 """Indeling van de loods: rekken en plaatsen (BLB-001 tot en met BLB-004, ADR-003), en de
 openbare leesfunctie (BLB-020)."""
 
+import io
 import re
 import secrets
 
+from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
+from openpyxl.styles import Font
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, log
+from app.domein import Regelfout, leden, log, vandaag
 from app.models import Boot, Bootsoort, Plaats, Rek, db
 
 # Zonder verwarrende tekens: geen 0, o, O, 1, l en I (ADR-003).
@@ -32,9 +36,73 @@ def rekken():
     return db.session.scalars(
         select(Rek).order_by(Rek.volgorde, Rek.id).options(
             selectinload(Rek.plaatsen).selectinload(Plaats.boot).selectinload(Boot.lid),
+            selectinload(Rek.plaatsen).selectinload(Plaats.boot).selectinload(Boot.bootsoort),
             selectinload(Rek.plaatsen).selectinload(Plaats.bootsoorten),
         )
     ).all()
+
+
+def status(p):
+    """vrij, bezet of clubplaats (BLB-016); een clubplaats heet zo, ook met een clubboot erop."""
+    return "clubplaats" if p.is_clubplaats else "bezet" if p.boot_id else "vrij"
+
+
+def vrije_plaatsen(bootsoort_id=None):
+    """Vrije plaatsen voor leden (BLB-015): zonder boot en geen clubplaats, in de volgorde van
+    de loods. Met bootsoort_id alleen de plaatsen die voor die soort geschikt zijn."""
+    q = (select(Plaats).join(Plaats.rek)
+         .where(Plaats.boot_id.is_(None), Plaats.is_clubplaats.is_(False))
+         .order_by(Rek.volgorde, Rek.id, Plaats.volgorde, Plaats.id)
+         .options(selectinload(Plaats.rek), selectinload(Plaats.bootsoorten)))
+    if bootsoort_id:
+        q = q.where(Plaats.bootsoorten.any(Bootsoort.id == bootsoort_id))
+    return db.session.scalars(q).all()
+
+
+def plaatsen_van_oud_leden():
+    """Plaatsen met de boot van een oud-lid (BLB-018), als (datum, plaats) met de oudste datum
+    eerst. De datum is de opzegdatum, of de dag waarop het lid uit de bron verdween als dat
+    eerder was."""
+    dag = vandaag()
+    plaatsen = db.session.scalars(
+        select(Plaats).join(Plaats.boot).join(Boot.lid).options(
+            selectinload(Plaats.rek), selectinload(Plaats.boot).selectinload(Boot.lid))
+    ).all()
+    rijen = [(min(d for d in (p.boot.lid.opzegdatum, p.boot.lid.uit_bron_op) if d and d <= dag), p)
+             for p in plaatsen if leden.is_oud_lid(p.boot.lid, dag)]
+    return sorted(rijen, key=lambda r: (r[0], r[1].code.lower()))
+
+
+# Besluit vraag 8: geen adres, telefoon, e-mail of foto. De kolommen kunnen later veranderen.
+KOLOMMEN = ("Rek", "Code", "Status", "Bootsoort", "Bootnaam", "Eigenaar", "Lidnummer")
+
+
+def export(vereniging):
+    """De indeling als .xlsx, een rij per plaats (BLB-017). Een clubboot heeft de vereniging
+    als eigenaar en geen lidnummer."""
+    boek = Workbook()
+    blad = boek.active
+    blad.title = "Indeling"
+    blad.append(KOLOMMEN)
+    for r in rekken():
+        for p in r.plaatsen:
+            b = p.boot
+            rij = (r.naam, p.code, status(p), b.bootsoort.naam if b else None,
+                   b.naam if b else None, (b.lid.naam if b.lid else vereniging) if b else None,
+                   b.lid.lidnummer if b and b.lid else None)
+            # Stuurtekens (mogelijk uit de ledenbron) weigert openpyxl; ze vallen weg.
+            blad.append([ILLEGAL_CHARACTERS_RE.sub("", w) if w else w for w in rij])
+    for rij in blad.iter_rows(min_row=2):
+        for cel in rij:
+            if cel.data_type == "f":  # tekst met = vooraan (zoals een naam uit de ledenbron)
+                cel.data_type = "s"  # blijft tekst en wordt geen formule
+    for cel, breedte in zip(blad[1], (12, 10, 12, 16, 24, 28, 12)):
+        cel.font = Font(bold=True)
+        blad.column_dimensions[cel.column_letter].width = breedte
+    blad.freeze_panes = "A2"
+    uit = io.BytesIO()
+    boek.save(uit)
+    return uit.getvalue()
 
 
 def rek(rek_id):

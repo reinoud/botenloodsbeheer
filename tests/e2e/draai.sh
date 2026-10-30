@@ -11,7 +11,7 @@ stempel=$(date +%s)
 
 links=()
 for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
-            methodes intrekken beheerders; do
+            methodes intrekken beheerders vrij leden huisstijl; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done

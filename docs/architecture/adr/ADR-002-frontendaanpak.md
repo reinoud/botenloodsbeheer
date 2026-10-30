@@ -2,6 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
+**Versie:** v1.1.0
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -14,12 +15,12 @@ Het lastigste scherm is de indeling per rek (BLB-016): 160 plaatsen met status, 
 
 De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. Er is geen JavaScript-framework en geen build-stap.
 
-- **Styling:** één CSS-bestand met design tokens als CSS custom properties (`--kleur-primair`, `--kleur-tekst`, `--ruimte-1`, `--radius` enz.). De basistemplate zet de tokens die de beheerder instelt (naam, primaire en secundaire kleur) in een `<style>`-blok met alleen `:root`-variabelen; de waarden zijn gevalideerd als hexkleur. Geen enkele template bevat een vaste kleur.
+- **Styling:** één CSS-bestand met design tokens als CSS custom properties (`--kleur-primair`, `--kleur-tekst`, `--ruimte-1`, `--radius` enz.). De tokens die de beheerder instelt (primaire en secundaire kleur) staan in een aparte stylesheet `/huisstijl.css` met alleen `:root`-variabelen, die de basistemplate na het vaste CSS-bestand laadt; de waarden zijn gevalideerd als hexkleur. De naam van de vereniging staat als tekst in de template. Geen enkele template bevat een vaste kleur.
 - **Responsive:** mobile first met CSS grid en flexbox. Tabellen worden op smalle schermen kaarten per rij. De indeling per rek is een raster van plaatsen dat op een telefoon onder elkaar valt.
 - **JavaScript:** alleen waar het niet anders kan: het passkeyscript (ADR-001), een kleine bevestiging bij verwijderen, en "alles selecteren" op de printpagina. Gewone bestanden in `static/`, zonder bundler.
 - **Toegankelijkheid:** semantische HTML, labels bij elk veld, voldoende contrast. BLB-027 vraagt een waarschuwing bij slecht leesbare kleuren; de applicatie berekent het contrast volgens de WCAG-formule bij het opslaan.
 - **Print:** de kaartjes zijn een HTML-pagina met print-CSS (`@page`, raster op A4). De beheerder print via de browser of slaat op als pdf (ADR-011).
-- **CSP:** Nginx stuurt een strikte Content Security Policy zonder inline scripts. Het `<style>`-blok met tokens krijgt een nonce.
+- **CSP:** Nginx stuurt een strikte Content Security Policy zonder inline scripts. Inline styles zijn niet nodig: de tokens komen uit `/huisstijl.css`, zodat de CSP geen nonce of uitzondering nodig heeft.
 
 ## Alternatieven
 
@@ -36,3 +37,10 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 - Het mutatielog onder elk overzicht is een gedeelde template-macro die de logregels voor het scherm toont (ADR-006).
 - Andere verenigingen passen de uitstraling aan via instellingen, niet via eigen templates. Wie meer wil dan naam, kleuren en logo, vraagt een wijziging in de tokens.
 - Komt er later behoefte aan deelupdates, dan is htmx per scherm toe te voegen zonder de aanpak te wijzigen. Dat besluit kan forge nemen.
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v1.1.0 | 2026-10-31 | Tokens uit een aparte stylesheet `/huisstijl.css` in plaats van een `<style>`-blok met nonce | Slice 3 (issue #13); de CSP blijft ongewijzigd, beoordeeld door aegis |
+| v1.0.0 | 2026-10-30 | Eerste versie | |

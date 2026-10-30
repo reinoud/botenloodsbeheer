@@ -17,14 +17,15 @@ from flask import (
     url_for,
 )
 
-from app.domein import Actor, Regelfout, log
-from app.models import Beheerder, Instelling, db
+from app.domein import Actor, Regelfout, instellingen, log
+from app.models import Beheerder, db
 
 bp = Blueprint("web", __name__)
 
 SESSIEDUUR = 12 * 3600
-RECENT = 10 * 60  # recente inlog vereist voor inlogmethodes, uitnodigen en herstellen (ADR-001)
-OPNIEUW = "Log opnieuw in om je inlogmethodes te wijzigen. Je inlog is ouder dan 10 minuten."
+# Recente inlog vereist voor inlogmethodes, uitnodigen, herstellen en instellingen (ADR-001).
+RECENT = 10 * 60
+OPNIEUW = "Log opnieuw in om dit te wijzigen. Je inlog is ouder dan 10 minuten."
 
 
 @bp.before_request
@@ -103,9 +104,10 @@ def uitvoeren(functie, *args, gelukt=None):
 
 
 @bp.app_context_processor
-def vereniging():
-    naam = db.session.get(Instelling, "naam")
-    return {"vereniging": naam.waarde if naam else "Botenloods"}
+def naam_en_logo():
+    """Naam en logo voor elke pagina; de kleuren komen via /huisstijl.css (BLB-027)."""
+    stijl = instellingen.huidig()
+    return {"vereniging": stijl["naam"], "logo": stijl["logo"]}
 
 
 @bp.app_template_filter("tijd")
@@ -127,5 +129,5 @@ def logboek():
     return render_template("log.html", regels=log.regels())
 
 
-from app.web import beheer, inloggen, openbaar  # noqa: F401  routes op bp
+from app.web import beheer, huisstijl, inloggen, openbaar, overzichten  # noqa: F401
 from app.web.health import health  # noqa: F401

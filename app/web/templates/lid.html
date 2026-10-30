@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}{{ lid.naam }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>{{ lid.naam }}</h1>
+<p>Lidnummer {{ lid.lidnummer }}{% if oud_lid %}, oud-lid{% endif %}.</p>
+
+<h2>Boten in de loods</h2>
+{% if lid.boten %}
+<table>
+  <thead><tr><th>Boot</th><th>Bootsoort</th><th>Plaats</th></tr></thead>
+  <tbody>
+  {% for b in lid.boten %}
+    <tr>
+      <td data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
+      <td data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
+      <td data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}Geen plaats{% endif %}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>Dit lid heeft geen boten in de loods.</p>
+{% endif %}
+
+{{ logtabel(regels) }}
+{% endblock %}

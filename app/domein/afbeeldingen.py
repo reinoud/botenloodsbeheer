@@ -23,7 +23,7 @@ def verwerk(inhoud, soort="foto"):
     try:
         with Image.open(io.BytesIO(inhoud)) as img:
             if img.format not in TOEGESTAAN or img.width * img.height > MAX_PIXELS:
-                raise Regelfout("Kies een foto in JPEG, PNG of WebP.")
+                raise Regelfout(f"Kies een {soort} in JPEG, PNG of WebP.")
             img = ImageOps.exif_transpose(img)
             img.thumbnail((LANGE_ZIJDE[soort],) * 2)
             uit = io.BytesIO()
@@ -32,6 +32,9 @@ def verwerk(inhoud, soort="foto"):
                 img.convert("RGB").save(uit, "JPEG", quality=85)
                 mime = "image/jpeg"
             else:
+                # PNG kent geen CMYK of YCbCr; met alfakanaal blijft transparantie staan.
+                if img.mode not in ("RGB", "RGBA", "L", "LA", "P"):
+                    img = img.convert("RGBA")
                 img.save(uit, "PNG")
                 mime = "image/png"
     except Regelfout:

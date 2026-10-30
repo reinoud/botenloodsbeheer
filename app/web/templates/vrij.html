@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Vrije plaatsen · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Vrije plaatsen</h1>
+<p>Plaatsen zonder boot, voor boten van leden. Clubplaatsen staan er niet in.</p>
+
+<form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="kaart">
+  <label for="bootsoort">Geschikt voor</label>
+  <select id="bootsoort" name="bootsoort">
+    <option value="">Alle bootsoorten</option>
+    {% for s in bootsoorten %}
+    <option value="{{ s.id }}"{% if gekozen and s.id == gekozen.id %} selected{% endif %}>{{ s.naam }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="knop">Filteren</button>
+</form>
+
+{% if plaatsen %}
+<table>
+  <thead><tr><th>Rek</th><th>Plaats</th><th>Geschikt voor</th></tr></thead>
+  <tbody>
+  {% for p in plaatsen %}
+    <tr>
+      <td data-label="Rek">{{ p.rek.naam }}</td>
+      <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="melding" role="status">Er zijn geen vrije plaatsen{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}.</p>
+{% endif %}
+
+{{ logtabel(regels) }}
+{% endblock %}

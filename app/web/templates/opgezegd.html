@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Plaatsen van opgezegde leden · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Plaatsen van opgezegde leden</h1>
+<p>Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Open een plaats om haar vrij te geven.</p>
+
+{% if rijen %}
+<table>
+  <thead><tr><th>Rek</th><th>Plaats</th><th>Boot</th><th>Oud-lid</th><th>Opgezegd op</th></tr></thead>
+  <tbody>
+  {% for datum, p in rijen %}
+    <tr>
+      <td data-label="Rek">{{ p.rek.naam }}</td>
+      <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td data-label="Boot">{{ p.boot.naam }}</td>
+      <td data-label="Oud-lid"><a href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a></td>
+      <td data-label="Opgezegd op">{{ datum.strftime('%d-%m-%Y') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="melding" role="status">Er zijn geen plaatsen van opgezegde leden.</p>
+{% endif %}
+
+{{ logtabel(regels) }}
+{% endblock %}

@@ -8,10 +8,11 @@ import re
 from datetime import UTC, date, datetime
 
 from sqlalchemy import or_, select
+from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, log, vandaag
 from app.ledenbron import LedenbronFout
-from app.models import Lid, Taakrun, db
+from app.models import Boot, Lid, Taakrun, db
 
 TAAK = "ledensynchronisatie"
 BEWAARJAREN = 5
@@ -49,8 +50,22 @@ def actieve_leden():
     ).all()
 
 
-def alle_leden():
-    return db.session.scalars(select(Lid).order_by(Lid.naam, Lid.lidnummer)).all()
+def alle_leden(zoek=""):
+    """Alle leden, of die waarvan naam of lidnummer de zoektekst bevat (BLB-019)."""
+    q = select(Lid).order_by(Lid.naam, Lid.lidnummer)
+    if zoek := (zoek or "").strip():
+        q = q.where(or_(Lid.naam.icontains(zoek, autoescape=True),
+                        Lid.lidnummer.icontains(zoek, autoescape=True)))
+    return db.session.scalars(q).all()
+
+
+def lid(lid_id):
+    gevonden = db.session.get(Lid, lid_id, options=[
+        selectinload(Lid.boten).selectinload(Boot.plaats),
+        selectinload(Lid.boten).selectinload(Boot.bootsoort)])
+    if gevonden is None:
+        raise Regelfout("Dit lid bestaat niet.")
+    return gevonden
 
 
 def _tekst(record, veld):

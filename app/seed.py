@@ -48,7 +48,7 @@ def seed(echo=print):
 
     if db.session.get(Instelling, "naam") is None:
         db.session.add(Instelling(sleutel="naam", waarde=VERENIGING))
-        log.schrijf(CLI, "instelling.gewijzigd", ["instelling:naam"], {"naam": VERENIGING})
+        log.schrijf(CLI, "instelling.gewijzigd", ["instelling:huisstijl"], {"naam": VERENIGING})
     leden.synchroniseer(StubBron(current_app.config["LEDENBRON_STUB_BESTAND"]), CLI)
     db.session.commit()
 

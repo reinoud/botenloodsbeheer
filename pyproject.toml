@@ -17,6 +17,7 @@ dependencies = [
     "cryptography>=45",
     "segno>=1.6",
     "pillow>=12.3",
+    "openpyxl>=3.1",
 ]
 
 [dependency-groups]

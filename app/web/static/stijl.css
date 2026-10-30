@@ -1,5 +1,6 @@
 /* Design tokens (ADR-002). Geen enkele template bevat een vaste kleur.
-   Naam, primaire en secundaire kleur komen later uit de instellingen (BLB-027). */
+   /huisstijl.css overschrijft de primaire en secundaire kleur met de instellingen (BLB-027);
+   de waarden hier zijn de neutrale standaard. */
 :root {
   --kleur-primair: #3f6fb5;
   --kleur-primair-tekst: #ffffff;
@@ -24,12 +25,16 @@
 body { margin: 0; font-family: var(--lettertype); color: var(--kleur-tekst); background: var(--kleur-achtergrond); line-height: 1.5; }
 .kop { display: flex; flex-wrap: wrap; gap: var(--ruimte-3); align-items: center; justify-content: space-between; padding: var(--ruimte-3); background: var(--kleur-primair); color: var(--kleur-primair-tekst); }
 .kop a, .kop .knop-link { color: var(--kleur-primair-tekst); }
-.kop-naam { font-weight: 700; text-decoration: none; }
-.kop-menu { display: flex; gap: var(--ruimte-3); align-items: center; }
+.kop { border-bottom: 4px solid var(--kleur-secundair); }
+.kop-naam { display: flex; gap: var(--ruimte-2); align-items: center; font-weight: 700; text-decoration: none; }
+.logo { display: block; max-height: 2.5rem; max-width: 10rem; width: auto; }
+.kop-menu { display: flex; flex-wrap: wrap; gap: var(--ruimte-2) var(--ruimte-3); align-items: center; }
+h1, h2 { color: var(--kleur-secundair); }
 .kop-menu form { margin: 0; }
 .inhoud { max-width: var(--breedte-inhoud); margin: 0 auto; padding: var(--ruimte-3); }
 .kaart { background: var(--kleur-vlak); border: 1px solid var(--kleur-rand); border-radius: var(--radius); padding: var(--ruimte-3); margin-bottom: var(--ruimte-3); }
 label { display: block; margin-top: var(--ruimte-3); font-weight: 600; }
+input[type="color"] { width: 4rem; height: 2.5rem; padding: var(--ruimte-1); }
 input { width: 100%; max-width: 24rem; padding: var(--ruimte-2); border: 1px solid var(--kleur-rand); border-radius: var(--radius); font: inherit; }
 .knop { margin-top: var(--ruimte-3); padding: var(--ruimte-2) var(--ruimte-3); border: 0; border-radius: var(--radius); background: var(--kleur-primair); color: var(--kleur-primair-tekst); font: inherit; cursor: pointer; }
 .knop-link { background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; }
@@ -61,3 +66,5 @@ dt { font-weight: 600; }
 dd { margin: 0; }
 .foto { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin-top: var(--ruimte-3); }
 .log { margin-top: var(--ruimte-4); }
+.status-vrij { color: var(--kleur-primair); font-weight: 600; }
+.status-clubplaats { font-style: italic; }

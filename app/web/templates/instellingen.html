@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Instellingen · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Instellingen</h1>
+<p>Naam, kleuren en logo staan op elke pagina, ook op de openbare pagina van een plaats. Opslaan vraagt een inlog van hooguit 10 minuten oud.</p>
+
+<section class="kaart">
+  <h2>Naam en kleuren</h2>
+  <form method="post" action="{{ url_for('web.instellingen_opslaan') }}">
+    {% include "_csrf.html" %}
+    <label for="naam">Naam van de vereniging</label>
+    <input id="naam" name="naam" value="{{ stijl.naam }}" maxlength="100" required>
+    <label for="kleur-primair">Primaire kleur (kopbalk en knoppen, met witte tekst)</label>
+    <input id="kleur-primair" name="kleur_primair" type="color" value="{{ stijl.kleur_primair }}">
+    <label for="kleur-secundair">Secundaire kleur (koppen en de lijn onder de kopbalk)</label>
+    <input id="kleur-secundair" name="kleur_secundair" type="color" value="{{ stijl.kleur_secundair }}">
+    <button type="submit" class="knop">Opslaan</button>
+  </form>
+</section>
+
+<section class="kaart">
+  <h2>Logo</h2>
+  {% if stijl.logo %}
+  <img class="foto" src="{{ url_for('web.afbeelding', sleutel=stijl.logo) }}" alt="Huidig logo">
+  {% else %}
+  <p>Er is nog geen logo; de kopbalk toont alleen de naam.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('web.logo_opslaan') }}" enctype="multipart/form-data">
+    {% include "_csrf.html" %}
+    <label for="logo">Logo (JPEG, PNG of WebP, tot 10 MB)</label>
+    <input id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp" required>
+    <button type="submit" class="knop">Logo opslaan</button>
+  </form>
+</section>
+
+{{ logtabel(regels) }}
+{% endblock %}
