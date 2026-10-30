@@ -100,3 +100,11 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - De link in de QR-code is niet voorspelbaar. Hij bevat geen plaatscode of volgnummer, maar een willekeurige sleutel per plaats, zodat niemand de links van andere plaatsen kan afleiden of doorlopen. De stakeholder vroeg om een "gehashte" URL; een willekeurige sleutel bereikt hetzelfde doel, en een hash van een volgnummer is wel te raden.
 - Back-ups vallen buiten de verantwoordelijkheid van de applicatie. Ze worden later bij de hosting geregeld.
 - De openbare pagina van een plaats is alleen via de QR-link te openen. Er is geen zoekfunctie op plaatscode, omdat iemand anders de namen van leden uit de applicatie kan halen.
+
+### Besluiten op de architectuurvragen (2026-10-30)
+
+- Beheerders loggen in met een passkey of met een wachtwoord plus TOTP. Beide methodes zijn beschikbaar.
+- Elke installatie heeft een vaste domeinnaam met HTTPS.
+- Een oud-lid wordt opgeschoond 5 jaar na de opzegdatum, zodra geen boot van het oud-lid nog een plaats heeft. De boten en foto's van het oud-lid gaan mee.
+- Verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond als opzegdatum.
+- De API wordt aan- en uitgezet in de installatie, via de omgeving. Niet door de beheerder in de applicatie.
