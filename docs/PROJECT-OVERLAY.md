@@ -69,6 +69,11 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - De backlog heeft geen wijzigingslog; de versie gaat omhoog zonder logregel.
 - Heeft een document nog geen versie of wijzigingslog, begin dan op v1.0.0 en voeg onderaan een wijzigingslog toe.
 - Na een besluit van foundation: voeg voor elk besluit een acceptatiecriterium toe aan de story, of meld waarom niet.
+- De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken.
+- Een logveld met de naam `code`, `adres`, `telefoon` of `email` staat in het log als `gewijzigd`; kies een andere sleutel als de waarde zichtbaar moet zijn.
+- Noem bij elk verschoven criterium ook de criteria die van dezelfde latere story afhangen.
+- Komt een handeling die eerst alleen via de CLI kon in de webinterface, noem dat in de brief aan de reviewer. Elke webroute met blijvend effect (een link, een nieuw account, een nieuwe inlogmethode) vraagt een recente inlog (ADR-001).
+- Een racetest voor een domeinfunctie laadt het object eerst in dezelfde sessie, zoals `laad_beheerder` dat doet, zodat verouderde attributen na `with_for_update` zichtbaar worden. Gebruik `populate_existing=True` bij een vergrendeling van een object dat al geladen kan zijn.
 
 ## 5. Projectcontracten
 

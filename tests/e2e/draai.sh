@@ -10,10 +10,21 @@ stempel=$(date +%s)
 "${c[@]}" exec -T worker flask seed  # doet niets als de loods al gegevens heeft
 
 links=()
-for soort in passkey wachtwoord vergrendel bezoeker indeling regels; do
+for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
+            methodes intrekken beheerders; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done
 
-"${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" "${links[@]}" \
-  e2e pytest -p no:cacheprovider "$@"
+e2e() { "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" "${links[@]}" \
+  e2e pytest -p no:cacheprovider "$@"; }
+
+# Nginx staat 20 inlogverzoeken direct toe en daarna 30 per minuut per IP-adres (ADR-001).
+# De hele suite blijft daar per bestand onder; tussen de bestanden loopt de teller leeg.
+if [ $# -gt 0 ]; then e2e "$@"; exit; fi
+status=0
+for bestand in tests/e2e/test_*.py; do
+  e2e "$(basename "$bestand")" || status=1
+  sleep 40
+done
+exit $status

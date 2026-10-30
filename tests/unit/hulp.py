@@ -1,16 +1,17 @@
 """Hulpfuncties voor tests: beheerders, leden en afbeeldingen aanmaken."""
 
 import io
+import threading
 import time
 
 import pyotp
 from PIL import Image
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
-from app.domein import CLI, beheerders
+from app.domein import CLI, Regelfout, beheerders
 from app.models import Lid, db
-from tests.unit.conftest import TAKEN
+from tests.unit.conftest import TAKEN, WEB
 
 WACHTWOORD = "correct paard batterij"
 
@@ -47,3 +48,32 @@ def lid(lidnummer="1001", naam="Anna de Vries", **velden):
         lid_id = nieuw.id
     engine.dispose()
     return db.session.get(Lid, lid_id)
+
+
+def race(app, sql, params, actie):
+    """Twee databasesessies. De eerste vergrendelt een rij en wijzigt die met de SQL-regels in
+    sql (de eerste regel is de SELECT ... FOR UPDATE). Intussen draait actie in een tweede sessie
+    en moet wachten tot de eerste commit. Geeft de meldingen van de Regelfouten van actie."""
+    fouten = []
+
+    def tweede():
+        with app.app_context():
+            try:
+                actie()
+            except Regelfout as fout:
+                fouten.append(str(fout))
+
+    engine = create_engine(WEB)
+    with engine.connect() as eerste:
+        for regel in sql:
+            eerste.execute(text(regel), params)
+            if regel is sql[0]:
+                draad = threading.Thread(target=tweede)
+                draad.start()
+                draad.join(timeout=1)
+                assert draad.is_alive(), "de tweede sessie wacht niet op de vergrendeling"
+        eerste.commit()
+    draad.join(timeout=5)
+    engine.dispose()
+    db.session.expire_all()
+    return fouten

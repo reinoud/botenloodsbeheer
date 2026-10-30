@@ -14,7 +14,7 @@ De applicatie draait op http://localhost:8080.
 ## Tests
 
 - Unit en integratie: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm test`
-- E2E (stack moet draaien): `tests/e2e/draai.sh`, één test met `tests/e2e/draai.sh -k <naam>`
+- E2E (stack moet draaien): `tests/e2e/draai.sh`, één test met `tests/e2e/draai.sh -k <naam>`. De hele suite draait per bestand, met 40 seconden pauze voor de rate limit op inloggen.
 
 ## Productie
 

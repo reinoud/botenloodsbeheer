@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block titel %}{{ titel }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>{{ titel }}</h1>
+<p>{{ uitleg }}</p>
+<p><code id="uitnodigingslink">{{ link }}</code></p>
+<p><a href="{{ url_for('web.beheerders_overzicht') }}">Terug naar beheerders</a></p>
+{% endblock %}

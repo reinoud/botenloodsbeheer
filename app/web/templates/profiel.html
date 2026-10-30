@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Profiel · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Profiel van {{ beheerder.gebruikersnaam }}</h1>
+<p>Toevoegen en intrekken kan tot 10 minuten na het inloggen; daarna vraagt de applicatie je opnieuw in te loggen. Intrekken beëindigt al je sessies. Je houdt altijd minstens één methode.</p>
+
+<section class="kaart">
+  <h2>Je inlogmethodes</h2>
+  <ul>
+    {% for p in beheerder.passkeys %}
+    <li>{{ p.naam }}, toegevoegd {{ p.aangemaakt_op|tijd }}
+      <form method="post" action="{{ url_for('web.profiel_intrekken') }}">
+        {% include "_csrf.html" %}
+        <input type="hidden" name="methode" value="{{ p.id }}">
+        <button type="submit" class="knop knop-gevaar">{{ p.naam }} intrekken</button>
+      </form>
+    </li>
+    {% endfor %}
+    {% if beheerder.wachtwoordhash %}
+    <li>Wachtwoord en authenticator-app
+      <form method="post" action="{{ url_for('web.profiel_intrekken') }}">
+        {% include "_csrf.html" %}
+        <input type="hidden" name="methode" value="wachtwoord">
+        <button type="submit" class="knop knop-gevaar">Wachtwoord intrekken</button>
+      </form>
+    </li>
+    {% endif %}
+  </ul>
+</section>
+
+<section class="kaart">
+  <h2>Passkey toevoegen</h2>
+  <button type="button" class="knop" id="passkey-registreren"
+          data-opties="{{ url_for('web.profiel_passkey_opties') }}"
+          data-verifieer="{{ url_for('web.profiel_passkey') }}">Passkey toevoegen</button>
+  <p class="melding melding-fout" id="passkey-fout" role="alert" hidden></p>
+</section>
+
+{% if not beheerder.wachtwoordhash %}
+<section class="kaart">
+  <h2>Wachtwoord en authenticator-app toevoegen</h2>
+  <form method="post" action="{{ url_for('web.profiel_wachtwoord') }}">
+    {% include "_csrf.html" %}
+    <label for="wachtwoord">Wachtwoord (12 tot 128 tekens)</label>
+    <input id="wachtwoord" name="wachtwoord" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+    <label for="herhaling">Wachtwoord nog een keer</label>
+    <input id="herhaling" name="herhaling" type="password" autocomplete="new-password" required>
+    <p>Scan de QR-code met je authenticator-app, of voer de sleutel met de hand in.</p>
+    <img src="{{ qr }}" alt="QR-code voor de authenticator-app" class="qr">
+    <p>Sleutel: <code id="totp-geheim">{{ geheim }}</code></p>
+    <label for="code">Code van zes cijfers uit de app</label>
+    <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required>
+    <button type="submit" class="knop">Wachtwoord toevoegen</button>
+  </form>
+</section>
+{% endif %}
+
+{{ logtabel(regels) }}
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='passkey.js') }}"></script>{% endblock %}

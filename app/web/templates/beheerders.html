@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Beheerders · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Beheerders</h1>
+<p>Alle beheerders hebben dezelfde rechten. Je eigen account beheer je in je <a href="{{ url_for('web.profiel') }}">profiel</a>.</p>
+
+<section class="kaart">
+  <h2>Beheerder uitnodigen</h2>
+  <form method="post" action="{{ url_for('web.beheerder_uitnodigen') }}">
+    {% include "_csrf.html" %}
+    <label for="gebruikersnaam">Gebruikersnaam (a-z, cijfers, punt, - en _)</label>
+    <input id="gebruikersnaam" name="gebruikersnaam" maxlength="50" required>
+    <button type="submit" class="knop">Uitnodigen</button>
+  </form>
+</section>
+
+<section class="kaart">
+  <h2>Accounts</h2>
+  <table>
+    <thead><tr><th>Gebruikersnaam</th><th>Status</th><th>Inlogmethodes</th><th>Acties</th></tr></thead>
+    <tbody>
+    {% for b in beheerders %}
+      <tr>
+        <td data-label="Gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</td>
+        <td data-label="Status">{{ 'Actief' if b.actief else 'Geblokkeerd' }}</td>
+        <td data-label="Inlogmethodes">{{ [(b.passkeys|length ~ ' passkey(s)') if b.passkeys, 'wachtwoord en TOTP' if b.wachtwoordhash]|select|join(', ') or 'nog niet ingesteld' }}</td>
+        <td data-label="Acties">
+          {% if b.id != g.beheerder.id %}
+          {% for actie, knop in ([('herstellen', 'Toegang herstellen'), ('blokkeren', 'Blokkeren')] if b.actief else [('deblokkeren', 'Deblokkeren')]) + [('verwijderen', 'Verwijderen')] %}
+          <form method="post" action="{{ url_for('web.beheerder_herstellen', beheerder_id=b.id) if actie == 'herstellen' else url_for('web.beheerder_wijzigen', beheerder_id=b.id, actie=actie) }}">
+            {% include "_csrf.html" %}
+            <button type="submit" class="knop{% if actie in ('blokkeren', 'verwijderen') %} knop-gevaar{% endif %}" aria-label="{{ knop }}: {{ b.gebruikersnaam }}">{{ knop }}</button>
+          </form>
+          {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+{{ logtabel(regels) }}
+{% endblock %}

@@ -10,7 +10,8 @@ from app.models import Plaats, Rek, db
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, png
 from tests.unit.test_web import inloggen
 
-BEHEER = ["/indeling", "/boten", "/leden", "/plaatsen/1", "/boten/1"]
+BEHEER = ["/indeling", "/boten", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
+          "/profiel"]
 
 
 @pytest.fixture
@@ -36,7 +37,8 @@ def test_beheer_vraagt_inloggen(client, pad):
 
 
 @pytest.mark.parametrize("pad", ["/rekken", "/rekken/1/plaatsen", "/plaatsen/1/toewijzen",
-                                 "/boten", "/leden/ophalen", "/rekken/1/verwijderen"])
+                                 "/boten", "/leden/ophalen", "/rekken/1/verwijderen",
+                                 "/plaatsen/1", "/plaatsen/1/vrijgeven"])
 def test_bezoeker_kan_niets_wijzigen(client, pad):
     r = client.post(pad, data={"naam": "Rek X", "code": "X1", "bootsoort": 1})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
@@ -143,3 +145,18 @@ def test_upload_boven_grens_geweigerd(ingelogd, app):
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club",
                                       "foto": (io.BytesIO(groot), "groot.jpg")})
     assert r.status_code == 413
+
+
+def test_plaats_wijzigen_en_vrijgeven(ingelogd):
+    p = bezette_plaats()
+    sleutel = p.publieke_sleutel
+    r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "A01", "bootsoort": "3"},
+                      follow_redirects=True)
+    assert "Op plaats A01 ligt Zeemeeuw, een kajak" in r.text
+    r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "B09", "bootsoort": ["1", "3"]},
+                      follow_redirects=True)
+    assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" in r.text
+    assert "Plaats B09" in ingelogd.get(f"/p/{sleutel}").text
+    r = ingelogd.post(f"/plaatsen/{p.id}/vrijgeven", follow_redirects=True)
+    assert "De plaats is vrijgegeven." in r.text and "Deze plaats is vrij" in r.text
+    assert db.session.get(Plaats, p.id).boot_id is None

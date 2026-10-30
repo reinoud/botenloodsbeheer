@@ -10,6 +10,8 @@
       credentials: "same-origin",
     });
     const body = await r.json().catch(() => ({}));
+    // Een te oude inlog stuurt de server terug naar het inlogscherm (ADR-001).
+    if (r.status === 401 && body.url) window.location.assign(body.url);
     if (!r.ok) throw new Error(body.fout || "Er ging iets mis. Probeer het opnieuw.");
     return body;
   }

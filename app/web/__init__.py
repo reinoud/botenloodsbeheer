@@ -4,7 +4,18 @@ import time
 from functools import wraps
 from zoneinfo import ZoneInfo
 
-from flask import Blueprint, current_app, flash, g, redirect, render_template, session, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
 
 from app.domein import Actor, Regelfout, log
 from app.models import Beheerder, Instelling, db
@@ -12,6 +23,8 @@ from app.models import Beheerder, Instelling, db
 bp = Blueprint("web", __name__)
 
 SESSIEDUUR = 12 * 3600
+RECENT = 10 * 60  # recente inlog vereist voor inlogmethodes, uitnodigen en herstellen (ADR-001)
+OPNIEUW = "Log opnieuw in om je inlogmethodes te wijzigen. Je inlog is ouder dan 10 minuten."
 
 
 @bp.before_request
@@ -54,6 +67,22 @@ def inloggen_vereist(view):
     @wraps(view)
     def binnen(*args, **kwargs):
         if g.beheerder is None:
+            return redirect(url_for("web.inloggen"))
+        return view(*args, **kwargs)
+
+    return binnen
+
+
+def recent_ingelogd(view):
+    """Na inloggen_vereist: de inlog is hooguit 10 minuten oud, anders opnieuw inloggen."""
+
+    @wraps(view)
+    def binnen(*args, **kwargs):
+        if time.time() - session.get("ingelogd_op", 0) > RECENT:
+            session.clear()
+            flash(OPNIEUW, "info")
+            if request.is_json:
+                return jsonify(fout=OPNIEUW, url=url_for("web.inloggen")), 401
             return redirect(url_for("web.inloggen"))
         return view(*args, **kwargs)
 

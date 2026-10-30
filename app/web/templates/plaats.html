@@ -29,6 +29,10 @@
   <p>{{ vereniging }} (clubboot)</p>
   {% endif %}
 </section>
+<form method="post" action="{{ url_for('web.plaats_vrijgeven', plaats_id=plaats.id) }}">
+  {% include "_csrf.html" %}
+  <button type="submit" class="knop">Plaats {{ plaats.code }} vrijgeven</button>
+</form>
 {% else %}
 <section class="kaart">
   <h2>Deze plaats is vrij</h2>
@@ -52,6 +56,23 @@
   </form>
 </section>
 {% endif %}
+
+<section class="kaart">
+  <h2>Plaats wijzigen</h2>
+  <form method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
+    {% include "_csrf.html" %}
+    <label for="code">Plaatscode</label>
+    <input id="code" name="code" value="{{ plaats.code }}" maxlength="20" required>
+    <fieldset>
+      <legend>Geschikt voor</legend>
+      {% for s in bootsoorten %}
+      <label class="keuze"><input type="checkbox" name="bootsoort" value="{{ s.id }}"{% if s in plaats.bootsoorten %} checked{% endif %}> {{ s.naam }}</label>
+      {% endfor %}
+    </fieldset>
+    <label class="keuze"><input type="checkbox" name="clubplaats" value="1"{% if plaats.is_clubplaats %} checked{% endif %}> Clubplaats (alleen voor clubboten)</label>
+    <button type="submit" class="knop">Plaats opslaan</button>
+  </form>
+</section>
 
 <section class="kaart">
   <h2>Openbare pagina</h2>

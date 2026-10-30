@@ -1,4 +1,4 @@
-"""Een boot een plaats geven (BLB-010, ADR-003). Vrijgeven en verplaatsen volgen in slice 2."""
+"""Een boot een plaats geven (BLB-010) en een plaats vrijgeven (BLB-011), ADR-003."""
 
 from sqlalchemy import select
 
@@ -33,5 +33,21 @@ def toewijzen(plaats_id, boot_id, actor):
     p.boot = b
     log.schrijf(actor, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                              *([f"lid:{b.lid_id}"] if b.lid_id else [])],
+                {"plaats": p.code, "boot": b.naam})
+    db.session.commit()
+
+
+def vrijgeven(plaats_id, actor):
+    """De boot blijft bestaan, zonder plaats. De plaats wordt eerst vergrendeld, zodat twee
+    beheerders niet tegelijk dezelfde plaats vrijgeven en het log één regel krijgt. De
+    applicatie wijst de vrije plaats niet zelf toe (BLB-011)."""
+    p = db.session.get(Plaats, plaats_id, with_for_update=True)
+    if p is None or p.boot is None:
+        db.session.rollback()
+        raise Regelfout("Deze plaats is al vrij." if p else "Deze plaats bestaat niet.")
+    b = p.boot
+    p.boot = None
+    log.schrijf(actor, "plaats.vrijgegeven", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
+                                              *([f"lid:{b.lid_id}"] if b.lid_id else [])],
                 {"plaats": p.code, "boot": b.naam})
     db.session.commit()

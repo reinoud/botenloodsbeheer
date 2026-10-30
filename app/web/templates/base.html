@@ -17,6 +17,8 @@
       <a href="{{ url_for('web.boten_overzicht') }}">Boten</a>
       <a href="{{ url_for('web.leden_overzicht') }}">Leden</a>
       <a href="{{ url_for('web.logboek') }}">Log</a>
+      <a href="{{ url_for('web.beheerders_overzicht') }}">Beheerders</a>
+      <a href="{{ url_for('web.profiel') }}">Profiel</a>
       <form method="post" action="{{ url_for('web.uitloggen') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button type="submit" class="knop-link">Uitloggen</button>

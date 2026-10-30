@@ -1,10 +1,10 @@
-"""Beheerschermen: indeling, plaatsdetail, boten en leden. Elk scherm toont het log dat erbij
-hoort (BLB-025, ADR-006)."""
+"""Beheerschermen: indeling, plaatsdetail, boten, leden en beheerders. Elk scherm toont het log
+dat erbij hoort (BLB-025, ADR-006)."""
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 
-from app.domein import Regelfout, boten, indeling, leden, log, toewijzing
-from app.web import bp, inloggen_vereist, uitvoeren
+from app.domein import Regelfout, beheerders, boten, indeling, leden, log, toewijzing
+from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
 def _of_404(functie, *args):
@@ -66,6 +66,7 @@ def plaats_detail(plaats_id):
     return render_template(
         "plaats.html", plaats=p, oud_lid=p.boot and p.boot.lid and leden.is_oud_lid(p.boot.lid),
         boten=boten.zonder_plaats() if p.boot is None else [],
+        bootsoorten=indeling.bootsoorten(),
         openbare_url=f"{current_app.config['BASIS_URL']}/p/{p.publieke_sleutel}",
         regels=log.regels(verwijzingen))
 
@@ -75,6 +76,22 @@ def plaats_detail(plaats_id):
 def plaats_toewijzen(plaats_id):
     uitvoeren(toewijzing.toewijzen, plaats_id, request.form.get("boot_id", type=int),
               gelukt="De boot heeft de plaats gekregen.")
+    return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
+
+
+@bp.post("/plaatsen/<int:plaats_id>/vrijgeven")
+@inloggen_vereist
+def plaats_vrijgeven(plaats_id):
+    uitvoeren(toewijzing.vrijgeven, plaats_id, gelukt="De plaats is vrijgegeven.")
+    return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
+
+
+@bp.post("/plaatsen/<int:plaats_id>")
+@inloggen_vereist
+def plaats_wijzigen(plaats_id):
+    uitvoeren(indeling.plaats_wijzigen, plaats_id, request.form.get("code"),
+              request.form.getlist("bootsoort", type=int), "clubplaats" in request.form,
+              gelukt="De plaats is opgeslagen.")
     return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
 
 
@@ -160,3 +177,51 @@ def leden_ophalen():
     uitvoeren(leden.synchronisatie_aanvragen,
               gelukt="De synchronisatie is aangevraagd. Ververs de pagina over een halve minuut.")
     return redirect(url_for("web.leden_overzicht"))
+
+
+# Beheerders (BLB-023)
+
+
+@bp.get("/beheerders")
+@inloggen_vereist
+def beheerders_overzicht():
+    return render_template("beheerders.html", beheerders=beheerders.alle(),
+                           regels=log.regels(acties=("beheerder.",)))
+
+
+def _link(code, titel, uitleg):
+    # De link staat alleen in dit antwoord; niet in een flash, want de sessiecookie is leesbaar.
+    return render_template("link.html", titel=titel, uitleg=uitleg,
+                           link=f"{current_app.config['BASIS_URL']}/uitnodiging/{code}")
+
+
+@bp.post("/beheerders")
+@inloggen_vereist
+@recent_ingelogd
+def beheerder_uitnodigen():
+    code = uitvoeren(beheerders.uitnodigen, request.form.get("gebruikersnaam", "").strip())
+    if code is None:
+        return redirect(url_for("web.beheerders_overzicht"))
+    return _link(code, "Beheerder uitgenodigd",
+                 "Geef deze link aan de nieuwe beheerder. Hij werkt één keer en is 24 uur geldig.")
+
+
+@bp.post("/beheerders/<int:beheerder_id>/herstellen")
+@inloggen_vereist
+@recent_ingelogd
+def beheerder_herstellen(beheerder_id):
+    code = uitvoeren(beheerders.herstellen, beheerder_id)
+    if code is None:
+        return redirect(url_for("web.beheerders_overzicht"))
+    return _link(code, "Toegang hersteld",
+                 "De oude inlogmethodes en sessies zijn ingetrokken. Geef deze link aan de "
+                 "beheerder. Hij werkt één keer en is 24 uur geldig.")
+
+
+@bp.post("/beheerders/<int:beheerder_id>/<any(blokkeren, deblokkeren, verwijderen):actie>")
+@inloggen_vereist
+def beheerder_wijzigen(beheerder_id, actie):
+    uitvoeren(getattr(beheerders, actie), beheerder_id, gelukt={
+        "blokkeren": "Het account is geblokkeerd.", "deblokkeren": "Het account is gedeblokkeerd.",
+        "verwijderen": "Het account is verwijderd."}[actie])
+    return redirect(url_for("web.beheerders_overzicht"))

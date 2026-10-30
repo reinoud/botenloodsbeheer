@@ -1,5 +1,5 @@
-"""Indeling van de loods: rekken en plaatsen (BLB-001, ADR-003), en de openbare leesfunctie
-(BLB-020). Bootsoorten per plaats en de plaatscode wijzigen volgen in slice 2."""
+"""Indeling van de loods: rekken en plaatsen (BLB-001 tot en met BLB-004, ADR-003), en de
+openbare leesfunctie (BLB-020)."""
 
 import re
 import secrets
@@ -93,16 +93,36 @@ def rek_verwijderen(rek_id, actor):
 
 def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
     r = rek(rek_id)
-    code = (code or "").strip()
-    if not CODE.fullmatch(code):
-        raise Regelfout("Een plaatscode heeft 1 tot 20 tekens: letters, cijfers, spatie, . _ of -.")
-    soorten = db.session.scalars(select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids))).all()
-    if not soorten:
-        raise Regelfout("Kies minstens één bootsoort die op de plaats past.")
+    code, soorten = _code(code), _soorten(bootsoort_ids)
     volgorde = len(r.plaatsen) + 1
     p = Plaats(rek=r, code=code, publieke_sleutel=_publieke_sleutel(),
                is_clubplaats=bool(is_clubplaats), volgorde=volgorde, bootsoorten=soorten)
     db.session.add(p)
+    _flush_code(code)
+    # "plaatscode", want het log verbergt de waarde van een veld "code" (ADR-006).
+    log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
+                {"plaatscode": code, "bootsoorten": [s.naam for s in soorten],
+                 "clubplaats": p.is_clubplaats})
+    db.session.commit()
+    return p
+
+
+def _code(code):
+    code = (code or "").strip()
+    if not CODE.fullmatch(code):
+        raise Regelfout("Een plaatscode heeft 1 tot 20 tekens: letters, cijfers, spatie, . _ of -.")
+    return code
+
+
+def _soorten(bootsoort_ids):
+    soorten = db.session.scalars(
+        select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids)).order_by(Bootsoort.id)).all()
+    if not soorten:
+        raise Regelfout("Kies minstens één bootsoort die op de plaats past.")
+    return soorten
+
+
+def _flush_code(code):
     try:
         db.session.flush()
     except IntegrityError as fout:
@@ -111,9 +131,41 @@ def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
         if fout.orig.diag.constraint_name == "uq_plaats_code":
             raise Regelfout(f"De code {code} hoort al bij een andere plaats.") from None
         raise
-    log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
-                {"code": code, "bootsoorten": [s.naam for s in soorten],
-                 "clubplaats": p.is_clubplaats})
+
+
+def plaats_wijzigen(plaats_id, code, bootsoort_ids, is_clubplaats, actor):
+    """Code, geschikte bootsoorten en clubplaats (BLB-002, 003, 004). De plaats wordt eerst
+    vergrendeld, net als bij toewijzen, zodat geen boot verschijnt tussen controle en wijziging.
+    De publieke sleutel blijft, dus de QR-link toont daarna de nieuwe code (ADR-003)."""
+    try:
+        p = db.session.get(Plaats, plaats_id, with_for_update=True)
+        if p is None:
+            raise Regelfout("Deze plaats bestaat niet.")
+        code, soorten = _code(code), _soorten(bootsoort_ids)
+        is_clubplaats = bool(is_clubplaats)
+        b = p.boot
+        if b is not None and b.bootsoort not in soorten:
+            raise Regelfout(f"Op plaats {p.code} ligt {b.naam}, een {b.bootsoort.naam.lower()}. "
+                            "Geef de plaats eerst vrij of laat die bootsoort staan.")
+        if b is not None and is_clubplaats != p.is_clubplaats:
+            raise Regelfout(f"Op plaats {p.code} ligt {b.naam}. Geef de plaats eerst vrij "
+                            "voordat je de clubplaats wijzigt.")
+    except Regelfout:
+        db.session.rollback()
+        raise
+    wijzigingen = {}
+    if code != p.code:
+        wijzigingen["plaatscode"] = [p.code, code]
+        p.code = code
+    if soorten != p.bootsoorten:
+        wijzigingen["bootsoorten"] = [[s.naam for s in p.bootsoorten], [s.naam for s in soorten]]
+        p.bootsoorten = soorten
+    if is_clubplaats != p.is_clubplaats:
+        wijzigingen["clubplaats"] = [p.is_clubplaats, is_clubplaats]
+        p.is_clubplaats = is_clubplaats
+    if wijzigingen:
+        _flush_code(code)
+        log.schrijf(actor, "plaats.gewijzigd", [f"plaats:{p.id}", f"rek:{p.rek_id}"], wijzigingen)
     db.session.commit()
     return p
 
@@ -132,7 +184,7 @@ def plaats_verwijderen(plaats_id, actor):
         db.session.rollback()
         raise Regelfout("Op deze plaats ligt een boot. Geef de plaats eerst vrij.")
     log.schrijf(actor, "plaats.verwijderd", [f"plaats:{p.id}", f"rek:{p.rek_id}"],
-                {"code": p.code})
+                {"plaatscode": p.code})
     db.session.delete(p)
     db.session.commit()
 

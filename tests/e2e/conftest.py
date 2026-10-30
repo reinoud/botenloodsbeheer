@@ -35,9 +35,10 @@ def authenticator(page):
     return cdp
 
 
-def wachtwoord_instellen(page, soort):
-    """Stelt via de eigen uitnodiging van de test een wachtwoord met TOTP in; daarna ingelogd."""
-    page.goto(link(soort))
+def wachtwoord_instellen(page, soort, url=None):
+    """Stelt via de eigen uitnodiging van de test (of url) een wachtwoord met TOTP in; daarna
+    ingelogd."""
+    page.goto(url or link(soort))
     totp = pyotp.TOTP(page.locator("#totp-geheim").inner_text())
     page.get_by_label("Wachtwoord (12 tot 128 tekens)").fill(WACHTWOORD)
     page.get_by_label("Wachtwoord nog een keer").fill(WACHTWOORD)

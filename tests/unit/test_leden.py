@@ -8,9 +8,18 @@ import pytest
 from sqlalchemy import select
 
 from app import taken
-from app.domein import CLI, LEDENSYNCHRONISATIE, Regelfout, leden, vandaag
+from app.domein import (
+    CLI,
+    LEDENSYNCHRONISATIE,
+    Regelfout,
+    boten,
+    indeling,
+    leden,
+    toewijzing,
+    vandaag,
+)
 from app.ledenbron import LedenbronFout, StubBron
-from app.models import Lid, Logregel, Taakrun, db
+from app.models import Lid, Logregel, Plaats, Taakrun, db
 
 pytestmark = pytest.mark.worker  # alleen de worker schrijft leden (#9)
 
@@ -174,3 +183,22 @@ def test_planning_dagelijks_na_tijdstip_met_wachttijd_na_fout(app):
     db.session.add(Taakrun(taak=leden.TAAK, status="geslaagd", gestart_op=ochtend))
     db.session.commit()
     assert not taken.sync_gepland(ochtend + timedelta(hours=3))
+
+
+def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(app, bron):
+    """BLB-008: gegevens en plaats blijven; een boot zonder plaats krijgt er geen meer."""
+    sync(bron([record("1")]))
+    anna = alle()["1"]
+    rek = indeling.rek_aanmaken("Rek A", CLI)
+    p1 = indeling.plaats_aanmaken(rek.id, "A01", [1], False, CLI)
+    p2 = indeling.plaats_aanmaken(rek.id, "A02", [1], False, CLI)
+    b1 = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
+    b2 = boten.boot_aanmaken("Fuut", 1, anna.id, None, CLI)
+    toewijzing.toewijzen(p1.id, b1.id, CLI)
+    gisteren = (vandaag() - timedelta(days=1)).isoformat()
+    sync(bron([record("1", opzegdatum=gisteren)]))
+    anna = alle()["1"]
+    assert leden.is_oud_lid(anna) and anna.email == "1@example.org" and anna.adres
+    assert db.session.get(Plaats, p1.id).boot_id == b1.id
+    with pytest.raises(Regelfout, match="is oud-lid"):
+        toewijzing.toewijzen(p2.id, b2.id, CLI)

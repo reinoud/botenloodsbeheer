@@ -98,6 +98,17 @@ def test_health(client):
     assert client.get("/health/ready").json == {"status": "ok"}
 
 
+def test_health_zonder_database(database):
+    """BLB-036: live antwoordt zonder database, ready meldt niet gereed, zonder details."""
+    app = create_app({"TESTING": True,
+                      "SQLALCHEMY_DATABASE_URI": "postgresql+psycopg://x:y@db:1/geen",
+                      "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"connect_timeout": 2}}})
+    client = app.test_client()
+    assert client.get("/health/live").json == {"status": "ok"}
+    r = client.get("/health/ready")
+    assert r.status_code == 503 and r.json == {"status": "niet gereed"}
+
+
 def test_config_weigert_ontbrekende_of_onveilige_waarden(monkeypatch, tmp_path):
     monkeypatch.delenv("SECRET_KEY")
     with pytest.raises(config.ConfigFout, match="SECRET_KEY"):

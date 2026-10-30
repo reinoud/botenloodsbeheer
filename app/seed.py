@@ -66,6 +66,10 @@ def seed(echo=print):
             # De boot bestond al voor de opzegging; boot_aanmaken weigert een oud-lid.
             b = Boot(naam=naam, bootsoort_id=soort[r.choice(SOORTEN)], lid_id=eigenaar)
             db.session.add(b)
+            db.session.flush()
+            log.schrijf(CLI, "boot.aangemaakt", [f"boot:{b.id}", f"lid:{eigenaar}"],
+                        {"naam": naam, "bootsoort": b.bootsoort.naam, "clubboot": False,
+                         "foto": False, "seed": "oud-lid"})  # #10: ook deze mutatie in het log
             db.session.commit()
             return b
         return boten.boot_aanmaken(naam, soort[r.choice(SOORTEN)], eigenaar, None, CLI)
@@ -90,6 +94,9 @@ def seed(echo=print):
             # Een oud-lid met een plaats ontstaat in het echt door opzegging na toewijzen;
             # toewijzen zelf weigert een oud-lid.
             p.boot = b
+            log.schrijf(CLI, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}",
+                                                   f"boot:{b.id}", f"lid:{b.lid_id}"],
+                        {"plaats": p.code, "boot": b.naam, "seed": "oud-lid"})
             db.session.commit()
         else:
             try:

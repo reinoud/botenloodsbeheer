@@ -109,3 +109,42 @@ def test_clubboot_op_ledenplaats_en_verkeerde_bootsoort_geweigerd(page):
     expect(page.get_by_role("alert")).to_contain_text("is een clubboot en hoort op een clubplaats")
     expect(page.get_by_role("heading", name="Deze plaats is vrij")).to_be_visible()
     expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+
+
+def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):
+    """BLB-002, 003, 004 en 011 op één plaats, met de QR-link die blijft werken."""
+    wachtwoord_instellen(page, "plaatsbeheer")
+    rek, code, nieuw, bootnaam = (f"E2E plaatsbeheer {STEMPEL}", f"P{STEMPEL}", f"Q{STEMPEL}",
+                                  f"Plaatsboot {STEMPEL}")
+    rek_met_plaats(page, rek, code, ["Kajak", "Surfski"])
+    boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
+    toewijzen(page, code, bootnaam)
+    expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
+    openbare_link = page.locator("#openbare-link").get_attribute("href")
+
+    page.get_by_label("Kajak", exact=True).uncheck()
+    page.get_by_role("button", name="Plaats opslaan").click()
+    expect(page.get_by_role("alert")).to_contain_text(f"ligt {bootnaam}, een kajak")
+
+    page.get_by_label("Plaatscode").fill(nieuw)
+    page.get_by_role("button", name="Plaats opslaan").click()
+    expect(page.get_by_role("heading", level=1)).to_have_text(f"Plaats {nieuw}")
+    page.goto(openbare_link)
+    expect(page.get_by_role("heading", level=1)).to_have_text(f"Plaats {nieuw}")
+    expect(page.get_by_text(bootnaam)).to_be_visible()
+    page.go_back()
+
+    page.get_by_label("Clubplaats (alleen voor clubboten)").check()
+    page.get_by_role("button", name="Plaats opslaan").click()
+    expect(page.get_by_role("alert")).to_contain_text("Geef de plaats eerst vrij")
+
+    page.get_by_role("button", name=f"Plaats {nieuw} vrijgeven").click()
+    expect(page.get_by_text("De plaats is vrijgegeven.")).to_be_visible()
+    expect(page.get_by_role("heading", name="Deze plaats is vrij")).to_be_visible()
+    expect(page.locator("section.log")).to_contain_text("plaats.vrijgegeven")
+
+    page.get_by_label("Clubplaats (alleen voor clubboten)").check()
+    page.get_by_role("button", name="Plaats opslaan").click()
+    expect(page.get_by_text("De plaats is opgeslagen.")).to_be_visible()
+    toewijzen(page, nieuw, bootnaam)
+    expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")

@@ -53,7 +53,10 @@ class Beheerder(db.Model):
     geblokkeerd_tot: Mapped[datetime | None] = mapped_column(Tijdstip)
     aangemaakt_op: Mapped[datetime] = mapped_column(Tijdstip, server_default=func.now())
 
-    passkeys: Mapped[list["Passkey"]] = relationship(back_populates="beheerder")
+    # Verwijderen laat de database de passkeys opruimen (ON DELETE CASCADE).
+    passkeys: Mapped[list["Passkey"]] = relationship(
+        back_populates="beheerder", passive_deletes=True, order_by="Passkey.id"
+    )
 
 
 class Passkey(db.Model):

@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.4
+**Versie:** v0.2.5
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
@@ -72,7 +72,7 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 
 Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor wat de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
 
-De regels die de database zelf kan bewaken, staan als constraint in de database: unieke code, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen.
+De regels die de database zelf kan bewaken, staan als constraint in de database: unieke code, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (code, bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
 
 Verplaatsen van een boot is vrijgeven gevolgd door toewijzen, binnen één domeinfunctie en één transactie (aanname uit de backlog §8).
 
@@ -153,7 +153,7 @@ De testfixture roept `flask beheerder uitnodigen` aan, opent de link in Playwrig
 
 ### 6.5 Tests
 
-Unit- en integratietests draaien met pytest tegen een echte PostgreSQL in compose; er is geen SQLite-variant, omdat de applicatie PostgreSQL-typen (`cidr`, `bytea`, `jsonb`, arrays) gebruikt. Elke test draait in een transactie die na afloop wordt teruggedraaid. De stub-ledenbron is ook de nepbron voor de tests van BLB-006 tot BLB-008: een test zet een ander fixturebestand neer en draait de synchronisatie.
+Unit- en integratietests draaien met pytest tegen een echte PostgreSQL in compose; er is geen SQLite-variant, omdat de applicatie PostgreSQL-typen (`cidr`, `bytea`, `jsonb`, arrays) gebruikt. Elke test draait in een transactie die na afloop wordt teruggedraaid. `tests/e2e/draai.sh` draait de E2E-tests per bestand met een pauze ertussen, zodat de rate limit van Nginx op inlogverzoeken (ADR-001) de suite niet blokkeert; met `-k` draait één selectie in één keer. De stub-ledenbron is ook de nepbron voor de tests van BLB-006 tot BLB-008: een test zet een ander fixturebestand neer en draait de synchronisatie.
 
 ## 7. Componenten per slice
 
@@ -162,7 +162,7 @@ De slices volgen het voorstel in backlog §5.
 | Slice | Stories | Geraakte componenten | ADR's |
 |-------|---------|----------------------|-------|
 | 1 | BLB-022, 001, 007, 006, 005, 010, 012, 020, 024, 025 | Alle vier containers, `migrate`, models (rek, plaats, bootsoort, lid, boot, beheerder, passkey, uitnodiging, logregel, afbeelding), `domein/indeling`, `boten`, `toewijzing`, `leden`, `log`, `afbeeldingen`, `ledenbron` met stub, `taken` (alleen synchronisatie), `web` (inloggen, indeling, boten, plaatsdetail, openbare pagina), basistemplate met design tokens, `cli` | 001, 002, 003, 004, 006, 007, 008, 009, 011 |
-| 2 | BLB-002, 003, 004, 008, 011, 023, 036 | `domein/indeling` (bootsoorten per plaats, clubplaats, code wijzigen), `domein/toewijzing` (vrijgeven), `domein/leden` (oud-lid), `domein/beheerders`, `web` (beheerders), health endpoints | 001, 003, 010 |
+| 2 | BLB-002, 003, 004, 008, 011, 023, 038, 036 | `domein/indeling` (`plaats_wijzigen`: bootsoorten, clubplaats en code in één functie met `FOR UPDATE`), `domein/toewijzing` (vrijgeven), `domein/leden` (oud-lid), `domein/beheerders` (beheerders beheren, eigen inlogmethodes), `web` (plaatsdetail, beheerders, profiel), health endpoints | 001, 003, 010 |
 | 3 | BLB-015, 016, 019, 018, 017, 027 | `web` (overzichten, lijst per lid, zoeken), Excel-export, `domein/instellingen`, logo-upload, design tokens uit instellingen | 008, 009, 011 |
 | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
@@ -179,7 +179,7 @@ Slice 1 is groot omdat de basis erin zit: containers, inloggen, mutatielog en de
 | Dreiging | Ingang | Kans | Impact | Maatregel | ADR |
 |----------|--------|------|--------|-----------|-----|
 | Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkey: phishingbestendig. Wachtwoord met TOTP: argon2id, TOTP-code eenmalig bruikbaar, vergrendeling per account na vijf pogingen, rate limit per IP; phishing blijft mogelijk en is door de stakeholder geaccepteerd (restrisico) | 001 |
-| Overgenomen open sessie voegt een eigen passkey toe of trekt een methode in | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
+| Overgenomen open sessie voegt een eigen passkey toe, trekt een methode in, nodigt een beheerder uit of herstelt een collega | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
 | Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vier velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
@@ -249,6 +249,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.5 | 2026-10-30 | Slice 2 (issue #11): BLB-038 in §7; `plaats_wijzigen` en de vergrendelingen in §4; E2E per bestand vanwege de rate limit (§6.5) |
 | v0.2.4 | 2026-10-30 | ADR-001 v1.1.0 (backlog §7, vragen 9 en 10): methode toevoegen of intrekken vraagt een recente inlog, intrekken beëindigt alle sessies; dreiging toegevoegd in §8.1 |
 | v0.2.3 | 2026-10-30 | Herstel slice 1b (issue #9): `flask seed` in de worker en `LEDENBRON` standaard leeg (§6.2); webrol alleen SELECT op `lid`; plaatscode uniek zonder onderscheid in hoofdletters |
 | v0.2.2 | 2026-10-30 | Afwijkingen uit slice 1b: seed volgt ADR-004 (§6.3), `DIENST` (ADR-009), nieuwe poging na een fout (ADR-007) |

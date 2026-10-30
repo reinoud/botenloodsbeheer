@@ -9,7 +9,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from app import seed, taken
 from app.domein import leden
-from app.models import Boot, Lid, Plaats, Rek, Taakrun, db
+from app.models import Boot, Lid, Logregel, Plaats, Rek, Taakrun, db
 from tests.unit.conftest import nieuwe_database
 
 
@@ -54,6 +54,9 @@ def test_seed_maakt_de_synthetische_loods(app):
                       if p.boot.lid and leden.is_oud_lid(p.boot.lid)]
     assert len(oud_met_plaats) == 4
     assert all(lid.email.endswith("@example.org") for lid in db.session.scalars(select(Lid)))
+    # #10: elke boot en elke toewijzing staat in het log, ook die van oud-leden.
+    assert tel(Logregel, Logregel.actie == "boot.aangemaakt") == 180
+    assert tel(Logregel, Logregel.actie == "plaats.toegewezen") == 150
     seed.seed(echo=lambda _: None)  # tweede keer: niets
     assert tel(Rek) == 10
 

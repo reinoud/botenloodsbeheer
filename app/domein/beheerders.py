@@ -1,4 +1,5 @@
-"""Beheerders: uitnodigen, inlogmethode instellen en inloggen (ADR-001)."""
+"""Beheerders: uitnodigen, inlogmethode instellen en inloggen (ADR-001), beheerders beheren
+(BLB-023) en de eigen inlogmethodes toevoegen of intrekken (BLB-038)."""
 
 import hashlib
 import hmac
@@ -71,18 +72,24 @@ def uitnodigen(gebruikersnaam, actor):
     if db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == gebruikersnaam)):
         raise Regelfout("Deze gebruikersnaam bestaat al.")
     beheerder = Beheerder(naam=gebruikersnaam, gebruikersnaam=gebruikersnaam)
-    code = secrets.token_urlsafe(32)
-    verloopt_op = _nu() + UITNODIGING_GELDIG
     db.session.add(beheerder)
     db.session.flush()
-    db.session.add(
-        Uitnodiging(beheerder_id=beheerder.id, code_hash=_hash_code(code), verloopt_op=verloopt_op)
-    )
+    code, verloopt_op = _nieuwe_uitnodiging(beheerder)
     log.schrijf(actor, "beheerder.uitgenodigd", [f"beheerder:{beheerder.id}"],
                 {"gebruikersnaam": gebruikersnaam,
                  "geldig_tot": verloopt_op.isoformat(timespec="minutes")})
     db.session.commit()
     return code
+
+
+def _nieuwe_uitnodiging(beheerder):
+    """Eenmalige code; de database bewaart alleen de hash. Geeft (code, verloopt_op)."""
+    code = secrets.token_urlsafe(32)
+    verloopt_op = _nu() + UITNODIGING_GELDIG
+    db.session.add(
+        Uitnodiging(beheerder_id=beheerder.id, code_hash=_hash_code(code), verloopt_op=verloopt_op)
+    )
+    return code, verloopt_op
 
 
 def uitnodiging(code, vergrendelen=False):
@@ -216,7 +223,11 @@ def totp_controleren(beheerder_id, code):
 
 def passkey_registratieopties(code):
     """(options-JSON, challenge) voor het registreren van een passkey via een uitnodiging."""
-    beheerder = uitnodiging(code).beheerder
+    return registratieopties(uitnodiging(code).beheerder)
+
+
+def registratieopties(beheerder):
+    """(options-JSON, challenge) voor een nieuwe passkey van deze beheerder."""
     rp_id, _ = _rp()
     opties = generate_registration_options(
         rp_id=rp_id,
@@ -234,9 +245,9 @@ def passkey_registratieopties(code):
     return options_to_json(opties), opties.challenge
 
 
-def passkey_registreren(code, credential, challenge, naam="Passkey"):
-    u = uitnodiging(code, vergrendelen=True)
-    beheerder = u.beheerder
+def _passkey_toevoegen(beheerder, credential, challenge, naam):
+    """Controleert de registratie en voegt de passkey toe aan de sessie; de aanroeper logt en
+    commit."""
     rp_id, origin = _rp()
     try:
         r = verify_registration_response(
@@ -249,7 +260,6 @@ def passkey_registreren(code, credential, challenge, naam="Passkey"):
     except WebAuthnException:
         db.session.rollback()
         raise Regelfout("De passkey kon niet worden geregistreerd. Probeer het opnieuw.") from None
-    u.gebruikt_op = _nu()
     db.session.add(
         Passkey(
             beheerder_id=beheerder.id,
@@ -259,6 +269,13 @@ def passkey_registreren(code, credential, challenge, naam="Passkey"):
             naam=naam[:100],
         )
     )
+
+
+def passkey_registreren(code, credential, challenge, naam="Passkey"):
+    u = uitnodiging(code, vergrendelen=True)
+    beheerder = u.beheerder
+    _passkey_toevoegen(beheerder, credential, challenge, naam)
+    u.gebruikt_op = _nu()
     log.schrijf(Actor.van(beheerder), "beheerder.methode_ingesteld",
                 [f"beheerder:{beheerder.id}"], {"methode": "passkey", "naam": naam[:100]})
     db.session.commit()
@@ -316,4 +333,157 @@ def uitloggen(beheerder):
     """Hoogt de sessieversie op, zodat ook een gekopieerde sessiecookie ongeldig wordt."""
     beheerder.sessieversie += 1
     log.schrijf(Actor.van(beheerder), "beheerder.uitgelogd", [f"beheerder:{beheerder.id}"])
+    db.session.commit()
+
+
+# Beheerders beheren (BLB-023). Alle beheerders hebben dezelfde rechten.
+
+
+def alle():
+    return db.session.scalars(select(Beheerder).order_by(Beheerder.gebruikersnaam)).all()
+
+
+def _ander_account(beheerder_id, actor, wat):
+    """Vergrendelt alle actieve accounts en het doel, en controleert dat de actor nog actief is
+    en niet zijn eigen account kiest. Zo blijft er altijd een actieve beheerder over, ook als
+    twee beheerders elkaar tegelijk blokkeren."""
+    actief = {b.id: b for b in db.session.scalars(
+        select(Beheerder).where(Beheerder.actief).order_by(Beheerder.id).with_for_update())}
+    doel = actief.get(beheerder_id) or db.session.get(Beheerder, beheerder_id,
+                                                     with_for_update=True)
+    if actor.id not in actief:
+        db.session.rollback()
+        raise Regelfout("Je account is niet meer actief.")
+    if doel is None:
+        db.session.rollback()
+        raise Regelfout("Deze beheerder bestaat niet.")
+    if doel.id == actor.id:
+        db.session.rollback()
+        raise Regelfout(f"Je kunt je eigen account niet {wat}. Zo blijft er altijd een actieve "
+                        "beheerder; vraag een andere beheerder.")
+    return doel
+
+
+def blokkeren(beheerder_id, actor):
+    """Het account wordt inactief en alle sessies eindigen (ADR-001)."""
+    b = _ander_account(beheerder_id, actor, "blokkeren")
+    if b.actief:
+        b.actief = False
+        b.sessieversie += 1
+        log.schrijf(actor, "beheerder.geblokkeerd", [f"beheerder:{b.id}"],
+                    {"gebruikersnaam": b.gebruikersnaam})
+    db.session.commit()
+
+
+def deblokkeren(beheerder_id, actor):
+    b = _ander_account(beheerder_id, actor, "deblokkeren")
+    if not b.actief:
+        b.actief = True
+        log.schrijf(actor, "beheerder.gedeblokkeerd", [f"beheerder:{b.id}"],
+                    {"gebruikersnaam": b.gebruikersnaam})
+    db.session.commit()
+
+
+def verwijderen(beheerder_id, actor):
+    """Passkeys en uitnodigingen gaan mee (ON DELETE CASCADE); het log blijft."""
+    b = _ander_account(beheerder_id, actor, "verwijderen")
+    log.schrijf(actor, "beheerder.verwijderd", [f"beheerder:{b.id}"],
+                {"gebruikersnaam": b.gebruikersnaam})
+    db.session.delete(b)
+    db.session.commit()
+
+
+def herstellen(beheerder_id, actor):
+    """Trekt alle methodes, open uitnodigingen en sessies van een collega in en geeft een nieuwe
+    eenmalige code. De helper ziet geen wachtwoord of geheim (ADR-001)."""
+    b = _ander_account(beheerder_id, actor, "herstellen")
+    if not b.actief:
+        db.session.rollback()
+        raise Regelfout("Dit account is geblokkeerd. Deblokkeer het eerst.")
+    for passkey in b.passkeys:
+        db.session.delete(passkey)
+    for u in db.session.scalars(select(Uitnodiging).where(Uitnodiging.beheerder_id == b.id)):
+        db.session.delete(u)
+    _wachtwoord_weg(b)
+    b.sessieversie += 1
+    code, verloopt_op = _nieuwe_uitnodiging(b)
+    log.schrijf(actor, "beheerder.hersteld", [f"beheerder:{b.id}"],
+                {"gebruikersnaam": b.gebruikersnaam,
+                 "geldig_tot": verloopt_op.isoformat(timespec="minutes")})
+    db.session.commit()
+    return code
+
+
+def _wachtwoord_weg(b):
+    b.wachtwoordhash = b.totp_geheim = b.laatste_totp_stap = b.geblokkeerd_tot = None
+    b.mislukte_pogingen = 0
+
+
+# Eigen inlogmethodes (BLB-038). De webroute eist een inlog van hooguit 10 minuten geleden.
+
+
+def _eigen_account(actor):
+    # populate_existing: laad_beheerder heeft het account al geladen, zonder vergrendeling
+    b = db.session.get(Beheerder, actor.id, with_for_update=True, populate_existing=True)
+    if b is None or not b.actief:
+        db.session.rollback()
+        raise Regelfout("Je account is niet meer actief.")
+    return b
+
+
+def passkey_toevoegen(credential, challenge, actor):
+    """Een extra passkey; lopende sessies blijven (ADR-001)."""
+    b = _eigen_account(actor)
+    naam = f"Passkey {len(b.passkeys) + 1}"
+    _passkey_toevoegen(b, credential, challenge, naam)
+    log.schrijf(actor, "beheerder.methode_toegevoegd", [f"beheerder:{b.id}"],
+                {"methode": "passkey", "naam": naam})
+    db.session.commit()
+
+
+def wachtwoord_toevoegen(wachtwoord, totp_geheim, totp_code, actor):
+    """Wachtwoord met TOTP naast een passkey; werkt pas na één juiste code."""
+    b = _eigen_account(actor)
+    try:
+        if b.wachtwoordhash:
+            raise Regelfout("Je hebt al een wachtwoord met TOTP.")
+        controleer_wachtwoord(b, wachtwoord)
+        stap = totp_stap(totp_geheim, totp_code, None)
+        if stap is None:
+            raise Regelfout("De code uit de authenticator-app klopt niet. Probeer het opnieuw.")
+    except Regelfout:
+        db.session.rollback()
+        raise
+    b.wachtwoordhash = _hasher.hash(wachtwoord)
+    b.totp_geheim = _fernet().encrypt(totp_geheim.encode())
+    b.laatste_totp_stap = stap
+    log.schrijf(actor, "beheerder.methode_toegevoegd", [f"beheerder:{b.id}"],
+                {"methode": "wachtwoord en TOTP"})
+    db.session.commit()
+
+
+def methode_intrekken(passkey_id, actor):
+    """passkey_id None trekt wachtwoord en TOTP in. Minstens één methode blijft. Alle sessies
+    van de beheerder eindigen, ook de huidige (ADR-001). Het account wordt eerst vergrendeld,
+    zodat twee gelijktijdige intrekkingen niet allebei slagen."""
+    b = _eigen_account(actor)
+    try:
+        if len(b.passkeys) + bool(b.wachtwoordhash) < 2:
+            raise Regelfout("Dit is je enige inlogmethode. Voeg eerst een andere toe.")
+        if passkey_id is None:
+            if not b.wachtwoordhash:
+                raise Regelfout("Je hebt geen wachtwoord met TOTP.")
+            gegevens = {"methode": "wachtwoord en TOTP"}
+            _wachtwoord_weg(b)
+        else:
+            passkey = next((p for p in b.passkeys if p.id == passkey_id), None)
+            if passkey is None:
+                raise Regelfout("Deze passkey bestaat niet.")
+            gegevens = {"methode": "passkey", "naam": passkey.naam}
+            db.session.delete(passkey)
+    except Regelfout:
+        db.session.rollback()
+        raise
+    b.sessieversie += 1
+    log.schrijf(actor, "beheerder.methode_ingetrokken", [f"beheerder:{b.id}"], gegevens)
     db.session.commit()
