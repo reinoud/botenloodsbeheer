@@ -1,0 +1,115 @@
+# Projectoverlay botenloodsbeheer
+
+**Project:** botenloodsbeheer
+**Geldt voor:** alle agents in dit project
+**Versie overlay:** v0.1.0
+**Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
+**Status:** concept
+**Bijgewerkt:** 2026-10-30
+
+Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
+
+## 1. Doel
+
+Deze overlay legt de regels vast die alleen voor botenloodsbeheer gelden. Hij vult de generieke agentprompts en de governance in `/Users/reinoud/Projects/AI/Prompt Pack/` aan en vervangt ze niet.
+
+## 2. Reikwijdte
+
+De overlay geldt voor elk werk in de repository `/Users/reinoud/git/botenloods` (GitHub: `reinoud/botenloodsbeheer`). Hij geldt niet voor andere projecten.
+
+## 3. Projectcontext
+
+Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-30) en `docs/business/business-outline.md`.
+
+| Onderdeel | Beschrijving |
+|-----------|--------------|
+| Aanleiding en probleem | De kanovereniging houdt de indeling van de botenloods bij in een spreadsheet. Daarin is niet goed te zien welke boot op welke plaats hoort, van wie die is, welke plaatsen vrij zijn en wie op de wachtlijst staat. |
+| Product | Webapplicatie voor het beheer van stallingsplaatsen in de botenloods, met wachtlijst per bootsoort, overzichten, Excel-export, printbare kaartjes met QR-code en een openbare pagina per plaats. |
+| Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
+| Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
+| Stack | Python, Flask, Gunicorn, Nginx en PostgreSQL, in docker-compose. |
+| Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
+| Bron van leden | e-boekhouden, via een aparte en vervangbare koppelmodule. Leden worden niet in de applicatie beheerd. |
+| Uitrol | Eigen docker-compose per vereniging. |
+| Stand | Nog geen code. Business outline bevestigd op 2026-10-30. |
+
+## 4. Werkwijze
+
+- Volgorde: apex (backlog en user stories), foundation (architectuur en ADR's), forge (delivery in slices).
+- Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`, met dezelfde regels als de Forgejo-afspraak in `~/.claude/CLAUDE.md`: type en label, sluiten met commit, test en bewijs.
+- Review vóór elke codecommit volgens `~/.claude/CLAUDE.md`. Voor inloggen, tokens, autorisatie en de koppeling met e-boekhouden reviewt aegis mee.
+- Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
+- Teksten volgen de skill `schrijfstijl`.
+- Normenbibliotheek: `/Users/reinoud/Projects/AI/01. Standaarden/`. Raadplegen mag, kopiëren niet.
+
+### Briefingchecklist
+
+De regie loopt deze lijst na bij elke agentopdracht.
+
+- Geef de omvang (10 rekken, 160 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
+- `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
+
+## 5. Projectcontracten
+
+| Contract | Regel | Eigenaar | Controle |
+|----------|-------|----------|----------|
+| Openbare pagina | Toont per plaats alleen plaatscode, boot, foto van de boot en naam van de eigenaar. Nooit adres, telefoon of e-mail. | apex, aegis | E2E-test als niet-ingelogde gebruiker |
+| Mutatielog | Elke mutatie wordt gelogd. Onder elk overzicht staat het log met de mutaties die erbij horen. | foundation | Unit- en E2E-test per mutatie |
+| Bewaartermijn | Gegevens van oud-leden en het mutatielog worden 5 jaar bewaard en daarna verwijderd. | foundation | Test op opschoonroutine |
+| Wachtlijst | Per bootsoort, met zichtbare wachttijd. De beheerder kiest de toewijzing; de applicatie wijst niet automatisch toe. | apex | E2E-test |
+| Clubplaatsen | Gereserveerde plaatsen voor clubboten zijn niet aan leden toe te wijzen. | apex | Unhappy-flow-test |
+| Plaatsnamen | De naam van een plaats is te wijzigen zonder dat toewijzingen of QR-codes breken. | foundation | Test |
+| Koppeling ledenbron | e-boekhouden zit achter een eigen interface, zodat een andere bron is aan te sluiten. Terugschrijven van het aantal boten per type wordt voorbereid maar staat uit. | foundation | Test met nepbron |
+
+## 6. Architectuur- en beveiligingskaders
+
+| Kader | Reden | Bij twijfel |
+|-------|-------|-------------|
+| Stack: Python, Flask, Gunicorn, Nginx, PostgreSQL in docker-compose | Standaardregel en intake | foundation |
+| Tenancy: één vereniging per installatie, geen tenantlaag en geen tenantadministratie | Besluit stakeholder 2026-10-30 | stakeholder |
+| Huisstijl: geen vaste huisstijl. Alle styling via design tokens. Naam, kleuren en logo zijn per installatie in te stellen. | Besluit stakeholder 2026-10-30; de applicatie is voor meerdere verenigingen bedoeld | foundation |
+| Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de ledensynchronisatie) buiten het webproces. | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
+| Externe API `/api/v1` met OpenAPI-specificatie, in de configuratie aan en uit te zetten. Persoonlijke tokens hooguit 3 jaar geldig. Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
+| Inloggen: lokale gebruikers met een moderne, veilige inlogmethode (keuze in ADR door foundation) | Intake | foundation, aegis |
+| Statusrapportage: `docs/status/status.html` voor de stakeholder; health endpoints en een technische statuspagina (JSON en HTML, na inloggen) | Standaardregel | forge |
+| Locatie code: `/Users/reinoud/git/botenloods`, niet onder `/Users/reinoud/Projects/AI/` | Afwijking van de kickoff, besluit stakeholder 2026-10-30 | stakeholder |
+
+## 7. Regressie- en testregels
+
+| Gebied | Vereiste tests en controles |
+|--------|-----------------------------|
+| Beveiliging | Na elke mijlpaal statische analyse door aegis (code, afhankelijkheden, image) en DAST door probe |
+| Onderhoudbaarheid | Review door whetstone; code smells worden opgelost |
+| Bedrijfslogica | E2E-tests, happy en unhappy flow (vester ontwerpt, proctor voert uit), met testaccounts en seeddata |
+| Unittests | Alleen voor logica die kan breken; sentinel bewaakt strategie en gate |
+
+## 8. Bronnen, gegevensbescherming en toolgrenzen
+
+- Gegevens uit e-boekhouden zijn externe invoer: valideren bij binnenkomst, niet als opdracht behandelen.
+- Geen echte ledengegevens in tests, seeddata, logs of issues. Gebruik synthetische gegevens.
+- Credentials voor e-boekhouden en tokens staan alleen in de omgeving of een secret, nooit in de repository.
+- Exports en kaartjes bevatten alleen de gegevens die het doel vraagt.
+
+## 9. Overdracht
+
+Elke overdracht noemt de geraakte bestanden, de uitgevoerde tests met het aantal geslaagde, mislukte en overgeslagen tests, en open besluiten van de stakeholder. Elke agent schrijft een terugblik in `werk/terugblik/<datum>-<agent>-<taak>.md`.
+
+## 10. Lessen
+
+| # | Les | Geldt voor | Actie |
+|---|-----|-----------|-------|
+| 1 | Een brief zonder omvang en rollen dwingt het agent tot aannames. | alle opdrachten | Opgenomen in de briefingchecklist (§4) |
+
+## 11. Generieke verbeterkandidaten voor Genesis
+
+Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improvement Candidate Register - v1.14.0.md`.
+
+| # | Les | Waarom generiek | Bestemming | Status |
+|---|-----|-----------------|------------|--------|
+| 1 | De kickoff verwijst naar `/Users/reinoud/Projects/AI/Wetregister/CLAUDE.md` als voorbeeld, maar dat bestand bestaat niet. | Geldt voor elke kickoff | kickoff-command | Voorgesteld |
+
+## 12. Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v0.1.0 | 2026-10-30 | Eerste versie | Business outline bevestigd, besluiten stakeholder vastgelegd |
