@@ -5,6 +5,7 @@ import re
 import secrets
 
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, log
@@ -95,8 +96,6 @@ def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
     code = (code or "").strip()
     if not CODE.fullmatch(code):
         raise Regelfout("Een plaatscode heeft 1 tot 20 tekens: letters, cijfers, spatie, . _ of -.")
-    if db.session.scalar(select(Plaats).where(func.lower(Plaats.code) == code.lower())):
-        raise Regelfout(f"De code {code} hoort al bij een andere plaats.")
     soorten = db.session.scalars(select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids))).all()
     if not soorten:
         raise Regelfout("Kies minstens één bootsoort die op de plaats past.")
@@ -104,7 +103,14 @@ def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
     p = Plaats(rek=r, code=code, publieke_sleutel=_publieke_sleutel(),
                is_clubplaats=bool(is_clubplaats), volgorde=volgorde, bootsoorten=soorten)
     db.session.add(p)
-    db.session.flush()
+    try:
+        db.session.flush()
+    except IntegrityError as fout:
+        db.session.rollback()
+        # De database vergelijkt zonder hoofdletters, ook bij twee gelijktijdige aanvragen.
+        if fout.orig.diag.constraint_name == "uq_plaats_code":
+            raise Regelfout(f"De code {code} hoort al bij een andere plaats.") from None
+        raise
     log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
                 {"code": code, "bootsoorten": [s.naam for s in soorten],
                  "clubplaats": p.is_clubplaats})
@@ -113,7 +119,7 @@ def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
 
 
 def _publieke_sleutel():
-    """Willekeurig en vast (ADR-003). Bij ongeveer 2 x 10^17 mogelijkheden is een botsing bij 160
+    """Willekeurig en vast (ADR-003). Bij ongeveer 3 x 10^17 mogelijkheden is een botsing bij 160
     plaatsen verwaarloosbaar; de unieke constraint vangt die toch af."""
     return "".join(secrets.choice(ALFABET) for _ in range(SLEUTELLENGTE))
 

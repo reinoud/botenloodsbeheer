@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {# Openbaar: alleen plaatscode, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025). #}
+{% block csrf %}{% endblock %}
 {% block titel %}{{ 'Plaats ' ~ plaats.code if plaats else 'Niet gevonden' }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 {% if not plaats %}

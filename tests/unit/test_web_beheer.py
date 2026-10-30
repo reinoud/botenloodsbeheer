@@ -110,6 +110,14 @@ def test_openbare_pagina_alleen_openbare_gegevens(client):
         assert verboden not in r.text
 
 
+def test_openbare_pagina_zet_geen_sessiecookie(client):
+    p = bezette_plaats()
+    for pad in (f"/p/{p.publieke_sleutel}", "/p/bestaatniet"):
+        r = client.get(pad)
+        assert "Set-Cookie" not in r.headers and 'name="csrf-token"' not in r.text
+    assert "Set-Cookie" in client.get("/inloggen").headers  # elders wel, voor het csrf-token
+
+
 def test_openbare_pagina_clubboot_en_onbekend(client):
     p = bezette_plaats(club=True)
     assert "Botenloods" in client.get(f"/p/{p.publieke_sleutel}").text

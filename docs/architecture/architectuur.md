@@ -119,9 +119,9 @@ De applicatie gebruikt Python 3.14 op het image `python:3.14-slim`. Heeft een af
 
 Lokaal start de ontwikkelaar de stack met:
 
-1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `LEDENBRON=stub` staat standaard aan.
+1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `compose.dev.yml` zet `LEDENBRON=stub` aan.
 2. `docker compose -f docker-compose.yml -f compose.dev.yml up --build`.
-3. `docker compose exec web flask seed` voor de synthetische gegevens.
+3. `docker compose exec worker flask seed` voor de synthetische gegevens. Seed draait in de worker, omdat alleen de taakrol leden mag schrijven (ADR-004).
 4. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.

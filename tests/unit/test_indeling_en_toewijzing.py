@@ -3,14 +3,17 @@ leesfunctie (BLB-020). Elke mutatie geeft een logregel (ADR-006)."""
 
 import io
 import re
+import threading
 from datetime import date, timedelta
 
 import pytest
 from PIL import Image
-from sqlalchemy import func, select
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.exc import IntegrityError
 
 from app.domein import CLI, Regelfout, afbeeldingen, boten, indeling, log, toewijzing
 from app.models import Afbeelding, Boot, Logregel, Plaats, Rek, db
+from tests.unit.conftest import WEB
 from tests.unit.hulp import lid, png
 
 
@@ -59,6 +62,15 @@ def test_dubbele_code_geweigerd(app, code):
     p = plaats()
     with pytest.raises(Regelfout, match="hoort al bij een andere plaats"):
         indeling.plaats_aanmaken(p.rek_id, code, [soort("Kajak")], False, CLI)
+    assert [q.code for q in indeling.rek(p.rek_id).plaatsen] == ["A01"]
+
+
+def test_database_weigert_dubbele_code_met_andere_hoofdletters(app, database):
+    """Twee gelijktijdige aanvragen komen allebei langs een controle in Python; de database niet."""
+    p = plaats()
+    with pytest.raises(IntegrityError, match="uq_plaats_code"), database.begin() as c:
+        c.execute(text("INSERT INTO plaats (rek_id, code, publieke_sleutel) "
+                       "VALUES (:rek, 'a01', 'xxxxxxxxxx')"), {"rek": p.rek_id})
 
 
 @pytest.mark.parametrize("code, soorten", [("", ["Kajak"]), ("x" * 21, ["Kajak"]),
@@ -97,6 +109,14 @@ def test_lege_plaats_verwijderen(app):
 
 
 # Boten
+
+
+@pytest.mark.parametrize("veld", ["opzegdatum", "uit_bron_op"])
+def test_geen_nieuwe_boot_voor_oud_lid(app, veld):
+    oud = lid(**{veld: date.today() - timedelta(days=1)})
+    with pytest.raises(Regelfout, match="is oud-lid en krijgt geen nieuwe boot"):
+        boot(oud.id)
+    assert db.session.scalar(select(func.count()).select_from(Boot)) == 0
 
 
 def test_boot_van_lid_en_clubboot(app):
@@ -197,7 +217,12 @@ def test_toewijzen_geweigerd(app, geval, melding):
     eigenaar = None if geval == "clubboot_op_ledenplaats" else lid(
         opzegdatum=gisteren if geval == "oud_lid" else None,
         uit_bron_op=gisteren if geval == "uit_bron" else None).id
-    b = boot(eigenaar, bootsoort="Supboard" if geval == "verkeerde_soort" else "Kajak")
+    if geval in ("oud_lid", "uit_bron"):  # de boot bestond al voor de opzegging
+        b = Boot(naam="Zeemeeuw", bootsoort_id=soort("Kajak"), lid_id=eigenaar)
+        db.session.add(b)
+        db.session.commit()
+    else:
+        b = boot(eigenaar, bootsoort="Supboard" if geval == "verkeerde_soort" else "Kajak")
     if geval == "bezet":
         toewijzing.toewijzen(p.id, boot(lid("1002").id, naam="Fuut").id, CLI)
     if geval == "al_plaats":
@@ -207,6 +232,36 @@ def test_toewijzen_geweigerd(app, geval, melding):
         toewijzing.toewijzen(p.id, b.id, CLI)
     assert len(acties()) == voor
     assert db.session.get(Plaats, p.id).boot_id != b.id
+
+
+def test_gelijktijdig_toewijzen_aan_dezelfde_plaats(app):
+    """Twee databasesessies: de tweede wacht op de vergrendeling van de eerste en ziet daarna dat
+    de plaats bezet is. Zonder FOR UPDATE zou ze de eerste toewijzing overschrijven."""
+    p = plaats()
+    b1, b2 = boot(lid().id), boot(lid("1002").id, naam="Fuut")
+    fouten = []
+
+    def tweede():
+        with app.app_context():
+            try:
+                toewijzing.toewijzen(p.id, b2.id, CLI)
+            except Regelfout as fout:
+                fouten.append(str(fout))
+
+    engine = create_engine(WEB)
+    with engine.connect() as eerste:
+        eerste.execute(text("SELECT id FROM plaats WHERE id = :p FOR UPDATE"), {"p": p.id})
+        draad = threading.Thread(target=tweede)
+        draad.start()
+        draad.join(timeout=1)
+        assert draad.is_alive()  # wacht op de vergrendeling
+        eerste.execute(text("UPDATE plaats SET boot_id = :b WHERE id = :p"), {"b": b1.id, "p": p.id})
+        eerste.commit()
+    draad.join(timeout=5)
+    engine.dispose()
+    assert fouten == ["Plaats A01 is al bezet."]
+    db.session.expire_all()
+    assert db.session.get(Plaats, p.id).boot_id == b1.id
 
 
 def test_lid_met_opzegdatum_in_de_toekomst_krijgt_een_plaats(app):

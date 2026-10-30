@@ -6,7 +6,7 @@ Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OV
 
 1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand).
 2. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`
-3. `docker compose -f docker-compose.yml -f compose.dev.yml exec web flask seed` voor een synthetische loods (alleen buiten productie).
+3. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed draait in de worker, omdat alleen die leden mag schrijven.
 4. `docker compose -f docker-compose.yml -f compose.dev.yml exec web flask beheerder uitnodigen <gebruikersnaam>` en de link openen.
 
 De applicatie draait op http://localhost:8080.

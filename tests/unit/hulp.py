@@ -5,9 +5,12 @@ import time
 
 import pyotp
 from PIL import Image
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
 from app.domein import CLI, beheerders
 from app.models import Lid, db
+from tests.unit.conftest import TAKEN
 
 WACHTWOORD = "correct paard batterij"
 
@@ -33,9 +36,14 @@ def png(breedte=40, hoogte=30, exif=None, formaat="PNG"):
 
 
 def lid(lidnummer="1001", naam="Anna de Vries", **velden):
-    """Een lid zoals de synchronisatie het aanmaakt; in tests direct in de database."""
-    nieuw = Lid(lidnummer=lidnummer, naam=naam, adres="Proefweg 1, 1234 AB Voorbeelddorp",
-                telefoon="06-00001234", email=f"{lidnummer}@example.org", **velden)
-    db.session.add(nieuw)
-    db.session.commit()
-    return nieuw
+    """Een lid zoals de synchronisatie het aanmaakt, als de taakrol: de webrol mag leden alleen
+    lezen. Geeft het lid in de sessie van de test."""
+    engine = create_engine(TAKEN)
+    with Session(engine) as taak:
+        nieuw = Lid(lidnummer=lidnummer, naam=naam, adres="Proefweg 1, 1234 AB Voorbeelddorp",
+                    telefoon="06-00001234", email=f"{lidnummer}@example.org", **velden)
+        taak.add(nieuw)
+        taak.commit()
+        lid_id = nieuw.id
+    engine.dispose()
+    return db.session.get(Lid, lid_id)

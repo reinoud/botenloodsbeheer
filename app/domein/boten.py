@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, afbeeldingen, log
+from app.domein import Regelfout, afbeeldingen, leden, log
 from app.models import Boot, Bootsoort, Lid, db
 
 
@@ -38,8 +38,11 @@ def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
     soort = db.session.get(Bootsoort, bootsoort_id) if bootsoort_id else None
     if soort is None:
         raise Regelfout("Kies een bootsoort.")
-    if lid_id is not None and db.session.get(Lid, lid_id) is None:
+    eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None
+    if lid_id is not None and eigenaar is None:
         raise Regelfout("Dit lid bestaat niet.")
+    if eigenaar is not None and leden.is_oud_lid(eigenaar):
+        raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
     b = Boot(naam=naam, bootsoort=soort, lid_id=lid_id)
     if foto:
         b.afbeelding = afbeeldingen.verwerk(foto)

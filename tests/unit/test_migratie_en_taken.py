@@ -4,7 +4,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic import command
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
+from sqlalchemy.exc import ProgrammingError
 
 from app import seed, taken
 from app.domein import leden
@@ -20,6 +21,15 @@ def test_migratie_omkeerbaar_en_gelijk_aan_modellen(database):
     command.upgrade(cfg, "head")
 
 
+@pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
+                                 "UPDATE lid SET naam = 'X'", "DELETE FROM lid"])
+def test_webgebruiker_leest_leden_alleen(app, sql):
+    db.session.execute(select(Lid)).all()
+    with pytest.raises(ProgrammingError, match="permission denied"):
+        db.session.execute(text(sql))
+    db.session.rollback()
+
+
 def test_heartbeat(app):
     assert not taken.gezond()
     taken.hartslag()
@@ -31,6 +41,7 @@ def test_heartbeat(app):
     assert not taken.gezond()
 
 
+@pytest.mark.worker  # seed draait in de worker (#9)
 def test_seed_maakt_de_synthetische_loods(app):
     seed.seed(echo=lambda _: None)
     def tel(model, *waar):

@@ -57,12 +57,17 @@ def database():
     eigenaar.dispose()
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "worker: de test draait als botenloods_taken, zoals de worker")
+
+
 @pytest.fixture
-def app(database):
+def app(database, request):
     from app import create_app
     from app.models import db
 
-    app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False})
+    rol = TAKEN if request.node.get_closest_marker("worker") else WEB
+    app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "SQLALCHEMY_DATABASE_URI": rol})
     with app.app_context():
         yield app
         db.session.remove()

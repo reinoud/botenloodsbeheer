@@ -7,7 +7,7 @@ cd "$(dirname "$0")/../.."
 c=(docker compose -f docker-compose.yml -f compose.dev.yml)
 stempel=$(date +%s)
 
-"${c[@]}" exec -T web flask seed  # doet niets als de loods al gegevens heeft
+"${c[@]}" exec -T worker flask seed  # doet niets als de loods al gegevens heeft
 
 links=()
 for soort in passkey wachtwoord vergrendel bezoeker indeling regels; do

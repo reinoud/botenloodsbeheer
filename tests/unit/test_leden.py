@@ -8,9 +8,11 @@ import pytest
 from sqlalchemy import select
 
 from app import taken
-from app.domein import CLI, LEDENSYNCHRONISATIE, Regelfout, leden
+from app.domein import CLI, LEDENSYNCHRONISATIE, Regelfout, leden, vandaag
 from app.ledenbron import LedenbronFout, StubBron
 from app.models import Lid, Logregel, Taakrun, db
+
+pytestmark = pytest.mark.worker  # alleen de worker schrijft leden (#9)
 
 
 def record(nummer, **velden):
@@ -101,8 +103,10 @@ def test_onleesbare_bron(app, bron, inhoud):
 
 
 def test_opgeschoond_oud_lid_komt_niet_terug(app, bron):
-    lang_geleden = (date.today() - timedelta(days=5 * 366)).isoformat()
-    aantallen = sync(bron([record("1"), record("2", opzegdatum=lang_geleden)]))
+    grens = leden.jaren_terug(vandaag(), leden.BEWAARJAREN)
+    aantallen = sync(bron([record("1", opzegdatum=grens.isoformat()),
+                           record("2", opzegdatum=(grens - timedelta(days=1)).isoformat())]))
+    # Precies 5 jaar geleden opgezegd komt nog binnen; een dag eerder niet.
     assert aantallen["overgeslagen"] == 1 and set(alle()) == {"1"}
 
 

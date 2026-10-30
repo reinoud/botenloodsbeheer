@@ -13,7 +13,7 @@ from sqlalchemy import select
 
 from app.domein import CLI, Regelfout, boten, indeling, leden, log, toewijzing
 from app.ledenbron import StubBron
-from app.models import Instelling, Plaats, Rek, db
+from app.models import Boot, Instelling, Plaats, Rek, db
 
 VERENIGING = "Kanovereniging De Voorbeeldplas"
 # Per rek de bootsoorten die passen; het laatste rek heeft acht clubplaatsen.
@@ -60,15 +60,21 @@ def seed(echo=print):
             indeling.plaats_aanmaken(rek.id, f"{letter}{n:02d}", [soort[s] for s in passend],
                                      club, CLI)
 
-    def boot(eigenaar):
+    def boot(eigenaar, oud_lid=False):
         naam = f"{r.choice(NAMEN)} {r.randint(1, 99)}"
+        if oud_lid:
+            # De boot bestond al voor de opzegging; boot_aanmaken weigert een oud-lid.
+            b = Boot(naam=naam, bootsoort_id=soort[r.choice(SOORTEN)], lid_id=eigenaar)
+            db.session.add(b)
+            db.session.commit()
+            return b
         return boten.boot_aanmaken(naam, soort[r.choice(SOORTEN)], eigenaar, None, CLI)
 
     alle = leden.alle_leden()
     oud = [lid for lid in alle if leden.is_oud_lid(lid)]
     actief = [lid for lid in alle if not leden.is_oud_lid(lid)]
     clubboten = [boot(None) for _ in range(CLUBBOTEN)]
-    oud_boten = [boot(lid.id) for lid in oud[:BOTEN_OUD_LID]]
+    oud_boten = [boot(lid.id, oud_lid=True) for lid in oud[:BOTEN_OUD_LID]]
     eigen = [boot(lid.id) for lid in r.choices(actief, k=BOTEN_LEDEN)]
 
     vrij = db.session.scalars(select(Plaats).order_by(Plaats.id)).all()

@@ -168,7 +168,7 @@ class Plaats(db.Model):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     rek_id: Mapped[int] = mapped_column(ForeignKey("rek.id"), index=True)
-    code: Mapped[str] = mapped_column(String(20), unique=True)
+    code: Mapped[str] = mapped_column(String(20))  # uniek zonder hoofdletters: zie __table_args__
     publieke_sleutel: Mapped[str] = mapped_column(String(10), unique=True)
     is_clubplaats: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     volgorde: Mapped[int] = mapped_column(default=0, server_default=text("0"))
@@ -179,6 +179,8 @@ class Plaats(db.Model):
         secondary=plaats_bootsoort, order_by=Bootsoort.id
     )
     boot: Mapped["Boot | None"] = relationship(back_populates="plaats")
+
+    __table_args__ = (Index("uq_plaats_code", func.lower(code), unique=True),)
 
 
 class Lid(db.Model):
