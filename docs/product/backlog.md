@@ -280,6 +280,8 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 
 - Gegeven een bezette plaats, wanneer een bezoeker de pagina zonder in te loggen opent, dan ziet die de plaatscode, de naam van de boot, de foto als die er is en alleen de naam van de eigenaar.
 - Gegeven de openbare pagina, wanneer een bezoeker de gegevens bekijkt die de pagina ontvangt, dan staan daar geen adres, telefoonnummer, e-mailadres of lidnummer in.
+- Gegeven de link naar de openbare pagina van een plaats, wanneer iemand die bekijkt, dan bevat die geen plaatscode, volgnummer of andere afleidbare waarde, maar een willekeurige, niet te voorspellen sleutel per plaats. Wie één link kent, kan daaruit de link van een andere plaats niet afleiden (besluit stakeholder 2026-10-30).
+- Gegeven een plaats waarvan de plaatscode wijzigt, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
 - Gegeven een code of link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
 - Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een clubplaats staan de clubboot en de naam van de vereniging als eigenaar.
 

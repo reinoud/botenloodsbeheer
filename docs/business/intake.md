@@ -97,3 +97,4 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - De bewaartermijn van 5 jaar begint voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log begint de termijn bij de mutatie.
 - De Excel-export bevat rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen.
 - Er is toegang tot de API van e-boekhouden. Voor nu komt er een stub achter de koppelmodule; de echte koppeling volgt later.
+- De link in de QR-code is niet voorspelbaar. Hij bevat geen plaatscode of volgnummer, maar een willekeurige sleutel per plaats, zodat niemand de links van andere plaatsen kan afleiden of doorlopen. De stakeholder vroeg om een "gehashte" URL; een willekeurige sleutel bereikt hetzelfde doel, en een hash van een volgnummer is wel te raden.
