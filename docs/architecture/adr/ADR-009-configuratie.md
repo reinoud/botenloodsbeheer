@@ -15,8 +15,7 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | Instelling | Waar | Standaard | Reden |
 |------------|------|-----------|-------|
 | `SECRET_KEY` | Omgeving | Geen; de applicatie start niet zonder | Geheim |
-| `DATABASE_URL` (web, alleen lezen en toevoegen op het log) | Omgeving | Geen | Geheim, ADR-006 |
-| `DATABASE_URL_TAKEN` (worker, mag opschonen) | Omgeving | Geen | Geheim, ADR-006 |
+| `DATABASE_URL`, per dienst een eigen waarde en databaserol: `web` mag het log alleen lezen en aanvullen, `worker` mag opschonen, `migrate` is eigenaar | Omgeving | Geen | Geheim, ADR-006. Eén naam per dienst in plaats van een aparte `DATABASE_URL_TAKEN` (slice 1a) |
 | `BASIS_URL` | Omgeving | Geen | Vast per installatie, altijd `https://` (besloten, §9 besluit 2); in QR-codes |
 | `TOTP_SLEUTEL` | Omgeving | Geen; de applicatie start niet zonder | Geheim; versleutelt de TOTP-geheimen (ADR-001) |
 | `API_INGESCHAKELD` | Omgeving | `false` | Besluit van de stakeholder: een installatiekeuze; wijzigen vraagt een herstart van `web` |

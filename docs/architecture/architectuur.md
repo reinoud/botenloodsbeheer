@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.2.0
+**Versie:** v0.2.1
 **Datum:** 2026-10-30
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30)
@@ -21,7 +21,7 @@ De installatie bestaat uit vier containers in één `docker-compose.yml`. Ze dra
 
 | Container | Inhoud | Taak | Bereikbaar van buiten |
 |-----------|--------|------|-----------------------|
-| `nginx` | Nginx (officieel image, unprivileged-variant) | TLS (vaste domeinnaam met HTTPS, §9 besluit 2), statische bestanden, beveiligingsheaders, rate limiting, maximale uploadgrootte, doorsturen naar `web` | Ja, poort 443 (en 80 voor doorverwijzing) |
+| `nginx` | Nginx (officieel image, unprivileged-variant) | TLS (vaste domeinnaam met HTTPS, §9 besluit 2), beveiligingsheaders, rate limiting, maximale uploadgrootte, doorsturen naar `web` | Ja, poort 443 (en 80 voor doorverwijzing) |
 | `web` | Applicatie-image, Gunicorn met Flask | Webinterface, openbare pagina, API `/api/v1`, health endpoints | Nee, alleen via `nginx` |
 | `worker` | Hetzelfde applicatie-image, ander startcommando | Dagelijkse ledensynchronisatie, handmatig gestarte synchronisatie, dagelijkse opschoning | Nee |
 | `db` | PostgreSQL 17 | Alle gegevens, ook foto's en logo | Nee, alleen intern netwerk |
@@ -248,4 +248,5 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.2.1 | 2026-10-30 | Afwijkingen uit slice 1a: Flask serveert de statische bestanden (§2); per dienst een eigen `DATABASE_URL` (ADR-009) |
 | v0.2.0 | 2026-10-30 | Vijf besluiten van de stakeholder verwerkt. ADR-001 herschreven (passkey of wachtwoord met TOTP). ADR-009: API-schakelaar naar de omgeving, `TOTP_SLEUTEL` toegevoegd. ADR-011: argon2-cffi, pyotp, cryptography. ADR-004 en ADR-006: opschoonregels als besloten. §4, §6, §8 en §9 aangepast; ADR-status Aanvaard |
