@@ -1,4 +1,5 @@
-"""Foto's en logo (ADR-008): controleren, verkleinen en zonder metadata opslaan."""
+"""Foto's en logo (ADR-008): controleren, verkleinen en zonder metadata opslaan. Alleen foto's
+komen in de database; het logo uit de installatie houdt web in het geheugen."""
 
 import io
 import secrets
@@ -35,7 +36,7 @@ def verwerk(inhoud, soort="foto"):
                 # PNG kent geen CMYK of YCbCr; met alfakanaal blijft transparantie staan.
                 if img.mode not in ("RGB", "RGBA", "L", "LA", "P"):
                     img = img.convert("RGBA")
-                img.save(uit, "PNG")
+                img.save(uit, "PNG", icc_profile=None)  # ook geen kleurprofiel van de bron
                 mime = "image/png"
     except Regelfout:
         raise

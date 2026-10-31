@@ -10,10 +10,13 @@ from openpyxl import load_workbook
 from PIL import Image
 from sqlalchemy import create_engine, func, select, update
 
+from app import config
+from app.config import UPLOAD_MAX
 from app.domein import CLI, Regelfout, instellingen, toewijzing
 from app.models import Afbeelding, Instelling, Lid, Logregel, db
+from app.web import huisstijl
 from tests.unit.conftest import TAKEN
-from tests.unit.hulp import lid, png, race
+from tests.unit.hulp import lid, png
 from tests.unit.test_indeling_en_toewijzing import boot, plaats, soort
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
@@ -142,18 +145,20 @@ def test_geen_plaatsen_van_oud_leden(ingelogd):  # noqa: F811
 
 
 def test_export_kolommen_en_geen_contactgegevens(ingelogd):  # noqa: F811
-    _vrij, _bezet, club, _c11, _anna = loods()
+    vrij, _bezet, club, _c11, _anna = loods()
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
+    plaats("A05", ("Kajak", "Canadese kano"), club=True, rek=vrij.rek)  # clubplaats zonder boot
     r = ingelogd.get("/indeling.xlsx")
     assert r.status_code == 200 and "attachment" in r.headers["Content-Disposition"]
     blad = load_workbook(io.BytesIO(r.data)).active
     rijen = [tuple(c.value for c in rij) for rij in blad.iter_rows()]
     assert rijen == [
         ("Rek", "Code", "Status", "Bootsoort", "Bootnaam", "Eigenaar", "Lidnummer"),
-        ("Rek A", "A01", "vrij", None, None, None, None),
+        ("Rek A", "A01", "vrij", "(geschikt voor Kajak, Surfski)", None, None, None),
         ("Rek A", "A02", "bezet", "Kajak", "Zeemeeuw", "Anna de Vries", "1001"),
         ("Rek A", "A03", "clubplaats", "Surfski", "Clubski", "Botenloods", None),
-        ("Rek A", "A04", "vrij", None, None, None, None)]
+        ("Rek A", "A04", "vrij", "(geschikt voor C11)", None, None, None),
+        ("Rek A", "A05", "clubplaats", "(geschikt voor Kajak, Canadese kano)", None, None, None)]
     inhoud = str(rijen)
     for verboden in ("Proefweg", "06-0000", "@example.org"):
         assert verboden not in inhoud
@@ -176,10 +181,13 @@ def test_export_vraagt_inloggen(client):
 # Naam, kleuren en logo (BLB-027)
 
 
-def test_neutrale_standaard_zonder_instellingen(client):
-    assert instellingen.huidig() == {**instellingen.STANDAARD, "logo": None}
+def test_neutrale_standaard_zonder_instellingen_en_zonder_logo(app, client):
+    assert app.config["LOGO_BESTAND"] == "/huisstijl/logo.png"  # bestaat niet in de testcontainer
+    assert app.extensions["logo"] is None
+    assert instellingen.huidig() == instellingen.STANDAARD
     assert "--kleur-primair: #3f6fb5" in client.get("/huisstijl.css").text
-    assert "Inloggen · Botenloods</title>" in client.get("/inloggen").text
+    tekst = client.get("/inloggen").text
+    assert "Inloggen · Botenloods</title>" in tekst and 'class="logo"' not in tekst
 
 
 def test_opslaan_met_log_en_overal_zichtbaar(app, ingelogd):  # noqa: F811
@@ -226,55 +234,82 @@ def test_ongeldige_kleur_in_database_wordt_standaard(app):
     assert instellingen.huidig()["kleur_primair"] == "#3f6fb5"
 
 
-def logo_rijen():
-    return db.session.scalars(select(Afbeelding).where(Afbeelding.soort == "logo")).all()
+def logo_uit_installatie(app, tmp_path, inhoud):
+    """Zoals web bij het starten, met LOGO_BESTAND naar een bestand in de installatie."""
+    pad = tmp_path / "logo.png"
+    pad.write_bytes(inhoud)
+    app.config["LOGO_BESTAND"] = str(pad)
+    huisstijl.logo_laden(app)
+    return app.extensions["logo"]
 
 
-def test_logo_opslaan_vervangen_en_tonen(app, ingelogd):  # noqa: F811
-    r = ingelogd.post("/instellingen/logo", data={"logo": (io.BytesIO(png(1200, 300)), "l.png")},
-                      follow_redirects=True)
-    assert "Het logo is opgeslagen." in r.text and "instelling.logo_toegevoegd" in r.text
-    eerste = logo_rijen()[0]
-    assert (eerste.breedte, eerste.mime_type) == (800, "image/png")
-    ingelogd.post("/instellingen/logo", data={"logo": (io.BytesIO(png()), "l2.png")})
-    [tweede] = logo_rijen()
-    assert tweede.sleutel != eerste.sleutel
-    assert f"/afbeelding/{tweede.sleutel}" in app.test_client().get("/inloggen").text
+def test_logo_uit_installatie_op_alle_paginas_zonder_metadata(app, client, tmp_path, caplog):
+    exif = Image.Exif()
+    exif[0x8825] = {2: (52.0, 22.0, 1.0)}  # GPS-gegevens
+    kenmerk, _ = logo_uit_installatie(app, tmp_path, png(1200, 300, exif=exif.tobytes(), icc=b"bron-kleurprofiel"))
+    assert "Logo geladen" in caplog.text
+    p = plaats()
+    for pad in ("/inloggen", f"/p/{p.publieke_sleutel}"):
+        assert f'src="/logo/{kenmerk}"' in client.get(pad).text
+    r = client.get(f"/logo/{kenmerk}")
+    assert r.status_code == 200 and r.mimetype == "image/png"
+    assert r.headers["Cache-Control"] == "public, max-age=31536000, immutable"
+    assert r.headers["X-Content-Type-Options"] == "nosniff" and "Set-Cookie" not in r.headers
+    with Image.open(io.BytesIO(r.data)) as img:
+        assert img.format == "PNG" and img.size == (800, 200)
+        assert not img.getexif() and "exif" not in img.info and "icc_profile" not in img.info
+    assert client.get("/logo/0123456789abcdef").status_code == 404
+    # Geen mutatie: geen logregel over de huisstijl en niets in de database.
+    acties = db.session.scalars(select(Logregel.actie)).all()
+    assert acties and not [a for a in acties if a.startswith("instelling")]
+    assert db.session.scalar(select(func.count()).select_from(Afbeelding)) == 0
+
+
+def test_nieuw_logo_na_herstart_krijgt_nieuwe_url(app, tmp_path):
+    eerste, _ = logo_uit_installatie(app, tmp_path, png())
+    tweede, _ = logo_uit_installatie(app, tmp_path, png(20, 20))
+    assert eerste != tweede
 
 
 @pytest.mark.parametrize("inhoud", [
+    None,  # bestand ontbreekt
     b"geen afbeelding",
     b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
-    png(formaat="GIF")])
-def test_ongeldig_logo_geweigerd_en_oude_blijft(ingelogd, inhoud):  # noqa: F811
-    instellingen.logo_vervangen(png(), CLI)
-    oud = logo_rijen()[0].sleutel
-    r = ingelogd.post("/instellingen/logo", data={"logo": (io.BytesIO(inhoud), "logo.png")},
-                      follow_redirects=True)
-    assert "Het logo is opgeslagen." not in r.text
-    assert [a.sleutel for a in logo_rijen()] == [oud]
+    png(formaat="GIF"),
+    png() + b"0" * UPLOAD_MAX],  # geldige PNG, maar groter dan 10 MB
+    ids=["ontbreekt", "tekst", "svg", "gif", "te-groot"])
+def test_ontbrekend_of_ongeldig_logo_toont_alleen_de_naam(app, client, tmp_path, caplog, inhoud):
+    if inhoud is None:
+        app.config["LOGO_BESTAND"] = str(tmp_path / "bestaat-niet.png")
+        huisstijl.logo_laden(app)
+    else:
+        logo_uit_installatie(app, tmp_path, inhoud)
+    assert app.extensions["logo"] is None
+    assert "alleen de naam" in caplog.text and caplog.records[-1].levelname == "WARNING"
+    tekst = client.get("/inloggen").text
+    assert 'class="logo"' not in tekst and "/logo/" not in tekst
 
 
-def test_logo_zonder_metadata_en_cmyk(app):
-    exif = Image.Exif()
-    exif[0x8825] = {2: (52.0, 22.0, 1.0)}  # GPS-gegevens
-    uit = io.BytesIO()
-    Image.new("CMYK", (40, 30)).save(uit, "JPEG", exif=exif)
-    instellingen.logo_vervangen(uit.getvalue(), CLI)
-    with Image.open(io.BytesIO(logo_rijen()[0].inhoud)) as img:
-        assert img.format == "PNG" and not img.getexif() and "exif" not in img.info
+def test_worker_leest_geen_logo(monkeypatch):
+    monkeypatch.setenv("DIENST", "worker")
+    assert config.laad()["LOGO_BESTAND"] is None
 
 
-@pytest.mark.parametrize("pad", ["/instellingen", "/instellingen/logo"])
-def test_recente_inlog_vereist(ingelogd, pad):  # noqa: F811
+def test_geen_logo_uploaden_of_verwijderen(ingelogd):  # noqa: F811
+    tekst = ingelogd.get("/instellingen").text
+    assert 'type="file"' not in tekst and "Logo opslaan" not in tekst
+    assert "staat in de installatie" in tekst
+    assert ingelogd.post("/instellingen/logo", data={"logo": (io.BytesIO(png()), "l.png")}
+                         ).status_code == 404
+
+
+def test_recente_inlog_vereist(ingelogd):  # noqa: F811
     with ingelogd.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
-    r = ingelogd.post(pad, data={"naam": "Overgenomen", "kleur_primair": "#000000",
-                                 "kleur_secundair": "#000000",
-                                 "logo": (io.BytesIO(png()), "l.png")})
+    r = ingelogd.post("/instellingen", data={"naam": "Overgenomen", "kleur_primair": "#000000",
+                                             "kleur_secundair": "#000000"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0
-    assert logo_rijen() == []
 
 
 @pytest.mark.parametrize("pad", ["/instellingen", "/vrij", "/opgezegd", "/leden/1"])
@@ -288,25 +323,3 @@ def test_bezoeker_wijzigt_geen_instellingen(client):
                                            "kleur_secundair": "#000000"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0
-
-
-# Een verouderd logo verwijderen geeft alleen een SAWarning ("0 were matched"); hier een fout.
-@pytest.mark.filterwarnings("error")
-def test_gelijktijdig_logo_vervangen_wacht_op_vergrendeling(app):
-    """Een tweede upload wacht op de eerste en verwijdert daarna het logo dat de eerste
-    achterliet, niet het logo dat hij vooraf las (populate_existing)."""
-    instellingen.logo_vervangen(png(), CLI)
-    [eerste] = logo_rijen()
-
-    def tweede():
-        # De rij en het oude logo staan al in de sessie, zoals na het tonen van een pagina.
-        geladen = [*db.session.scalars(select(Instelling)), db.session.get(Afbeelding, eerste.id)]
-        instellingen.logo_vervangen(png(20, 20), CLI)
-        assert geladen
-
-    fouten = race(app, ["SELECT * FROM instelling WHERE sleutel = 'logo' FOR UPDATE",
-                        "UPDATE instelling SET waarde = '' WHERE sleutel = 'logo'",
-                        "DELETE FROM afbeelding WHERE id = :a"], {"a": eerste.id}, tweede)
-    assert fouten == []
-    [nieuw] = logo_rijen()
-    assert nieuw.breedte == 20 and instellingen.huidig()["logo"] == nieuw.sleutel

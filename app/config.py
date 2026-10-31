@@ -29,7 +29,7 @@ def _verplicht(naam):
 
 LEDENBRONNEN = ("", "stub")
 DIENSTEN = ("web", "worker")
-UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan client_max_body_size van de uploadroute (ADR-008)
+UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan client_max_body_size van /boten (ADR-008)
 
 
 def _tijdstip(naam, standaard):
@@ -75,6 +75,8 @@ def laad():
         "TZ": _lees("TZ", "Europe/Amsterdam"),
         "LOG_NIVEAU": _lees("LOG_NIVEAU", "INFO"),
         "LEDENBRON": ledenbron,
+        # Alleen web toont het logo; de worker leest het niet (ADR-008).
+        "LOGO_BESTAND": _lees("LOGO_BESTAND", "/huisstijl/logo.png") if dienst == "web" else None,
         "LEDENBRON_STUB_BESTAND": _lees("LEDENBRON_STUB_BESTAND", "tests/fixtures/leden.json"),
         "SYNC_TIJDSTIP": _tijdstip("SYNC_TIJDSTIP", "03:00"),
         "MAX_CONTENT_LENGTH": UPLOAD_MAX,

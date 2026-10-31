@@ -106,8 +106,8 @@ def uitvoeren(functie, *args, gelukt=None):
 @bp.app_context_processor
 def naam_en_logo():
     """Naam en logo voor elke pagina; de kleuren komen via /huisstijl.css (BLB-027)."""
-    stijl = instellingen.huidig()
-    return {"vereniging": stijl["naam"], "logo": stijl["logo"]}
+    logo = current_app.extensions.get("logo")
+    return {"vereniging": instellingen.huidig()["naam"], "logo": logo[0] if logo else None}
 
 
 @bp.app_template_filter("tijd")

@@ -11,7 +11,7 @@
 </head>
 <body>
   <header class="kop">
-    <a class="kop-naam" href="{{ url_for('web.start') }}">{% if logo %}<img class="logo" src="{{ url_for('web.afbeelding', sleutel=logo) }}" alt="">{% endif %}{{ vereniging }}</a>
+    <a class="kop-naam" href="{{ url_for('web.start') }}">{% if logo %}<img class="logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>
     {% if g.beheerder %}
     <nav class="kop-menu" aria-label="Hoofdmenu">
       <a href="{{ url_for('web.indeling_overzicht') }}">Indeling</a>

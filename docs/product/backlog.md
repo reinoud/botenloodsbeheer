@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.1
+**Versie:** v0.3.2
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -292,7 +292,7 @@ Als beheerder wil ik de huidige indeling naar Excel exporteren zodat ik die buit
 
 - Gegeven de indeling, wanneer de beheerder de export start, dan komt er een Excel-bestand met een rij per plaats met rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer (besluit vraag 8; de kolommen kunnen later veranderen).
 - Gegeven het bestand, wanneer de beheerder het opent, dan bevat het geen adres, telefoonnummer, e-mailadres of foto.
-- Gegeven een vrije plaats die geschikt is voor kajak en surfski, wanneer de beheerder exporteert, dan staat in de kolom Bootsoort "(geschikt voor kajak, surfski)" (besluit vraag 11). Voor een clubplaats zonder boot zie vraag 19. (slice 4)
+- Gegeven een vrije plaats die geschikt is voor kajak en surfski, wanneer de beheerder exporteert, dan staat in de kolom Bootsoort "(geschikt voor Kajak, Surfski)", met de namen zoals ingevoerd (besluit vraag 11; spelling besloten 2026-10-31). Voor een clubplaats zonder boot zie vraag 19. (slice 4)
 
 #### BLB-018 Plaatsen van opgezegde leden
 

@@ -2,8 +2,8 @@
 
 Vaste random seed, dus elke run levert hetzelfde op. Alle gegevens zijn verzonnen.
 Afwijkingen van §6.3: de twee oud-leden met een opzegdatum van meer dan 5 jaar geleden komen
-niet binnen, omdat de synchronisatie die overslaat (ADR-004 stap 4); wachtlijst, kleuren en
-logo volgen met hun slice.
+niet binnen, omdat de synchronisatie die overslaat (ADR-004 stap 4); wachtlijst en kleuren
+volgen met hun slice. Het testlogo komt niet uit seed maar uit compose.dev.yml (ADR-008).
 """
 
 import random

@@ -5,11 +5,12 @@ services:
   db:
     ports: !override ["127.0.0.1:5432:5432"]
 
-  # Lokaal is de stub de ledenbron, met de synthetische leden uit tests/fixtures.
+  # Lokaal is de stub de ledenbron, met de synthetische leden en het testlogo uit tests/fixtures.
   web:
     environment:
       GUNICORN_CMD_ARGS: --reload
       LEDENBRON: stub
+      LOGO_BESTAND: /app/tests/fixtures/logo.png
     volumes:
       - ./app:/app/app:ro
       - ./tests/fixtures:/app/tests/fixtures:ro

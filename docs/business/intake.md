@@ -135,3 +135,4 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De mogelijkheid om de API bewust van buiten bereikbaar te maken blijft open, als keuze per installatie. Persoonlijke tokens blijven daarom mogelijk.
 - e-boekhouden kan leden leveren met een opzegdatum in de toekomst. Heeft zo'n lid boten in de loods, dan ziet de beheerder een lijst met die boten en de opzegdatum, zodat ze vóór die datum weg zijn.
 - "(geschikt voor …)" in de Excel-export geldt ook voor een clubplaats zonder boot.
+- In "(geschikt voor …)" staan de bootsoorten zoals ze in de applicatie zijn ingevoerd, zonder omzetting naar kleine letters.

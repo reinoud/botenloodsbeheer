@@ -4,8 +4,8 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic import command
-from sqlalchemy import func, select, text
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy import create_engine, func, select, text
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app import seed, taken
 from app.domein import leden
@@ -19,6 +19,31 @@ def test_migratie_omkeerbaar_en_gelijk_aan_modellen(database):
     command.check(cfg)  # faalt als models.py en de migraties uit elkaar lopen
     command.downgrade(cfg, "base")
     command.upgrade(cfg, "head")
+
+
+def test_migratie_verwijdert_geupload_logo(database):
+    """BLB-027 criterium 5: een logo uit slice 3 verdwijnt; alleen het logo uit de installatie
+    geldt nog. Foto's blijven staan."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0003")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    rij = ("INSERT INTO afbeelding (soort, mime_type, inhoud, breedte, hoogte, sleutel) "
+           "VALUES (:s, 'image/png', '\\x00', 1, 1, :s) RETURNING id")
+    with engine.begin() as c:
+        logo = c.execute(text(rij), {"s": "logo"}).scalar()
+        c.execute(text(rij), {"s": "foto"})
+        c.execute(text("INSERT INTO instelling (sleutel, waarde) VALUES ('logo', :id), "
+                       "('naam', 'KV')"), {"id": str(logo)})
+    command.upgrade(cfg, "head")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT soort FROM afbeelding")).scalars().all() == ["foto"]
+        assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
+        with pytest.raises(IntegrityError):
+            c.execute(text(rij), {"s": "logo"})
+    command.downgrade(cfg, "0003")
+    with engine.begin() as c:
+        c.execute(text(rij), {"s": "logo"})
+    engine.dispose()
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",

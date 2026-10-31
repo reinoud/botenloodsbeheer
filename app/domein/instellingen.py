@@ -1,13 +1,14 @@
-"""Naam, kleuren en logo van de vereniging (BLB-027, ADR-009). Staan in de tabel instelling;
-een lege of ontbrekende waarde is de neutrale standaard."""
+"""Naam en kleuren van de vereniging (BLB-027, ADR-009). Staan in de tabel instelling;
+een lege of ontbrekende waarde is de neutrale standaard. Het logo komt uit de installatie
+(app.web.huisstijl.logo_laden, ADR-008)."""
 
 import re
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
-from app.domein import Regelfout, afbeeldingen, log
-from app.models import Afbeelding, Instelling, db
+from app.domein import Regelfout, log
+from app.models import Instelling, db
 
 STANDAARD = {"naam": "Botenloods", "kleur_primair": "#3f6fb5", "kleur_secundair": "#5f6b7a"}
 HEX = re.compile(r"#[0-9a-fA-F]{6}")
@@ -18,15 +19,13 @@ TEGENKLEUR = {"kleur_primair": ("#ffffff", "de tekst in de kopbalk"),
 
 
 def huidig():
-    """Naam, kleuren en de sleutel van het logo (of None). Een ongeldige kleur in de database
-    wordt de standaard, zodat de stylesheet nooit iets anders dan een hexkleur bevat."""
+    """Naam en kleuren. Een ongeldige kleur in de database wordt de standaard, zodat de
+    stylesheet nooit iets anders dan een hexkleur bevat."""
     waarden = {i.sleutel: i.waarde for i in db.session.scalars(select(Instelling))}
     uit = {k: waarden.get(k) or v for k, v in STANDAARD.items()}
     for k in TEGENKLEUR:
         if not HEX.fullmatch(uit[k]):
             uit[k] = STANDAARD[k]
-    logo = db.session.get(Afbeelding, int(waarden["logo"])) if waarden.get("logo") else None
-    uit["logo"] = logo.sleutel if logo else None
     return uit
 
 
@@ -78,17 +77,3 @@ def opslaan(naam, kleur_primair, kleur_secundair, actor):
                                   f"{verhouding:.1f} op 1, minimaal {MIN_CONTRAST} op 1.")
     return waarschuwingen
 
-
-def logo_vervangen(inhoud, actor):
-    """Pas na een geslaagde verwerking vervangt het nieuwe logo het oude (ADR-008)."""
-    nieuw = afbeeldingen.verwerk(inhoud, "logo")
-    rij = _vergrendel(["logo"])["logo"]
-    oud = db.session.get(Afbeelding, int(rij.waarde)) if rij.waarde else None
-    db.session.add(nieuw)
-    db.session.flush()
-    rij.waarde = str(nieuw.id)
-    if oud:
-        db.session.delete(oud)
-    log.schrijf(actor, "instelling.logo_vervangen" if oud else "instelling.logo_toegevoegd",
-                ["instelling:huisstijl"], {"breedte": nieuw.breedte, "hoogte": nieuw.hoogte})
-    db.session.commit()

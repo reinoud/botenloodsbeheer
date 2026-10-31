@@ -1,4 +1,5 @@
-"""Overzichten, Excel-export en huisstijl (BLB-015 tot en met 019, BLB-027).
+"""Overzichten, Excel-export en huisstijl (BLB-015 tot en met 019, BLB-027). Het testlogo komt
+uit compose.dev.yml (ADR-008).
 
 Elke test gebruikt een eigen uitnodiging en eigen plaatsen met de stempel van de run. De leden en
 de oud-leden met een plaats komen uit flask seed (draai.sh)."""
@@ -9,7 +10,7 @@ import zipfile
 
 from conftest import STEMPEL, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_loods import png, rek_met_plaats
+from test_loods import rek_met_plaats
 
 
 def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
@@ -40,6 +41,8 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     with zipfile.ZipFile(io.BytesIO(open(download.value.path(), "rb").read())) as xlsx:
         teksten = "".join(xlsx.read(n).decode() for n in xlsx.namelist() if n.startswith("xl/"))
     assert ski in teksten and "Lidnummer" in teksten
+    # Vrije plaats en clubplaats zonder boot (BLB-017 criterium 3).
+    assert "(geschikt voor Surfski)" in teksten
     assert "@example.org" not in teksten and "Peddelpad" not in teksten and "06-0000" not in teksten
 
 
@@ -85,24 +88,22 @@ def test_huisstijl_instellen_en_terugzetten(page, browser, base_url):
         expect(page.get_by_role("alert")).to_contain_text("is de tekst in de kopbalk slecht leesbaar")
         expect(page.locator("section.log")).to_contain_text("instelling.gewijzigd")
 
-        logo = page.get_by_label("Logo (JPEG, PNG of WebP, tot 10 MB)")
-        logo.set_input_files({"name": "logo.txt", "mimeType": "image/png", "buffer": b"geen logo"})
-        page.get_by_role("button", name="Logo opslaan").click()
-        expect(page.get_by_role("alert")).to_contain_text("geen geldige afbeelding")
-        logo.set_input_files({"name": "logo.png", "mimeType": "image/png", "buffer": png(40, 20)})
-        page.get_by_role("button", name="Logo opslaan").click()
-        expect(page.get_by_text("Het logo is opgeslagen.")).to_be_visible()
+        # Het logo komt uit de installatie: geen upload in de applicatie (BLB-027 criterium 4).
+        expect(page.locator("input[type=file]")).to_have_count(0)
+        expect(page.get_by_text("Het logo staat in de installatie")).to_be_visible()
 
         bezoeker = browser.new_page(base_url=base_url)
         bezoeker.goto(openbare_link)
         expect(bezoeker.locator(".kop-naam")).to_have_text(naam)
-        expect(bezoeker.locator(".kop-naam img.logo")).to_be_visible()
+        logo = bezoeker.locator(".kop-naam img.logo")
+        expect(logo).to_be_visible()
+        expect(logo).to_have_attribute("src", re.compile(r"^/logo/[0-9a-f]{16}$"))
         kleur = bezoeker.evaluate("getComputedStyle(document.querySelector('.kop')).backgroundColor")
         assert kleur == "rgb(255, 238, 0)"
         bezoeker.close()
     finally:
         # Ook na een fout terugzetten, zodat andere tests en de handmatige route de oude naam
-        # en kleuren zien. Het logo blijft staan: er is geen knop om het te verwijderen.
+        # en kleuren zien.
         page.goto("/instellingen")
         page.get_by_label("Naam van de vereniging").fill(oud["naam"])
         page.locator("#kleur-primair").fill(oud["kleur-primair"])

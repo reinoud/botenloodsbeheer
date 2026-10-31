@@ -77,6 +77,11 @@ def plaatsen_van_oud_leden():
 KOLOMMEN = ("Rek", "Code", "Status", "Bootsoort", "Bootnaam", "Eigenaar", "Lidnummer")
 
 
+def geschikt_voor(p):
+    """Kolom Bootsoort bij een plaats zonder boot, ook een clubplaats (besluit vraag 11)."""
+    return f"(geschikt voor {', '.join(s.naam for s in p.bootsoorten)})"
+
+
 def export(vereniging):
     """De indeling als .xlsx, een rij per plaats (BLB-017). Een clubboot heeft de vereniging
     als eigenaar en geen lidnummer."""
@@ -87,7 +92,8 @@ def export(vereniging):
     for r in rekken():
         for p in r.plaatsen:
             b = p.boot
-            rij = (r.naam, p.code, status(p), b.bootsoort.naam if b else None,
+            soort = b.bootsoort.naam if b else geschikt_voor(p)
+            rij = (r.naam, p.code, status(p), soort,
                    b.naam if b else None, (b.lid.naam if b.lid else vereniging) if b else None,
                    b.lid.lidnummer if b and b.lid else None)
             # Stuurtekens (mogelijk uit de ledenbron) weigert openpyxl; ze vallen weg.

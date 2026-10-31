@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.2.0
+**Versie overlay:** v0.2.1
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -84,6 +84,12 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Raakt een besluit van de stakeholder ook de overlay, dan noemt foundation de verouderde regels in de overlay; de regie werkt ze bij.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
 - Draai vóór de oplevering `git diff` op de leidende bronnen; een besluit dat tijdens het werk is bijgekomen, gaat voor de opdracht. Meld het in je antwoord.
+- Na een wijziging in `docker-compose.yml` of `compose.dev.yml` die `web` opnieuw aanmaakt, herstart ook `nginx` voordat je E2E-tests of curl-controles draait.
+- Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
+- ADR-008 "zonder metadata" betekent zonder EXIF, tekstblokken en ICC-profiel; de test en de reviewer gebruiken een bronbestand met alle drie.
+- Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
+- Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad.
+- Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
 
 ## 5. Projectcontracten
 
@@ -148,6 +154,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.1 | 2026-10-31 | Regels in de briefingchecklist uit de terugblikken van slice 4 en het ontwerp van de integratiecontainer | Lessen |
 | v0.2.0 | 2026-10-31 | API standaard aan; imports en exports in een aparte container via de API | Besluit stakeholder 2026-10-31 |
 | v0.1.2 | 2026-10-31 | Zeven regels in de briefingchecklist uit de terugblikken van forge, aegis en sentinel (slice 3) en de controle door de regie | Lessen slice 3 |
 | v0.1.1 | 2026-10-30 | API-schakelaar en inlogmethode volgens de besluiten op de architectuurvragen; regel in de briefingchecklist uit de terugblik van foundation | Besluiten stakeholder 2026-10-30 |

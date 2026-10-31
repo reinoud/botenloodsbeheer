@@ -18,4 +18,4 @@ De applicatie draait op http://localhost:8080.
 
 ## Productie
 
-`docker compose up -d` met `APP_OMGEVING=productie`, een `https://`-adres in `BASIS_URL` en het certificaat in `certs/` (`fullchain.pem`, `privkey.pem`).
+`docker compose up -d` met `APP_OMGEVING=productie`, een `https://`-adres in `BASIS_URL` en het certificaat in `certs/` (`fullchain.pem`, `privkey.pem`). Het logo van de vereniging staat in `huisstijl/logo.png` (JPEG, PNG of WebP); na het vervangen `docker compose restart web`. Ontbreekt het of is het ongeldig, dan staat dat in `docker compose logs web` en toont de kopbalk alleen de naam.

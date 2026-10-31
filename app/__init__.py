@@ -44,4 +44,5 @@ def create_app(overrides=None):
     app.register_blueprint(web.bp)
     app.register_blueprint(web.health)
     cli.registreer(app)
+    web.huisstijl.logo_laden(app)
     return app

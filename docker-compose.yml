@@ -60,6 +60,10 @@ services:
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
       PROXY_HOPS: ${PROXY_HOPS:-1}
       DATABASE_URL: postgresql+psycopg://botenloods_web:${DB_WEB_WACHTWOORD}@db/botenloods
+      LOGO_BESTAND: ${LOGO_BESTAND:-/huisstijl/logo.png}
+    # Het logo van de vereniging, gelezen bij het starten (ADR-008). Zonder bestand alleen de naam.
+    volumes:
+      - ./huisstijl:/huisstijl:ro
     depends_on:
       migrate: {condition: service_completed_successfully}
     healthcheck:

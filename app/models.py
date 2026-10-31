@@ -205,10 +205,11 @@ class Lid(db.Model):
 
 
 class Afbeelding(db.Model):
-    """Foto of logo als bytea (ADR-008). De sleutel staat in de URL en wijzigt per upload."""
+    """Foto als bytea (ADR-008). De sleutel staat in de URL en wijzigt per upload. Het logo
+    staat niet hier maar in de installatie."""
 
     __tablename__ = "afbeelding"
-    __table_args__ = (CheckConstraint("soort IN ('foto', 'logo')", name="soort_geldig"),)
+    __table_args__ = (CheckConstraint("soort = 'foto'", name="soort_geldig"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     soort: Mapped[str] = mapped_column(String(10))

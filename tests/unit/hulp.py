@@ -28,11 +28,11 @@ def beheerder_met_wachtwoord(gebruikersnaam="anna"):
     return b, geheim
 
 
-def png(breedte=40, hoogte=30, exif=None, formaat="PNG"):
-    """Een kleine afbeelding als bytes, eventueel met exif (zoals GPS van een telefoon)."""
+def png(breedte=40, hoogte=30, exif=None, formaat="PNG", icc=None):
+    """Een kleine afbeelding als bytes, eventueel met exif (zoals GPS van een telefoon) of kleurprofiel."""
     uit = io.BytesIO()
     img = Image.new("RGB", (breedte, hoogte), (200, 80, 40))
-    img.save(uit, formaat, **({"exif": exif} if exif else {}))
+    img.save(uit, formaat, **({"exif": exif} if exif else {}), **({"icc_profile": icc} if icc else {}))
     return uit.getvalue()
 
 
