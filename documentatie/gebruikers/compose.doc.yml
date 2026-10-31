@@ -1,0 +1,11 @@
+# Aanvulling voor schermafbeeldingen.sh: een eigen, wegwerpbare stack naast de lokale (project
+# botenloods-doc). Geen poorten naar de host, zodat de lokale stack ongemoeid blijft.
+services:
+  db:
+    ports: !override []
+  nginx:
+    ports: !override []
+  e2e:
+    volumes:
+      - ./documentatie:/documentatie
+      - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
