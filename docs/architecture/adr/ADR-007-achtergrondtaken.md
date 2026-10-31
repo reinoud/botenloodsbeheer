@@ -2,12 +2,12 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.2.0
 **Stories:** BLB-006, BLB-026, BLB-037
 
 ## Context
 
-De dagelijkse opschoning na 5 jaar draait buiten het webproces (overlay §6) en duurt bij 210 leden enkele seconden. De ledensynchronisatie draait sinds 2026-10-31 in de integratiecontainer (ADR-012); een beheerder kan haar nog steeds handmatig aanvragen vanuit de webinterface. De statuspagina toont de laatste uitvoering met resultaat (BLB-037).
+De dagelijkse opschoning na 5 jaar draait buiten het webproces (overlay §6) en duurt bij 210 leden enkele seconden. De ledenimport draait sinds 2026-10-31 in de integratiecontainer (ADR-012); een beheerder kan hem nog steeds handmatig aanvragen vanuit de webinterface. De statuspagina toont de laatste uitvoering met resultaat (BLB-037).
 
 ## Besluit
 
@@ -19,7 +19,7 @@ De container `worker` draait hetzelfde image als `web` met het commando `flask t
 4. Start, einde, resultaat, aantallen en een foutmelding zonder geheimen vastleggen in `taakrun`.
 5. Na elke ronde de heartbeat bijwerken (een rij in `taakrun` met soort `heartbeat`), voor de healthcheck en de statuspagina.
 
-Handmatig synchroniseren: de knop in de webinterface voegt een rij met status `aangevraagd` toe aan `taakrun` en schrijft een logregel. De integratiecontainer ziet het verzoek binnen 60 seconden via `GET /api/v1/leden/importverzoek` (ADR-012). De pagina toont de status van het verzoek; de beheerder ververst de pagina. Er wordt niets in het webproces of de worker uitgevoerd.
+Handmatig importeren: de knop in de webinterface voegt een rij met taak `ledenimport` en status `aangevraagd` toe aan `taakrun` en schrijft een logregel `leden.import_aangevraagd`. De integratiecontainer ziet het verzoek binnen 60 seconden via `GET /api/v1/leden/importverzoek` (ADR-012). De pagina toont de status van het verzoek; de beheerder ververst de pagina. Er wordt niets in het webproces of de worker uitgevoerd.
 
 De lus vangt elke fout per taak af, legt die vast en draait door. Bij `SIGTERM` maakt de worker de lopende taak af en stopt. Tijden gelden in de tijdzone uit `TZ` (standaard `Europe/Amsterdam`).
 
@@ -45,5 +45,6 @@ De lus vangt elke fout per taak af, legt die vast en draait door. Bij `SIGTERM` 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-10-31 | Termen gelijk aan de bouw: taak `ledenimport`, logactie `leden.import_aangevraagd` | Issue #22, bouw slice 6 |
 | v1.1.0 | 2026-10-31 | Ledensynchronisatie uit de worker naar de integratiecontainer; de worker houdt heartbeat en opschoning | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

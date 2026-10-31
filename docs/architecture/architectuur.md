@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.2
+**Versie:** v0.3.3
 **Datum:** 2026-10-31
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -124,11 +124,14 @@ De applicatie gebruikt Python 3.14 op het image `python:3.14-slim`. Heeft een af
 
 Lokaal start de ontwikkelaar de stack met:
 
-1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `compose.dev.yml` zet `LEDENBRON=stub` aan in `integratie` en koppelt een testlogo aan `web`.
-2. `docker compose -f docker-compose.yml -f compose.dev.yml up --build`.
-3. `docker compose exec api flask seed` voor de synthetische gegevens. Seed draait in `api`, omdat alleen die rol leden mag schrijven (ADR-012).
-4. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
-5. `docker compose exec web flask token robot integratie --recht leden:importeren --recht bootaantallen:lezen` geeft het token; dat komt in `secrets/api_token` (ADR-012).
+1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `compose.dev.yml` zet `LEDENBRON=stub` aan in `integratie`, koppelt `tests/fixtures/leden.json` als bron van de stub en koppelt een testlogo aan `web`.
+2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`. Zonder dit bestand start compose niet; een leeg bestand geldt als "zonder token" (ADR-012).
+3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build`.
+4. `docker compose exec -T web flask token robot integratie --recht leden:importeren --recht bootaantallen:lezen 2>/dev/null | tail -n 1 > secrets/api_token`. Op Linux krijgt gebruiker 10001 het bestand (`chown 10001`). Binnen een minuut importeert de integratiecontainer de leden via `PUT /api/v1/leden` (`docs/beheer/integratiecontainer.md`).
+5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
+6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
+
+`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, start de integratiecontainer opnieuw en wacht op de import.
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
@@ -137,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` maakt een volledige, synthetische loods op de omvang van de vereniging, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 10 rekken met samen 160 plaatsen, waarvan 8 clubplaatsen en een mix van geschikte bootsoorten;
-- 210 leden uit `tests/fixtures/leden.json`, via dezelfde domeinfunctie als de import, met 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
+- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam en kleuren voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
@@ -181,7 +184,7 @@ De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import 
 |----------|-----|--------|----------------------|-------|
 | A | nieuw | Logo uit de installatie en "(geschikt voor …)" in de Excel-export (issue #17) | `web` (logo uit `LOGO_BESTAND`, route `/logo/<hash>`), migratie die logo en route verwijdert, Nginx-locatie weg, `domein/indeling` (export) | 008, 009 |
 | B | deel van 7 | API-basis: robottoken via de CLI, controle per aanroep, logging, rate limit, `GET /api/v1/ik` (deel van BLB-029, 031, 033, 034) | model `token`, `domein/tokens`, dienst `api` met rol `botenloods_api`, netwerken, interne Nginx-server op 8081, `openapi.yaml` | 005, 009, 011, 012 |
-| C | nieuw | Integratiecontainer met stub; import, importverzoek en gemelde fout via de API; BLB-006, 007 en 008 opnieuw groen via de nieuwe route | `integratie/`, `domein/leden` (import), `taken` zonder synchronisatie, `app/ledenbron/` weg, seed in `api`, `docs/beheer/integratiecontainer.md` | 004, 007, 012 |
+| C | nieuw | Integratiecontainer met stub; import, importverzoek en gemelde fout via de API; BLB-006, 007 en 008 opnieuw groen via de nieuwe route | `integratie/`, `domein/leden` (import), `taken` zonder synchronisatie, `app/ledenbron/` weg, seed in de worker zonder leden, `docs/beheer/integratiecontainer.md` | 004, 007, 012 |
 | D | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | E | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
 | F | 6 | BLB-026, 037, 009 | `domein/opschonen`, `taken` (opschoning), statuspagina, `GET /api/v1/bootaantallen`, `schrijf_bootaantallen` in de integratiecontainer (uit) | 004, 006, 007, 010, 012 |
@@ -276,6 +279,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.3.3 | 2026-10-31 | Bouw slice 6 (issue #22): seed in de worker zonder leden, de leden komen via de integratiecontainer (§6.2, §6.3, §7.1); secretbestand leeg aanmaken; ADR-004 v2.2.0, ADR-007 v1.2.0, ADR-012 v1.3.0 |
 | v0.3.2 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; ADR-004 v2.1.0, ADR-005 v1.2.0, ADR-006 v1.0.0, ADR-011 v1.2.0, ADR-012 v1.2.0 |
 | v0.3.1 | 2026-10-31 | §10.2 vragen 5 en 6 besloten door de stakeholder; tokenwaarschuwing naar F (backlog vraag 18) |
 | v0.3.0 | 2026-10-31 | Besluiten stakeholder 2026-10-31: integratiecontainer en dienst `api` (ADR-012), API standaard aan op het interne netwerk, logo uit de installatie. §1 tot en met §11 bijgewerkt; voorstel voor de volgende slices in §7.1; ADR-004 v2.0.0, ADR-005, 007, 008, 009, 010 en 011 v1.1.0, ADR-002 v1.1.1 |

@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.2.4
+**Versie overlay:** v0.2.5
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -103,6 +103,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef een reviewer van de API een tweede token zonder het recht van de nieuwe route mee (of zeg dat hij er een mag maken), zodat hij de 403 via Nginx kan controleren.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet.
 - Bij de Nginx-logcontrole tellen regels uit de foutlog (zoals `client intended to send too large body`) apart; meld of zo'n regel gewenst is.
+- Verandert een afwijking wat een beheerder ziet of hoe lang die moet wachten, leg die dan vóór de bouw aan apex en de stakeholder voor; een melding achteraf in een issue is te laat.
 
 ## 5. Projectcontracten
 
@@ -167,6 +168,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.5 | 2026-10-31 | Regel in de briefingchecklist uit de terugblik van foundation (issue #22) | Lessen |
 | v0.2.4 | 2026-10-31 | Vijf regels in de briefingchecklist uit de terugblikken van forge, aegis en sentinel (slice 6); stand bijgewerkt | Lessen |
 | v0.2.3 | 2026-10-31 | Drie regels in de briefingchecklist uit de terugblikken van het herstel van slice 5 | Lessen |
 | v0.2.2 | 2026-10-31 | Vijf regels in de briefingchecklist uit de terugblikken van forge, sentinel en aegis (slice 5) | Lessen |
