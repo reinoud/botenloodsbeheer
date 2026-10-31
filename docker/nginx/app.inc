@@ -6,6 +6,7 @@ add_header Referrer-Policy "same-origin" always;
 add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
 
 client_max_body_size 1m;
+access_log /dev/stdout zonder_code;
 
 location ~ ^/(inloggen|uitnodiging) {
     limit_req zone=inloggen burst=20 nodelay;
@@ -16,6 +17,11 @@ location ~ ^/(inloggen|uitnodiging) {
 location /boten {
     client_max_body_size 10m;
     proxy_pass http://web:8000;
+}
+
+# De publieke server kent de API niet; die draait alleen op de interne server (ADR-012).
+location /api/ {
+    return 404;
 }
 
 location / {

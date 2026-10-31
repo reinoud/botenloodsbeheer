@@ -1,5 +1,6 @@
 """Instellingen uit de omgeving (ADR-009). Eén keer gelezen bij het starten."""
 
+import ipaddress
 import os
 from datetime import time, timedelta
 from urllib.parse import urlsplit
@@ -28,7 +29,7 @@ def _verplicht(naam):
 
 
 LEDENBRONNEN = ("", "stub")
-DIENSTEN = ("web", "worker")
+DIENSTEN = ("web", "worker", "api")
 UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan client_max_body_size van /boten (ADR-008)
 
 
@@ -39,9 +40,16 @@ def _tijdstip(naam, standaard):
         raise ConfigFout(f"{naam} moet een tijd zijn als 03:00") from None
 
 
+def _schakelaar(naam, standaard):
+    waarde = _lees(naam, standaard)
+    if waarde not in ("true", "false"):
+        raise ConfigFout(f"{naam} moet true of false zijn")
+    return waarde == "true"
+
+
 def laad():
     omgeving = _lees("APP_OMGEVING", "productie")
-    # De worker krijgt geen sessie- en TOTP-sleutel mee (#7): hij gebruikt ze niet.
+    # De worker en de api krijgen geen sessie- en TOTP-sleutel mee (#7): ze gebruiken ze niet.
     dienst = _lees("DIENST", "web")
     if dienst not in DIENSTEN:
         raise ConfigFout(f"DIENST moet een van {', '.join(DIENSTEN)} zijn")
@@ -51,6 +59,12 @@ def laad():
     basis_url = _verplicht("BASIS_URL").rstrip("/")
     if omgeving == "productie" and not basis_url.startswith("https://"):
         raise ConfigFout("BASIS_URL moet in productie met https:// beginnen")
+
+    koppelnet = _lees("KOPPELNET", "10.203.0.0/24")
+    try:
+        ipaddress.ip_network(koppelnet)
+    except ValueError:
+        raise ConfigFout("KOPPELNET moet een reeks zijn zoals 10.203.0.0/24") from None
 
     totp_sleutel = secret_key = None
     if dienst == "web":
@@ -66,6 +80,9 @@ def laad():
 
     return {
         "APP_OMGEVING": omgeving,
+        "DIENST": dienst,
+        "API_INGESCHAKELD": _schakelaar("API_INGESCHAKELD", "true"),
+        "KOPPELNET": koppelnet,
         "SECRET_KEY": secret_key,
         "SQLALCHEMY_DATABASE_URI": _verplicht("DATABASE_URL"),
         "BASIS_URL": basis_url,

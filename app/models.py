@@ -1,5 +1,5 @@
 """Alle tabellen (architectuur §4). Slice 1a: beheerders, inloggen, log en techniek.
-Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen."""
+Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen. Slice 5: token."""
 
 from datetime import date, datetime
 
@@ -19,7 +19,7 @@ from sqlalchemy import (
     func,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, CIDR, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -235,3 +235,28 @@ class Boot(db.Model):
     lid: Mapped[Lid | None] = relationship(back_populates="boten")
     afbeelding: Mapped[Afbeelding | None] = relationship()
     plaats: Mapped[Plaats | None] = relationship(back_populates="boot")
+
+
+class Token(db.Model):
+    """API-token (ADR-005). De waarde staat nergens; alleen de prefix en een SHA-256-hash.
+    Persoonlijke tokens (met beheerder) volgen in slice 10."""
+
+    __tablename__ = "token"
+    __table_args__ = (
+        CheckConstraint("soort IN ('persoonlijk', 'robot')", name="soort_geldig"),
+        CheckConstraint("cardinality(rechten) > 0", name="minstens_een_recht"),
+        CheckConstraint("soort <> 'robot' OR cardinality(ip_whitelist) > 0",
+                        name="robot_met_whitelist"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    naam: Mapped[str] = mapped_column(String(50), unique=True)
+    soort: Mapped[str] = mapped_column(String(12))
+    prefix: Mapped[str] = mapped_column(String(8), unique=True)
+    hash: Mapped[str] = mapped_column(String(64))  # sha256 van het hele token, hex
+    rechten: Mapped[list[str]] = mapped_column(ARRAY(Text))
+    ip_whitelist: Mapped[list] = mapped_column(ARRAY(CIDR), server_default="{}")
+    aangemaakt_op: Mapped[datetime] = mapped_column(Tijdstip, server_default=func.now())
+    verloopt_op: Mapped[datetime] = mapped_column(Tijdstip)
+    ingetrokken_op: Mapped[datetime | None] = mapped_column(Tijdstip)
+    laatst_gebruikt_op: Mapped[datetime | None] = mapped_column(Tijdstip)

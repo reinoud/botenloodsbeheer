@@ -1,0 +1,92 @@
+# Contract van de API (ADR-012, BLB-034). Elke route van de blueprint staat hier; een test
+# vergelijkt beide. Slice 6 en 9 voegen de import van leden en de bootaantallen toe.
+openapi: 3.1.0
+info:
+  title: Botenloodsbeheer API
+  version: 0.5.0
+  description: >
+    Alleen bereikbaar over het interne netwerk, via de interne Nginx-server op poort 8081.
+    Elke aanroep heeft een token nodig (`Authorization: Bearer blb_...`). Het token moet bestaan,
+    niet verlopen of ingetrokken zijn, de aanroep moet van een adres in de IP-whitelist komen en
+    het token moet het recht van de aanroep hebben. Een weigering geeft 401, of 403 bij een
+    ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
+    dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`.
+servers:
+  - url: http://nginx:8081/api/v1
+security:
+  - token: []
+paths:
+  /ik:
+    get:
+      summary: Naam, rechten en vervaldatum van het token
+      description: "Recht: elk geldig token. Argumenten: geen."
+      responses:
+        "200":
+          description: Het token van deze aanroep
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ik"
+              example:
+                token: integratie
+                rechten: [leden:importeren, bootaantallen:lezen]
+                verloopt_op: "2027-10-31"
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+components:
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+  schemas:
+    Ik:
+      type: object
+      required: [token, rechten, verloopt_op]
+      additionalProperties: false
+      properties:
+        token:
+          type: string
+          description: Naam van het token
+        rechten:
+          type: array
+          minItems: 1
+          items:
+            type: string
+            enum: [plaatsen:lezen, boten:lezen, leden:lezen, wachtlijst:lezen, persoonsgegevens,
+                   leden:importeren, bootaantallen:lezen]
+        verloopt_op:
+          type: string
+          format: date
+          description: Dag waarop het token verloopt, JJJJ-MM-DD
+    Fout:
+      type: object
+      required: [fout]
+      properties:
+        fout:
+          type: string
+  responses:
+    GeenToegang:
+      description: Geweigerd; de reden staat in het log, niet in het antwoord
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Fout"
+          example:
+            fout: Geen toegang.
+    TeVeel:
+      description: Meer dan 60 aanroepen per minuut met dit token
+      headers:
+        Retry-After:
+          description: Aantal seconden tot het token weer mag
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Fout"
+          example:
+            fout: Te veel aanroepen.

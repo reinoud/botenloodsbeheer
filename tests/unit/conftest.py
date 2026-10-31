@@ -1,7 +1,8 @@
 """Tests tegen een echte PostgreSQL in compose (architectuur §6.5).
 
 De eigenaar maakt een lege database botenloods_test en draait de migraties. De applicatie
-verbindt als botenloods_web, net als in productie. Na elke test worden de tabellen geleegd.
+verbindt als botenloods_web, net als in productie; met de markering worker als botenloods_taken
+en met api als de dienst api (botenloods_api). Na elke test worden de tabellen geleegd.
 """
 
 import os
@@ -15,7 +16,7 @@ from sqlalchemy import create_engine, text
 TEST_DB = "botenloods_test"
 # bootsoort niet: de startlijst komt uit de migratie.
 TABELLEN = ("beheerder, passkey, uitnodiging, logregel, instelling, taakrun, rek, plaats, "
-            "plaats_bootsoort, lid, boot, afbeelding")
+            "plaats_bootsoort, lid, boot, afbeelding, token")
 
 
 def db_url(gebruiker, wachtwoord, database=TEST_DB):
@@ -25,6 +26,7 @@ def db_url(gebruiker, wachtwoord, database=TEST_DB):
 EIGENAAR = db_url("botenloods", os.environ["POSTGRES_PASSWORD"])
 WEB = db_url("botenloods_web", os.environ["DB_WEB_WACHTWOORD"])
 TAKEN = db_url("botenloods_taken", os.environ["DB_TAKEN_WACHTWOORD"])
+API = db_url("botenloods_api", os.environ["DB_API_WACHTWOORD"])
 
 os.environ.update(
     APP_OMGEVING="test",
@@ -59,6 +61,7 @@ def database():
 
 def pytest_configure(config):
     config.addinivalue_line("markers", "worker: de test draait als botenloods_taken, zoals de worker")
+    config.addinivalue_line("markers", "api: de test draait als de dienst api (botenloods_api)")
 
 
 @pytest.fixture
@@ -67,6 +70,9 @@ def app(database, request):
     from app.models import db
 
     rol = TAKEN if request.node.get_closest_marker("worker") else WEB
+    if request.node.get_closest_marker("api"):
+        rol = API
+        request.getfixturevalue("monkeypatch").setenv("DIENST", "api")
     app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "SQLALCHEMY_DATABASE_URI": rol})
     with app.app_context():
         yield app

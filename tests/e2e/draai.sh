@@ -16,7 +16,17 @@ for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done
 
-e2e() { "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" "${links[@]}" \
+# Robottokens voor test_api.py. De e2e-container deelt het netwerk van nginx: 127.0.0.1.
+token() { "${c[@]}" exec -T web flask token robot "e2e-$1-$stempel" --recht leden:importeren \
+  "${@:2}" 2>/dev/null | tail -n 1; }
+tokens=(-e "E2E_TOKEN_API=$(token api --whitelist 127.0.0.1/32)"
+        -e "E2E_TOKEN_TEMPO=$(token tempo --whitelist 127.0.0.1/32)"
+        -e "E2E_TOKEN_PREFIX=$(token prefix --whitelist 127.0.0.1/32)"
+        -e "E2E_TOKEN_KOPPELNET=$(token koppelnet)"
+        -e "E2E_TOKEN_INGETROKKEN=$(token ingetrokken --whitelist 127.0.0.1/32)")
+"${c[@]}" exec -T web flask token intrekken "e2e-ingetrokken-$stempel" >/dev/null
+
+e2e() { "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" "${links[@]}" "${tokens[@]}" \
   e2e pytest -p no:cacheprovider "$@"; }
 
 # Nginx staat 20 inlogverzoeken direct toe en daarna 30 per minuut per IP-adres (ADR-001).

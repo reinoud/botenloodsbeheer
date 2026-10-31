@@ -41,8 +41,16 @@ def create_app(overrides=None):
 
     from app import cli, web
 
-    app.register_blueprint(web.bp)
+    if app.config["DIENST"] == "api":
+        # Alleen de dienst api kent /api/v1; web en worker niet (ADR-012).
+        from app import api
+
+        app.register_blueprint(api.bp)
+        app.logger.info("API staat %s (API_INGESCHAKELD).",
+                        "aan" if app.config["API_INGESCHAKELD"] else "uit")
+    else:
+        app.register_blueprint(web.bp)
+        web.huisstijl.logo_laden(app)
     app.register_blueprint(web.health)
     cli.registreer(app)
-    web.huisstijl.logo_laden(app)
     return app
