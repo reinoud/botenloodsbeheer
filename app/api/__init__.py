@@ -5,8 +5,9 @@ from functools import wraps
 from zoneinfo import ZoneInfo
 
 from flask import Blueprint, current_app, request
+from werkzeug.exceptions import RequestEntityTooLarge
 
-from app.domein import tokens
+from app.domein import leden, tokens
 
 bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -47,3 +48,41 @@ def ik(token):
     tz = ZoneInfo(current_app.config["TZ"])
     return {"token": token.naam, "rechten": token.rechten,
             "verloopt_op": token.verloopt_op.astimezone(tz).date().isoformat()}
+
+
+@bp.errorhandler(RequestEntityTooLarge)
+def te_groot(_fout):
+    return {"fout": "Het verzoek is groter dan 2 MB."}, 413
+
+
+def _veld(naam):
+    gegevens = request.get_json(silent=True)
+    return gegevens.get(naam) if isinstance(gegevens, dict) else None
+
+
+@bp.get("/leden/importverzoek")
+@aanroep("leden:importeren")
+def importverzoek(_token):
+    return {"aangevraagd": leden.import_aangevraagd()}
+
+
+@bp.put("/leden")
+@aanroep("leden:importeren")
+def leden_importeren(_token):
+    """De volledige lijst uit de bron (ADR-012). Wijzigingen in leden komen niet in het log."""
+    try:
+        return leden.importeer(_veld("leden"))
+    except leden.Ongeldig as fout:
+        return {"fout": str(fout)}, 422
+    except (leden.ImportLoopt, leden.Veiligheidsgrens) as fout:
+        return {"fout": str(fout)}, 409
+
+
+@bp.post("/leden/import-mislukt")
+@aanroep("leden:importeren")
+def import_mislukt(_token):
+    try:
+        leden.import_mislukt(_veld("reden"))
+    except leden.Ongeldig as fout:
+        return {"fout": str(fout)}, 422
+    return {}, 201

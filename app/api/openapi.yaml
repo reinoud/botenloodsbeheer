@@ -1,9 +1,9 @@
 # Contract van de API (ADR-012, BLB-034). Elke route van de blueprint staat hier; een test
-# vergelijkt beide. Slice 6 en 9 voegen de import van leden en de bootaantallen toe.
+# vergelijkt beide. Slice 9 voegt de bootaantallen toe.
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.5.0
+  version: 0.6.0
   description: >
     Alleen bereikbaar over het interne netwerk, via de interne Nginx-server op poort 8081.
     Elke aanroep heeft een token nodig (`Authorization: Bearer blb_...`). Het token moet bestaan,
@@ -37,6 +37,115 @@ paths:
           $ref: "#/components/responses/GeenToegang"
         "429":
           $ref: "#/components/responses/TeVeel"
+  /leden/importverzoek:
+    get:
+      summary: Staat er een importverzoek van een beheerder klaar?
+      description: "Recht: `leden:importeren`. Argumenten: geen."
+      responses:
+        "200":
+          description: true als een beheerder in de webinterface een import heeft aangevraagd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Importverzoek"
+              example:
+                aangevraagd: false
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+  /leden:
+    put:
+      summary: Importeert de volledige ledenlijst uit de bron
+      description: >
+        Recht: `leden:importeren`. Altijd de volledige lijst: een lid dat ontbreekt, wordt
+        oud-lid. Nieuwe leden worden aangemaakt en gewijzigde bijgewerkt, met het lidnummer als
+        sleutel. Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
+        Een nieuw record met een opzegdatum van meer dan 5 jaar geleden wordt overgeslagen.
+        De uitkomst sluit een open importverzoek af. Wijzigingen in leden komen niet in het log.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ledenlijst"
+            example:
+              leden:
+                - lidnummer: "1001"
+                  naam: Anna Voorbeeld
+                  adres: Proefweg 1, 1234 AB Voorbeelddorp
+                  telefoon: 06-00000000
+                  email: anna@example.org
+                  lid_sinds: "2020-04-01"
+                  opzegdatum: null
+      responses:
+        "200":
+          description: Geïmporteerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Importuitkomst"
+              example:
+                ontvangen: 210
+                nieuw: 0
+                bijgewerkt: 3
+                uit_bron: 1
+                ongeldig: 0
+                overgeslagen: 2
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "409":
+          description: >
+            Er loopt al een import, of de lijst bevat minder dan de helft van het aantal actieve
+            leden (veiligheidsgrens). Er is niets gewijzigd; de veiligheidsgrens staat als
+            mislukte import bij de leden.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Fout"
+              example:
+                fout: Er loopt al een import.
+        "413":
+          $ref: "#/components/responses/TeGroot"
+        "422":
+          $ref: "#/components/responses/Ongeldig"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+  /leden/import-mislukt:
+    post:
+      summary: Meldt dat de bron geen leden leverde
+      description: >
+        Recht: `leden:importeren`. De reden komt uit een vaste lijst, zodat geen tekst van buiten
+        in de applicatie komt. De melding sluit een open importverzoek af.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Importfout"
+            example:
+              reden: bron_onbereikbaar
+      responses:
+        "201":
+          description: Vastgelegd
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+              example: {}
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "422":
+          $ref: "#/components/responses/Ongeldig"
+        "429":
+          $ref: "#/components/responses/TeVeel"
 components:
   securitySchemes:
     token:
@@ -62,6 +171,76 @@ components:
           type: string
           format: date
           description: Dag waarop het token verloopt, JJJJ-MM-DD
+    Importverzoek:
+      type: object
+      required: [aangevraagd]
+      additionalProperties: false
+      properties:
+        aangevraagd:
+          type: boolean
+    Ledenlijst:
+      type: object
+      required: [leden]
+      properties:
+        leden:
+          type: array
+          maxItems: 5000
+          items:
+            $ref: "#/components/schemas/Lidrecord"
+    Lidrecord:
+      type: object
+      description: >
+        Een record zonder geldig lidnummer (1 tot 20 tekens, letters, cijfers en -), zonder naam,
+        met een ongeldige datum of e-mail telt als ongeldig. Langere tekst wordt ingekort.
+      required: [lidnummer, naam]
+      properties:
+        lidnummer:
+          type: [string, integer]
+        naam:
+          type: string
+          maxLength: 100
+        adres:
+          type: [string, "null"]
+          maxLength: 200
+        telefoon:
+          type: [string, "null"]
+          maxLength: 30
+        email:
+          type: [string, "null"]
+          maxLength: 254
+        lid_sinds:
+          type: [string, "null"]
+          format: date
+        opzegdatum:
+          type: [string, "null"]
+          format: date
+          description: Mag in de toekomst liggen; het lid blijft dan lid tot die datum
+    Importuitkomst:
+      type: object
+      required: [ontvangen, nieuw, bijgewerkt, uit_bron, ongeldig, overgeslagen]
+      additionalProperties: false
+      properties:
+        ontvangen:
+          type: integer
+        nieuw:
+          type: integer
+        bijgewerkt:
+          type: integer
+        uit_bron:
+          type: integer
+          description: Leden die ontbraken en oud-lid zijn geworden
+        ongeldig:
+          type: integer
+        overgeslagen:
+          type: integer
+          description: Nieuwe records met een opzegdatum van meer dan 5 jaar geleden
+    Importfout:
+      type: object
+      required: [reden]
+      properties:
+        reden:
+          type: string
+          enum: [bron_onbereikbaar, bron_onleesbaar, bron_geweigerd]
     Fout:
       type: object
       required: [fout]
@@ -77,6 +256,22 @@ components:
             $ref: "#/components/schemas/Fout"
           example:
             fout: Geen toegang.
+    TeGroot:
+      description: Het verzoek is groter dan 2 MB; er is niets gewijzigd
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Fout"
+          example:
+            fout: Het verzoek is groter dan 2 MB.
+    Ongeldig:
+      description: Het verzoek heeft niet de vorm uit dit contract; er is niets gewijzigd
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Fout"
+          example:
+            fout: leden moet een lijst zijn van hooguit 5000 records.
     TeVeel:
       description: Meer dan 60 aanroepen per minuut met dit token
       headers:

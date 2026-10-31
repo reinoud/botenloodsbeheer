@@ -46,6 +46,7 @@ def create_app(overrides=None):
         from app import api
 
         app.register_blueprint(api.bp)
+        csrf.exempt(api.bp)  # token in de header, geen cookie: CSRF speelt niet (ADR-005)
         app.logger.info("API staat %s (API_INGESCHAKELD).",
                         "aan" if app.config["API_INGESCHAKELD"] else "uit")
     else:

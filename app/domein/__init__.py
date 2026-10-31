@@ -24,7 +24,6 @@ class Actor:
 
 CLI = Actor("systeem", None, "cli")
 SYSTEEM = Actor("systeem", None, "systeem")
-LEDENSYNCHRONISATIE = Actor("taak", None, "ledensynchronisatie")
 
 
 def vandaag():

@@ -15,7 +15,7 @@ from app.config import UPLOAD_MAX
 from app.domein import CLI, Regelfout, instellingen, toewijzing
 from app.models import Afbeelding, Instelling, Lid, Logregel, db
 from app.web import huisstijl
-from tests.unit.conftest import TAKEN
+from tests.unit.conftest import API
 from tests.unit.hulp import lid, png
 from tests.unit.test_indeling_en_toewijzing import boot, plaats, soort
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
@@ -24,8 +24,8 @@ GISTEREN = date.today() - timedelta(days=1)
 
 
 def opzeggen(lid_id, **velden):
-    """Zoals de synchronisatie, als de taakrol: de webrol mag leden alleen lezen."""
-    engine = create_engine(TAKEN)
+    """Zoals de import, als de rol van de dienst api: de webrol mag leden alleen lezen."""
+    engine = create_engine(API)
     with engine.begin() as c:
         c.execute(update(Lid).where(Lid.id == lid_id).values(**velden))
     engine.dispose()
@@ -139,6 +139,41 @@ def test_plaatsen_van_oud_leden_oudste_eerst(ingelogd):  # noqa: F811
 def test_geen_plaatsen_van_oud_leden(ingelogd):  # noqa: F811
     loods()
     assert "Er zijn geen plaatsen van opgezegde leden." in ingelogd.get("/opgezegd").text
+
+
+# Boten van leden die gaan opzeggen (BLB-041)
+
+
+def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F811
+    """BLB-041 criteria 2 tot en met 4."""
+    p1 = plaats("C01")
+    p2, p3 = (plaats(c, rek=p1.rek) for c in ("C02", "C03"))
+    namen = ("Zegt Laat Op", "Zegt Vroeg Op", "Al Opgezegd", "Zonder Plaats", "Blijft Lid")
+    laat, vroeg, al, zonder, _blijft = (lid(str(n), naam) for n, naam in enumerate(namen))
+    for p, eigenaar in ((p1, laat), (p2, vroeg), (p3, al)):
+        toewijzing.toewijzen(p.id, boot(eigenaar.id, naam=f"Boot {eigenaar.naam}").id, CLI)
+    boot(zonder.id, naam="Boot zonder plaats")
+    vandaag = date.today()
+    opzeggen(laat.id, opzegdatum=vandaag + timedelta(days=60))
+    opzeggen(vroeg.id, opzegdatum=vandaag + timedelta(days=1))
+    opzeggen(al.id, opzegdatum=vandaag)  # vandaag opgezegd: oud-lid, staat bij BLB-018
+    opzeggen(zonder.id, opzegdatum=vandaag + timedelta(days=5))
+    tekst = ingelogd.get("/opzeggend").text
+    assert tekst.index("Zegt Vroeg Op") < tekst.index("Zegt Laat Op")
+    assert "Boot Zegt Vroeg Op" in tekst and "Rek A" in tekst
+    assert f'href="/plaatsen/{p2.id}">C02</a>' in tekst
+    assert (vandaag + timedelta(days=1)).strftime("%d-%m-%Y") in tekst
+    for weg in ("Al Opgezegd", "Zonder Plaats", "Blijft Lid"):
+        assert weg not in tekst
+    assert "Al Opgezegd" in ingelogd.get("/opgezegd").text
+
+
+def test_geen_boten_van_leden_die_gaan_opzeggen(ingelogd):  # noqa: F811
+    """BLB-041 criterium 5."""
+    loods()
+    tekst = ingelogd.get("/opzeggend").text
+    assert "Er zijn geen boten van leden die gaan opzeggen." in tekst
+    assert 'href="/opzeggend"' in tekst  # in het menu
 
 
 # Excel-export (BLB-017)

@@ -70,10 +70,12 @@ def app(database, request):
     from app.models import db
 
     rol = TAKEN if request.node.get_closest_marker("worker") else WEB
-    if request.node.get_closest_marker("api"):
+    api = request.node.get_closest_marker("api") is not None
+    if api:
         rol = API
         request.getfixturevalue("monkeypatch").setenv("DIENST", "api")
-    app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": False, "SQLALCHEMY_DATABASE_URI": rol})
+    # De API draait met CSRF aan, zoals in productie: een PUT zonder vrijstelling faalt dan.
+    app = create_app({"TESTING": True, "WTF_CSRF_ENABLED": api, "SQLALCHEMY_DATABASE_URI": rol})
     with app.app_context():
         yield app
         db.session.remove()

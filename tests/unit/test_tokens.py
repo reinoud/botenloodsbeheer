@@ -18,6 +18,7 @@ from app.config import ConfigFout
 from app.domein import CLI, Regelfout, tokens
 from app.models import Logregel, Token, db
 from tests.unit.conftest import API, EIGENAAR, WEB
+from tests.unit.hulp import als_web
 
 KOPPEL = {"X-Forwarded-For": "10.203.0.5"}
 IMPORT = ["leden:importeren"]
@@ -30,15 +31,7 @@ def maak(naam="integratie", rechten=IMPORT, whitelist=(), dagen=None):
 
 def maak_als_web(**kw):
     """Maakt een token zoals de CLI in web dat doet; voor tests die als de dienst api draaien."""
-    from app import create_app
-
-    with mock.patch.dict(os.environ, DIENST="web"):
-        web = create_app({"TESTING": True, "SQLALCHEMY_DATABASE_URI": WEB})
-    with web.app_context():
-        waarde = maak(**kw)
-        db.session.remove()
-        db.engine.dispose()
-    return waarde
+    return als_web(lambda: maak(**kw))
 
 
 def eigenaar(sql, **params):
@@ -285,7 +278,8 @@ def test_api_kent_de_webinterface_niet(client):
     "UPDATE token SET rechten = '{persoonsgegevens}'", "UPDATE token SET ingetrokken_op = NULL",
     "UPDATE token SET ip_whitelist = '{0.0.0.0/0}'", "DELETE FROM token",
     "DELETE FROM logregel", "UPDATE logregel SET actie = 'x'",
-    "INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')"])
+    # Sinds slice 6 maakt api leden aan en werkt ze bij (ADR-012), maar verwijdert niets.
+    "DELETE FROM lid", "DELETE FROM taakrun", "UPDATE plaats SET boot_id = NULL"])
 def test_api_rol_mag_tokens_niet_wijzigen(app, sql):
     with pytest.raises(ProgrammingError, match="permission denied"):
         db.session.execute(text(sql))
@@ -339,6 +333,7 @@ def test_openapi_is_geldig_en_beschrijft_elke_route(app):
         api_app = create_app({"TESTING": True})
     routes = {r.rule.removeprefix("/api/v1") for r in api_app.url_map.iter_rules()
               if r.endpoint.startswith(api.bp.name + ".")}
-    assert routes == set(SPEC["paths"]) == {"/ik"}
+    assert routes == set(SPEC["paths"]) == {"/ik", "/leden", "/leden/importverzoek",
+                                            "/leden/import-mislukt"}
     voorbeeld = SPEC["paths"]["/ik"]["get"]["responses"]["200"]["content"]["application/json"]
     jsonschema.validate(voorbeeld["example"], SPEC["components"]["schemas"]["Ik"])

@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, leden, log, vandaag
-from app.models import Boot, Bootsoort, Plaats, Rek, db
+from app.models import Boot, Bootsoort, Lid, Plaats, Rek, db
 
 # Zonder verwarrende tekens: geen 0, o, O, 1, l en I (ADR-003).
 ALFABET = "23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
@@ -71,6 +71,17 @@ def plaatsen_van_oud_leden():
     rijen = [(min(d for d in (p.boot.lid.opzegdatum, p.boot.lid.uit_bron_op) if d and d <= dag), p)
              for p in plaatsen if leden.is_oud_lid(p.boot.lid, dag)]
     return sorted(rijen, key=lambda r: (r[0], r[1].code.lower()))
+
+
+def plaatsen_van_opzeggende_leden():
+    """Plaatsen met de boot van een lid met een opzegdatum in de toekomst (BLB-041), de vroegste
+    opzegdatum eerst. Na die datum staat de plaats bij de plaatsen van oud-leden (BLB-018)."""
+    return db.session.scalars(
+        select(Plaats).join(Plaats.boot).join(Boot.lid)
+        .where(Lid.opzegdatum > vandaag(), Lid.uit_bron_op.is_(None))
+        .order_by(Lid.opzegdatum, func.lower(Plaats.code))
+        .options(selectinload(Plaats.rek), selectinload(Plaats.boot).selectinload(Boot.lid))
+    ).all()
 
 
 # Besluit vraag 8: geen adres, telefoon, e-mail of foto. De kolommen kunnen later veranderen.

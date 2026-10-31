@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.3
+**Versie:** v0.3.4
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -665,6 +665,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | 17 | Hoe trekt iemand het robottoken in vóór slice 10? ADR-012 beschrijft alleen het maken met de CLI. | Foundation | Ja, voor de eerste uitrol in productie; niet voor de bouw van slice 5 | Besloten door de regie: `flask token intrekken <naam>` in slice 5 (ADR-012 v1.1.0) |
 | 18 | De waarschuwing voor tokens die binnen een maand verlopen (BLB-037 criterium 5) staat in architectuur §7.1 bij slice 10, maar ADR-010 zet hem op de statuspagina van slice 9. Het robottoken bestaat al vanaf slice 5 en verloopt na 365 dagen. | Regie en foundation | Nee | Besloten door de regie: slice 9, met BLB-037 (ADR-010) |
 | 19 | Geldt "(geschikt voor …)" in de export ook voor een clubplaats zonder boot? Het besluit noemt alleen een vrije plaats. | Stakeholder | Nee; slice 4 bouwt het voor een vrije plaats | Besloten door de stakeholder 2026-10-31: ja, ook voor een clubplaats zonder boot |
+| 21 | BLB-040 vraagt de vijf aanroepen van de container met voorbeeldcode, maar `GET /api/v1/bootaantallen` hoort bij BLB-009 in slice 9. Slice 6 beschrijft vier aanroepen en noemt de vijfde voor slice 9 (issue #22). Blijft dat zo, of gaat de aanroep naar voren? | Apex en foundation | Nee; de container gebruikt de aanroep pas als terugschrijven aan kan | Advies van forge: zo laten; BLB-040 criterium 1 en 3 gelden in slice 9 ook voor de vijfde aanroep |
 
 ## 8. Aannames
 

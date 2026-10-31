@@ -2,7 +2,7 @@
 
 import ipaddress
 import os
-from datetime import time, timedelta
+from datetime import timedelta
 from urllib.parse import urlsplit
 
 from cryptography.fernet import Fernet
@@ -28,16 +28,9 @@ def _verplicht(naam):
     return waarde
 
 
-LEDENBRONNEN = ("", "stub")
 DIENSTEN = ("web", "worker", "api")
 UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan client_max_body_size van /boten (ADR-008)
-
-
-def _tijdstip(naam, standaard):
-    try:
-        return time.fromisoformat(_lees(naam, standaard))
-    except ValueError:
-        raise ConfigFout(f"{naam} moet een tijd zijn als 03:00") from None
+IMPORT_MAX = 2 * 1024 * 1024  # PUT /api/v1/leden, gelijk aan client_max_body_size in api.inc
 
 
 def _schakelaar(naam, standaard):
@@ -53,9 +46,6 @@ def laad():
     dienst = _lees("DIENST", "web")
     if dienst not in DIENSTEN:
         raise ConfigFout(f"DIENST moet een van {', '.join(DIENSTEN)} zijn")
-    ledenbron = _lees("LEDENBRON", "")
-    if ledenbron not in LEDENBRONNEN:
-        raise ConfigFout("LEDENBRON moet leeg zijn of stub")
     basis_url = _verplicht("BASIS_URL").rstrip("/")
     if omgeving == "productie" and not basis_url.startswith("https://"):
         raise ConfigFout("BASIS_URL moet in productie met https:// beginnen")
@@ -91,12 +81,9 @@ def laad():
         "PROXY_HOPS": int(_lees("PROXY_HOPS", "1")),
         "TZ": _lees("TZ", "Europe/Amsterdam"),
         "LOG_NIVEAU": _lees("LOG_NIVEAU", "INFO"),
-        "LEDENBRON": ledenbron,
         # Alleen web toont het logo; de worker leest het niet (ADR-008).
         "LOGO_BESTAND": _lees("LOGO_BESTAND", "/huisstijl/logo.png") if dienst == "web" else None,
-        "LEDENBRON_STUB_BESTAND": _lees("LEDENBRON_STUB_BESTAND", "tests/fixtures/leden.json"),
-        "SYNC_TIJDSTIP": _tijdstip("SYNC_TIJDSTIP", "03:00"),
-        "MAX_CONTENT_LENGTH": UPLOAD_MAX,
+        "MAX_CONTENT_LENGTH": IMPORT_MAX if dienst == "api" else UPLOAD_MAX,
         "SESSION_COOKIE_SECURE": basis_url.startswith("https://"),
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",

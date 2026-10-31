@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_log.html" import logtabel %}
+{% block titel %}Boten van leden die gaan opzeggen · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Boten van leden die gaan opzeggen</h1>
+<p>Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste opzegdatum bovenaan. Deze boten horen vóór die datum weg te zijn.</p>
+
+{% if plaatsen %}
+<table>
+  <thead><tr><th>Lid</th><th>Boot</th><th>Rek</th><th>Plaats</th><th>Opzegdatum</th></tr></thead>
+  <tbody>
+  {% for p in plaatsen %}
+    <tr>
+      <td data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a></td>
+      <td data-label="Boot">{{ p.boot.naam }}</td>
+      <td data-label="Rek">{{ p.rek.naam }}</td>
+      <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td data-label="Opzegdatum">{{ p.boot.lid.opzegdatum.strftime('%d-%m-%Y') }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="melding" role="status">Er zijn geen boten van leden die gaan opzeggen.</p>
+{% endif %}
+
+{{ logtabel(regels) }}
+{% endblock %}

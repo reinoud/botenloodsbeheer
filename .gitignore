@@ -6,3 +6,4 @@ __pycache__/
 certs/
 huisstijl/
 tests/e2e/resultaten/
+secrets/

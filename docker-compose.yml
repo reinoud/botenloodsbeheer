@@ -18,8 +18,6 @@ x-omgeving: &omgeving
   BASIS_URL: ${BASIS_URL:?BASIS_URL ontbreekt in .env}
   TZ: ${TZ:-Europe/Amsterdam}
   LOG_NIVEAU: ${LOG_NIVEAU:-INFO}
-  LEDENBRON: ${LEDENBRON:-}
-  LEDENBRON_STUB_BESTAND: ${LEDENBRON_STUB_BESTAND:-tests/fixtures/leden.json}
 
 services:
   db:
@@ -102,7 +100,6 @@ services:
     environment:
       <<: *omgeving
       DIENST: worker
-      SYNC_TIJDSTIP: ${SYNC_TIJDSTIP:-03:00}
       DATABASE_URL: postgresql+psycopg://botenloods_taken:${DB_TAKEN_WACHTWOORD}@db/botenloods
     networks: [achterkant]
     depends_on:
@@ -131,10 +128,36 @@ services:
       web: {condition: service_healthy}
       api: {condition: service_healthy}
 
-# ADR-012. Alleen voorkant heeft verkeer naar buiten. Op koppeling komt in slice 6 de
-# integratiecontainer; het vaste subnet is de standaardwhitelist van zijn token.
+  # Integratiecontainer (ADR-012): eigen image zonder applicatiecode. Praat alleen met de API via
+  # de interne Nginx-server; bereikt db en api niet. Inloggegevens van de bron staan alleen hier.
+  integratie:
+    build: integratie
+    image: botenloods-integratie
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      TZ: ${TZ:-Europe/Amsterdam}
+      API_URL: http://nginx:8081/api/v1
+      API_TOKEN_FILE: /run/secrets/api_token
+      LEDENBRON: ${LEDENBRON:-}
+      LEDENBRON_STUB_BESTAND: ${LEDENBRON_STUB_BESTAND:-/data/leden.json}
+      SYNC_TIJDSTIP: ${SYNC_TIJDSTIP:-03:00}
+    # Het bestand moet bestaan, ook leeg: zonder token wacht de container (beheerdocumentatie).
+    secrets: [api_token]
+    networks: [koppeling, buiten]
+    depends_on: [nginx]
+
+secrets:
+  api_token:
+    file: ./secrets/api_token
+
+# ADR-012. Alleen voorkant en buiten hebben verkeer naar buiten. Op koppeling staan alleen nginx
+# en de integratiecontainer; het vaste subnet is de standaardwhitelist van zijn token.
 networks:
   voorkant: {}
+  buiten: {}
   achterkant:
     internal: true
   koppeling:

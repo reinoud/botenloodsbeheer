@@ -1,9 +1,10 @@
 """flask seed: een synthetische loods op de omvang van de vereniging (architectuur §6.3).
 
 Vaste random seed, dus elke run levert hetzelfde op. Alle gegevens zijn verzonnen.
-Afwijkingen van §6.3: de twee oud-leden met een opzegdatum van meer dan 5 jaar geleden komen
-niet binnen, omdat de synchronisatie die overslaat (ADR-004 stap 4); wachtlijst en kleuren
-volgen met hun slice. Het testlogo komt niet uit seed maar uit compose.dev.yml (ADR-008).
+Afwijkingen van §6.3: seed draait in de worker en importeert geen leden. De leden komen uit
+tests/fixtures/leden.json via de integratiecontainer met de stub en PUT /api/v1/leden, de enige
+route die leden schrijft (ADR-012); seed weigert zonder leden. Wachtlijst en kleuren volgen met
+hun slice. Het testlogo komt niet uit seed maar uit compose.dev.yml (ADR-008).
 """
 
 import random
@@ -12,8 +13,7 @@ from flask import current_app
 from sqlalchemy import select
 
 from app.domein import CLI, Regelfout, boten, indeling, leden, log, toewijzing
-from app.ledenbron import StubBron
-from app.models import Boot, Instelling, Plaats, Rek, db
+from app.models import Boot, Instelling, Lid, Plaats, Rek, db
 
 VERENIGING = "Kanovereniging De Voorbeeldplas"
 # Per rek de bootsoorten die passen; het laatste rek heeft acht clubplaatsen.
@@ -44,12 +44,14 @@ def seed(echo=print):
     if db.session.scalar(select(Rek).limit(1)):
         echo("De loods heeft al gegevens; seed doet niets.")
         return
+    if not db.session.scalar(select(Lid).limit(1)):
+        raise SeedFout("Er zijn nog geen leden. Laat eerst de integratiecontainer met de stub "
+                       "importeren (docs/beheer/integratiecontainer.md).")
     r = random.Random(2026)
 
     if db.session.get(Instelling, "naam") is None:
         db.session.add(Instelling(sleutel="naam", waarde=VERENIGING))
         log.schrijf(CLI, "instelling.gewijzigd", ["instelling:huisstijl"], {"naam": VERENIGING})
-    leden.synchroniseer(StubBron(current_app.config["LEDENBRON_STUB_BESTAND"]), CLI)
     db.session.commit()
 
     soort = {s.naam: s.id for s in indeling.bootsoorten()}

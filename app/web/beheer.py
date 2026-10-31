@@ -160,7 +160,7 @@ def boot_verwijderen(boot_id):
     return redirect(url_for("web.boten_overzicht"))
 
 
-# Leden (BLB-006): alleen lezen; de bron is leidend
+# Leden (BLB-006): alleen lezen; de bron is leidend en de integratiecontainer importeert
 
 
 @bp.get("/leden")
@@ -184,8 +184,9 @@ def lid_detail(lid_id):
 @bp.post("/leden/ophalen")
 @inloggen_vereist
 def leden_ophalen():
-    uitvoeren(leden.synchronisatie_aanvragen,
-              gelukt="De synchronisatie is aangevraagd. Ververs de pagina over een halve minuut.")
+    uitvoeren(leden.import_aanvragen,
+              gelukt="De import is aangevraagd. De integratiecontainer begint binnen een minuut; "
+                     "ververs daarna de pagina.")
     return redirect(url_for("web.leden_overzicht"))
 
 

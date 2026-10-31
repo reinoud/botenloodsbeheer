@@ -11,6 +11,8 @@ from app import seed, taken
 from app.domein import leden
 from app.models import Boot, Lid, Logregel, Plaats, Rek, Taakrun, db
 from tests.unit.conftest import nieuwe_database
+from tests.unit.hulp import als_api
+from tests.unit.test_leden import FIXTURE
 
 
 def test_migratie_omkeerbaar_en_gelijk_aan_modellen(database):
@@ -66,9 +68,13 @@ def test_heartbeat(app):
     assert not taken.gezond()
 
 
-@pytest.mark.worker  # seed draait in de worker (#9)
+@pytest.mark.worker  # seed draait in de worker (#9); de leden komen uit de import (ADR-012)
 def test_seed_maakt_de_synthetische_loods(app):
+    with pytest.raises(seed.SeedFout, match="nog geen leden"):
+        seed.seed(echo=lambda _: None)
+    als_api(leden.importeer, FIXTURE)
     seed.seed(echo=lambda _: None)
+
     def tel(model, *waar):
         return db.session.scalar(select(func.count()).select_from(model).where(*waar))
 

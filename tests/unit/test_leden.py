@@ -1,27 +1,24 @@
-"""Ledensynchronisatie met de stub als nepbron (BLB-006, BLB-007, ADR-004) en de taak in de
-worker (ADR-007)."""
+"""Import van leden via PUT /api/v1/leden, met tests/fixtures/leden.json en eigen records als
+nepbron (BLB-006, 007, 008, 024, 032, 034; ADR-004, ADR-012). Draait als de dienst api."""
 
 import json
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
+from pathlib import Path
 
+import jsonschema
 import pytest
-from sqlalchemy import select
+from sqlalchemy import create_engine, select, text
+from sqlalchemy.exc import ProgrammingError
 
-from app import taken
-from app.domein import (
-    CLI,
-    LEDENSYNCHRONISATIE,
-    Regelfout,
-    boten,
-    indeling,
-    leden,
-    toewijzing,
-    vandaag,
-)
-from app.ledenbron import LedenbronFout, StubBron
+from app.domein import CLI, Regelfout, boten, indeling, leden, toewijzing, vandaag
 from app.models import Lid, Logregel, Plaats, Taakrun, db
+from tests.unit.conftest import API, TAKEN
+from tests.unit.hulp import als_web
+from tests.unit.test_tokens import KOPPEL, SPEC, bearer, maak_als_web
 
-pytestmark = pytest.mark.worker  # alleen de worker schrijft leden (#9)
+pytestmark = pytest.mark.api  # alleen de dienst api schrijft leden (ADR-012)
+
+FIXTURE = json.loads((Path(__file__).parents[1] / "fixtures/leden.json").read_text())
 
 
 def record(nummer, **velden):
@@ -31,174 +28,244 @@ def record(nummer, **velden):
 
 
 @pytest.fixture
-def bron(tmp_path):
-    """Schrijft records naar een nieuw stubbestand en geeft de bron terug."""
-    def maak(records):
-        pad = tmp_path / "leden.json"
-        pad.write_text(records if isinstance(records, str) else json.dumps(records))
-        return StubBron(str(pad))
-    return maak
+def importeer(client):
+    """PUT /api/v1/leden met een token met leden:importeren; geeft het antwoord."""
+    waarde = maak_als_web()
 
-
-def sync(bron):
-    aantallen = leden.synchroniseer(bron, LEDENSYNCHRONISATIE)
-    db.session.commit()
-    return aantallen
+    def put(lijst, **lichaam):
+        return client.put("/api/v1/leden", headers=bearer(waarde) | KOPPEL,
+                          **(lichaam or {"json": {"leden": lijst}}))
+    put.token = waarde
+    return put
 
 
 def alle():
+    db.session.expire_all()
     return {lid.lidnummer: lid for lid in db.session.scalars(select(Lid))}
 
 
-def test_nieuwe_en_gewijzigde_leden_op_lidnummer(app, bron):
-    sync(bron([record("1"), record("2")]))
-    aantallen = sync(bron([record("1", adres="Nieuweweg 2"), record("2"), record("3")]))
-    assert aantallen | {"ontvangen": 0} == {"ontvangen": 0, "nieuw": 1, "bijgewerkt": 1,
-                                           "uit_bron": 0, "ongeldig": 0, "overgeslagen": 0}
+def runs():
+    db.session.expire_all()
+    return db.session.scalars(select(Taakrun).where(Taakrun.taak == leden.TAAK)
+                              .order_by(Taakrun.id)).all()
+
+
+def test_fixture_importeren_met_aantallen_volgens_het_contract(importeer):
+    """BLB-006 criterium 1, BLB-007 criterium 1: de nepbron gaat door PUT /api/v1/leden."""
+    r = importeer(FIXTURE)
+    assert r.status_code == 200
+    jsonschema.validate(r.json, SPEC["components"]["schemas"]["Importuitkomst"])
+    assert r.json == {"ontvangen": 210, "nieuw": 208, "bijgewerkt": 0, "uit_bron": 0,
+                      "ongeldig": 0, "overgeslagen": 2}  # 2 langer dan 5 jaar opgezegd
+    assert len(alle()) == 208
+    [run] = runs()
+    assert (run.status, run.aantallen["nieuw"]) == ("geslaagd", 208)
+
+
+def test_nieuwe_en_gewijzigde_leden_op_lidnummer_met_alle_velden(importeer):
+    importeer([record("1"), record("2")])
+    r = importeer([record("1", adres="Nieuweweg 2", opzegdatum="2099-01-01"), record("2"),
+                   record("3")])
+    assert r.json | {"ontvangen": 0} == {"ontvangen": 0, "nieuw": 1, "bijgewerkt": 1,
+                                         "uit_bron": 0, "ongeldig": 0, "overgeslagen": 0}
     lid = alle()["1"]
-    assert (lid.adres, lid.email, lid.lid_sinds) == ("Nieuweweg 2", "1@example.org",
-                                                     date(2020, 1, 1))
+    assert (lid.naam, lid.adres, lid.telefoon, lid.email, str(lid.lid_sinds),
+            str(lid.opzegdatum)) == ("Lid 1", "Nieuweweg 2", "06-00000000", "1@example.org",
+                                     "2020-01-01", "2099-01-01")
 
 
-def test_log_noemt_velden_zonder_waarden(app, bron):
-    sync(bron([record("1")]))
-    sync(bron([record("1", adres="Geheimstraat 9", telefoon="06-99999999")]))
-    regels = db.session.scalars(select(Logregel).order_by(Logregel.id)).all()
-    assert [r.actie for r in regels] == ["lid.aangemaakt", "leden.gesynchroniseerd",
-                                         "lid.bijgewerkt", "leden.gesynchroniseerd"]
-    assert regels[2].gegevens == {"velden": ["adres", "telefoon"]}
-    assert regels[2].actor_soort == "taak"
-    tekst = json.dumps([(r.gegevens, r.verwijzingen) for r in regels])
-    for waarde in ("Geheimstraat", "06-", "@example.org", "Lid 1"):
-        assert waarde not in tekst
+def test_geen_logregel_per_lid_of_per_import(importeer):
+    """BLB-024 criterium 2 en issue #21: een import die leden aanmaakt, wijzigt en oud-lid maakt,
+    schrijft geen logregel. Mutaties aan boten door de import volgen met de wachtlijst (slice 7)."""
+    importeer([record("1"), record("2")])
+    importeer([record("1", adres="Geheimstraat 9"), record("3")])
+    assert db.session.scalars(select(Logregel.actie)).all() == ["token.gemaakt"]
 
 
-def test_ongeldige_records_overgeslagen_rest_verwerkt(app, bron):
-    sync(bron([record("1"), record("2")]))
-    aantallen = sync(bron([
+def test_ongeldige_records_overgeslagen_rest_verwerkt(importeer):
+    """BLB-006 criterium 4: ongeldig telt, zonder de inhoud te loggen."""
+    importeer([record("1"), record("2")])
+    r = importeer([
         record("1", email="geen-adres"),  # bestaand lid met tikfout: blijft lid, ongewijzigd
         record("2"), record(None), {"naam": "Zonder nummer"}, record(""), record("4", naam=" "),
         record("5", lid_sinds="31-12-2020"), record("6", naam=7), "geen record", record("2"),
         record("7", naam="x" * 300),
-    ]))
-    assert aantallen["ongeldig"] == 9 and aantallen["nieuw"] == 1 and aantallen["uit_bron"] == 0
+    ])
+    assert (r.json["ongeldig"], r.json["nieuw"], r.json["uit_bron"]) == (9, 1, 0)
     lid = alle()
     assert lid["1"].email == "1@example.org" and lid["1"].uit_bron_op is None
     assert set(lid) == {"1", "2", "7"} and len(lid["7"].naam) == 100
+    assert "Zonder nummer" not in json.dumps([r.aantallen for r in runs()])
 
 
-def test_ontbrekend_lid_wordt_oud_lid_en_komt_terug(app, bron):
-    sync(bron([record("1"), record("2")]))
-    assert sync(bron([record("1"), record("3")]))["uit_bron"] == 1
-    assert alle()["2"].uit_bron_op is not None and leden.is_oud_lid(alle()["2"])
-    sync(bron([record("1"), record("2"), record("3")]))
+def test_ontbrekend_lid_wordt_oud_lid_met_importdatum_en_komt_terug(importeer):
+    """BLB-008 criterium 2."""
+    importeer([record("1"), record("2")])
+    assert importeer([record("1"), record("3")]).json["uit_bron"] == 1
+    twee = alle()["2"]
+    assert twee.uit_bron_op == vandaag() and leden.is_oud_lid(twee) and twee.email
+    importeer([record("1"), record("2"), record("3")])
     assert alle()["2"].uit_bron_op is None
 
 
-def test_halve_lijst_breekt_af_zonder_wijziging(app, bron):
-    sync(bron([record(str(n)) for n in range(1, 11)]))
-    with pytest.raises(LedenbronFout, match="minder dan de helft"):
-        leden.synchroniseer(bron([record(str(n)) for n in range(1, 5)]), LEDENSYNCHRONISATIE)
-    db.session.rollback()
-    assert all(lid.uit_bron_op is None for lid in alle().values())
-    # Precies de helft gaat wel door.
-    assert sync(bron([record(str(n)) for n in range(1, 6)]))["uit_bron"] == 5
+def test_halve_lijst_409_zonder_wijziging_en_als_mislukte_run(importeer):
+    """BLB-034 criterium 3, BLB-007 criterium 4. Precies de helft gaat wel door."""
+    importeer([record(str(n)) for n in range(1, 11)])
+    r = importeer([record(str(n), naam="Anders") for n in range(1, 5)])
+    assert r.status_code == 409 and "minder dan de helft" in r.json["fout"]
+    assert all(lid.uit_bron_op is None and lid.naam != "Anders" for lid in alle().values())
+    assert runs()[-1].status == "mislukt" and "minder dan de helft" in runs()[-1].foutmelding
+    assert importeer([record(str(n)) for n in range(1, 6)]).json["uit_bron"] == 5
 
 
-@pytest.mark.parametrize("inhoud", ["{kapot", '{"geen": "lijst"}'])
-def test_onleesbare_bron(app, bron, inhoud):
-    with pytest.raises(LedenbronFout, match="onleesbaar"):
-        bron(inhoud).haal_leden()
+@pytest.mark.parametrize("lichaam", [{"json": {"leden": "geen lijst"}}, {"json": {}},
+                                     {"json": [record("1")]}, {"data": "{kapot"},
+                                     {"json": {"leden": [record("1")] * 5001}}],
+                         ids=["tekst", "zonder-leden", "lijst-zonder-object", "kapot",
+                              "5001-records"])
+def test_geen_lijst_of_te_veel_records_422_zonder_wijziging(importeer, lichaam):
+    """BLB-007 criterium 3. 5000 records mag wel (volgende test)."""
+    importeer([record("1")])
+    r = importeer(None, content_type="application/json", **lichaam)
+    assert r.status_code == 422 and r.json["fout"].startswith("leden moet een lijst")
+    assert set(alle()) == {"1"} and len(runs()) == 1
 
 
-def test_opgeschoond_oud_lid_komt_niet_terug(app, bron):
+def test_5000_records_mag(importeer):
+    assert importeer([record(str(n)) for n in range(5000)]).json["nieuw"] == 5000
+
+
+def test_boven_2_mb_413_zonder_wijziging(importeer):
+    """BLB-007 criterium 3; Nginx heeft dezelfde grens (E2E)."""
+    groot = [record(str(n), adres="x" * 500) for n in range(4000)]
+    assert len(json.dumps({"leden": groot})) > 2 * 1024 * 1024  # zonder de grens geldig
+    r = importeer(groot)
+    assert r.status_code == 413 and r.json == {"fout": "Het verzoek is groter dan 2 MB."}
+    assert alle() == {} and runs() == []
+
+
+def test_zonder_recht_403_zonder_wijziging(client):
+    """BLB-032 criterium 2."""
+    waarde = maak_als_web(rechten=["bootaantallen:lezen"])
+    for methode, pad, gegevens in [("put", "/leden", {"leden": [record("1")]}),
+                                   ("get", "/leden/importverzoek", None),
+                                   ("post", "/leden/import-mislukt", {"reden": "bron_onleesbaar"})]:
+        r = getattr(client, methode)(f"/api/v1{pad}", json=gegevens,
+                                     headers=bearer(waarde) | KOPPEL)
+        assert (r.status_code, r.json) == (403, {"fout": "Geen toegang."})
+    assert alle() == {} and runs() == []
+
+
+def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
+    """BLB-008 criteria 1 en 5: gegevens en plaats blijven; een boot zonder plaats krijgt er
+    geen meer. Rek, plaatsen en boten maakt web, zoals de beheerder."""
+    importeer([record("1")])
+    anna = alle()["1"].id
+
+    def loods():
+        rek = indeling.rek_aanmaken("Rek A", CLI)
+        p1 = indeling.plaats_aanmaken(rek.id, "A01", [1], False, CLI)
+        p2 = indeling.plaats_aanmaken(rek.id, "A02", [1], False, CLI)
+        b1 = boten.boot_aanmaken("Zeemeeuw", 1, anna, None, CLI)
+        b2 = boten.boot_aanmaken("Fuut", 1, anna, None, CLI)
+        toewijzing.toewijzen(p1.id, b1.id, CLI)
+        return p1.id, p2.id, b1.id, b2.id
+
+    p1, p2, b1, b2 = als_web(loods)
+    gisteren = (vandaag() - timedelta(days=1)).isoformat()
+    importeer([record("1", opzegdatum=gisteren)])
+    lid = alle()["1"]
+    assert leden.is_oud_lid(lid) and lid.email == "1@example.org" and lid.adres
+    assert als_web(lambda: db.session.get(Plaats, p1).boot_id) == b1
+    with pytest.raises(Regelfout, match="is oud-lid"):
+        als_web(lambda: toewijzing.toewijzen(p2, b2, CLI))
+
+
+def test_opgeschoond_oud_lid_komt_niet_terug(importeer):
+    """BLB-008 criterium 4. Precies 5 jaar geleden opgezegd komt nog binnen; een dag eerder niet."""
     grens = leden.jaren_terug(vandaag(), leden.BEWAARJAREN)
-    aantallen = sync(bron([record("1", opzegdatum=grens.isoformat()),
-                           record("2", opzegdatum=(grens - timedelta(days=1)).isoformat())]))
-    # Precies 5 jaar geleden opgezegd komt nog binnen; een dag eerder niet.
-    assert aantallen["overgeslagen"] == 1 and set(alle()) == {"1"}
+    r = importeer([record("1", opzegdatum=grens.isoformat()),
+                   record("2", opzegdatum=(grens - timedelta(days=1)).isoformat())])
+    assert r.json["overgeslagen"] == 1 and set(alle()) == {"1"}
+
+
+def test_opzegdatum_in_de_toekomst_blijft_lid_tot_die_datum(importeer):
+    """BLB-041 criteria 1 en 2."""
+    morgen = vandaag() + timedelta(days=1)
+    importeer([record("1", opzegdatum=morgen.isoformat())])
+    lid = alle()["1"]
+    assert not leden.is_oud_lid(lid) and leden.is_oud_lid(lid, morgen)
 
 
 def test_jaren_terug_op_schrikkeldag():
     assert leden.jaren_terug(date(2028, 2, 29), 5) == date(2023, 2, 28)
 
 
-def test_terugschrijven_niet_beschikbaar():
-    bron = StubBron("x")
-    assert not bron.kan_terugschrijven
-    with pytest.raises(Exception, match="niet beschikbaar"):
-        bron.schrijf_bootaantallen({})
+# Importverzoek en gemelde fout
 
 
-# Taak in de worker
+def test_verzoek_van_de_beheerder_krijgt_de_uitkomst_van_de_import(importeer, client):
+    """BLB-006 criterium 5: het verzoek uit web staat open tot de import het afsluit."""
+    verzoek = client.get("/api/v1/leden/importverzoek", headers=bearer(importeer.token) | KOPPEL)
+    assert verzoek.json == {"aangevraagd": False}
+    als_web(leden.import_aanvragen, CLI)
+    verzoek = client.get("/api/v1/leden/importverzoek", headers=bearer(importeer.token) | KOPPEL)
+    jsonschema.validate(verzoek.json, SPEC["components"]["schemas"]["Importverzoek"])
+    assert verzoek.json == {"aangevraagd": True}
+    importeer([record("1")])
+    [run] = runs()
+    assert run.status == "geslaagd" and run.aangevraagd_op and run.aantallen["nieuw"] == 1
+    assert client.get("/api/v1/leden/importverzoek",
+                      headers=bearer(importeer.token) | KOPPEL).json == {"aangevraagd": False}
 
 
-def test_aanvraag_wordt_door_de_worker_uitgevoerd(app):
-    leden.synchronisatie_aanvragen(CLI)
-    with pytest.raises(Regelfout, match="al een synchronisatie"):
-        leden.synchronisatie_aanvragen(CLI)
-    taken.ronde()
-    run = db.session.scalar(select(Taakrun).where(Taakrun.taak == leden.TAAK))
-    assert run.status == "geslaagd" and run.aantallen["nieuw"] == 208
-    assert len(alle()) == 208  # de fixture: 210, waarvan 2 langer dan 5 jaar opgezegd
+@pytest.mark.parametrize("reden", list(leden.REDENEN))
+def test_gemelde_fout_met_vaste_reden_sluit_het_verzoek(importeer, client, reden):
+    """BLB-006 criterium 3: de ledenlijst blijft ongewijzigd, de vaste tekst staat in taakrun."""
+    importeer([record("1")])
+    als_web(leden.import_aanvragen, CLI)
+    r = client.post("/api/v1/leden/import-mislukt", json={"reden": reden},
+                    headers=bearer(importeer.token) | KOPPEL)
+    assert (r.status_code, r.json) == (201, {})
+    run = runs()[-1]
+    assert (run.status, run.foutmelding) == ("mislukt", leden.REDENEN[reden]) and run.aangevraagd_op
+    assert set(alle()) == {"1"}
+    assert [r.actie for r in db.session.scalars(select(Logregel))] == ["token.gemaakt",
+                                                                       "leden.import_aangevraagd"]
 
 
-def test_mislukte_synchronisatie_in_taakrun_en_log(app, bron):
-    app.config["LEDENBRON_STUB_BESTAND"] = "/bestaat/niet.json"
-    leden.synchronisatie_aanvragen(CLI)
-    taken.ronde()
-    run = db.session.scalar(select(Taakrun).where(Taakrun.taak == leden.TAAK))
-    assert (run.status, run.foutmelding) == ("mislukt", "De ledenbron is niet bereikbaar.")
-    regel = db.session.scalars(select(Logregel).order_by(Logregel.id.desc())).first()
-    assert regel.actie == "leden.synchronisatie_mislukt"
-    assert alle() == {}
+@pytest.mark.parametrize("gegevens", [{"reden": "De bron zegt: Anna woont op Proefweg 1"},
+                                      {"reden": ["bron_onleesbaar"]}, {}, "bron_onleesbaar"],
+                         ids=["vrije-tekst", "lijst", "leeg", "geen-object"])
+def test_andere_reden_422_zonder_run(importeer, client, gegevens):
+    r = client.post("/api/v1/leden/import-mislukt", json=gegevens,
+                    headers=bearer(importeer.token) | KOPPEL)
+    assert r.status_code == 422 and runs() == []
 
 
-def test_zonder_bron_verandert_er_niets(app):
-    app.config["LEDENBRON"] = ""
-    taken.synchroniseer(Taakrun(taak=leden.TAAK, status="bezig"))
-    run = db.session.scalar(select(Taakrun).where(Taakrun.taak == leden.TAAK))
-    assert (run.status, run.foutmelding) == ("mislukt", "Er is geen ledenbron ingesteld.")
-    assert alle() == {}
+def test_lopende_import_geeft_409_en_verandert_niets(importeer):
+    """BLB-006 criterium 6. Een andere sessie houdt de advisory lock van de import vast."""
+    importeer([record("1")])
+    engine = create_engine(API)
+    with engine.connect() as lopend:
+        lopend.execute(text("SELECT pg_advisory_lock(:slot)"), {"slot": leden.IMPORT_SLOT})
+        r = importeer([record("1", naam="Tweede"), record("2")])
+        lopend.execute(text("SELECT pg_advisory_unlock(:slot)"), {"slot": leden.IMPORT_SLOT})
+    engine.dispose()
+    assert (r.status_code, r.json) == (409, {"fout": "Er loopt al een import."})
+    assert set(alle()) == {"1"} and alle()["1"].naam == "Lid 1" and len(runs()) == 1
 
 
-def test_onverwachte_fout_zonder_inhoud_in_taakrun(app, monkeypatch):
-    def kapot(*_):
-        raise ValueError("adres van iemand")
-    monkeypatch.setattr(leden, "synchroniseer", kapot)
-    taken.synchroniseer(Taakrun(taak=leden.TAAK, status="bezig"))
-    run = db.session.scalar(select(Taakrun).where(Taakrun.taak == leden.TAAK))
-    assert run.foutmelding == "Onverwachte fout (ValueError)."
+# Databaserechten
 
 
-def test_planning_dagelijks_na_tijdstip_met_wachttijd_na_fout(app):
-    app.config["SYNC_TIJDSTIP"] = datetime.strptime("03:00", "%H:%M").time()
-    ochtend = datetime.now(UTC).replace(hour=9, minute=0)  # 10:00 of 11:00 in Amsterdam
-    assert not taken.sync_gepland(ochtend.replace(hour=0))  # 01:00 of 02:00: te vroeg
-    assert taken.sync_gepland(ochtend)
-    db.session.add(Taakrun(taak=leden.TAAK, status="mislukt", gestart_op=ochtend))
-    db.session.commit()
-    assert not taken.sync_gepland(ochtend + timedelta(minutes=30))
-    assert taken.sync_gepland(ochtend + timedelta(minutes=61))
-    db.session.add(Taakrun(taak=leden.TAAK, status="geslaagd", gestart_op=ochtend))
-    db.session.commit()
-    assert not taken.sync_gepland(ochtend + timedelta(hours=3))
-
-
-def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(app, bron):
-    """BLB-008: gegevens en plaats blijven; een boot zonder plaats krijgt er geen meer."""
-    sync(bron([record("1")]))
-    anna = alle()["1"]
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p1 = indeling.plaats_aanmaken(rek.id, "A01", [1], False, CLI)
-    p2 = indeling.plaats_aanmaken(rek.id, "A02", [1], False, CLI)
-    b1 = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
-    b2 = boten.boot_aanmaken("Fuut", 1, anna.id, None, CLI)
-    toewijzing.toewijzen(p1.id, b1.id, CLI)
-    gisteren = (vandaag() - timedelta(days=1)).isoformat()
-    sync(bron([record("1", opzegdatum=gisteren)]))
-    anna = alle()["1"]
-    assert leden.is_oud_lid(anna) and anna.email == "1@example.org" and anna.adres
-    assert db.session.get(Plaats, p1.id).boot_id == b1.id
-    with pytest.raises(Regelfout, match="is oud-lid"):
-        toewijzing.toewijzen(p2.id, b2.id, CLI)
+@pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
+                                 "UPDATE lid SET naam = 'X'"])
+def test_worker_maakt_of_wijzigt_geen_leden(database, sql):
+    """ADR-012: alleen botenloods_api schrijft leden; de worker houdt DELETE voor de opschoning."""
+    engine = create_engine(TAKEN)
+    with engine.connect() as c, pytest.raises(ProgrammingError, match="permission denied"):
+        c.execute(text(sql))
+    with engine.begin() as c:
+        c.execute(text("DELETE FROM lid WHERE false"))
+    engine.dispose()

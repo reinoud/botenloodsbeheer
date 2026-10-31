@@ -144,6 +144,3 @@ def test_worker_heeft_geen_sessie_of_totp_sleutel_nodig(monkeypatch):
     monkeypatch.setenv("DIENST", "web")
     with pytest.raises(config.ConfigFout, match="TOTP_SLEUTEL"):
         config.laad()
-    monkeypatch.setenv("LEDENBRON", "eboekhouden")
-    with pytest.raises(config.ConfigFout, match="LEDENBRON"):
-        config.laad()

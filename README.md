@@ -5,9 +5,11 @@ Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OV
 ## Lokaal starten
 
 1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand).
-2. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`
-3. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed draait in de worker, omdat alleen die leden mag schrijven.
-4. `docker compose -f docker-compose.yml -f compose.dev.yml exec web flask beheerder uitnodigen <gebruikersnaam>` en de link openen.
+2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`: zonder dat bestand start compose niet.
+3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`
+4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `docs/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub.
+5. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed maakt geen leden: alleen de import via de API schrijft leden.
+6. `docker compose -f docker-compose.yml -f compose.dev.yml exec web flask beheerder uitnodigen <gebruikersnaam>` en de link openen.
 
 De applicatie draait op http://localhost:8080. De API (`/api/v1`) is alleen bereikbaar via de interne Nginx-server op poort 8081, vanaf het netwerk `koppeling` (ADR-012).
 

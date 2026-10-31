@@ -3,10 +3,10 @@
 {% block titel %}Leden · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Leden</h1>
-<p>De ledenlijst komt uit de ledenbron. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
+<p>De ledenlijst komt uit de ledenbron. De integratiecontainer haalt haar dagelijks op en stuurt haar naar de applicatie. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
 
 <section class="kaart">
-  <h2>Synchronisatie</h2>
+  <h2>Import</h2>
   <form method="post" action="{{ url_for('web.leden_ophalen') }}">
     {% include "_csrf.html" %}
     <button type="submit" class="knop">Leden nu ophalen</button>
@@ -25,7 +25,7 @@
     </tbody>
   </table>
   {% else %}
-  <p>De synchronisatie heeft nog niet gedraaid.</p>
+  <p>Er is nog geen import geweest.</p>
   {% endif %}
 </section>
 

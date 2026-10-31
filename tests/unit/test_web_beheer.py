@@ -97,9 +97,13 @@ def test_toewijzen_geweigerd_toont_reden(ingelogd):
     assert "is een clubboot en hoort op een clubplaats" in r.text
 
 
-def test_synchronisatie_aanvragen(ingelogd):
+def test_import_aanvragen(ingelogd):
+    """BLB-006 criterium 5, deel webinterface: het verzoek staat op de pagina en in het log."""
     r = ingelogd.post("/leden/ophalen", follow_redirects=True)
-    assert "De synchronisatie is aangevraagd" in r.text and "aangevraagd" in r.text
+    assert "De import is aangevraagd" in r.text and "aangevraagd" in r.text
+    r = ingelogd.post("/leden/ophalen", follow_redirects=True)
+    assert "Er staat al een import klaar." in r.text
+    assert "leden.import_aangevraagd" in r.text
 
 
 def test_openbare_pagina_alleen_openbare_gegevens(client):

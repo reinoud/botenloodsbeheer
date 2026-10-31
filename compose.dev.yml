@@ -7,11 +7,10 @@ services:
     ports: !override ["127.0.0.1:5432:5432"]
     networks: [achterkant, voorkant]
 
-  # Lokaal is de stub de ledenbron, met de synthetische leden en het testlogo uit tests/fixtures.
+  # Lokaal het testlogo uit tests/fixtures.
   web:
     environment:
       GUNICORN_CMD_ARGS: --reload
-      LEDENBRON: stub
       LOGO_BESTAND: /app/tests/fixtures/logo.png
     volumes:
       - ./app:/app/app:ro
@@ -24,11 +23,16 @@ services:
       - ./app:/app/app:ro
 
   worker:
-    environment:
-      LEDENBRON: stub
     volumes:
       - ./app:/app/app:ro
-      - ./tests/fixtures:/app/tests/fixtures:ro
+
+  # Lokaal is de stub de ledenbron, met de synthetische leden uit tests/fixtures.
+  integratie:
+    environment:
+      LEDENBRON: stub
+      LEDENBRON_STUB_BESTAND: /data/leden.json
+    volumes:
+      - ./tests/fixtures/leden.json:/data/leden.json:ro
 
   nginx:
     ports: !override ["127.0.0.1:8080:8080"]
@@ -58,6 +62,9 @@ services:
       - ./app:/app/app:ro
       - ./tests:/app/tests:ro
       - ./migrations:/app/migrations:ro
+      - ./integratie:/app/integratie:ro
+      - ./docker-compose.yml:/app/docker-compose.yml:ro
+      - ./compose.dev.yml:/app/compose.dev.yml:ro
     depends_on:
       db: {condition: service_healthy}
 
@@ -71,5 +78,6 @@ services:
       E2E_BASIS_URL: http://localhost:8080
     volumes:
       - ./tests/e2e:/e2e
+      - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
     working_dir: /e2e
     command: ["pytest", "-p", "no:cacheprovider"]

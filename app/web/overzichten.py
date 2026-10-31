@@ -1,5 +1,5 @@
-"""Overzichten voor de beheerder: vrije plaatsen (BLB-015), plaatsen van oud-leden (BLB-018) en
-de export van de indeling (BLB-017). Alleen lezen."""
+"""Overzichten voor de beheerder: vrije plaatsen (BLB-015), plaatsen van oud-leden (BLB-018), van
+leden die gaan opzeggen (BLB-041) en de export van de indeling (BLB-017). Alleen lezen."""
 
 from flask import render_template, request
 
@@ -25,6 +25,15 @@ def opgezegd():
     return render_template(
         "opgezegd.html", rijen=rijen,
         regels=log.regels([f"plaats:{p.id}" for _d, p in rijen]) if rijen else [])
+
+
+@bp.get("/opzeggend")
+@inloggen_vereist
+def opzeggend():
+    plaatsen = indeling.plaatsen_van_opzeggende_leden()
+    return render_template(
+        "opzeggend.html", plaatsen=plaatsen,
+        regels=log.regels([f"plaats:{p.id}" for p in plaatsen]) if plaatsen else [])
 
 
 @bp.get("/indeling.xlsx")
