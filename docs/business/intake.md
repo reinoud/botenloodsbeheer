@@ -154,3 +154,8 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 - Traefik vervangt Nginx. Een gedeelde Traefik draait in een eigen docker-compose-stack op de host; de compose van de botenloods levert alleen de labels voor Traefik en bevat zelf geen Traefik.
 - De beheerdocumentatie geeft twee voorbeelden: een docker-compose die kant-en-klare images binnenhaalt en een docker-compose die de images bouwt uit een git-checkout.
+
+### Images (issue #35)
+
+- Bij elke release bouwt GitHub Actions de images en zet ze in ghcr.io: `ghcr.io/reinoud/botenloods-app` en `ghcr.io/reinoud/botenloods-integratie`, alleen voor linux/amd64.
+- De packages zijn openbaar, zodat een vereniging ze zonder token binnenhaalt. De repository wordt later ook openbaar.
