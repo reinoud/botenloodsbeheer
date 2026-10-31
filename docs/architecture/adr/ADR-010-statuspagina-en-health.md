@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.1.1
 **Stories:** BLB-036, BLB-037
 
 ## Context
@@ -11,14 +11,14 @@ De applicatie meldt of ze leeft en gereed is, zonder inloggen en zonder gegevens
 
 ## Besluit
 
-**Health endpoints**, zonder inloggen, alleen bereikbaar via Nginx:
+**Health endpoints**, zonder inloggen, alleen bereikbaar via Traefik (ADR-013):
 
 | Endpoint | Controle | Antwoord |
 |----------|----------|----------|
 | `GET /health/live` | Het proces antwoordt; geen database | 200 met `{"status": "ok"}` |
 | `GET /health/ready` | `SELECT 1` op de database en de migratieversie gelijk aan de verwachte head | 200 of 503 met `{"status": "ok"}` of `{"status": "niet gereed"}` |
 
-De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelogd, krijgt alleen ok of niet gereed. Nginx sluit de health endpoints uit van de rate limits.
+De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelogd, krijgt alleen ok of niet gereed. Traefik zet geen rate limit op de health endpoints.
 
 **Healthchecks in compose:** `web` en `api` op `/health/live`; `db` met `pg_isready`; `worker` met `flask taken gezond`, dat controleert of de heartbeat in `taakrun` jonger is dan 2 minuten. `web`, `api` en `worker` starten pas als `db` gezond is en `migrate` klaar is. `integratie` heeft geen healthcheck; de statuspagina laat zien of hij werkt.
 
@@ -49,5 +49,6 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.1 | 2026-10-31 | Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | Healthcheck voor `api`; statuspagina toont de laatste import via de API, de laatste aanroep per robottoken en het ophalen van de bootaantallen, niet meer de ledenbron en de instelling terugschrijven | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

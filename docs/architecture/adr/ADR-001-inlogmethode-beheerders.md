@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (besluit van de stakeholder; architectuur §9, besluit 1)
 **Datum:** 2026-10-30
-**Versie:** v1.1.2
+**Versie:** v1.2.0
 **Stories:** BLB-022, BLB-023, BLB-038
 
 ## Context
@@ -21,7 +21,7 @@ Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat 
 
 **TOTP.** RFC 6238 (`pyotp`), zes cijfers, 30 seconden, een stap marge. Het geheim staat versleuteld in de database (Fernet, sleutel `TOTP_SLEUTEL` uit de omgeving, ADR-009). De beheerder scant een QR-code (segno) en activeert pas na één juiste code. De applicatie bewaart de laatst gebruikte tijdstap en weigert die tweede keer. Er komen geen herstelcodes; herstel loopt via een andere beheerder.
 
-**Brute force.** Nginx beperkt de inlog-endpoints per IP-adres. Daarnaast telt de applicatie per account opeenvolgende mislukte wachtwoord- en TOTP-pogingen. Na vijf weigert ze 15 minuten elke wachtwoordinlog voor dat account. Passkeyinlog blijft werken, dus de teller kan een beheerder met passkey niet buitensluiten.
+**Brute force.** Traefik beperkt de inlog-endpoints per IP-adres (ADR-013). Daarnaast telt de applicatie per account opeenvolgende mislukte wachtwoord- en TOTP-pogingen. Na vijf weigert ze 15 minuten elke wachtwoordinlog voor dat account. Passkeyinlog blijft werken, dus de teller kan een beheerder met passkey niet buitensluiten.
 
 **Herstel.** Een andere beheerder kan voor een collega een herstellink maken. Dat trekt direct alle passkeys, het wachtwoord, het TOTP-geheim en alle sessies van de collega in. De collega stelt via de link opnieuw een methode in. De helper ziet nooit een wachtwoord of geheim en kan zijn eigen account niet zo herstellen. Elk herstel krijgt een logregel. Zijn alle drie hun toegang kwijt, dan gebruikt iemand met servertoegang het CLI-commando.
 
@@ -56,6 +56,7 @@ Intrekken hoogt de sessieversie op. Alle sessies van die beheerder eindigen, ook
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v1.2.0 | 2026-10-31 | Rate limit per IP in Traefik in plaats van Nginx (Besluit stakeholder 2026-10-31, issue #29 (ADR-013)) |
 | v1.1.2 | 2026-10-30 | Recente inlog ook voor uitnodigen en herstellen (review aegis, issue #11) |
 | v1.1.1 | 2026-10-30 | Uitwerking van slice 2 bij de gevolgen (forge, issue #11) |
 | v1.1.0 | 2026-10-30 | Vragen 9 en 10 uit backlog §7: recente inlog vereist, intrekken beëindigt alle sessies |

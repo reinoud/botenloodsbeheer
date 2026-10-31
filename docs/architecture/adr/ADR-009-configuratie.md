@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5); herzien 2026-10-31 (logo en integratiecontainer)
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.2.0
 **Stories:** BLB-007, BLB-009, BLB-027, BLB-028, BLB-029
 
 ## Context
@@ -27,10 +27,11 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `APP_OMGEVING` | Omgeving | `productie` | Seed en debug alleen buiten productie |
 | `PROXY_HOPS` | Omgeving | 1 | Bepaalt het vertrouwde clientadres (ADR-005) |
 | `LEDENBRON`, `LEDENBRON_STUB_BESTAND` en inloggegevens van de bron | Omgeving van `integratie` | Leeg | Techniek en geheim (ADR-004); de applicatie kent ze niet |
-| `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://nginx:8081/api/v1`, `/run/secrets/api_token`, 03:00 | ADR-012 |
+| `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://traefik:8081/api/v1` (instelbaar), `/run/secrets/api_token`, 03:00 | ADR-012, ADR-013 |
 | `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
 | `LOGO_BESTAND` | Omgeving (`web`), bestand in `./huisstijl` | `/huisstijl/logo.png`; zonder bestand alleen de naam | Besluit stakeholder 2026-10-31: logo in de installatie, wijzigen wordt niet gelogd (ADR-008) |
 | `LOG_NIVEAU` | Omgeving | `INFO` | Techniek |
+| `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` | Omgeving (compose-labels en netwerknamen) | Geen, `botenloods`, geen | `DOMEIN` gelijk aan de host uit `BASIS_URL`; `INSTALLATIE` uniek per host (ADR-013) |
 | Naam van de vereniging | Applicatie | "Botenloods" | BLB-027 |
 | Primaire en secundaire kleur | Applicatie | Neutraal grijs en blauw | BLB-027, design tokens (ADR-002) |
 | Bootsoorten | Applicatie (tabel `bootsoort`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
@@ -60,5 +61,6 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-10-31 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` toegevoegd; `API_URL` instelbaar | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | `API_INGESCHAKELD` standaard `true`; `KOPPELNET`, `DB_API_WACHTWOORD`, `LOGO_BESTAND` toegevoegd; ledenbron en `SYNC_TIJDSTIP` naar de integratiecontainer; logo en terugschrijven niet meer in de applicatie | Besluiten stakeholder 2026-10-31, ADR-008, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

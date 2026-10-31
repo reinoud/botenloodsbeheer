@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.3.1
+**Versie:** v1.4.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -15,12 +15,12 @@ Een aparte, vervangbare container doet alle imports en exports: leden ophalen en
 
 | Netwerk | Leden | Eigenschap |
 |---------|-------|-----------|
-| `voorkant` | nginx | Poort 443 en 80 naar buiten |
-| `achterkant` | nginx, web, api, worker, migrate, db | `internal: true` |
-| `koppeling` | nginx, integratie | `internal: true`, vast subnet `KOPPELNET` (standaard `10.203.0.0/24`) |
+| `voorkant` | Traefik, web, api | `internal`, extern aangemaakt (ADR-013) |
+| `achterkant` | web, api, worker, migrate, db | `internal: true` |
+| `koppeling` | Traefik, integratie | `internal`, extern aangemaakt, vast subnet `KOPPELNET` (standaard `10.203.0.0/24`) |
 | `buiten` | integratie | Uitgaand verkeer naar e-boekhouden |
 
-Nginx krijgt een tweede, niet gepubliceerde server op poort 8081, die alleen `/api/v1/` doorstuurt naar `api`. De publieke server op 443 kent geen route naar `api`. Zo gelden de rate limits en de overschreven `X-Forwarded-For` uit ADR-005 ongewijzigd, en bereikt `integratie` `api` en `db` niet rechtstreeks.
+Traefik heeft een niet gepubliceerd entrypoint `intern` op poort 8081, met een router die alleen `/api/v1/` vanaf `KOPPELNET` doorstuurt naar `api` (ADR-013). Het entrypoint op 443 kent geen route naar `api`. Zo gelden de rate limits en het vastgestelde clientadres uit ADR-005, en bereikt `integratie` `api` en `db` niet rechtstreeks.
 
 Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat bestand komt pas met een story die erom vraagt (architectuur §10.2, vraag 5).
 
@@ -34,7 +34,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 | `POST /api/v1/leden/import-mislukt` | `leden:importeren` | `{"reden": ...}`, één van `bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd` | 201; andere reden 422 |
 | `GET /api/v1/bootaantallen` | `bootaantallen:lezen` | geen | 200 `[{"lidnummer", "aantallen": {bootsoort: aantal}}]`, voor elk lid elke bootsoort, ook 0 |
 
-**Regels aan de kant van de API.** `PUT /api/v1/leden` roept `domein/leden.importeer` aan met de ontvangen lijst. Alle regels uit ADR-004 gelden daardoor ongewijzigd: validatie per record zonder de inhoud te loggen, de veiligheidsgrens van de helft, geen nieuw lid met een opzegdatum van meer dan 5 jaar geleden, `uit_bron_op` voor een lid dat in de lijst ontbreekt, en boten van oud-leden van de wachtlijst. Wijzigingen in leden komen niet in het log; mutaties aan boten wel (ADR-004 v2.1.0). Een advisory lock voorkomt twee imports tegelijk. Een geslaagde import, een import die de veiligheidsgrens tegenhoudt (409) en een gemelde fout zijn een run in `taakrun` met taak `ledenimport`; een open verzoek van een beheerder krijgt die uitkomst. Een 413, een 422 en een 409 omdat er al een import loopt, laten `taakrun` ongemoeid: er is dan niets geïmporteerd. De reden bij een fout komt uit een vaste lijst, zodat geen tekst van buiten op de statuspagina komt. De blueprint `/api/v1` is vrijgesteld van CSRF (`csrf.exempt`): de API gebruikt alleen het token in de header en geen cookie, dus een andere site kan geen aanroep doen namens een ingelogde beheerder. Nginx op poort 8081 laat een verzoek tot 2 MB door (`client_max_body_size` en `client_body_buffer_size` 2m) en geeft daarboven zelf de 413 als JSON.
+**Regels aan de kant van de API.** `PUT /api/v1/leden` roept `domein/leden.importeer` aan met de ontvangen lijst. Alle regels uit ADR-004 gelden daardoor ongewijzigd: validatie per record zonder de inhoud te loggen, de veiligheidsgrens van de helft, geen nieuw lid met een opzegdatum van meer dan 5 jaar geleden, `uit_bron_op` voor een lid dat in de lijst ontbreekt, en boten van oud-leden van de wachtlijst. Wijzigingen in leden komen niet in het log; mutaties aan boten wel (ADR-004 v2.1.0). Een advisory lock voorkomt twee imports tegelijk. Een geslaagde import, een import die de veiligheidsgrens tegenhoudt (409) en een gemelde fout zijn een run in `taakrun` met taak `ledenimport`; een open verzoek van een beheerder krijgt die uitkomst. Een 413, een 422 en een 409 omdat er al een import loopt, laten `taakrun` ongemoeid: er is dan niets geïmporteerd. De reden bij een fout komt uit een vaste lijst, zodat geen tekst van buiten op de statuspagina komt. De blueprint `/api/v1` is vrijgesteld van CSRF (`csrf.exempt`): de API gebruikt alleen het token in de header en geen cookie, dus een andere site kan geen aanroep doen namens een ingelogde beheerder. De applicatie geeft boven 2 MB de 413 als JSON (`MAX_CONTENT_LENGTH`); Traefik weigert boven 3 MB als buitengrens (ADR-013).
 
 **Integratiecontainer.** Een lus van 60 seconden: vraag het importverzoek op, en importeer bij een verzoek of na `SYNC_TIJDSTIP` als die dag nog geen import slaagde. Na een fout hooguit één geplande poging per uur; een verzoek van een beheerder wacht niet (besluit stakeholder 2026-10-31, #28), behalve na een fout van de API zelf (elke HTTP-fout behalve 409, en een netwerkfout): dan blijft het verzoek open en komt een geweigerde aanroep in het log van de API. Na een fout van de bron of een 409 is het verzoek gesloten. Een nieuw token in het secretbestand heft die wachttijd op, zodat een vervangen token direct werkt (BLB-039 criterium 3). Een lijst van meer dan 5000 records of meer dan 2 MB stuurt de container niet; hij meldt dan `bron_onleesbaar`. De bron zit achter de interface uit ADR-004 (`haal_leden`, `schrijf_bootaantallen`), met een stub die een JSON-bestand leest. `schrijf_bootaantallen` gooit `NietBeschikbaar`; er draait geen taak die terugschrijft. De container draait zonder root, alleen-lezen, met alleen de standaardbibliotheek van Python.
 
@@ -46,7 +46,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Optie | Waarom niet |
 |-------|-------------|
-| API in `web`, met een blokkade op `/api/` in Nginx | `web` staat aan internet en zou leden mogen schrijven; de scheiding in de database verdwijnt |
+| API in `web`, met een blokkade op `/api/` in de proxy | `web` staat aan internet en zou leden mogen schrijven; de scheiding in de database verdwijnt |
 | Integratiecontainer rechtstreeks naar `api:8000` | Geen rate limit en een clientadres dat de whitelist niet betrouwbaar maakt |
 | Import per lid (`POST` en `PATCH`) | Een verdwenen lid is dan niet te herkennen, en de veiligheidsgrens werkt niet |
 
@@ -61,6 +61,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.0 | 2026-10-31 | Traefik in plaats van Nginx: netwerken, entrypoint `intern`, grens van 2 MB in de applicatie | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.3.1 | 2026-10-31 | Een verzoek van een beheerder wacht na een fout niet het uur af, behalve na een fout van de API zelf | Besluit stakeholder 2026-10-31, issue #28 |
 | v1.3.0 | 2026-10-31 | Gelijk aan de bouw van slice 6: vier aanroepen gebouwd, de vijfde in slice 9; `domein/leden.importeer`; uitkomsten in `taakrun` (taak `ledenimport`); secretbestand leeg aanmaken en uid 10001; nieuw token heft de wachttijd op; grens van 5000 records en 2 MB in de container; CSRF-vrijstelling van `/api/v1`; Nginx tot 2 MB | Issue #22 |
 | v1.2.0 | 2026-10-31 | Geen logregel per lid | Besluit stakeholder 2026-10-31 (backlog vraag 20) |

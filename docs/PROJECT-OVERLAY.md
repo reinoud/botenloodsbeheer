@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.2.6
+**Versie overlay:** v0.3.0
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -27,7 +27,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Product | Webapplicatie voor het beheer van stallingsplaatsen in de botenloods, met wachtlijst per bootsoort, overzichten, Excel-export, printbare kaartjes met QR-code en een openbare pagina per plaats. |
 | Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
 | Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
-| Stack | Python, Flask, Gunicorn, Nginx en PostgreSQL, in docker-compose. |
+| Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013; tot de bouw van #29 nog Nginx). |
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
@@ -78,35 +78,36 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef een nieuwe webmodule geen naam die al bestaat in `app.web` (zoals een domeinmodule of functie); controleer na het toevoegen dat de route bestaat met `flask routes` of een unittest.
 - Een racetest moet falen met een mutant zonder de vergrendeling. Overleeft de mutant, meld dan waarom de vergrendeling toch nodig is.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
-- Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan de `$log_uri`-map in `docker/nginx/http.inc`.
+- Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan het maskeren in de toegangslog (Gunicorn na ADR-013; tot dan de `$log_uri`-map in `docker/nginx/http.inc`).
 - Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen.
 - Raakt een besluit van de stakeholder ook de overlay, dan noemt foundation de verouderde regels in de overlay; de regie werkt ze bij.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
 - Draai vóór de oplevering `git diff` op de leidende bronnen; een besluit dat tijdens het werk is bijgekomen, gaat voor de opdracht. Meld het in je antwoord.
-- Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, herstart ook `nginx` voordat je E2E-tests of curl-controles draait; anders geeft de API via Nginx 404.
+- Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, herstart ook de proxy (`nginx`, na ADR-013 `traefik`) voordat je E2E-tests of curl-controles draait; anders geeft de API via de proxy 404.
 - Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - ADR-008 "zonder metadata" betekent zonder EXIF, tekstblokken en ICC-profiel; de test en de reviewer gebruiken een bronbestand met alle drie.
 - Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
 - Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
 - Draai geen compose-commando terwijl een `git stash` actief is; vergelijk een baseline in een aparte worktree.
-- Controleer na elke wijziging aan Nginx met `docker compose logs nginx` dat elk verzoek precies één logregel geeft, in het formaat `zonder_code`.
+- Controleer na elke wijziging aan de proxy of de toegangslog dat elk verzoek precies één logregel geeft, in het formaat `zonder_code` (na ADR-013 in de log van `web` of `api`, en niets in de log van Traefik).
 - Elke nieuwe omgevingsvariabele krijgt een test die de variabele zet en `create_app` aanroept (geldige en ongeldige waarde); een test die alleen `app.config` overschrijft, telt niet.
 - Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
 - Geef een reviewer van de API een container op het netwerk `koppeling` mee (`docker run --rm -i --network botenloods_koppeling --entrypoint python botenloods-app`), zodat hij whitelist en rate limit positief kan controleren.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
-- Een proef op een gedeelde rate limit doe je in een losse nginx-container op de gestagede bestanden (eigen teller, stub als upstream); de gedeelde nginx alleen voor proeven onder de grens.
+- Een proef op een gedeelde rate limit doe je in een losse proxycontainer op de gestagede bestanden (eigen teller, stub als upstream); de gedeelde proxy alleen voor proeven onder de grens.
 - Een gemelde afwijking van een ADR krijgt vóór de review een issue of een ADR-wijziging; een melding alleen in een terugblik of issuecommentaar telt niet.
-- Draai na elke nieuwe schrijfroute in de API één aanroep via Nginx tegen de draaiende stack voordat je unittests als bewijs telt; de unittests zetten CSRF en de proxy niet altijd zoals productie.
+- Draai na elke nieuwe schrijfroute in de API één aanroep via de proxy tegen de draaiende stack voordat je unittests als bewijs telt; de unittests zetten CSRF en de proxy niet altijd zoals productie.
 - Noem bij een story die een aanroep uit een latere slice beschrijft (zoals BLB-040 en de bootaantallen) of die aanroep in deze slice gebouwd wordt.
-- Geef een reviewer van de API een tweede token zonder het recht van de nieuwe route mee (of zeg dat hij er een mag maken), zodat hij de 403 via Nginx kan controleren.
+- Geef een reviewer van de API een tweede token zonder het recht van de nieuwe route mee (of zeg dat hij er een mag maken), zodat hij de 403 via de proxy kan controleren.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet.
-- Bij de Nginx-logcontrole tellen regels uit de foutlog (zoals `client intended to send too large body`) apart; meld of zo'n regel gewenst is.
+- Bij de logcontrole tellen regels uit de foutlog van de proxy (zoals `client intended to send too large body`) apart; meld of zo'n regel gewenst is.
 - Verandert een afwijking wat een beheerder ziet of hoe lang die moet wachten, leg die dan vóór de bouw aan apex en de stakeholder voor; een melding achteraf in een issue is te laat.
 - Een uitzondering op een besluit van de stakeholder komt ook in het acceptatiecriterium van de backlog, niet alleen in de ADR.
 - Noem bij een wijziging in de herhaallogica van de container welke API-uitkomsten een open importverzoek sluiten en welke het openlaten, en welke aanroepen de API in het log schrijft (alleen geweigerde).
-- Ruff draait in de testcontainer met `ruff check --no-cache`.
+- Gaat een proxy of netwerk gedeeld worden met andere diensten, zeg dan of `web` en `api` op het gedeelde netwerk mogen; standaard niet.
+- Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 
 ## 5. Projectcontracten
 
@@ -124,7 +125,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 
 | Kader | Reden | Bij twijfel |
 |-------|-------|-------------|
-| Stack: Python, Flask, Gunicorn, Nginx, PostgreSQL in docker-compose | Standaardregel en intake | foundation |
+| Stack: Python, Flask, Gunicorn, PostgreSQL in docker-compose, achter Traefik (ADR-013) | Standaardregel, intake en besluit stakeholder 2026-10-31 (#29) | foundation |
 | Tenancy: één vereniging per installatie, geen tenantlaag en geen tenantadministratie | Besluit stakeholder 2026-10-30 | stakeholder |
 | Huisstijl: geen vaste huisstijl. Alle styling via design tokens. Naam, kleuren en logo zijn per installatie in te stellen. | Besluit stakeholder 2026-10-30; de applicatie is voor meerdere verenigingen bedoeld | foundation |
 | Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de opschoning) buiten het webproces; imports en exports in de integratiecontainer (ADR-012). | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
@@ -171,6 +172,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013): stack en regels over de proxy; regels uit de terugblikken van de review van #28 en van foundation | Besluit stakeholder 2026-10-31 (#29), lessen |
 | v0.2.6 | 2026-10-31 | Vier regels in de briefingchecklist uit de terugblikken van de review van #28 | Lessen |
 | v0.2.5 | 2026-10-31 | Regel in de briefingchecklist uit de terugblik van foundation (issue #22) | Lessen |
 | v0.2.4 | 2026-10-31 | Vijf regels in de briefingchecklist uit de terugblikken van forge, aegis en sentinel (slice 6); stand bijgewerkt | Lessen |

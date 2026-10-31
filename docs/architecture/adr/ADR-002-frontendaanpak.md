@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.1
+**Versie:** v1.1.2
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -20,7 +20,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 - **JavaScript:** alleen waar het niet anders kan: het passkeyscript (ADR-001), een kleine bevestiging bij verwijderen, en "alles selecteren" op de printpagina. Gewone bestanden in `static/`, zonder bundler.
 - **Toegankelijkheid:** semantische HTML, labels bij elk veld, voldoende contrast. BLB-027 vraagt een waarschuwing bij slecht leesbare kleuren; de applicatie berekent het contrast volgens de WCAG-formule bij het opslaan.
 - **Print:** de kaartjes zijn een HTML-pagina met print-CSS (`@page`, raster op A4). De beheerder print via de browser of slaat op als pdf (ADR-011).
-- **CSP:** Nginx stuurt een strikte Content Security Policy zonder inline scripts. Inline styles zijn niet nodig: de tokens komen uit `/huisstijl.css`, zodat de CSP geen nonce of uitzondering nodig heeft.
+- **CSP:** Traefik stuurt (ADR-013) een strikte Content Security Policy zonder inline scripts. Inline styles zijn niet nodig: de tokens komen uit `/huisstijl.css`, zodat de CSP geen nonce of uitzondering nodig heeft.
 
 ## Alternatieven
 
@@ -42,6 +42,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.2 | 2026-10-31 | CSP uit Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.1 | 2026-10-31 | Reden bij het alternatief SPA bijgewerkt (de API is niet meer alleen-lezen); logo uit de installatie | Besluiten stakeholder 2026-10-31 |
 | v1.1.0 | 2026-10-31 | Tokens uit een aparte stylesheet `/huisstijl.css` in plaats van een `<style>`-blok met nonce | Slice 3 (issue #13); de CSP blijft ongewijzigd, beoordeeld door aegis |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

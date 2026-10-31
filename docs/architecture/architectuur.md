@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.3
+**Versie:** v0.4.0
 **Datum:** 2026-10-31
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -17,13 +17,12 @@ De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey
 
 ## 2. Containers
 
-De installatie bestaat uit zes containers in één `docker-compose.yml`, verdeeld over vier netwerken (ADR-012). Ze draaien alle zes zonder root.
+De installatie bestaat uit zes containers in één `docker-compose.yml`, verdeeld over vier netwerken (ADR-012). Ze draaien alle zes zonder root. Ervoor staat een gedeelde Traefik op de host, die via de extern aangemaakte netwerken `voorkant` en `koppeling` en labels bij `web` en `api` komt (ADR-013). Lokaal draait een eigen Traefik in `compose.dev.yml`.
 
 | Container | Inhoud | Taak | Bereikbaar van buiten |
 |-----------|--------|------|-----------------------|
-| `nginx` | Nginx (officieel image, unprivileged-variant) | TLS (vaste domeinnaam met HTTPS, §9 besluit 2), beveiligingsheaders, rate limiting, maximale uploadgrootte; publieke server naar `web`, interne server op poort 8081 naar `api` | Ja, poort 443 (en 80 voor doorverwijzing); 8081 niet |
-| `web` | Applicatie-image, Gunicorn met Flask | Webinterface, openbare pagina, health endpoints | Nee, alleen via `nginx` |
-| `api` | Hetzelfde applicatie-image, `DIENST=api` | API `/api/v1`, import van leden, health endpoints | Nee, alleen via de interne server van `nginx` |
+| `web` | Applicatie-image, Gunicorn met Flask | Webinterface, openbare pagina, health endpoints | Nee, alleen via Traefik (labels: TLS, headers, rate limits, uploadgrootte) |
+| `api` | Hetzelfde applicatie-image, `DIENST=api` | API `/api/v1`, import van leden, health endpoints | Nee, alleen via het entrypoint `intern` van Traefik (8081) |
 | `worker` | Hetzelfde applicatie-image, ander startcommando | Heartbeat, dagelijkse opschoning | Nee |
 | `integratie` | Eigen klein image uit `integratie/`, vervangbaar | Leden ophalen uit de bron en importeren via de API; terugschrijven voorbereid, uit | Nee; alleen uitgaand naar de bron |
 | `db` | PostgreSQL 17 | Alle gegevens, ook foto's | Nee, alleen intern netwerk |
@@ -101,7 +100,7 @@ botenloods/
     fixtures/            synthetische leden voor de stub
   docker/
     Dockerfile
-    nginx/               publieke server en interne server op 8081
+    traefik/             statische configuratie voor de lokale Traefik
   huisstijl/             logo van de installatie, niet in git (ADR-008)
   secrets/               api_token van de integratiecontainer, niet in git (ADR-012)
   docker-compose.yml     productie-opbouw
@@ -162,7 +161,7 @@ De testfixture roept `flask beheerder uitnodigen` aan, opent de link in Playwrig
 
 ### 6.5 Tests
 
-Unit- en integratietests draaien met pytest tegen een echte PostgreSQL in compose; er is geen SQLite-variant, omdat de applicatie PostgreSQL-typen (`cidr`, `bytea`, `jsonb`, arrays) gebruikt. Elke test draait in een transactie die na afloop wordt teruggedraaid. `tests/e2e/draai.sh` draait de E2E-tests per bestand met een pauze ertussen, zodat de rate limit van Nginx op inlogverzoeken (ADR-001) de suite niet blokkeert; met `-k` draait één selectie in één keer. De nepbron voor de tests van BLB-006 tot BLB-008 is een fixturebestand dat de test naar `PUT /api/v1/leden` stuurt. De integratiecontainer heeft eigen tests met de stub en een nep-API.
+Unit- en integratietests draaien met pytest tegen een echte PostgreSQL in compose; er is geen SQLite-variant, omdat de applicatie PostgreSQL-typen (`cidr`, `bytea`, `jsonb`, arrays) gebruikt. Elke test draait in een transactie die na afloop wordt teruggedraaid. `tests/e2e/draai.sh` draait de E2E-tests per bestand met een pauze ertussen, zodat de rate limit van Traefik op inlogverzoeken (ADR-001) de suite niet blokkeert; met `-k` draait één selectie in één keer. De nepbron voor de tests van BLB-006 tot BLB-008 is een fixturebestand dat de test naar `PUT /api/v1/leden` stuurt. De integratiecontainer heeft eigen tests met de stub en een nep-API.
 
 ## 7. Componenten per slice
 
@@ -182,8 +181,8 @@ De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import 
 
 | Volgorde | Was | Inhoud | Geraakte componenten | ADR's |
 |----------|-----|--------|----------------------|-------|
-| A | nieuw | Logo uit de installatie en "(geschikt voor …)" in de Excel-export (issue #17) | `web` (logo uit `LOGO_BESTAND`, route `/logo/<hash>`), migratie die logo en route verwijdert, Nginx-locatie weg, `domein/indeling` (export) | 008, 009 |
-| B | deel van 7 | API-basis: robottoken via de CLI, controle per aanroep, logging, rate limit, `GET /api/v1/ik` (deel van BLB-029, 031, 033, 034) | model `token`, `domein/tokens`, dienst `api` met rol `botenloods_api`, netwerken, interne Nginx-server op 8081, `openapi.yaml` | 005, 009, 011, 012 |
+| A | nieuw | Logo uit de installatie en "(geschikt voor …)" in de Excel-export (issue #17) | `web` (logo uit `LOGO_BESTAND`, route `/logo/<hash>`), migratie die logo en route verwijdert, proxylocatie weg, `domein/indeling` (export) | 008, 009 |
+| B | deel van 7 | API-basis: robottoken via de CLI, controle per aanroep, logging, rate limit, `GET /api/v1/ik` (deel van BLB-029, 031, 033, 034) | model `token`, `domein/tokens`, dienst `api` met rol `botenloods_api`, netwerken, interne server op 8081 (sinds ADR-013 een entrypoint van Traefik), `openapi.yaml` | 005, 009, 011, 012 |
 | C | nieuw | Integratiecontainer met stub; import, importverzoek en gemelde fout via de API; BLB-006, 007 en 008 opnieuw groen via de nieuwe route | `integratie/`, `domein/leden` (import), `taken` zonder synchronisatie, `app/ledenbron/` weg, seed in de worker zonder leden, `docs/beheer/integratiecontainer.md` | 004, 007, 012 |
 | D | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | E | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
@@ -207,18 +206,20 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 | Kwaadaardig bestand als foto of logo (XSS via SVG, verborgen locatiegegevens) | Upload van een foto; logobestand in de installatie | M | M | Alleen JPEG, PNG en WebP, opnieuw coderen met Pillow, EXIF verwijderen; een ongeldig logo wordt niet getoond | 008 |
 | Formule in de Excel-export via een naam uit de ledenbron (bijvoorbeeld `=HYPERLINK(...)`) | Export | L | M | Tekst met `=` vooraan blijft tekst in het bestand; stuurtekens vallen weg | 011 |
 | Ongeldige of gemanipuleerde gegevens uit de ledenbron, of een halve lijst van een vervangende container | `PUT /api/v1/leden` | L | M | Validatie per record in de domeinlaag, grens op grootte en aantal, afbreken bij een verdachte afname | 004, 012 |
-| Overgenomen integratiecontainer of gelekt robottoken | API | L | H | Token met alleen `leden:importeren` en `bootaantallen:lezen`, whitelist `KOPPELNET`, geen toegang tot `db` of `api` buiten Nginx; het ergste gevolg is een import van gemanipuleerde leden, die de veiligheidsgrens en het log beperken | 005, 012 |
-| API per ongeluk vanaf internet bereikbaar | Nginx | L | H | Publieke server kent geen route naar `api`; ontsluiten vraagt een apart compose-bestand; `api` zit op een intern netwerk | 012 |
+| Overgenomen integratiecontainer of gelekt robottoken | API | L | H | Token met alleen `leden:importeren` en `bootaantallen:lezen`, whitelist `KOPPELNET`, geen toegang tot `db` of `api` buiten Traefik; het ergste gevolg is een import van gemanipuleerde leden, die de veiligheidsgrens en het log beperken | 005, 012 |
+| API per ongeluk vanaf internet bereikbaar | Traefik | L | H | Entrypoint op 443 kent geen route naar `api`; router op `intern` alleen vanaf `KOPPELNET`; ontsluiten vraagt een apart compose-bestand; `api` zit op een intern netwerk | 012 |
 | CSRF op beheeracties | Webinterface | M | M | CSRF-token op elk formulier, sessiecookie `SameSite=Lax`, `Secure`, `HttpOnly` | 011 |
 | Inloggegevens van e-boekhouden in logs of statuspagina | Integratiecontainer, statuspagina | L | H | Alleen in de omgeving van `integratie`; de applicatie kent ze niet; een gemelde fout heeft een reden uit een vaste lijst | 004, 009, 012 |
-| Vervalst IP-adres via `X-Forwarded-For` | API | M | H | Flask vertrouwt precies één proxy (Nginx); Nginx overschrijft de header | 005 |
+| Vervalst IP-adres via `X-Forwarded-For` | API | M | H | Flask vertrouwt precies één proxy (Traefik); Traefik vertrouwt geen binnenkomende header. Verkeer buiten Traefik om via `achterkant` blijft open (#20) | 005, 013 |
+| Andere dienst achter de gedeelde Traefik roept `api` of `web` rechtstreeks aan | Gedeelde Traefik | M | H | `web` en `api` alleen op netwerken van deze installatie, niet op het gedeelde netwerk van Traefik | 013 |
+| Codes of zoektermen in de toegangslog van de gedeelde Traefik | Traefik | M | M | Toegangslog van Traefik uit per router; de applicatie logt zonder querystring en code | 013 |
 
 ### 8.2 Ontwerpprincipes
 
 | Principe | Status | Toelichting |
 |----------|--------|-------------|
 | Minimale rechten | Compliant | Containers zonder root; database-accounts zonder superuser, per dienst een rol, alleen `api` schrijft leden; `integratie` zonder databasetoegang; tokens met losse rechten; persoonsgegevens alleen met apart recht |
-| Gelaagde verdediging | Compliant | Nginx (rate limits, headers, CSP) voor Flask; constraints in de database onder de domeinregels |
+| Gelaagde verdediging | Compliant | Traefik (rate limits, headers, CSP) voor Flask; constraints in de database onder de domeinregels |
 | Veilig falen | Compliant | Import breekt af zonder wijziging; de API staat standaard aan maar alleen op het interne netwerk (`API_INGESCHAKELD=true`, whitelist `KOPPELNET`); terugschrijven staat uit; een ongeldig logo wordt niet getoond |
 | Scheiding | Compliant | Eén plek voor regels; de enige externe koppeling zit in een eigen container die alleen de API kent |
 
@@ -228,17 +229,18 @@ Back-ups vallen buiten de applicatie. Een back-up bevat persoonsgegevens en foto
 
 ## 9. Besluiten van de stakeholder
 
-De stakeholder besloot over de eerste vijf keuzes op 2026-10-30 (bron: `docs/business/intake.md`, sectie "Besluiten op de architectuurvragen"). Besluit 1 en 5 wijken af van de aanbeveling van foundation en zijn in de ADR's herschreven. Besluit 6 en 7 zijn van 2026-10-31 (sectie "Besluiten van de stakeholder (2026-10-31)"); besluit 7 wijzigt de standaard van besluit 5.
+De stakeholder besloot over de eerste vijf keuzes op 2026-10-30 (bron: `docs/business/intake.md`, sectie "Besluiten op de architectuurvragen"). Besluit 1 en 5 wijken af van de aanbeveling van foundation en zijn in de ADR's herschreven. Besluit 6, 7 en 8 zijn van 2026-10-31 (sectie "Besluiten van de stakeholder (2026-10-31)"); besluit 7 wijzigt de standaard van besluit 5.
 
 | # | Besluit | Uitkomst (2026-10-30) | Gevolg |
 |---|---------|-----------------------|--------|
 | 1 | Inlogmethode voor beheerders (ADR-001) | Een beheerder logt in met een passkey of met een wachtwoord plus TOTP; beide zijn beschikbaar. Een eenmalige uitnodigingslink dient voor instellen en herstel. Afwijking van de aanbeveling (alleen passkeys). | De beheerder kiest bij de uitnodiging één of beide methodes. Wachtwoord met TOTP is te phishen; dat restrisico is geaccepteerd. Wie zijn toestel kwijt is, krijgt een herstellink van een andere beheerder. |
-| 2 | Vaste domeinnaam en TLS per installatie | Besloten zoals aanbevolen: elke installatie heeft een eigen, blijvende (sub)domeinnaam met HTTPS. Nginx in de compose termineert TLS met een gemount certificaat; vernieuwen (bijvoorbeeld met certbot op de host) hoort bij de hosting. | Passkeys werken alleen op een vaste domeinnaam met HTTPS. De QR-codes op de kaartjes bevatten de domeinnaam: verandert die, dan moeten alle kaartjes opnieuw. |
+| 2 | Vaste domeinnaam en TLS per installatie | Besloten zoals aanbevolen: elke installatie heeft een eigen, blijvende (sub)domeinnaam met HTTPS. Sinds besluit 8 termineert de gedeelde Traefik TLS; certificaat en vernieuwen horen bij de hosting (ADR-013). | Passkeys werken alleen op een vaste domeinnaam met HTTPS. De QR-codes op de kaartjes bevatten de domeinnaam: verandert die, dan moeten alle kaartjes opnieuw. |
 | 3 | Wat "een boot in de loods" is voor de bewaartermijn | Besloten zoals aanbevolen: een oud-lid valt onder de opschoning zodra 5 jaar na de opzegdatum geen boot van het oud-lid nog een plaats heeft. Bij het opschonen worden ook de boten en foto's van het oud-lid verwijderd (ADR-006). | Een boot zonder plaats houdt het opschonen niet tegen. Wil de vereniging boten zonder plaats als "in de loods" tellen, dan blijven gegevens langer staan. |
 | 4 | Begin van de termijn voor een lid dat uit de bron verdwijnt zonder opzegdatum | Besloten zoals aanbevolen: de datum waarop de synchronisatie het lid niet meer vond, telt als opzegdatum (ADR-004, ADR-006). | Zonder deze regel begint de termijn van zo'n oud-lid nooit en blijven de gegevens onbeperkt staan. |
 | 5 | Wie de API aan- en uitzet (ADR-009) | De API gaat aan en uit in de installatie, via de omgevingsvariabele `API_INGESCHAKELD`, niet door de beheerder in de applicatie. Afwijking van de aanbeveling. De standaard is sinds besluit 7 `true`. | Er komt geen scherm voor de schakelaar. Wijzigen vraagt iemand met servertoegang en een herstart van `api`. |
 | 6 | Waar het logo staat (ADR-008, ADR-009) | In de installatie (docker-compose), niet in de applicatie; wijzigen wordt niet gelogd. Naam en kleuren blijven in de applicatie. | Geen uploadscherm meer; het logo staat in `./huisstijl` en een nieuw logo vraagt een herstart van `web`. |
-| 7 | Imports en exports (ADR-004, ADR-012) | Een aparte, vervangbare container doet alle imports en exports, alleen via de API over het interne netwerk. De API staat standaard aan met als whitelist het interne netwerk en is niet meer alleen-lezen. | Dienst `api` met eigen databaserol, interne Nginx-server, robottoken via de CLI; de synchronisatie verdwijnt uit de worker. |
+| 7 | Imports en exports (ADR-004, ADR-012) | Een aparte, vervangbare container doet alle imports en exports, alleen via de API over het interne netwerk. De API staat standaard aan met als whitelist het interne netwerk en is niet meer alleen-lezen. | Dienst `api` met eigen databaserol, interne server op 8081, robottoken via de CLI; de synchronisatie verdwijnt uit de worker. |
+| 8 | Proxy vóór de containers (ADR-013, issue #29) | Traefik vervangt Nginx en neemt de controles over. | Gedeelde Traefik op de host via extern aangemaakte netwerken en labels; toegangslog in de applicatie; 429 als tekst. |
 
 ## 10. Botsingen tussen bronnen en open vragen
 
@@ -263,6 +265,8 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | 4 | Botst het standaardsubnet `10.203.0.0/24` van `KOPPELNET` met een netwerk op de host van een vereniging? | Forge, bij de installatiebeschrijving | L | Nee, `KOPPELNET` is in te stellen |
 | 5 | Vervallen persoonlijke tokens nu de API niet vanaf internet bereikbaar is? | Stakeholder | H | Besloten 2026-10-31: de keuze per installatie blijft open (`compose.api-extern.yml`, ADR-012), persoonlijke tokens blijven mogelijk |
 | 6 | Mag een import ook leden met een `opzegdatum` in de toekomst aanmaken? | Stakeholder | L | Besloten 2026-10-31: ja, e-boekhouden kan dat leveren. De beheerder ziet een lijst met boten van deze leden en de opzegdatum (story volgt van apex) |
+| 7 | Een 429 van Traefik en een 413 boven 3 MB komen in geen toegangslog, omdat de toegangslog van Traefik per router uit staat (ADR-013). Is dat aanvaardbaar, of komt er een tweede logroute (metrics van Traefik, of de `errors`-middleware naar de applicatie)? | Stakeholder | M | Nee; standaard geen log van deze weigeringen |
+| 8 | Werkt `observability.accesslogs=false` per router in `traefik:v3.7.17`? | Forge, proef bij de bouw | H | Ja, voor productie: zonder deze eigenschap komen codes en zoektermen in de log van de gedeelde Traefik |
 
 ## 11. Proactieve bevindingen
 
@@ -279,6 +283,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.4.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013, issue #29): §2, §6, §7.1, §8, §9 besluit 2 en 8, §10.2 vragen 7 en 8; ADR-001 v1.2.0, ADR-002 v1.1.2, ADR-005 v1.3.0, ADR-008 v1.2.0, ADR-009 v1.2.0, ADR-010 v1.1.1, ADR-011 v1.2.1, ADR-012 v1.4.0 |
 | v0.3.3 | 2026-10-31 | Bouw slice 6 (issue #22): seed in de worker zonder leden, de leden komen via de integratiecontainer (§6.2, §6.3, §7.1); secretbestand leeg aanmaken; ADR-004 v2.2.0, ADR-007 v1.2.0, ADR-012 v1.3.0 |
 | v0.3.2 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; ADR-004 v2.1.0, ADR-005 v1.2.0, ADR-006 v1.0.0, ADR-011 v1.2.0, ADR-012 v1.2.0 |
 | v0.3.1 | 2026-10-31 | §10.2 vragen 5 en 6 besloten door de stakeholder; tokenwaarschuwing naar F (backlog vraag 18) |

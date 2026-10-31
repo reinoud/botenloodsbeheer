@@ -2,12 +2,12 @@
 
 **Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
 
-De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die stack zijn keuzes nodig voor de database-laag en migraties, formulieren en CSRF, inloggen (passkeys, wachtwoordhash, TOTP), afbeeldingen, Excel, QR-codes, het printen van kaartjes, de OpenAPI-beschrijving en de tests. Elke afhankelijkheid is onderhoud en een mogelijk lek in de toeleveringsketen. De regel is daarom: een bibliotheek alleen als die een echt probleem oplost dat niet in een paar regels code te doen is, en dan een breed gebruikte, onderhouden bibliotheek.
+De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die stack zijn keuzes nodig voor de database-laag en migraties, formulieren en CSRF, inloggen (passkeys, wachtwoordhash, TOTP), afbeeldingen, Excel, QR-codes, het printen van kaartjes, de OpenAPI-beschrijving en de tests. Elke afhankelijkheid is onderhoud en een mogelijk lek in de toeleveringsketen. De regel is daarom: een bibliotheek alleen als die een echt probleem oplost dat niet in een paar regels code te doen is, en dan een breed gebruikte, onderhouden bibliotheek.
 
 ## Besluit
 
@@ -57,6 +57,7 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-10-31 | Traefik in plaats van Nginx in de stack | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.2.0 | 2026-10-31 | Geen `/api/v1/openapi.json` en HTML-pagina; het contract staat in de repository | Afwijking uit slice 5, door de regie overgenomen |
 | v1.1.0 | 2026-10-31 | OpenAPI met schrijvende endpoints; integratiecontainer zonder extra afhankelijkheden | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |
