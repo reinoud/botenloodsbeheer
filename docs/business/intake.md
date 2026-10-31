@@ -149,3 +149,8 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De vereniging rekent de contributie voor een ligplaats af per bootsoort; een Canadese kano is bijvoorbeeld duurder. De applicatie kent geen prijzen. Ze levert per lid het aantal boten per bootsoort; de afrekening gebeurt in de ledenadministratie.
 - Alleen boten met een toegewezen plaats tellen mee. Een boot zonder plaats of op de wachtlijst telt niet.
 - Clubboten tellen niet mee; ze zijn niet van een lid.
+
+### Proxy en installatie (issue #29)
+
+- Traefik vervangt Nginx. Een gedeelde Traefik draait in een eigen docker-compose-stack op de host; de compose van de botenloods levert alleen de labels voor Traefik en bevat zelf geen Traefik.
+- De beheerdocumentatie geeft twee voorbeelden: een docker-compose die kant-en-klare images binnenhaalt en een docker-compose die de images bouwt uit een git-checkout.
