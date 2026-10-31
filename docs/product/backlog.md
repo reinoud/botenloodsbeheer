@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.6
+**Versie:** v0.3.7
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -176,7 +176,9 @@ Als beheerder wil ik dat het aantal boten per bootsoort per lid klaarstaat voor 
 
 - Gegeven een standaardinstallatie, wanneer de integratiecontainer draait, dan stuurt hij niets naar de bron: terugschrijven is in de container niet beschikbaar en er draait geen taak die terugschrijft.
 - Gegeven een lid met boten, wanneer de beheerder de lijst per lid opent (BLB-019), dan staat daar het aantal boten per bootsoort: de gegevens die later worden teruggeschreven.
-- Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0, en dezelfde aantallen als de lijst per lid.
+- Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0, en dezelfde aantallen als de lijst per lid. Er tellen alleen boten met een toegewezen plaats; clubboten tellen niet mee (besluit 2026-10-31).
+- Gegeven een lid met één boot op een plaats en één boot op de wachtlijst, wanneer de API de bootaantallen levert, dan telt alleen de boot op de plaats.
+- Gegeven een clubboot op een clubplaats, wanneer de API de bootaantallen levert, dan staat die boot er niet in. De applicatie kent geen prijzen; de afrekening per bootsoort gebeurt in de ledenadministratie.
 - Gegeven een token zonder het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan weigert de API met 403.
 - Gegeven de webinterface, wanneer de beheerder de instellingen opent, dan is er geen instelling voor terugschrijven.
 

@@ -143,3 +143,9 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Geweigerde aanroepen (geen of een ongeldig token, een adres buiten de whitelist, een ontbrekend recht) komen wel in het log.
 - Wijzigingen in leden door de import komen niet in het log, ook niet als één regel per import. De uitkomst van een import en een gemelde fout staan op de statuspagina.
 - Mutaties in de botenadministratie komen wel in het log, ook als een import ze veroorzaakt, zoals een boot die van de wachtlijst gaat.
+
+### Export van de botenindeling voor de contributie
+
+- De vereniging rekent de contributie voor een ligplaats af per bootsoort; een Canadese kano is bijvoorbeeld duurder. De applicatie kent geen prijzen. Ze levert per lid het aantal boten per bootsoort; de afrekening gebeurt in de ledenadministratie.
+- Alleen boten met een toegewezen plaats tellen mee. Een boot zonder plaats of op de wachtlijst telt niet.
+- Clubboten tellen niet mee; ze zijn niet van een lid.
