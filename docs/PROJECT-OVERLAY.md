@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.1
+**Versie overlay:** v0.3.2
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -111,6 +111,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Noem in een opdracht welke functies uit de lijst nog niet bestaan (zoals de kaartjes met QR-code, slice 8), zodat het agent ze niet zoekt.
 - Een nieuwe map in de repository die een test leest, moet in de testcontainer gemount worden in `compose.dev.yml`.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
+- Noem bij een review van screenshots welke schermen geheimen of persoonsgegevens kunnen tonen; de reviewer bekijkt die eerst en de rest steekproefsgewijs.
+- Een script met een eigen compose-project noemt welke images het bouwt en of het die na afloop laat staan.
 
 ## 5. Projectcontracten
 
@@ -175,6 +177,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.2 | 2026-10-31 | Twee regels in de briefingchecklist uit de terugblik van sentinel (review gebruikersdocumentatie) | Lessen |
 | v0.3.1 | 2026-10-31 | Drie regels in de briefingchecklist uit de terugblik van prism (gebruikersdocumentatie) | Lessen |
 | v0.3.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013): stack en regels over de proxy; regels uit de terugblikken van de review van #28 en van foundation | Besluit stakeholder 2026-10-31 (#29), lessen |
 | v0.2.6 | 2026-10-31 | Vier regels in de briefingchecklist uit de terugblikken van de review van #28 | Lessen |
