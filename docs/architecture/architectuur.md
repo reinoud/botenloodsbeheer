@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.0
+**Versie:** v0.3.1
 **Datum:** 2026-10-31
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -185,7 +185,7 @@ De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import 
 | D | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | E | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
 | F | 6 | BLB-026, 037, 009 | `domein/opschonen`, `taken` (opschoning), statuspagina, `GET /api/v1/bootaantallen`, `schrijf_bootaantallen` in de integratiecontainer (uit) | 004, 006, 007, 010, 012 |
-| G | rest van 7 | Leesendpoints, persoonlijke tokens, tokenschermen, waarschuwing op de statuspagina (rest van BLB-029 tot en met 035) | `api`, `web` (tokenschermen) | 005, 010 |
+| G | rest van 7 | Leesendpoints, persoonlijke tokens, tokenschermen (rest van BLB-029 tot en met 035); de waarschuwing voor tokens die verlopen staat in F (backlog vraag 18) | `api`, `web` (tokenschermen) | 005, 010 |
 | H | 8 | BLB-028 | `domein/indeling` (bootsoorten), `web` | geen nieuwe |
 
 A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract en het token uit B nodig heeft. C gaat vóór de wachtlijst, zodat BLB-008 (boten van oud-leden van de wachtlijst) meteen op de definitieve importroute wordt gebouwd. Wat G precies omvat, hangt af van open vraag 5 in §10.2.
@@ -258,8 +258,8 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | 2 | Welke API-velden levert e-boekhouden precies voor leden (adres als één veld of in delen, opzegdatum)? | Oracle of forge, bij de echte koppeling | L | Nee, de stub gebruikt het eigen formaat |
 | 3 | Moet de openbare pagina ook via de plaatscode op te zoeken zijn ("code of link" in BLB-020)? Het ontwerp kent alleen de link. | Apex | Besloten | Besluit stakeholder 2026-10-30: alleen via de QR-link, geen zoeken op plaatscode |
 | 4 | Botst het standaardsubnet `10.203.0.0/24` van `KOPPELNET` met een netwerk op de host van een vereniging? | Forge, bij de installatiebeschrijving | L | Nee, `KOPPELNET` is in te stellen |
-| 5 | Persoonlijke tokens (BLB-029 en verder) zijn alleen nuttig als de API van buiten bereikbaar is, en de intake zegt dat de API niet vanaf internet bereikbaar is. Vervallen persoonlijke tokens en de leesendpoints voor buiten, of komt er een bewuste keuze per installatie (`compose.api-extern.yml`, ADR-012)? | Stakeholder | H | Ja, voor slice G (§7.1); niet voor A tot en met F |
-| 6 | Mag een import ook leden met een `opzegdatum` in de toekomst aanmaken? Dat kan nu al via de stub; de vraag is of e-boekhouden dat levert. | Oracle of forge, bij de echte koppeling | L | Nee |
+| 5 | Vervallen persoonlijke tokens nu de API niet vanaf internet bereikbaar is? | Stakeholder | H | Besloten 2026-10-31: de keuze per installatie blijft open (`compose.api-extern.yml`, ADR-012), persoonlijke tokens blijven mogelijk |
+| 6 | Mag een import ook leden met een `opzegdatum` in de toekomst aanmaken? | Stakeholder | L | Besloten 2026-10-31: ja, e-boekhouden kan dat leveren. De beheerder ziet een lijst met boten van deze leden en de opzegdatum (story volgt van apex) |
 
 ## 11. Proactieve bevindingen
 
@@ -276,6 +276,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.3.1 | 2026-10-31 | §10.2 vragen 5 en 6 besloten door de stakeholder; tokenwaarschuwing naar F (backlog vraag 18) |
 | v0.3.0 | 2026-10-31 | Besluiten stakeholder 2026-10-31: integratiecontainer en dienst `api` (ADR-012), API standaard aan op het interne netwerk, logo uit de installatie. §1 tot en met §11 bijgewerkt; voorstel voor de volgende slices in §7.1; ADR-004 v2.0.0, ADR-005, 007, 008, 009, 010 en 011 v1.1.0, ADR-002 v1.1.1 |
 | v0.2.6 | 2026-10-31 | Slice 3 (issue #13): componenten in §7, stylesheet voor de kleuren in plaats van een nonce, dreiging formule-injectie in §8.1 |
 | v0.2.5 | 2026-10-30 | Slice 2 (issue #11): BLB-038 in §7; `plaats_wijzigen` en de vergrendelingen in §4; E2E per bestand vanwege de rate limit (§6.5) |

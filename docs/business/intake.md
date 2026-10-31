@@ -130,3 +130,8 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De API is daarmee niet meer alleen-lezen: de container moet leden kunnen bijwerken via de API. Dit vervangt het besluit dat de API in de eerste versie alleen-lezen is en dat `API_INGESCHAKELD` standaard uit staat.
 - De beheerdocumentatie beschrijft hoe de container zich bij de API aanmeldt, met voorbeeldcode voor het maken en instellen van een token.
 
+### API van buiten en opzeggingen in de toekomst
+
+- De mogelijkheid om de API bewust van buiten bereikbaar te maken blijft open, als keuze per installatie. Persoonlijke tokens blijven daarom mogelijk.
+- e-boekhouden kan leden leveren met een opzegdatum in de toekomst. Heeft zo'n lid boten in de loods, dan ziet de beheerder een lijst met die boten en de opzegdatum, zodat ze vóór die datum weg zijn.
+- "(geschikt voor …)" in de Excel-export geldt ook voor een clubplaats zonder boot.

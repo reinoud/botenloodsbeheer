@@ -83,6 +83,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen.
 - Raakt een besluit van de stakeholder ook de overlay, dan noemt foundation de verouderde regels in de overlay; de regie werkt ze bij.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
+- Draai vóór de oplevering `git diff` op de leidende bronnen; een besluit dat tijdens het werk is bijgekomen, gaat voor de opdracht. Meld het in je antwoord.
 
 ## 5. Projectcontracten
 

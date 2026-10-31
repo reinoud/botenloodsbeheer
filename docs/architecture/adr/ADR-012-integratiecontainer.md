@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.0.0
+**Versie:** v1.1.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -38,7 +38,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 **Integratiecontainer.** Een lus van 60 seconden: vraag het importverzoek op, en importeer bij een verzoek of na `SYNC_TIJDSTIP` als die dag nog geen import slaagde. Na een fout hooguit één nieuwe poging per uur. De bron zit achter de interface uit ADR-004 (`haal_leden`, `schrijf_bootaantallen`), met een stub die een JSON-bestand leest. `schrijf_bootaantallen` gooit `NietBeschikbaar`; er draait geen taak die terugschrijft. De container draait zonder root, alleen-lezen, met alleen de standaardbibliotheek van Python.
 
-**Token en aanmelden.** De integratiecontainer krijgt een robottoken met alleen `leden:importeren` en `bootaantallen:lezen`. Het eerste token ontstaat met de CLI in `web`: `flask token robot <naam> --recht ... [--whitelist CIDR] [--dagen N]`. De whitelist is standaard `KOPPELNET`, de geldigheid standaard 365 dagen en hooguit 3 jaar. De CLI toont het token één keer en schrijft een logregel met actor `cli`. De beheerder zet het in `secrets/api_token` (mode 0600); compose levert dat als secret op `/run/secrets/api_token` (`API_TOKEN_FILE`). De container leest het bij elke run opnieuw, dus een nieuw token vraagt geen herstart. Zonder token meldt de container dat in zijn log en wacht een minuut.
+**Token en aanmelden.** De integratiecontainer krijgt een robottoken met alleen `leden:importeren` en `bootaantallen:lezen`. Het eerste token ontstaat met de CLI in `web`: `flask token robot <naam> --recht ... [--whitelist CIDR] [--dagen N]`. De whitelist is standaard `KOPPELNET`, de geldigheid standaard 365 dagen en hooguit 3 jaar. De CLI toont het token één keer en schrijft een logregel met actor `cli`. Intrekken kan met `flask token intrekken <naam>`, ook met een logregel; vervangen is een nieuw token maken en het oude intrekken. De beheerder zet het in `secrets/api_token` (mode 0600); compose levert dat als secret op `/run/secrets/api_token` (`API_TOKEN_FILE`). De container leest het bij elke run opnieuw, dus een nieuw token vraagt geen herstart. Zonder token meldt de container dat in zijn log en wacht een minuut.
 
 **Beheerdocumentatie.** Forge schrijft `docs/beheer/integratiecontainer.md`: token maken en instellen, de vijf aanroepen met voorbeeldcode, en wat een eigen container moet doen.
 
@@ -61,4 +61,5 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.0 | 2026-10-31 | Robottoken intrekken met de CLI (backlog vraag 17) | Besluit regie, veiligste eenvoudige variant |
 | v1.0.0 | 2026-10-31 | Eerste versie | Besluiten stakeholder 2026-10-31 |
