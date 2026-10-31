@@ -2,7 +2,8 @@
 
 Alleen de standaardbibliotheek en alleen de aanroepen uit docs/beheer/integratiecontainer.md.
 Elke ronde: is er een importverzoek, of is SYNC_TIJDSTIP gepasseerd zonder geslaagde import die
-dag, dan importeert hij. Na een fout hooguit één poging per uur. De log bevat nooit het token,
+dag, dan importeert hij. Na een fout hooguit één geplande poging per uur; een verzoek van een
+beheerder wacht niet (#28). De log bevat nooit het token,
 inloggegevens van de bron of gegevens van leden.
 """
 
@@ -47,6 +48,7 @@ class Koppeling:
         self.geslaagd_op = None  # dag van de laatste geslaagde import
         self.fout_op = None
         self.fout_token = None
+        self.fout_van_api = False
 
     def lees_token(self):
         """Bij elke ronde opnieuw, zodat een nieuw token geen herstart vraagt (BLB-039)."""
@@ -93,19 +95,25 @@ class Koppeling:
             log.warning("Geen token in %s; nieuwe poging over een minuut.",
                         self.cfg["token_bestand"])
             return
-        # Een nieuw token mag meteen; met hetzelfde token na een fout pas na een uur.
-        if self.fout_op and nu - self.fout_op < NIEUWE_POGING and token == self.fout_token:
-            return
+        # Een nieuw token mag meteen; met hetzelfde token na een fout pas na een uur een geplande
+        # import. Een verzoek van een beheerder wacht niet (besluit 2026-10-31, #28).
+        wachten = self.fout_op and nu - self.fout_op < NIEUWE_POGING and token == self.fout_token
+        if wachten and self.fout_van_api:
+            return  # het verzoek blijft open en een geweigerde aanroep komt in het log van de API
         try:
             verzoek = self.roep(token, "GET", "/leden/importverzoek").get("aangevraagd") is True
-            gepland = nu.time() >= self.cfg["tijdstip"] and self.geslaagd_op != nu.date()
+            gepland = (not wachten and nu.time() >= self.cfg["tijdstip"]
+                       and self.geslaagd_op != nu.date())
             if verzoek or gepland:
                 self.importeer(token, nu)
-        except (ApiFout, bronnen.LedenbronFout) as fout:
-            self._fout(nu, token, str(fout))
+        except bronnen.LedenbronFout as fout:
+            self._fout(nu, token, str(fout), van_api=False)
+        except ApiFout as fout:
+            # Een 409 sluit het verzoek (veiligheidsgrens) of een lopende import doet dat.
+            self._fout(nu, token, str(fout), van_api=str(fout) != "HTTP 409")
         except Exception as fout:  # noqa: BLE001  de lus draait door; alleen het soort fout
-            self._fout(nu, token, type(fout).__name__)
+            self._fout(nu, token, type(fout).__name__, van_api=True)
 
-    def _fout(self, nu, token, tekst):
-        self.fout_op, self.fout_token = nu, token
+    def _fout(self, nu, token, tekst, van_api):
+        self.fout_op, self.fout_token, self.fout_van_api = nu, token, van_api
         log.warning("Import mislukt (%s); nieuwe poging over een uur.", tekst)

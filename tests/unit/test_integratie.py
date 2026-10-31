@@ -118,7 +118,7 @@ def test_dagelijks_na_het_tijdstip_als_die_dag_nog_niets_slaagde(api, koppeling)
                          ids=["ontbreekt", "kapot", "geen-lijst"])
 def test_fout_van_de_bron_gemeld_en_hooguit_een_poging_per_uur(api, koppeling, tmp_path,
                                                                inhoud, reden):
-    """BLB-006 criterium 3: reden uit de vaste lijst, geen PUT, daarna een uur niets."""
+    """BLB-006 criterium 3: reden uit de vaste lijst, geen PUT, daarna een uur geen geplande import."""
     bron = tmp_path / "leden.json"
     if inhoud is not None:
         bron.write_text(inhoud)
@@ -126,24 +126,50 @@ def test_fout_van_de_bron_gemeld_en_hooguit_een_poging_per_uur(api, koppeling, t
     koppeling.ronde(OCHTEND)
     assert paden(api) == [("GET", "/leden/importverzoek"), ("POST", "/leden/import-mislukt")]
     assert api.aanroepen[1][3] == {"reden": reden}
-    api.verzoek = True  # ook een verzoek wacht het uur af
     koppeling.ronde(OCHTEND + timedelta(minutes=59))
-    assert len(api.aanroepen) == 2
+    assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
     koppeling.ronde(OCHTEND + timedelta(minutes=60))
-    assert len(api.aanroepen) == 4
+    assert paden(api)[3:] == [("GET", "/leden/importverzoek"), ("POST", "/leden/import-mislukt")]
 
 
-def test_geweigerd_door_de_api_ook_een_uur_wachten_behalve_met_een_nieuw_token(api, koppeling):
-    """BLB-039 criterium 3: een nieuw token werkt bij de volgende ronde, zonder herstart."""
-    api.status["/leden/importverzoek"] = 401
+def test_verzoek_van_een_beheerder_wacht_het_uur_na_een_fout_niet_af(api, koppeling, tmp_path):
+    """BLB-006 criterium 5, besluit 2026-10-31 (#28): de bron is hersteld, de beheerder vraagt."""
+    koppeling.cfg["bron"] = bronnen.StubBron(str(tmp_path / "ontbreekt.json"))
     koppeling.ronde(OCHTEND)
+    koppeling.cfg["bron"] = bronnen.StubBron(str(FIXTURE))
+    api.verzoek = True
     koppeling.ronde(OCHTEND + timedelta(minutes=1))
-    assert len(api.aanroepen) == 1
+    assert paden(api)[-1] == ("PUT", "/leden")
+
+
+@pytest.mark.parametrize("pad,status", [("/leden/importverzoek", 401), ("/leden/importverzoek", 403),
+                                        ("/leden/importverzoek", 429), ("/leden", 422),
+                                        ("/leden", 500)],
+                         ids=["401", "403", "429", "put-422", "put-500"])
+def test_fout_van_de_api_een_uur_stil_ook_bij_een_verzoek_behalve_met_een_nieuw_token(
+        api, koppeling, pad, status):
+    """BLB-039 criterium 3 en #28: het verzoek blijft open, dus geen aanroep per minuut."""
+    api.status[pad], api.verzoek = status, True
+    koppeling.ronde(OCHTEND)
+    eerst = len(api.aanroepen)
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    assert len(api.aanroepen) == eerst
     nieuw = "blb_" + "B" * 60
     koppeling.token.write_text(nieuw)
-    del api.status["/leden/importverzoek"]
+    del api.status[pad]
     koppeling.ronde(OCHTEND + timedelta(minutes=2))
-    assert [a for _m, _p, a, _l in api.aanroepen[1:]] == [f"Bearer {nieuw}"] * 2
+    assert [a for _m, _p, a, _l in api.aanroepen[eerst:]] == [f"Bearer {nieuw}"] * 2
+
+
+def test_onverwachte_fout_ook_een_uur_stil(api, koppeling):
+    """De lus draait door; het verzoek blijft open, dus geen poging per minuut (#28)."""
+    class Kapot:
+        def haal_leden(self):
+            raise RuntimeError
+    koppeling.cfg["bron"], api.verzoek = Kapot(), True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    assert paden(api) == [("GET", "/leden/importverzoek")]
 
 
 def test_veiligheidsgrens_van_de_api_telt_als_fout(api, koppeling):
@@ -152,7 +178,7 @@ def test_veiligheidsgrens_van_de_api_telt_als_fout(api, koppeling):
     koppeling.ronde(OCHTEND)
     assert koppeling.geslaagd_op is None and koppeling.fout_op == OCHTEND
     koppeling.ronde(OCHTEND + timedelta(minutes=30))
-    assert len(api.aanroepen) == 2
+    assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
 
 
 def test_zonder_token_melden_en_niets_aanroepen(api, koppeling, caplog):

@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.5
+**Versie:** v0.3.6
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -134,7 +134,7 @@ Gebouwd in slice 1 met de synchronisatie in de applicatie. Sinds 2026-10-31 haal
 
 - Gegeven een bereikbare bron, wanneer de import draait, dan zijn nieuwe leden aangemaakt en gewijzigde leden bijgewerkt, met het lidnummer als sleutel, en bevat elk lid naam, adres, telefoonnummer, e-mailadres, lidmaatschapsdatum en eventueel opzegdatum. (slice 6)
 - Gegeven een integratiecontainer met een ingestelde `SYNC_TIJDSTIP`, wanneer dat tijdstip is gepasseerd en die dag nog geen import slaagde, dan start de import. (slice 6)
-- Gegeven een bron die niet antwoordt of ongeldige gegevens levert, wanneer de import draait, dan blijft de ledenlijst ongewijzigd, meldt de container de fout met een reden uit de vaste lijst (`bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd`), en staat die reden op de statuspagina. Na een fout probeert de container hooguit één keer per uur opnieuw. (slice 6)
+- Gegeven een bron die niet antwoordt of ongeldige gegevens levert, wanneer de import draait, dan blijft de ledenlijst ongewijzigd, meldt de container de fout met een reden uit de vaste lijst (`bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd`), en staat die reden op de statuspagina. Na een fout probeert de container hooguit één keer per uur opnieuw; een verzoek van een beheerder wacht niet (besluit 2026-10-31, #28), behalve na een fout van de API zelf (zoals een geweigerd token), want dan blijft het verzoek open. (slice 6)
 - Gegeven een record zonder lidnummer, wanneer de import draait, dan slaat de applicatie dat record over, telt het als ongeldig zonder de inhoud te loggen, en verwerkt de rest. (slice 6)
 - Gegeven een beheerder die in de webinterface een import aanvraagt, wanneer de integratiecontainer draait, dan begint de import binnen een minuut en toont de pagina na verversen de uitkomst van die import. (slice 6)
 - Gegeven een lopende import, wanneer er een tweede `PUT /api/v1/leden` binnenkomt, dan weigert de API die met 409 en verandert er niets aan de lopende import. (slice 6)
