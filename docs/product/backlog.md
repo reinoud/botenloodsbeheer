@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.2
+**Versie:** v0.3.3
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -134,7 +134,7 @@ Gebouwd in slice 1 met de synchronisatie in de applicatie. Sinds 2026-10-31 haal
 
 - Gegeven een bereikbare bron, wanneer de import draait, dan zijn nieuwe leden aangemaakt en gewijzigde leden bijgewerkt, met het lidnummer als sleutel, en bevat elk lid naam, adres, telefoonnummer, e-mailadres, lidmaatschapsdatum en eventueel opzegdatum. (slice 6)
 - Gegeven een integratiecontainer met een ingestelde `SYNC_TIJDSTIP`, wanneer dat tijdstip is gepasseerd en die dag nog geen import slaagde, dan start de import. (slice 6)
-- Gegeven een bron die niet antwoordt of ongeldige gegevens levert, wanneer de import draait, dan blijft de ledenlijst ongewijzigd, meldt de container de fout met een reden uit de vaste lijst (`bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd`), en staat die reden op de statuspagina en in het log. Na een fout probeert de container hooguit één keer per uur opnieuw. (slice 6)
+- Gegeven een bron die niet antwoordt of ongeldige gegevens levert, wanneer de import draait, dan blijft de ledenlijst ongewijzigd, meldt de container de fout met een reden uit de vaste lijst (`bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd`), en staat die reden op de statuspagina. Na een fout probeert de container hooguit één keer per uur opnieuw. (slice 6)
 - Gegeven een record zonder lidnummer, wanneer de import draait, dan slaat de applicatie dat record over, telt het als ongeldig zonder de inhoud te loggen, en verwerkt de rest. (slice 6)
 - Gegeven een beheerder die in de webinterface een import aanvraagt, wanneer de integratiecontainer draait, dan begint de import binnen een minuut en toont de pagina na verversen de uitkomst van die import. (slice 6)
 - Gegeven een lopende import, wanneer er een tweede `PUT /api/v1/leden` binnenkomt, dan weigert de API die met 409 en verandert er niets aan de lopende import. (slice 6)
@@ -387,8 +387,8 @@ Prioriteit: Must. Bron: intake (logging), overlay §5. Afhankelijk van: BLB-022.
 
 Als beheerder wil ik dat elke wijziging wordt vastgelegd zodat ik kan nagaan hoe een situatie is ontstaan.
 
-- Gegeven een wijziging (aanmaken, wijzigen, verwijderen, toewijzen, vrijgeven, wachtlijst, naam en kleuren, accounts, tokens, import van leden), wanneer die slaagt, dan staat er een logregel met tijdstip, wie of wat de wijziging deed, wat er veranderde en waar relevant de oude en nieuwe waarde.
-- Gegeven een geslaagde import via `PUT /api/v1/leden` die een lid wijzigt, wanneer de beheerder het log bekijkt, dan staat per gewijzigd lid een logregel met de naam van het robottoken als actor en de namen van de gewijzigde velden, zonder de waarden van adres, telefoonnummer of e-mailadres (architectuur §10.1). (slice 6)
+- Gegeven een wijziging (aanmaken, wijzigen, verwijderen, toewijzen, vrijgeven, wachtlijst, naam en kleuren, accounts, tokens), wanneer die slaagt, dan staat er een logregel met tijdstip, wie of wat de wijziging deed, wat er veranderde en waar relevant de oude en nieuwe waarde.
+- Gegeven een geslaagde import via `PUT /api/v1/leden` die een lid wijzigt, wanneer de beheerder het log bekijkt, dan staat er geen regel over dat lid; een mutatie in de botenadministratie die de import veroorzaakt, staat er wel, met de naam van het robottoken als actor (besluit 2026-10-31, vraag 20). (slice 6)
 - Gegeven het log, wanneer een beheerder een regel wil wijzigen of verwijderen, dan kan dat in de applicatie niet.
 - Gegeven het log, wanneer een beheerder het bekijkt, dan staan er geen wachtwoorden, tokenwaarden, adressen, telefoonnummers of e-mailadressen in.
 
@@ -509,7 +509,7 @@ Als beheerder wil ik dat de API dezelfde bedrijfsregels afdwingt, beperkt wordt 
 - Gegeven een token zonder het recht op persoonsgegevens, wanneer het leden opvraagt, dan levert de applicatie geen adres, telefoonnummer of e-mailadres, net als de webinterface die gegevens alleen aan beheerders toont. (slice 10)
 - Gegeven een import via `PUT /api/v1/leden` met minder dan de helft van het huidige aantal actieve leden, wanneer die binnenkomt, dan weigert de API met 409 en verandert er niets: de import volgt dezelfde regels als elke import (architectuur §10.1). De API kent geen andere schrijfaanroepen. (slice 6)
 - Gegeven meer dan 60 aanroepen van één token binnen een minuut, wanneer de grens wordt overschreden, dan antwoordt de API met 429 en meldt wanneer het token weer mag. (slice 5)
-- Gegeven een aanroep, wanneer die is afgehandeld, dan staan token, tijdstip en uitkomst in het log, zonder tokenwaarde. (slice 5)
+- Gegeven een geweigerde aanroep, wanneer die is afgehandeld, dan staan token (als dat bekend is), tijdstip en reden in het log, zonder tokenwaarde. Een geslaagde aanroep komt niet in het log (besluit 2026-10-31, vraag 20). (slice 5)
 - Gegeven de beschrijving van de API in de repository, wanneer een beheerder die opent, dan staan alle beschikbare aanroepen erin met recht, argumenten en antwoord. (slice 5, bijgewerkt in elke slice die een aanroep toevoegt)
 
 #### BLB-035 Tokens overzien en intrekken
@@ -647,6 +647,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | 13 | Klopt de datum "Opgezegd op" voor een lid dat zonder opzegdatum uit de bron verdween? | Ja. De datum waarop de import het lid niet meer vond, telt als opzegdatum (besluit 2026-10-30). | BLB-018, BLB-008 |
 | 14 | Hoe lopen imports en exports? | Een aparte, vervangbare container doet ze, alleen via de API over het interne netwerk. De API staat standaard aan, met het interne netwerk als whitelist, en is niet meer alleen-lezen. De beheerdocumentatie beschrijft het aanmelden met voorbeeldcode. Dit vervangt vraag 2 en de standaard "uit" van de API. | BLB-006 tot en met 009, 024, 029 tot en met 034, 037, 039, 040 |
 | 15 | Vervallen persoonlijke tokens nu de API niet vanaf internet bereikbaar is? (architectuur §10.2, vraag 5) | Nee. Een installatie mag de API bewust van buiten bereikbaar maken; persoonlijke tokens blijven daarom mogelijk. | BLB-030 tot en met 035, 042 |
+| 20 | Komen aanroepen van de API en wijzigingen in leden door de import in het log? | Nee. De applicatie is niet leidend voor de ledenadministratie. Geweigerde aanroepen en mutaties in de botenadministratie, ook door een import, komen wel in het log; de uitkomst van een import staat op de statuspagina. | BLB-006 tot en met 008, 024, 033, 034 |
 | 16 | Mag een import leden met een opzegdatum in de toekomst aanmaken? (architectuur §10.2, vraag 6) | Ja, e-boekhouden kan dat leveren. Heeft zo'n lid boten in de loods, dan ziet de beheerder die boten met de opzegdatum, zodat ze vóór die datum weg zijn. | BLB-006, BLB-041 |
 
 ### Besluiten van apex (2026-10-31)

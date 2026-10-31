@@ -136,3 +136,10 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - e-boekhouden kan leden leveren met een opzegdatum in de toekomst. Heeft zo'n lid boten in de loods, dan ziet de beheerder een lijst met die boten en de opzegdatum, zodat ze vóór die datum weg zijn.
 - "(geschikt voor …)" in de Excel-export geldt ook voor een clubplaats zonder boot.
 - In "(geschikt voor …)" staan de bootsoorten zoals ze in de applicatie zijn ingevoerd, zonder omzetting naar kleine letters.
+
+### Loggen van de API en de ledenimport
+
+- Geslaagde aanroepen van de API komen niet in het log. De applicatie is niet leidend voor de ledenadministratie.
+- Geweigerde aanroepen (geen of een ongeldig token, een adres buiten de whitelist, een ontbrekend recht) komen wel in het log.
+- Wijzigingen in leden door de import komen niet in het log, ook niet als één regel per import. De uitkomst van een import en een gemelde fout staan op de statuspagina.
+- Mutaties in de botenadministratie komen wel in het log, ook als een import ze veroorzaakt, zoals een boot die van de wachtlijst gaat.

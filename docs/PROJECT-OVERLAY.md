@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.2.1
+**Versie overlay:** v0.2.3
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -90,6 +90,14 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
 - Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
+- Draai geen compose-commando terwijl een `git stash` actief is; vergelijk een baseline in een aparte worktree.
+- Controleer na elke wijziging aan Nginx met `docker compose logs nginx` dat elk verzoek precies één logregel geeft, in het formaat `zonder_code`.
+- Elke nieuwe omgevingsvariabele krijgt een test die de variabele zet en `create_app` aanroept (geldige en ongeldige waarde); een test die alleen `app.config` overschrijft, telt niet.
+- Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
+- Geef een reviewer van de API een container op het netwerk `koppeling` mee (`docker run --rm -i --network botenloods_koppeling --entrypoint python botenloods-app`), zodat hij whitelist en rate limit positief kan controleren.
+- Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
+- Een proef op een gedeelde rate limit doe je in een losse nginx-container op de gestagede bestanden (eigen teller, stub als upstream); de gedeelde nginx alleen voor proeven onder de grens.
+- Een gemelde afwijking van een ADR krijgt vóór de review een issue of een ADR-wijziging; een melding alleen in een terugblik of issuecommentaar telt niet.
 
 ## 5. Projectcontracten
 
@@ -154,6 +162,8 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.3 | 2026-10-31 | Drie regels in de briefingchecklist uit de terugblikken van het herstel van slice 5 | Lessen |
+| v0.2.2 | 2026-10-31 | Vijf regels in de briefingchecklist uit de terugblikken van forge, sentinel en aegis (slice 5) | Lessen |
 | v0.2.1 | 2026-10-31 | Regels in de briefingchecklist uit de terugblikken van slice 4 en het ontwerp van de integratiecontainer | Lessen |
 | v0.2.0 | 2026-10-31 | API standaard aan; imports en exports in een aparte container via de API | Besluit stakeholder 2026-10-31 |
 | v0.1.2 | 2026-10-31 | Zeven regels in de briefingchecklist uit de terugblikken van forge, aegis en sentinel (slice 3) en de controle door de regie | Lessen slice 3 |

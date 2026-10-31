@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012)
 **Datum:** 2026-10-30
-**Versie:** v2.0.0
+**Versie:** v2.1.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
 ## Context
@@ -23,12 +23,12 @@ De bron doet alleen transport en vertaling naar het bronrecord. De container stu
 
 De synchronisatie in `domein/leden` werkt in deze stappen, bij elke aanroep van `PUT /api/v1/leden`:
 
-1. De lijst uit het verzoek nemen. Is het geen lijst, of zijn er meer dan 5000 records: 422, niets wijzigen. Een gemelde fout van de bron komt in `taakrun` en log, met een reden uit een vaste lijst (BLB-006).
+1. De lijst uit het verzoek nemen. Is het geen lijst, of zijn er meer dan 5000 records: 422, niets wijzigen. Een gemelde fout van de bron komt in `taakrun`, met een reden uit een vaste lijst (BLB-006).
 2. Elk record valideren: lidnummer verplicht, tekstvelden ingekort tot een maximumlengte, datums geldig, e-mail op vorm. Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
 3. Veiligheidsgrens: komen er minder dan de helft van het huidige aantal actieve leden terug, dan breekt de synchronisatie af met 409. Een kapotte bron of een container die een halve lijst stuurt, maakt zo niet alle leden oud-lid.
 4. Records met een opzegdatum van meer dan 5 jaar geleden die lokaal niet bestaan, worden overgeslagen. Anders zou de synchronisatie een opgeschoond oud-lid opnieuw aanmaken.
 5. In één transactie: nieuwe leden aanmaken, gewijzigde bijwerken, leden die ontbreken krijgen `uit_bron_op` met de datum van vandaag. Boten van leden die oud-lid worden, gaan van de wachtlijst (BLB-008).
-6. Per gewijzigd lid één logregel met de namen van de gewijzigde velden, zonder de waarden van adres, telefoon of e-mail, met het robottoken als actor (BLB-024).
+6. Wijzigingen in leden komen niet in het log; de aantallen staan in `taakrun`. Een mutatie in de botenadministratie die de import veroorzaakt, krijgt wel een logregel met het robottoken als actor (BLB-024, besluit stakeholder 2026-10-31).
 
 De stub in de integratiecontainer leest leden uit een JSON-bestand (`LEDENBRON_STUB_BESTAND`). De tests van de applicatie sturen het fixturebestand `tests/fixtures/leden.json` rechtstreeks naar `PUT /api/v1/leden`; dat is de nepbron.
 
@@ -53,5 +53,6 @@ Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort; de li
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.1.0 | 2026-10-31 | Geen logregels voor wijzigingen in leden; een gemelde fout alleen in `taakrun` | Besluit stakeholder 2026-10-31 (backlog vraag 20) |
 | v2.0.0 | 2026-10-31 | De bron draait in de integratiecontainer; de synchronisatie start met `PUT /api/v1/leden`; instelling "terugschrijven" vervalt | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

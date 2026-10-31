@@ -2,11 +2,12 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
+**Versie:** v1.0.0
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034
 
 ## Context
 
-Elke mutatie wordt gelogd en onder elk overzicht staat het log dat erbij hoort (intake, overlay §5). Het log bevat tijdstip, wie of wat de wijziging deed, wat er veranderde en waar relevant oud en nieuw, maar geen wachtwoorden, tokenwaarden, adressen, telefoonnummers of e-mailadressen (BLB-024). Beheerders kunnen het log niet wijzigen. Logregels worden na 5 jaar verwijderd, gerekend vanaf de mutatie. Gegevens van een oud-lid worden 5 jaar na de opzegdatum verwijderd, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. API-aanroepen en geweigerde pogingen komen ook in het log (BLB-033, BLB-034).
+Elke mutatie wordt gelogd en onder elk overzicht staat het log dat erbij hoort (intake, overlay §5). Het log bevat tijdstip, wie of wat de wijziging deed, wat er veranderde en waar relevant oud en nieuw, maar geen wachtwoorden, tokenwaarden, adressen, telefoonnummers of e-mailadressen (BLB-024). Beheerders kunnen het log niet wijzigen. Logregels worden na 5 jaar verwijderd, gerekend vanaf de mutatie. Gegevens van een oud-lid worden 5 jaar na de opzegdatum verwijderd, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Geweigerde API-aanroepen komen ook in het log (BLB-033, BLB-034). Geslaagde aanroepen en wijzigingen in leden door de import komen er niet in; mutaties aan boten wel, ook als een import ze veroorzaakt (besluit stakeholder 2026-10-31).
 
 ## Besluit
 
@@ -47,5 +48,11 @@ Er is één tabel `logregel`, alleen voor toevoegen.
 ## Gevolgen
 
 - Een nieuwe wijzigende functie zonder logregel valt op in de review en in een test die per domeinfunctie controleert dat er een regel bijkomt.
-- Een robot die elke minuut vraagt, geeft ongeveer 2,6 miljoen regels in 5 jaar. Dat is geen probleem voor PostgreSQL met deze indexen.
+- Een robot die elke minuut vraagt, geeft geen logregels; alleen weigeringen tellen mee.
 - Back-ups bevatten verwijderde gegevens langer dan 5 jaar, tenzij hun bewaartermijn is afgestemd (architectuur §10, open vraag 1).
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v1.0.0 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; versie en wijzigingslog toegevoegd | Besluit stakeholder 2026-10-31 (backlog vraag 20) |

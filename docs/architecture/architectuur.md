@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.1
+**Versie:** v0.3.2
 **Datum:** 2026-10-31
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -267,7 +267,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 |---|-----------|-----------|-----------|-------|------------|
 | 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De synchronisatie slaat records over waarvan de opzegdatum meer dan 5 jaar geleden ligt en die lokaal niet bestaan (ADR-004). | H |
 | 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). | H |
-| 3 | Elke API-aanroep in het log geeft bij een robot die elke minuut vraagt ongeveer 2,6 miljoen regels in 5 jaar. De integratiecontainer doet precies dat met `GET /api/v1/leden/importverzoek`. | Schaal | Confirmed | Index op tijdstip en verwijzingen; prima voor PostgreSQL. Bij meer dan 10 miljoen regels per jaar aggregeren (ADR-006). | L |
+| 3 | Elke API-aanroep in het log zou bij een robot die elke minuut vraagt ongeveer 2,6 miljoen regels in 5 jaar geven. | Schaal | Opgelost | Besluit stakeholder 2026-10-31: geslaagde aanroepen en wijzigingen in leden door de import niet in het log (ADR-005 v1.2.0, ADR-006). | L |
 | 5 | Het netwerk `achterkant` is `internal: true`; `web`, `api` en `worker` hebben dan geen uitgaand verkeer. | Betrouwbaarheid | Probable | Geen van de drie heeft dat nu nodig; forge controleert dat bij slice B. | L |
 | 4 | De QR-codes op geprinte kaartjes hangen aan de domeinnaam. | Onderhoudbaarheid | Confirmed | Besluit 2 in §9. | M |
 
@@ -276,6 +276,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.3.2 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; ADR-004 v2.1.0, ADR-005 v1.2.0, ADR-006 v1.0.0, ADR-011 v1.2.0, ADR-012 v1.2.0 |
 | v0.3.1 | 2026-10-31 | §10.2 vragen 5 en 6 besloten door de stakeholder; tokenwaarschuwing naar F (backlog vraag 18) |
 | v0.3.0 | 2026-10-31 | Besluiten stakeholder 2026-10-31: integratiecontainer en dienst `api` (ADR-012), API standaard aan op het interne netwerk, logo uit de installatie. §1 tot en met §11 bijgewerkt; voorstel voor de volgende slices in §7.1; ADR-004 v2.0.0, ADR-005, 007, 008, 009, 010 en 011 v1.1.0, ADR-002 v1.1.1 |
 | v0.2.6 | 2026-10-31 | Slice 3 (issue #13): componenten in §7, stylesheet voor de kleuren in plaats van een nonce, dreiging formule-injectie in §8.1 |

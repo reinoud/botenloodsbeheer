@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.1.0
+**Versie:** v1.2.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -34,7 +34,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 | `POST /api/v1/leden/import-mislukt` | `leden:importeren` | `{"reden": ...}`, één van `bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd` | 201; andere reden 422 |
 | `GET /api/v1/bootaantallen` | `bootaantallen:lezen` | geen | 200 `[{"lidnummer", "aantallen": {bootsoort: aantal}}]`, voor elk lid elke bootsoort, ook 0 |
 
-**Regels aan de kant van de API.** `PUT /api/v1/leden` roept `domein/leden.synchroniseer` aan met de ontvangen lijst als bron en het token als actor. Alle regels uit ADR-004 gelden daardoor ongewijzigd: validatie per record zonder de inhoud te loggen, de veiligheidsgrens van de helft, geen nieuw lid met een opzegdatum van meer dan 5 jaar geleden, `uit_bron_op` voor een lid dat in de lijst ontbreekt, boten van oud-leden van de wachtlijst, en een logregel per lid. Een advisory lock voorkomt twee imports tegelijk. Elke import en elke gemelde fout is een run in `taakrun`; een open verzoek van een beheerder krijgt de uitkomst van de eerstvolgende import. De reden bij een fout komt uit een vaste lijst, zodat geen tekst van buiten op de statuspagina komt.
+**Regels aan de kant van de API.** `PUT /api/v1/leden` roept `domein/leden.synchroniseer` aan met de ontvangen lijst als bron en het token als actor. Alle regels uit ADR-004 gelden daardoor ongewijzigd: validatie per record zonder de inhoud te loggen, de veiligheidsgrens van de helft, geen nieuw lid met een opzegdatum van meer dan 5 jaar geleden, `uit_bron_op` voor een lid dat in de lijst ontbreekt, en boten van oud-leden van de wachtlijst. Wijzigingen in leden komen niet in het log; mutaties aan boten wel (ADR-004 v2.1.0). Een advisory lock voorkomt twee imports tegelijk. Elke import en elke gemelde fout is een run in `taakrun`; een open verzoek van een beheerder krijgt de uitkomst van de eerstvolgende import. De reden bij een fout komt uit een vaste lijst, zodat geen tekst van buiten op de statuspagina komt.
 
 **Integratiecontainer.** Een lus van 60 seconden: vraag het importverzoek op, en importeer bij een verzoek of na `SYNC_TIJDSTIP` als die dag nog geen import slaagde. Na een fout hooguit één nieuwe poging per uur. De bron zit achter de interface uit ADR-004 (`haal_leden`, `schrijf_bootaantallen`), met een stub die een JSON-bestand leest. `schrijf_bootaantallen` gooit `NietBeschikbaar`; er draait geen taak die terugschrijft. De container draait zonder root, alleen-lezen, met alleen de standaardbibliotheek van Python.
 
@@ -61,5 +61,6 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-10-31 | Geen logregel per lid | Besluit stakeholder 2026-10-31 (backlog vraag 20) |
 | v1.1.0 | 2026-10-31 | Robottoken intrekken met de CLI (backlog vraag 17) | Besluit regie, veiligste eenvoudige variant |
 | v1.0.0 | 2026-10-31 | Eerste versie | Besluiten stakeholder 2026-10-31 |

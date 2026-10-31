@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.2.0
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
@@ -33,7 +33,7 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 
 **Kaartjes.** De printpagina toont per plaats een kaartje met logo, plaatscode, naam van de eigenaar (of "vrij", of de naam van de vereniging bij een clubplaats) en de QR-code als inline SVG. Print-CSS zet een vast aantal kaartjes per A4 met snijlijnen en voorkomt dat een kaartje over twee pagina's valt. De beheerder kiest één, meerdere of alle plaatsen met selectievakjes of per rek.
 
-**OpenAPI.** De beschrijving staat in `app/api/openapi.yaml` en is te zien via `/api/v1/openapi.json` en een eenvoudige HTML-pagina die de endpoints uit de beschrijving opsomt (BLB-034). Een test vergelijkt de routes van de blueprint met de paden in de beschrijving en controleert de voorbeeldantwoorden tegen de schema's. Een route zonder beschrijving laat de test falen.
+**OpenAPI.** De beschrijving staat in `app/api/openapi.yaml` in de repository (BLB-034). Er is geen route die hem serveert: dat zou PyYAML in het productie-image vragen. Een test vergelijkt de routes van de blueprint met de paden in de beschrijving en controleert de voorbeeldantwoorden tegen de schema's. Een route zonder beschrijving laat de test falen.
 
 ## Alternatieven
 
@@ -57,5 +57,6 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-10-31 | Geen `/api/v1/openapi.json` en HTML-pagina; het contract staat in de repository | Afwijking uit slice 5, door de regie overgenomen |
 | v1.1.0 | 2026-10-31 | OpenAPI met schrijvende endpoints; integratiecontainer zonder extra afhankelijkheden | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |
