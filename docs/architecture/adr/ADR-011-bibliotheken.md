@@ -2,6 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
+**Versie:** v1.1.0
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
@@ -24,7 +25,8 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 | Excel-export | openpyxl | Schrijft `.xlsx` zonder Office; één werkblad met kolombreedtes en een kopregel is genoeg |
 | QR-codes | segno | Pure Python zonder afhankelijkheden, levert SVG die scherp print en direct in HTML past |
 | Kaartjes printen | HTML met print-CSS, print via de browser | Geen pdf-bibliotheek nodig; de browser maakt een pdf als de beheerder dat wil |
-| OpenAPI | Handgeschreven `openapi.yaml`, gecontroleerd met openapi-spec-validator | Acht leesendpoints; een generator kost meer dan hij scheelt |
+| OpenAPI | Handgeschreven `openapi.yaml`, gecontroleerd met openapi-spec-validator | Een dozijn endpoints, waarvan twee schrijvend; een generator kost meer dan hij scheelt |
+| Integratiecontainer | Alleen de standaardbibliotheek van Python (`urllib.request`, `json`) | Vijf JSON-aanroepen naar de API (ADR-012); een HTTP-bibliotheek komt pas met de echte e-boekhoudenkoppeling, via de notitie hieronder |
 | Tests | pytest, Playwright voor Python | Unit, integratie en E2E in één taal |
 | Lint en opmaak | ruff | Eén snelle tool |
 | Pakketbeheer | uv met lockbestand | Vaste versies en reproduceerbare builds |
@@ -41,7 +43,7 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 | Excel | XlsxWriter, pandas | XlsxWriter is ook goed; openpyxl kan later ook lezen, wat de spreadsheetimport (later) helpt; pandas is veel te zwaar |
 | QR | qrcode | Heeft Pillow nodig voor bitmaps; segno levert SVG zonder extra afhankelijkheid |
 | Printen | WeasyPrint, ReportLab | Systeembibliotheken (Pango, Cairo) in het image of een eigen opmaaktaal; de browser print al goed |
-| OpenAPI | flask-smorest, apispec, spectree | Schema-laag en extra afhankelijkheden voor een handvol leesroutes |
+| OpenAPI | flask-smorest, apispec, spectree | Schema-laag en extra afhankelijkheden voor een handvol routes |
 | Formulieren | Alleen eigen validatie | CSRF zelf bouwen is een bekende bron van fouten |
 
 ## Gevolgen
@@ -50,3 +52,10 @@ De stack staat vast: Python, Flask, Gunicorn, Nginx en PostgreSQL. Binnen die st
 - Kaartjes zien er per browser iets anders uit. Forge test de printpagina in Chromium en Firefox.
 - Aegis scant de afhankelijkheden na elke mijlpaal (overlay §7). Forge houdt het lockbestand bij.
 - Een nieuwe afhankelijkheid buiten deze lijst vraagt een korte notitie van forge aan foundation met reden en alternatief.
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v1.1.0 | 2026-10-31 | OpenAPI met schrijvende endpoints; integratiecontainer zonder extra afhankelijkheden | Besluiten stakeholder 2026-10-31, ADR-012 |
+| v1.0.0 | 2026-10-30 | Eerste versie | |

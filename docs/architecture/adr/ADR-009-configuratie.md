@@ -1,12 +1,13 @@
 # ADR-009 Configuratie: in de applicatie of in de installatie
 
-**Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5)
+**Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5); herzien 2026-10-31 (logo en integratiecontainer)
 **Datum:** 2026-10-30
+**Versie:** v1.1.0
 **Stories:** BLB-007, BLB-009, BLB-027, BLB-028, BLB-029
 
 ## Context
 
-Elke vereniging draait een eigen installatie met eigen naam, kleuren en logo (intake). De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
+Elke vereniging draait een eigen installatie met eigen naam, kleuren en logo (intake). Het logo staat sinds 2026-10-31 in de installatie; naam en kleuren stelt de beheerder in de applicatie in. De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
 
 De vuistregel: wat de installatie technisch laat werken of een geheim is, staat in de omgeving. Wat een beheerder in het dagelijks werk wil aanpassen, staat in de applicatie, in de tabel `instelling`, en wijzigen geeft een logregel.
 
@@ -15,23 +16,24 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | Instelling | Waar | Standaard | Reden |
 |------------|------|-----------|-------|
 | `SECRET_KEY` | Omgeving | Geen; de applicatie start niet zonder | Geheim |
-| `DATABASE_URL`, per dienst een eigen waarde en databaserol: `web` mag het log alleen lezen en aanvullen, `worker` mag opschonen, `migrate` is eigenaar | Omgeving | Geen | Geheim, ADR-006. Eén naam per dienst in plaats van een aparte `DATABASE_URL_TAKEN` (slice 1a) |
+| `DATABASE_URL`, per dienst een eigen waarde en databaserol: `web` mag het log alleen lezen en aanvullen, `api` mag leden aanmaken en bijwerken, `worker` mag opschonen, `migrate` is eigenaar | Omgeving | Geen | Geheim, ADR-006 en ADR-012. Eén naam per dienst in plaats van een aparte `DATABASE_URL_TAKEN` (slice 1a) |
 | `BASIS_URL` | Omgeving | Geen | Vast per installatie, altijd `https://` (besloten, §9 besluit 2); in QR-codes |
 | `TOTP_SLEUTEL` | Omgeving | Geen; de applicatie start niet zonder | Geheim; versleutelt de TOTP-geheimen (ADR-001) |
-| `API_INGESCHAKELD` | Omgeving | `false` | Besluit van de stakeholder: een installatiekeuze; wijzigen vraagt een herstart van `web` |
+| `API_INGESCHAKELD` | Omgeving | `true` | Besluit van de stakeholder: een installatiekeuze, standaard aan (2026-10-31); wijzigen vraagt een herstart van `api`. Uit betekent ook: geen import van leden |
+| `KOPPELNET` | Omgeving (compose, `web`) | `10.203.0.0/24` | Subnet van het netwerk `koppeling` en standaardwhitelist van een nieuw robottoken (ADR-012) |
+| `DB_API_WACHTWOORD` | Omgeving (`db`, `api`) | Geen | Geheim, voor de rol `botenloods_api` (ADR-012) |
 | `WEBAUTHN_RP_ID` | Omgeving | Host uit `BASIS_URL` | Hoort bij de domeinnaam (ADR-001) |
-| `DIENST` | Omgeving | `web` | `worker` in de workercontainer; die heeft dan geen `SECRET_KEY` en `TOTP_SLEUTEL` nodig (slice 1b) |
+| `DIENST` | Omgeving | `web` | `worker` of `api` in die containers; die hebben dan geen `SECRET_KEY` en `TOTP_SLEUTEL` nodig (slice 1b, ADR-012) |
 | `APP_OMGEVING` | Omgeving | `productie` | Seed en debug alleen buiten productie |
 | `PROXY_HOPS` | Omgeving | 1 | Bepaalt het vertrouwde clientadres (ADR-005) |
-| `LEDENBRON` en inloggegevens van de bron | Omgeving | Leeg | Techniek en geheim (ADR-004) |
-| `LEDENBRON_STUB_BESTAND` | Omgeving | Fixture | Alleen voor de stub |
-| `SYNC_TIJDSTIP`, `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving | 03:00, 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
+| `LEDENBRON`, `LEDENBRON_STUB_BESTAND` en inloggegevens van de bron | Omgeving van `integratie` | Leeg | Techniek en geheim (ADR-004); de applicatie kent ze niet |
+| `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://nginx:8081/api/v1`, `/run/secrets/api_token`, 03:00 | ADR-012 |
+| `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
+| `LOGO_BESTAND` | Omgeving (`web`), bestand in `./huisstijl` | `/huisstijl/logo.png`; zonder bestand alleen de naam | Besluit stakeholder 2026-10-31: logo in de installatie, wijzigen wordt niet gelogd (ADR-008) |
 | `LOG_NIVEAU` | Omgeving | `INFO` | Techniek |
 | Naam van de vereniging | Applicatie | "Botenloods" | BLB-027 |
 | Primaire en secundaire kleur | Applicatie | Neutraal grijs en blauw | BLB-027, design tokens (ADR-002) |
-| Logo | Applicatie | Geen; alleen de naam | BLB-027, ADR-008 |
 | Bootsoorten | Applicatie (tabel `bootsoort`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
-| Terugschrijven aan of uit | Applicatie, vergrendeld | Uit | BLB-009; aanzetten geeft een melding (ADR-004) |
 
 Vaste waarden in code, niet instelbaar: de bewaartermijn van 5 jaar, de maximale tokenduur van 3 jaar, de waarschuwing 31 dagen voor verlopen, de rechtenlijst van tokens, de uploadgrens. Dit zijn besluiten van de stakeholder of beveiligingsgrenzen, geen voorkeuren per vereniging. Wijzigen gaat via een release.
 
@@ -43,13 +45,20 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Optie | Waarom niet |
 |-------|-------------|
-| Alles in de omgeving | Naam, kleur of logo wijzigen vraagt servertoegang en een herstart; er is geen systeembeheerrol |
+| Alles in de omgeving | Naam of kleur wijzigen vraagt servertoegang en een herstart; er is geen systeembeheerrol. Voor het logo koos de stakeholder dit wel |
 | Alles in de applicatie | Geheimen in de database en een bootstrapprobleem voor `SECRET_KEY` en de database zelf |
-| API-schakelaar in de applicatie | Foundation raadde dit aan; de stakeholder koos de installatie. De API blijft zo uit zolang de installatie niet bewust anders is ingericht |
+| API-schakelaar in de applicatie | Foundation raadde dit aan; de stakeholder koos de installatie |
 | Configuratiebestand (YAML) in een volume | Derde plek naast omgeving en database |
 
 ## Gevolgen
 
-- Een nieuwe installatie start met neutrale naam en stijl (BLB-027) en heeft na de eerste inlog de eigen huisstijl.
-- Er komt geen scherm om de API aan of uit te zetten. Een beheerder die de API wil gebruiken, vraagt degene die de installatie draait. Een wijziging van de schakelaar staat daardoor niet in het mutatielog; `web` meldt de stand bij het opstarten in de containerlog.
-- De statuspagina toont welke ledenbron actief is en of API en terugschrijven aan staan, nooit de waarden van geheimen (BLB-037).
+- Een nieuwe installatie start met neutrale naam en stijl (BLB-027). Naam en kleuren zijn na de eerste inlog in te stellen; het logo zet wie de installatie draait in `./huisstijl`.
+- Er komt geen scherm om de API aan of uit te zetten. Een wijziging van de schakelaar staat niet in het mutatielog; `api` meldt de stand bij het opstarten in de containerlog. Hetzelfde geldt voor het logo.
+- De statuspagina toont of de API aan staat, de laatste import en wanneer de bootaantallen voor het laatst zijn opgehaald, nooit de waarden van geheimen (BLB-037, ADR-010). Welke bron de integratiecontainer gebruikt, weet de applicatie niet.
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v1.1.0 | 2026-10-31 | `API_INGESCHAKELD` standaard `true`; `KOPPELNET`, `DB_API_WACHTWOORD`, `LOGO_BESTAND` toegevoegd; ledenbron en `SYNC_TIJDSTIP` naar de integratiecontainer; logo en terugschrijven niet meer in de applicatie | Besluiten stakeholder 2026-10-31, ADR-008, ADR-012 |
+| v1.0.0 | 2026-10-30 | Eerste versie | |

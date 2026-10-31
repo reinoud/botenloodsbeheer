@@ -110,3 +110,23 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - De API wordt aan- en uitgezet in de installatie, via de omgeving. Niet door de beheerder in de applicatie.
 - De ontwerpkeuzes die foundation bij deze besluiten maakte, zijn akkoord: herstel via een andere beheerder trekt alle inlogmethodes en sessies in; na 5 mislukte pogingen 15 minuten geen wachtwoordinlog, passkey blijft werken; geen herstelcodes; TOTP-geheim versleuteld met `TOTP_SLEUTEL`; `API_INGESCHAKELD` standaard uit, wijzigen vraagt een herstart.
 - Twee restrisico's uit de review van slice 1a zijn voor nu aanvaard, tot uiterlijk 2027-04-30 of de eerste uitrol in productie: de uitnodigingscode kan in de foutlogs staan (issue #5), en de WebAuthn-challenge staat in een ondertekende cookie (issue #6).
+
+## Besluiten van de stakeholder (2026-10-31)
+
+Deze besluiten gaan voor eerdere besluiten die ermee botsen.
+
+### Na slice 3 (issue #17)
+
+- Het logo staat in de installatie (docker-compose), niet in de applicatie. Het wijzigen van het logo is daardoor geen mutatie en hoeft niet gelogd te worden. Naam en kleuren blijft de beheerder in de applicatie instellen.
+- In de Excel-export staat bij een vrije plaats in de kolom Bootsoort "(geschikt voor …)", met de bootsoorten die op die plaats mogen.
+- De kolom "Opgezegd op" volgt het besluit van 2026-10-30: verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond.
+
+### Imports en exports in een aparte container
+
+- Een aparte container doet alle imports en exports: het ophalen van leden en het terugschrijven van het aantal boten per lid en per bootsoort. Daarmee verdwijnt die functie uit de hoofdapplicatie.
+- De container praat alleen met de API van de applicatie, via het interne netwerk van docker-compose. De API is dus niet vanaf internet bereikbaar.
+- Een andere vereniging kan de container vervangen door een eigen container voor een andere bron dan e-boekhouden.
+- De API staat standaard aan. De standaardwhitelist is het interne netwerk van docker-compose.
+- De API is daarmee niet meer alleen-lezen: de container moet leden kunnen bijwerken via de API. Dit vervangt het besluit dat de API in de eerste versie alleen-lezen is en dat `API_INGESCHAKELD` standaard uit staat.
+- De beheerdocumentatie beschrijft hoe de container zich bij de API aanmeldt, met voorbeeldcode voor het maken en instellen van een token.
+

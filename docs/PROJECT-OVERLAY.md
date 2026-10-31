@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.1.2
+**Versie overlay:** v0.2.0
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -29,9 +29,9 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
 | Stack | Python, Flask, Gunicorn, Nginx en PostgreSQL, in docker-compose. |
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
-| Bron van leden | e-boekhouden, via een aparte en vervangbare koppelmodule. Leden worden niet in de applicatie beheerd. |
+| Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Nog geen code. Business outline bevestigd op 2026-10-30. |
+| Stand | Slice 1 tot en met 3 gebouwd. Integratiecontainer ontworpen (ADR-012, 2026-10-31). |
 
 ## 4. Werkwijze
 
@@ -81,6 +81,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan de `$log_uri`-map in `docker/nginx/http.inc`.
 - Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen.
+- Raakt een besluit van de stakeholder ook de overlay, dan noemt foundation de verouderde regels in de overlay; de regie werkt ze bij.
+- Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
 
 ## 5. Projectcontracten
 
@@ -92,7 +94,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 | Wachtlijst | Per bootsoort, met zichtbare wachttijd. De beheerder kiest de toewijzing; de applicatie wijst niet automatisch toe. | apex | E2E-test |
 | Clubplaatsen | Gereserveerde plaatsen voor clubboten zijn niet aan leden toe te wijzen. | apex | Unhappy-flow-test |
 | Plaatsnamen | De naam van een plaats is te wijzigen zonder dat toewijzingen of QR-codes breken. | foundation | Test |
-| Koppeling ledenbron | e-boekhouden zit achter een eigen interface, zodat een andere bron is aan te sluiten. Terugschrijven van het aantal boten per type wordt voorbereid maar staat uit. | foundation | Test met nepbron |
+| Koppeling ledenbron | De koppeling met e-boekhouden draait in een aparte container die alleen via de API werkt, zodat een andere vereniging de container kan vervangen. Terugschrijven van het aantal boten per type wordt voorbereid maar staat uit. | foundation | Test met nepbron |
 
 ## 6. Architectuur- en beveiligingskaders
 
@@ -101,8 +103,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 | Stack: Python, Flask, Gunicorn, Nginx, PostgreSQL in docker-compose | Standaardregel en intake | foundation |
 | Tenancy: één vereniging per installatie, geen tenantlaag en geen tenantadministratie | Besluit stakeholder 2026-10-30 | stakeholder |
 | Huisstijl: geen vaste huisstijl. Alle styling via design tokens. Naam, kleuren en logo zijn per installatie in te stellen. | Besluit stakeholder 2026-10-30; de applicatie is voor meerdere verenigingen bedoeld | foundation |
-| Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de ledensynchronisatie) buiten het webproces. | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
-| Externe API `/api/v1` met OpenAPI-specificatie, aan en uit te zetten in de installatie via de omgeving (`API_INGESCHAKELD`, standaard uit). Persoonlijke tokens hooguit 3 jaar geldig. Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
+| Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de opschoning) buiten het webproces; imports en exports in de integratiecontainer (ADR-012). | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
+| Externe API `/api/v1` met OpenAPI-specificatie, aan en uit te zetten in de installatie via de omgeving (`API_INGESCHAKELD`, standaard aan, standaardwhitelist het interne netwerk van docker-compose). Imports en exports (ledenbron, terugschrijven) draaien in een aparte, vervangbare container die alleen via de API werkt (besluit 2026-10-31). Persoonlijke tokens hooguit 3 jaar geldig. Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
 | Inloggen: lokale beheerders met een passkey of met wachtwoord plus TOTP, beide beschikbaar (ADR-001) | Intake, besluit stakeholder 2026-10-30 | foundation, aegis |
 | Statusrapportage: `docs/status/status.html` voor de stakeholder; health endpoints en een technische statuspagina (JSON en HTML, na inloggen) | Standaardregel | forge |
 | Locatie code: `/Users/reinoud/git/botenloods`, niet onder `/Users/reinoud/Projects/AI/` | Afwijking van de kickoff, besluit stakeholder 2026-10-30 | stakeholder |
@@ -145,6 +147,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.0 | 2026-10-31 | API standaard aan; imports en exports in een aparte container via de API | Besluit stakeholder 2026-10-31 |
 | v0.1.2 | 2026-10-31 | Zeven regels in de briefingchecklist uit de terugblikken van forge, aegis en sentinel (slice 3) en de controle door de regie | Lessen slice 3 |
 | v0.1.1 | 2026-10-30 | API-schakelaar en inlogmethode volgens de besluiten op de architectuurvragen; regel in de briefingchecklist uit de terugblik van foundation | Besluiten stakeholder 2026-10-30 |
 | v0.1.0 | 2026-10-30 | Eerste versie | Business outline bevestigd, besluiten stakeholder vastgelegd |

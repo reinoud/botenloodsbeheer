@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.1.1
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -26,7 +26,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Optie | Voordelen | Nadelen |
 |-------|-----------|---------|
-| SPA (React of Vue) met de API als backend | Rijke interactie; API wordt vanzelf gebruikt | Tweede codebasis, build-keten, node-afhankelijkheden, eigen auth-stroom in de browser; de API moet dan ook schrijven, terwijl de intake versie 1 alleen-lezen wil |
+| SPA (React of Vue) met de API als backend | Rijke interactie; API wordt vanzelf gebruikt | Tweede codebasis, build-keten, node-afhankelijkheden, eigen auth-stroom in de browser; de API moet dan voor elk scherm schrijven, niet alleen voor de import van leden |
 | Server-rendered met htmx | Deelupdates zonder herladen | Extra afhankelijkheid voor een gemak dat bij twintig schermen en drie gebruikers geen probleem oplost; later toe te voegen per scherm |
 | CSS-framework (Bootstrap, Tailwind) | Snelle start | Vaste uitstraling of een build-stap; design tokens zijn met een eigen klein bestand eenvoudiger te sturen |
 | Server-rendered, eigen CSS met tokens (gekozen) | Eén taal, één codebasis, geen build, snel op een telefoon, eenvoudig te testen met Playwright | Minder interactief; elke actie herlaadt de pagina |
@@ -35,12 +35,13 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 - Een beheeractie is een formulier met CSRF-token en een redirect na verwerking (post/redirect/get). Meldingen van de domeinlaag (`Regelfout`) verschijnen als flashbericht.
 - Het mutatielog onder elk overzicht is een gedeelde template-macro die de logregels voor het scherm toont (ADR-006).
-- Andere verenigingen passen de uitstraling aan via instellingen, niet via eigen templates. Wie meer wil dan naam, kleuren en logo, vraagt een wijziging in de tokens.
+- Andere verenigingen passen de uitstraling aan via instellingen en het logobestand van de installatie (ADR-008), niet via eigen templates. Wie meer wil dan naam, kleuren en logo, vraagt een wijziging in de tokens.
 - Komt er later behoefte aan deelupdates, dan is htmx per scherm toe te voegen zonder de aanpak te wijzigen. Dat besluit kan forge nemen.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.1 | 2026-10-31 | Reden bij het alternatief SPA bijgewerkt (de API is niet meer alleen-lezen); logo uit de installatie | Besluiten stakeholder 2026-10-31 |
 | v1.1.0 | 2026-10-31 | Tokens uit een aparte stylesheet `/huisstijl.css` in plaats van een `<style>`-blok met nonce | Slice 3 (issue #13); de CSP blijft ongewijzigd, beoordeeld door aegis |
 | v1.0.0 | 2026-10-30 | Eerste versie | |
