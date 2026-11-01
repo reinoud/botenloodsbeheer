@@ -14,14 +14,14 @@
 </head>
 <body>
 <h1>Botenloodsbeheer</h1>
-<p class="meta">Gestart op 2026-10-30. Bijgewerkt op 2026-11-01.</p>
+<p class="meta">Gestart op 2026-10-30. Bijgewerkt op 2026-11-02.</p>
 
 <h2>Stand</h2>
 <table>
-  <tr><th>Fase</th><td>Delivery, tussen slice 6 en slice 7</td></tr>
-  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 43 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-013 in <code>docs/architecture/</code>. Slice 1 tot en met 6 gebouwd en gereviewd: inloggen, indeling, overzichten, Excel-export, huisstijl, logo, de API als eigen dienst en de integratiecontainer voor leden. Traefik vervangt Nginx (#29), met certificaten via Let's Encrypt. Gebruikers- en beheerdocumentatie in <code>documentatie/</code> (#30). Workflow die bij een release de images naar ghcr.io pusht (#35).</td></tr>
-  <tr><th>Bezig</th><td>Niets. Twee logs gebouwd (#37); ADR-006 en ADR-002 bijgewerkt (#38). Wachtlijstacties zijn bootmutaties (#41). Het log bladert per 50 regels (#42). Geen besluit van de stakeholder open.</td></tr>
-  <tr><th>Volgende stap</th><td>Slice 7: de wachtlijst per bootsoort. De eerste release met images in ghcr.io staat nog open (#35).</td></tr>
+  <tr><th>Fase</th><td>Delivery, tussen slice 7 en slice 8</td></tr>
+  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 43 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-013 in <code>docs/architecture/</code>. Slice 1 tot en met 7 gebouwd en gereviewd: inloggen, indeling, overzichten, Excel-export, huisstijl, logo, de API als eigen dienst, de integratiecontainer voor leden en de wachtlijst per bootsoort (#43). Traefik vervangt Nginx (#29), met certificaten via Let's Encrypt. Gebruikers- en beheerdocumentatie in <code>documentatie/</code> (#30). Workflow die bij een release de images naar ghcr.io pusht (#35).</td></tr>
+  <tr><th>Bezig</th><td>Niets. Geen besluit van de stakeholder open.</td></tr>
+  <tr><th>Volgende stap</th><td>Slice 8: printbare kaartjes met QR-code en logo. De eerste release met images in ghcr.io staat nog open (#35).</td></tr>
   <tr><th>Open werk</th><td>In de <a href="https://github.com/reinoud/botenloodsbeheer/issues">GitHub-issues</a>, met de kleinere restpunten en restrisico's.</td></tr>
 </table>
 
@@ -38,6 +38,8 @@
   <li>Back-ups vallen buiten de applicatie.</li>
   <li>Traefik als proxy, met certificaten via Let's Encrypt.</li>
   <li>Imports en exports draaien in een aparte container die alleen via de API werkt.</li>
+  <li>Aanmelddatum op de wachtlijst is vandaag of eerder, niet later te wijzigen.</li>
+  <li>Een boot met een andere eigenaar gaat van de wachtlijst.</li>
   <li>Images in ghcr.io, packages openbaar.</li>
   <li>Twee logs: bootmutaties en techniek; elke beheerder ziet beide.</li>
 </ul>
