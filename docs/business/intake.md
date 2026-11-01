@@ -159,3 +159,12 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 - Bij elke release bouwt GitHub Actions de images en zet ze in ghcr.io: `ghcr.io/reinoud/botenloods-app` en `ghcr.io/reinoud/botenloods-integratie`, alleen voor linux/amd64.
 - De packages zijn openbaar, zodat een vereniging ze zonder token binnenhaalt. De repository wordt later ook openbaar.
+
+## Besluiten van de stakeholder (2026-11-01)
+
+### Twee logs (issue #37)
+
+- Er zijn twee logs. Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto vervangen en plaats toegewezen of vrijgegeven. Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling (rekken en plaatsen).
+- Onder elke boot staan de logregels over die boot. Onder elk lid staan de mutaties over de boten van dat lid.
+- Het technische log staat alleen onder een eigen menuoptie, niet onder de overzichten.
+- Elke beheerder mag beide logs zien.
