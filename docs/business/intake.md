@@ -176,6 +176,7 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 - Een boot die op de wachtlijst komt, krijgt standaard de datum van vandaag als aanmelddatum. De beheerder mag een eerdere datum invullen, zodat wie nu op de lijst in de spreadsheet staat zijn wachttijd houdt. Een datum in de toekomst wordt geweigerd. De aanmelddatum staat in het log.
 - De aanmelddatum is achteraf niet te wijzigen. Een andere datum kan alleen door de boot van de lijst te halen en er opnieuw op te zetten.
+- Krijgt een boot op de wachtlijst een andere eigenaar, dan gaat de boot van de lijst; de wachttijd hoort bij het lid. De nieuwe eigenaar kan de boot opnieuw op de lijst laten zetten. Dat staat in het log.
 
 ### Certificaten
 

@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.10
+**Versie overlay:** v0.3.11
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-01
@@ -133,6 +133,10 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een wijziging in een vergrendelvolgorde krijgt een racetest die faalt met de oude volgorde (bijvoorbeeld met `FOR UPDATE NOWAIT` op de tweede rij).
 - Loop na een besluitcommit elk criterium in de backlog na tegen de ADR-zin over hetzelfde onderwerp; een uitzondering in de ADR staat ook in het criterium.
 - Een losse proef met de fixtures van de unittests draait met een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef` met `-e PYTHONPATH=/app`.
+- Na een nieuwe migratie eerst `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d --wait`; de dienst migrate leest de migraties uit het image.
+- `flask seed` draait als de worker (`botenloods_taken`); een nieuwe tabel die seed vult, krijgt rechten voor die rol.
+- Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
+- Een E2E-test op een gedeelde lijst controleert de volgorde over de hele kolom, niet op de eerste rij; eerdere runs laten rijen achter.
 
 ## 5. Projectcontracten
 
@@ -197,6 +201,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.11 | 2026-11-01 | Regels over migraties in het image, rechten voor seed en E2E-gegevens uit de bouw van slice 7 (#43) | Lessen |
 | v0.3.10 | 2026-11-01 | Regels over E2E-uitnodigingen, slotvolgorde, schermafbeeldingen, backlog tegen ADR en losse proeven uit de bouw en review van #39 | Lessen |
 | v0.3.9 | 2026-11-01 | Regel over grenstests uit de terugblik van sentinel (#42) | Lessen |
 | v0.3.8 | 2026-11-01 | Regel over mutanten tegen het hele testbestand uit de terugblik van sentinel (#42) | Lessen |
