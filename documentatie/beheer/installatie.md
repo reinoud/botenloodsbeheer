@@ -25,10 +25,9 @@ De labels zijn getest met `traefik:v3.7.17`. Een andere versie vraagt dat de pro
 - de entrypoints `web` (80), `websecure` (443) en `intern` (8081) hebben, met precies die namen;
 - `intern` niet publiceren naar de host;
 - op geen van de drie `forwardedHeaders.trustedIPs` of `forwardedHeaders.insecure` zetten, zodat hij een binnenkomende `X-Forwarded-For` niet vertrouwt;
+- op alle drie `http.aliasHeadersStrategy=delete` zetten (`--entrypoints.<naam>.http.aliasheadersstrategy=delete`), zodat een kop als `X_Forwarded_For` niet ongewijzigd doorgaat;
 - aangesloten zijn op `<INSTALLATIE>_voorkant` en `<INSTALLATIE>_koppeling`;
 - een certresolver hebben die het certificaat van `DOMEIN` bij Let's Encrypt aanvraagt. In het voorbeeld heet die `letsencrypt` en gebruikt hij de TLS-challenge, dus poort 443 moet vanaf internet bereikbaar zijn en `DOMEIN` moet naar de host wijzen.
-
-Aanbevolen: zet `aliasHeadersStrategy` op `delete` of `reject`, zodat een kop als `X_Forwarded_For` niet ongewijzigd doorgaat. De botenloods gebruikt zo'n kop niet, maar een andere dienst achter dezelfde Traefik misschien wel.
 
 De toegangslog van Traefik mag aan staan: elke router van de botenloods zet hem voor zichzelf uit. Een verzoek dat bij geen enkele router past, zoals `https://DOMEIN/api/...`, schrijft Traefik wel in zijn log. Dat geldt ook zolang `web` start of gestopt is: dan heeft `web` geen router, en komen alle paden, ook codes en zoektermen, in de log van de gedeelde Traefik.
 

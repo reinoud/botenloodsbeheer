@@ -278,14 +278,10 @@ components:
     TeVeel:
       description: >
         Meer dan 60 aanroepen per minuut met dit token, of meer dan 300 per minuut vanaf dit adres.
-        Het antwoord komt van Traefik, als platte tekst (ADR-013); lees alleen de status.
+        Het antwoord komt van Traefik, met de tekst Too Many Requests en zonder Content-Type (ADR-013);
+        lees alleen de status.
       headers:
         Retry-After:
           description: Aantal seconden tot het token weer mag
           schema:
             type: integer
-      content:
-        text/plain:
-          schema:
-            type: string
-          example: Too Many Requests

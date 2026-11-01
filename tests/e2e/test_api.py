@@ -65,7 +65,7 @@ def test_vervalst_adres_in_de_header_telt_niet():
 
 def test_boven_60_per_minuut_429_met_retry_after():
     """BLB-034 criterium 4. Zonder de grens slagen alle 15 aanroepen; met de grens (1 per
-    seconde, burst 10) komt er een 429 van Traefik, als platte tekst (ADR-013). Een ander token
+    seconde, burst 10) komt er een 429 van Traefik, zonder Content-Type (ADR-013). Een ander token
     van hetzelfde adres werkt dan nog."""
     statussen, retry = [], None
     for _ in range(15):

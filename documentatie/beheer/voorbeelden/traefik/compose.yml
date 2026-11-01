@@ -22,6 +22,10 @@ services:
       - --entrypoints.websecure.address=:443
       # Niet publiceren: alleen voor de integratiecontainer op koppeling.
       - --entrypoints.intern.address=:8081
+      # Kop als X_Forwarded_For weghalen in plaats van ongewijzigd doorgeven (ADR-013).
+      - --entrypoints.web.http.aliasheadersstrategy=delete
+      - --entrypoints.websecure.http.aliasheadersstrategy=delete
+      - --entrypoints.intern.http.aliasheadersstrategy=delete
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL ontbreekt}
       - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true

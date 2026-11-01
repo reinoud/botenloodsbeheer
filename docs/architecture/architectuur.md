@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.4.0
-**Datum:** 2026-10-31
+**Versie:** v0.4.1
+**Datum:** 2026-11-01
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -100,16 +100,16 @@ botenloods/
     fixtures/            synthetische leden voor de stub
   docker/
     Dockerfile
-    traefik/             statische configuratie voor de lokale Traefik
   huisstijl/             logo van de installatie, niet in git (ADR-008)
   secrets/               api_token van de integratiecontainer, niet in git (ADR-012)
   docker-compose.yml     productie-opbouw
-  compose.dev.yml        aanvulling voor lokaal: poorten, herladen, testdatabase
+  compose.dev.yml        aanvulling voor lokaal: eigen Traefik, poorten, herladen, testdatabase
   .env.example           alle variabelen, zonder geheimen
   pyproject.toml         afhankelijkheden met vaste versies, ruff, pytest
   documentatie/
     gebruikers/          handleiding met screenshots (issue #30)
     beheer/              beheerdocumentatie, onder meer integratiecontainer.md (ADR-012)
+    beheer/voorbeelden/traefik/  voorbeeld van een gedeelde Traefik (ADR-013)
 ```
 
 Eén `models.py` is genoeg voor vijftien tabellen. Splitsen kan later zonder gevolgen voor de lagen.
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.4.1 | 2026-11-01 | §5: geen `docker/traefik/`, de lokale Traefik staat in `compose.dev.yml`; voorbeeld van een gedeelde Traefik; ADR-013 v1.1.0 (issue #36) |
 | v0.4.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013, issue #29): §2, §6, §7.1, §8, §9 besluit 2 en 8, §10.2 vragen 7 en 8; ADR-001 v1.2.0, ADR-002 v1.1.2, ADR-005 v1.3.0, ADR-008 v1.2.0, ADR-009 v1.2.0, ADR-010 v1.1.1, ADR-011 v1.2.1, ADR-012 v1.4.0 |
 | v0.3.3 | 2026-10-31 | Bouw slice 6 (issue #22): seed in de worker zonder leden, de leden komen via de integratiecontainer (§6.2, §6.3, §7.1); secretbestand leeg aanmaken; ADR-004 v2.2.0, ADR-007 v1.2.0, ADR-012 v1.3.0 |
 | v0.3.2 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; ADR-004 v2.1.0, ADR-005 v1.2.0, ADR-006 v1.0.0, ADR-011 v1.2.0, ADR-012 v1.2.0 |
