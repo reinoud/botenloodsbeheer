@@ -85,7 +85,8 @@ def gelogde_acties(map_="app"):
 
 def test_elke_handeling_hoort_bij_precies_een_log():
     acties = gelogde_acties()
-    assert {"boot.foto_toegevoegd", "plaats.toegewezen", "api.geweigerd"} <= acties  # scan werkt
+    assert {"boot.foto_toegevoegd", "boot.gewijzigd", "plaats.toegewezen", "api.geweigerd"} <= acties  # scan werkt
+    assert "boot.gewijzigd" in log.BOOTMUTATIES
     assert not log.BOOTMUTATIES & log.TECHNISCH, "in beide logs"
     assert not acties - log.BOOTMUTATIES - log.TECHNISCH, "in geen enkel log"
     assert not (log.BOOTMUTATIES | log.TECHNISCH) - acties, "staat in een log maar wordt nergens geschreven"

@@ -77,7 +77,9 @@ Op `/boten` staan alle boten met bootsoort, eigenaar en plaats. Een boot heeft e
 2. Voeg eventueel een foto toe (JPEG, PNG of WebP, hooguit 10 MB).
 3. Kies **Boot vastleggen**. Je ziet daarna de pagina van de boot.
 
-Een nieuwe boot heeft nog geen plaats. Op de pagina van de boot vervang je de foto of verwijder je de boot. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij.
+Een nieuwe boot heeft nog geen plaats. Op de pagina van de boot wijzig je de naam, de bootsoort en de eigenaar, vervang je de foto of verwijder je de boot. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij.
+
+**Boot wijzigen:** open de boot en pas onder **Boot wijzigen** de naam, de bootsoort of de eigenaar aan (een actief lid of de vereniging) en kies **Boot opslaan**. Een oud-lid kan geen nieuwe eigenaar worden; een boot die al van een oud-lid is, kan wel zo blijven. Heeft de boot een plaats, dan weigert de applicatie een bootsoort die niet bij de plaats past en een wissel tussen een boot van een lid en een clubboot, en zegt ze waarom. Geef de plaats dan eerst vrij. Elke wijziging komt als `boot.gewijzigd` in het log onder de boot, onder het oude en het nieuwe lid en in het log van de bootmutaties. Naam, bootsoort en eigenaar staan er met de oude en de nieuwe waarde. De eigenaar staat er als lidverwijzing (zoals `lid:7`) of als `vereniging`, zonder naam. Wie opslaat zonder iets te veranderen, geeft geen logregel.
 
 ![De pagina van een boot met bootsoort, eigenaar, plaats en foto.](afbeeldingen/boot.png)
 
@@ -158,7 +160,7 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 
 | Log | Menu | Inhoud |
 |---|---|---|
-| Mutatielog (`/log`) | **Log** | Boten aangemaakt of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven |
+| Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven |
 | Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling: rekken en plaatsen aanmaken, wijzigen of verwijderen |
 
 Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.

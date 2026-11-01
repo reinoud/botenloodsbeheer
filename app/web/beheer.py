@@ -136,7 +136,22 @@ def boot_aanmaken():
 @inloggen_vereist
 def boot_detail(boot_id):
     b = _of_404(boten.boot, boot_id)
-    return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]))
+    return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
+                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden())
+
+
+@bp.post("/boten/<int:boot_id>")
+@inloggen_vereist
+def boot_wijzigen(boot_id):
+    _of_404(boten.boot, boot_id)
+    eigenaar = request.form.get("eigenaar", "")
+    lid_id = None if eigenaar == "club" else request.form.get("eigenaar", type=int)
+    if eigenaar != "club" and lid_id is None:
+        flash("Kies een eigenaar.", "fout")
+    else:
+        uitvoeren(boten.boot_wijzigen, boot_id, request.form.get("naam"),
+                  request.form.get("bootsoort", type=int), lid_id, gelukt="De boot is opgeslagen.")
+    return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 
 @bp.post("/boten/<int:boot_id>/foto")

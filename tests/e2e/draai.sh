@@ -22,7 +22,7 @@ geimporteerd || { echo "De integratiecontainer importeerde niet; zie zijn log." 
 
 links=()
 for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
-            methodes intrekken beheerders vrij leden huisstijl import opzeggend; do
+            methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done

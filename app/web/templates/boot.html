@@ -12,6 +12,25 @@
   {% if boot.afbeelding %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}">{% endif %}
 </section>
 <section class="kaart">
+  <h2>Boot wijzigen</h2>
+  <form method="post" action="{{ url_for('web.boot_wijzigen', boot_id=boot.id) }}">
+    {% include "_csrf.html" %}
+    <label for="boot-naam">Naam van de boot</label>
+    <input id="boot-naam" name="naam" maxlength="100" value="{{ boot.naam }}" required>
+    <label for="bootsoort">Bootsoort</label>
+    <select id="bootsoort" name="bootsoort" required>
+      {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == boot.bootsoort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
+    </select>
+    <label for="eigenaar">Eigenaar</label>
+    <select id="eigenaar" name="eigenaar" required>
+      <option value="club"{% if boot.lid_id is none %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
+      {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
+      {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+    </select>
+    <button type="submit" class="knop">Boot opslaan</button>
+  </form>
+</section>
+<section class="kaart">
   <h2>Foto</h2>
   <form method="post" action="{{ url_for('web.boot_foto', boot_id=boot.id) }}" enctype="multipart/form-data">
     {% include "_csrf.html" %}

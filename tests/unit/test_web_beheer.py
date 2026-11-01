@@ -38,7 +38,7 @@ def test_beheer_vraagt_inloggen(client, pad):
 
 @pytest.mark.parametrize("pad", ["/rekken", "/rekken/1/plaatsen", "/plaatsen/1/toewijzen",
                                  "/boten", "/leden/ophalen", "/rekken/1/verwijderen",
-                                 "/plaatsen/1", "/plaatsen/1/vrijgeven"])
+                                 "/plaatsen/1", "/plaatsen/1/vrijgeven", "/boten/1"])
 def test_bezoeker_kan_niets_wijzigen(client, pad):
     r = client.post(pad, data={"naam": "Rek X", "code": "X1", "bootsoort": 1})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
@@ -218,3 +218,31 @@ def test_log_met_precies_50_regels_heeft_geen_volgende_pagina(ingelogd):
 @pytest.mark.parametrize("pagina", ["abc", "0", "-3", "1" + "0" * 30])
 def test_ongeldige_pagina_geeft_geen_fout(ingelogd, pagina):
     assert ingelogd.get(f"/log/techniek?pagina={pagina}").status_code == 200
+
+
+def test_boot_wijzigen_via_het_formulier_en_log_op_alle_plaatsen(ingelogd):
+    anna, bert = lid(), lid("1002", "Bert Jansen")
+    b = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
+    form = ingelogd.get(f"/boten/{b.id}").text
+    assert 'value="Zeemeeuw"' in form and "Boot opslaan" in form
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": "3", "eigenaar": str(bert.id)},
+                      follow_redirects=True)
+    assert "De boot is opgeslagen." in r.text and "Fuut" in r.text and "boot.gewijzigd" in r.text
+    for pad in (f"/boten/{b.id}", f"/leden/{anna.id}", f"/leden/{bert.id}", "/boten", "/log"):
+        assert "boot.gewijzigd" in ingelogd.get(pad).text, pad
+    assert "boot.gewijzigd" not in ingelogd.get("/log/techniek").text
+    assert anna.email not in r.text
+
+
+def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):
+    p = bezette_plaats()  # kajak van een lid op een plaats voor kajaks
+    boot_id = p.boot_id
+    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4", "eigenaar": "club"},
+                      follow_redirects=True)
+    assert "is een clubboot en hoort op een clubplaats" in r.text and "De boot is opgeslagen." not in r.text
+    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4",
+                                                   "eigenaar": str(p.boot.lid_id)}, follow_redirects=True)
+    assert "niet geschikt voor een c11" in r.text
+    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "1"}, follow_redirects=True)
+    assert "Kies een eigenaar." in r.text
+    assert ingelogd.post("/boten/999", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club"}).status_code == 404

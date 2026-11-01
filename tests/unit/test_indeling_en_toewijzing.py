@@ -284,3 +284,32 @@ def test_openbaar_geeft_alleen_openbare_velden(app):
         "code": "A01", "vrij": False, "clubboot": False, "boot": "Zeemeeuw",
         "foto": b.afbeelding.sleutel, "eigenaar": "Anna de Vries"}
     assert indeling.openbaar("bestaatniet") is None
+
+
+def test_toewijzen_pakt_de_plaats_niet_voor_de_boot(app):
+    p = plaats()
+    b = boot(lid().id)
+    fouten = []
+
+    def tweede():
+        with app.app_context():
+            try:
+                toewijzing.toewijzen(p.id, b.id, CLI)
+            except Regelfout as fout:
+                fouten.append(str(fout))
+
+    engine = create_engine(WEB)
+    with engine.connect() as eerste:
+        eerste.execute(text("SELECT id FROM boot WHERE id = :b FOR UPDATE"), {"b": b.id})
+        draad = threading.Thread(target=tweede)
+        draad.start()
+        draad.join(timeout=1)
+        assert draad.is_alive(), "toewijzen wacht niet op het bootslot"
+        # Zoals boot_wijzigen (#39): na de boot de plaats. Houdt toewijzen de plaats al vast, dan faalt dit.
+        eerste.execute(text("SELECT id FROM plaats WHERE id = :p FOR UPDATE NOWAIT"), {"p": p.id})
+        eerste.commit()
+    draad.join(timeout=5)
+    engine.dispose()
+    assert not fouten
+    db.session.expire_all()
+    assert db.session.get(Plaats, p.id).boot_id == b.id

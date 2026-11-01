@@ -160,3 +160,29 @@ def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):
     expect(page.get_by_text("De plaats is opgeslagen.")).to_be_visible()
     toewijzen(page, nieuw, bootnaam)
     expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")
+
+
+def test_boot_wijzigen_en_weigeren_met_log(page):
+    """BLB-005, issue #39: naam en bootsoort wijzigen, een bootsoort die de plaats niet past
+    weigeren, en het log van de bootmutaties onder de boot."""
+    wachtwoord_instellen(page, "bootwijzigen")
+    rek, code, bootnaam, nieuw = (f"E2E wijzigen {STEMPEL}", f"W{STEMPEL}", f"Wijzigboot {STEMPEL}",
+                                  f"Nieuwe naam {STEMPEL}")
+    rek_met_plaats(page, rek, code, ["Kajak"])
+    boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
+    toewijzen(page, code, bootnaam)
+    expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
+    page.get_by_role("link", name=bootnaam).click()
+
+    formulier = page.locator("section.kaart", has=page.get_by_role("heading", name="Boot wijzigen"))
+    formulier.get_by_label("Bootsoort").select_option(label="C11")
+    formulier.get_by_role("button", name="Boot opslaan").click()
+    expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een c11")
+    expect(page.locator("section.log")).not_to_contain_text("boot.gewijzigd")
+
+    formulier.get_by_label("Naam van de boot").fill(nieuw)
+    formulier.get_by_role("button", name="Boot opslaan").click()
+    expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
+    expect(page.get_by_role("heading", level=1)).to_have_text(nieuw)
+    expect(page.locator("section.log")).to_contain_text(f"naam: ['{bootnaam}', '{nieuw}']")
+    expect(page.locator("section.log")).to_contain_text("boot.gewijzigd")

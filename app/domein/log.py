@@ -12,7 +12,7 @@ VERBODEN = frozenset(
 
 # Twee logs (BLB-043): elke handeling hoort bij precies één; tests/unit/test_log.py bewaakt dat.
 BOOTMUTATIES = frozenset(
-    {"boot.aangemaakt", "boot.foto_toegevoegd", "boot.foto_vervangen", "boot.verwijderd",
+    {"boot.aangemaakt", "boot.gewijzigd", "boot.foto_toegevoegd", "boot.foto_vervangen", "boot.verwijderd",
      "plaats.toegewezen", "plaats.vrijgegeven"}
 )
 TECHNISCH = frozenset(

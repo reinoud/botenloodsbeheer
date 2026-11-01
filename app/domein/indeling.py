@@ -220,7 +220,7 @@ def _flush_code(code):
 
 def plaats_wijzigen(plaats_id, code, bootsoort_ids, is_clubplaats, actor):
     """Code, geschikte bootsoorten en clubplaats (BLB-002, 003, 004). De plaats wordt eerst
-    vergrendeld, net als bij toewijzen, zodat geen boot verschijnt tussen controle en wijziging.
+    vergrendeld, zodat geen boot verschijnt tussen controle en wijziging.
     De publieke sleutel blijft, dus de QR-link toont daarna de nieuwe code (ADR-003)."""
     try:
         p = db.session.get(Plaats, plaats_id, with_for_update=True)
