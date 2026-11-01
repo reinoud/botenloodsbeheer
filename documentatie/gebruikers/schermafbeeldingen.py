@@ -189,6 +189,8 @@ def schermen(browser):
 
     page.goto("/log")
     o.maak("log", hoogte=700)
+    page.goto("/log/techniek")
+    o.maak("log-techniek", hoogte=700)
     page.goto("/instellingen")
     o.maak("instellingen", hoogte=800)
 

@@ -17,7 +17,7 @@ def inloggen(client, geheim, stappen_verder=1, gebruikersnaam="anna"):
 
 
 def test_beheerpagina_vraagt_inloggen(client):
-    for pad in ("/", "/log"):
+    for pad in ("/", "/log", "/log/techniek"):
         r = client.get(pad)
         assert r.status_code == 302 and r.location.endswith("/inloggen")
 

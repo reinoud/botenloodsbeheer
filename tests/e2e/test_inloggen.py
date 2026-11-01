@@ -23,8 +23,8 @@ def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
     page.get_by_role("button", name="Inloggen met passkey").click()
     expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
 
-    # Het log toont de uitnodiging en de passkey, zonder de code uit de link.
-    page.get_by_role("link", name="Log").click()
+    # Het technische log toont de uitnodiging en de passkey, zonder de code uit de link.
+    page.get_by_role("link", name="Technisch log").click()
     log = page.locator("section.log")
     expect(log).to_contain_text("beheerder.uitgenodigd")
     expect(log).to_contain_text("methode: passkey")

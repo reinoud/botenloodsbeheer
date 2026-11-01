@@ -3,6 +3,7 @@
 Elke test maakt eigen rekken, plaatsen en boten met de stempel van de run, zodat hij los en in
 elke volgorde draait. De leden komen uit flask seed (draai.sh)."""
 
+import os
 import re
 import struct
 import zlib
@@ -73,6 +74,17 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     toewijzen(page, code, bootnaam)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
     expect(page.locator("section.log")).to_contain_text("plaats.toegewezen")
+    detail = page.url
+    # BLB-043: de toewijzing staat alleen in het log van de bootmutaties, het nieuwe token (vlak
+    # voor deze aanroep gemaakt door draai.sh) alleen in het technische log.
+    token = os.environ["E2E_TOKEN_NIEUW_NAAM"]
+    page.get_by_role("link", name="Log", exact=True).click()
+    expect(page.locator("section.log")).to_contain_text(f"boot: {bootnaam}; plaats: {code}")
+    expect(page.locator("section.log")).not_to_contain_text(token)
+    page.get_by_role("link", name="Technisch log").click()
+    expect(page.locator("section.log")).to_contain_text(token)
+    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+    page.goto(detail)
     prive = {veld: page.locator(f"[data-veld={veld}]").inner_text()
              for veld in ("naam", "lidnummer", "adres", "telefoon", "email")}
     assert all(prive.values())

@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
 {% block titel %}Profiel · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Profiel van {{ beheerder.gebruikersnaam }}</h1>
@@ -56,6 +55,5 @@
 </section>
 {% endif %}
 
-{{ logtabel(regels) }}
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='passkey.js') }}"></script>{% endblock %}

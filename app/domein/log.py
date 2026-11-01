@@ -10,6 +10,20 @@ VERBODEN = frozenset(
      "email"}
 )
 
+# Twee logs (BLB-043): elke handeling hoort bij precies één; tests/unit/test_log.py bewaakt dat.
+BOOTMUTATIES = frozenset(
+    {"boot.aangemaakt", "boot.foto_toegevoegd", "boot.foto_vervangen", "boot.verwijderd",
+     "plaats.toegewezen", "plaats.vrijgegeven"}
+)
+TECHNISCH = frozenset(
+    {"token.gemaakt", "token.ingetrokken", "api.geweigerd", "instelling.gewijzigd",
+     "leden.import_aangevraagd", "rek.aangemaakt", "rek.gewijzigd", "rek.verwijderd",
+     "plaats.aangemaakt", "plaats.gewijzigd", "plaats.verwijderd", "beheerder.uitgenodigd",
+     "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
+     "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
+     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld"}
+)
+
 
 def schrijf(actor, actie, verwijzingen, gegevens=None, soort="mutatie"):
     """Voegt een logregel toe aan de lopende sessie; de aanroeper commit."""
@@ -27,10 +41,14 @@ def schrijf(actor, actie, verwijzingen, gegevens=None, soort="mutatie"):
     )
 
 
-def regels(verwijzingen=None, acties=None, limiet=50):
-    """Nieuwste regels eerst. Filtert op regels met minstens één van de verwijzingen (zoals
+def regels(verwijzingen=None, acties=None, limiet=50, technisch=False):
+    """Nieuwste regels eerst, uit één logboek: standaard de bootmutaties, zodat geen overzicht
+    technische regels toont. Het technische log toont alles wat geen bootmutatie is, ook oude
+    soorten die de code niet meer schrijft. Filtert op regels met minstens één van de verwijzingen (zoals
     'plaats:12') en op acties die beginnen met een van de voorvoegsels (zoals 'boot.')."""
-    q = select(Logregel).order_by(Logregel.tijdstip.desc(), Logregel.id.desc()).limit(limiet)
+    soort = Logregel.actie.not_in(BOOTMUTATIES) if technisch else Logregel.actie.in_(BOOTMUTATIES)
+    q = (select(Logregel).where(soort)
+         .order_by(Logregel.tijdstip.desc(), Logregel.id.desc()).limit(limiet))
     if verwijzingen is not None:
         q = q.where(Logregel.verwijzingen.overlap(list(verwijzingen)))
     if acties:

@@ -86,7 +86,10 @@ def test_huisstijl_instellen_en_terugzetten(page, browser, base_url):
         page.get_by_role("button", name="Opslaan", exact=True).click()
         expect(page.get_by_text("De instellingen zijn opgeslagen.")).to_be_visible()
         expect(page.get_by_role("alert")).to_contain_text("is de tekst in de kopbalk slecht leesbaar")
+        expect(page.locator("section.log")).to_have_count(0)  # BLB-043: alleen technisch log
+        page.goto("/log/techniek")
         expect(page.locator("section.log")).to_contain_text("instelling.gewijzigd")
+        page.goto("/instellingen")
 
         # Het logo komt uit de installatie: geen upload in de applicatie (BLB-027 criterium 4).
         expect(page.locator("input[type=file]")).to_have_count(0)

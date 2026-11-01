@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% from "_log.html" import logtabel %}
-{% block titel %}Log · {{ vereniging }}{% endblock %}
+{% block titel %}{{ 'Technisch log' if technisch else 'Log' }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
+{% if technisch %}
+<h1>Technisch log</h1>
+<p>De nieuwste 50 regels over tokens, geweigerde API-aanroepen, beheerders, instellingen, importverzoeken en de indeling. De mutaties van boten staan in het <a href="{{ url_for('web.logboek') }}">log</a>.</p>
+{% else %}
 <h1>Mutatielog</h1>
-<p>De nieuwste 50 mutaties.</p>
+<p>De nieuwste 50 mutaties van boten en hun plaats. Tokens, beheerders, instellingen en de indeling staan in het <a href="{{ url_for('web.technisch_log') }}">technische log</a>.</p>
+{% endif %}
 {{ logtabel(regels) }}
 {% endblock %}

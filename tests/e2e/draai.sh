@@ -47,8 +47,14 @@ tokens=(-e "E2E_API_URL=http://$koppel_ip:8081/api/v1"
         -e "E2E_TOKEN_IMPORT=$(token import "${eigen[@]}")")
 "${c[@]}" exec -T web flask token intrekken "e2e-ingetrokken-$stempel" >/dev/null
 
-e2e() { "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" "${links[@]}" "${tokens[@]}" \
-  "${tokens_lezen[@]}" e2e pytest -p no:cacheprovider "$@"; }
+# Per aanroep een vers token, zodat test_loods.py het in de nieuwste 50 regels van het technische
+# log vindt, los of in de hele suite (BLB-043).
+e2e() {
+  local nieuw="e2e-nieuw-$stempel-$((++aanroep))"
+  "${c[@]}" exec -T web flask token robot "$nieuw" --recht bootaantallen:lezen >/dev/null 2>&1
+  "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" -e E2E_TOKEN_NIEUW_NAAM="$nieuw" \
+    "${links[@]}" "${tokens[@]}" "${tokens_lezen[@]}" e2e pytest -p no:cacheprovider "$@"; }
+aanroep=0
 
 # Traefik staat 20 inlogverzoeken direct toe en daarna 30 per minuut per IP-adres (ADR-001).
 # De hele suite blijft daar per bestand onder; tussen de bestanden loopt de teller leeg.

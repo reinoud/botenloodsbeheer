@@ -25,6 +25,7 @@ def test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt(page, authenticato
     """Issue #2: een vergrendeld wachtwoord sluit een beheerder met passkey niet buiten."""
     wachtwoord_instellen(page, "methodes")
     passkey_toevoegen(page)
+    page.goto("/log/techniek")
     expect(page.locator("section.log")).to_contain_text("beheerder.methode_toegevoegd")
     uitloggen(page)
     for _ in range(5):
@@ -51,6 +52,7 @@ def test_methode_intrekken_beeindigt_sessie_laatste_blijft(page, authenticator):
     page.get_by_role("link", name="Profiel").click()
     page.get_by_role("button", name="Passkey 1 intrekken").click()
     expect(page.get_by_role("alert")).to_contain_text("Dit is je enige inlogmethode")
+    page.goto("/log/techniek")
     log = page.locator("section.log")
     expect(log).to_contain_text("beheerder.methode_ingetrokken")
     expect(log).to_contain_text("methode: wachtwoord en TOTP")
@@ -87,5 +89,6 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     # Het eigen account heeft geen knoppen: zo blijft er altijd een actieve beheerder.
     eigen = gebruikersnaam("beheerders")
     expect(page.get_by_role("button", name=f"Blokkeren: {eigen}")).to_have_count(0)
+    page.goto("/log/techniek")
     expect(page.locator("section.log")).to_contain_text("beheerder.geblokkeerd")
     collega.context.close()

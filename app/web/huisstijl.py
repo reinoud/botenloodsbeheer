@@ -5,7 +5,7 @@ import hashlib
 from flask import current_app, flash, redirect, render_template, request, url_for
 
 from app.config import UPLOAD_MAX
-from app.domein import Regelfout, afbeeldingen, instellingen, log
+from app.domein import Regelfout, afbeeldingen, instellingen
 from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
@@ -62,8 +62,7 @@ def huisstijl_css():
 @bp.get("/instellingen")
 @inloggen_vereist
 def instellingen_scherm():
-    return render_template("instellingen.html", stijl=instellingen.huidig(),
-                           regels=log.regels(["instelling:huisstijl"]))
+    return render_template("instellingen.html", stijl=instellingen.huidig())
 
 
 @bp.post("/instellingen")

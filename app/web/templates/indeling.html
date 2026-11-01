@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
 {% block titel %}Indeling · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Indeling</h1>
@@ -71,5 +70,4 @@
 <p>Er zijn nog geen rekken.</p>
 {% endfor %}
 
-{{ logtabel(regels) }}
 {% endblock %}

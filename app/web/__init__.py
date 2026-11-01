@@ -118,15 +118,19 @@ def tijd(waarde):
 @bp.get("/")
 @inloggen_vereist
 def start():
-    return render_template(
-        "start.html", regels=log.regels([f"beheerder:{g.beheerder.id}"], limiet=10)
-    )
+    return render_template("start.html")
 
 
 @bp.get("/log")
 @inloggen_vereist
 def logboek():
-    return render_template("log.html", regels=log.regels())
+    return render_template("log.html", regels=log.regels(), technisch=False)
+
+
+@bp.get("/log/techniek")
+@inloggen_vereist
+def technisch_log():
+    return render_template("log.html", regels=log.regels(technisch=True), technisch=True)
 
 
 from app.web import beheer, huisstijl, inloggen, openbaar, overzichten  # noqa: F401

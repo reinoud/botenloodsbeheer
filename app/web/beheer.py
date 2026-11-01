@@ -1,5 +1,5 @@
-"""Beheerschermen: indeling, plaatsdetail, boten, leden en beheerders. Elk scherm toont het log
-dat erbij hoort (BLB-025, ADR-006)."""
+"""Beheerschermen: indeling, plaatsdetail, boten, leden en beheerders. Schermen over boten en
+plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 
@@ -21,8 +21,7 @@ def _of_404(functie, *args):
 @inloggen_vereist
 def indeling_overzicht():
     return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
-                           bootsoorten=indeling.bootsoorten(),
-                           regels=log.regels(acties=("rek.", "plaats.")))
+                           bootsoorten=indeling.bootsoorten())
 
 
 @bp.post("/rekken")
@@ -62,13 +61,12 @@ def plaats_aanmaken(rek_id):
 @inloggen_vereist
 def plaats_detail(plaats_id):
     p = _of_404(indeling.plaats, plaats_id)
-    verwijzingen = [f"plaats:{p.id}", *([f"boot:{p.boot_id}"] if p.boot_id else [])]
     return render_template(
         "plaats.html", plaats=p, oud_lid=p.boot and p.boot.lid and leden.is_oud_lid(p.boot.lid),
         boten=boten.zonder_plaats() if p.boot is None else [],
         bootsoorten=indeling.bootsoorten(),
         openbare_url=f"{current_app.config['BASIS_URL']}/p/{p.publieke_sleutel}",
-        regels=log.regels(verwijzingen))
+        regels=log.regels([f"plaats:{p.id}"]))
 
 
 @bp.post("/plaatsen/<int:plaats_id>/toewijzen")
@@ -168,8 +166,7 @@ def boot_verwijderen(boot_id):
 def leden_overzicht():
     zoek = request.args.get("zoek", "")
     return render_template("leden.html", leden=leden.alle_leden(zoek), zoek=zoek,
-                           runs=leden.laatste_runs(), is_oud_lid=leden.is_oud_lid,
-                           regels=log.regels(acties=("lid.", "leden.")))
+                           runs=leden.laatste_runs(), is_oud_lid=leden.is_oud_lid)
 
 
 @bp.get("/leden/<int:lid_id>")
@@ -196,8 +193,7 @@ def leden_ophalen():
 @bp.get("/beheerders")
 @inloggen_vereist
 def beheerders_overzicht():
-    return render_template("beheerders.html", beheerders=beheerders.alle(),
-                           regels=log.regels(acties=("beheerder.",)))
+    return render_template("beheerders.html", beheerders=beheerders.alle())
 
 
 def _link(code, titel, uitleg):

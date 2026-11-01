@@ -11,7 +11,7 @@ from tests.unit.hulp import beheerder_met_wachtwoord, lid, png
 from tests.unit.test_web import inloggen
 
 BEHEER = ["/indeling", "/boten", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
-          "/profiel"]
+          "/profiel", "/log", "/log/techniek"]
 
 
 @pytest.fixture
@@ -54,7 +54,10 @@ def test_indeling_aanmaken_en_dubbele_code(ingelogd):
     assert "De code A01 hoort al bij een andere plaats." in r.text
     p = db.session.scalar(select(Plaats))
     assert [s.naam for s in p.bootsoorten] == ["Kajak", "Surfski"]
-    assert "rek.aangemaakt" in r.text and "plaats.aangemaakt" in r.text  # log onder het scherm
+    # BLB-043: onder /indeling geen log; de indeling staat in het technische log.
+    assert 'class="log"' not in r.text
+    techniek = ingelogd.get("/log/techniek").text
+    assert "rek.aangemaakt" in techniek and "plaats.aangemaakt" in techniek
 
 
 def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
@@ -103,7 +106,8 @@ def test_import_aanvragen(ingelogd):
     assert "De import is aangevraagd" in r.text and "aangevraagd" in r.text
     r = ingelogd.post("/leden/ophalen", follow_redirects=True)
     assert "Er staat al een import klaar." in r.text
-    assert "leden.import_aangevraagd" in r.text
+    assert "leden.import_aangevraagd" not in r.text  # technisch: niet onder het overzicht
+    assert "leden.import_aangevraagd" in ingelogd.get("/log/techniek").text
 
 
 def test_openbare_pagina_alleen_openbare_gegevens(client):
@@ -159,8 +163,24 @@ def test_plaats_wijzigen_en_vrijgeven(ingelogd):
     assert "Op plaats A01 ligt Zeemeeuw, een kajak" in r.text
     r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "B09", "bootsoort": ["1", "3"]},
                       follow_redirects=True)
-    assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" in r.text
+    assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" not in r.text
+    assert "plaats.gewijzigd" in ingelogd.get("/log/techniek").text
     assert "Plaats B09" in ingelogd.get(f"/p/{sleutel}").text
     r = ingelogd.post(f"/plaatsen/{p.id}/vrijgeven", follow_redirects=True)
     assert "De plaats is vrijgegeven." in r.text and "Deze plaats is vrij" in r.text
+    assert "plaats.vrijgegeven" in r.text
     assert db.session.get(Plaats, p.id).boot_id is None
+
+
+def test_twee_logs_gescheiden(ingelogd):
+    """BLB-043: een toewijzing staat alleen bij de bootmutaties, de indeling alleen technisch;
+    onder plaats, boot en lid alleen bootmutaties."""
+    p = bezette_plaats()
+    boot, lid_id = p.boot.id, p.boot.lid_id
+    mutaties, techniek = ingelogd.get("/log").text, ingelogd.get("/log/techniek").text
+    assert "plaats.toegewezen" in mutaties and "plaats.aangemaakt" not in mutaties
+    assert "plaats.aangemaakt" in techniek and "plaats.toegewezen" not in techniek
+    for pad in (f"/plaatsen/{p.id}", f"/boten/{boot}", f"/leden/{lid_id}"):
+        tekst = ingelogd.get(pad).text
+        assert "plaats.toegewezen" in tekst and "plaats.aangemaakt" not in tekst, pad
+    assert "beheerder." not in ingelogd.get("/").text

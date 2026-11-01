@@ -18,7 +18,7 @@ from flask import (
 )
 from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 
-from app.domein import Actor, Regelfout, beheerders, log
+from app.domein import Actor, Regelfout, beheerders
 from app.web import bp, inloggen_vereist, recent_ingelogd, start_sessie
 
 MISLUKT = (
@@ -180,8 +180,7 @@ def profiel():
     geheim = qr = None
     if not b.wachtwoordhash:
         geheim, qr = _nieuw_geheim(b.gebruikersnaam)
-    return render_template("profiel.html", beheerder=b, geheim=geheim, qr=qr,
-                           regels=log.regels([f"beheerder:{b.id}"], acties=("beheerder.methode",)))
+    return render_template("profiel.html", beheerder=b, geheim=geheim, qr=qr)
 
 
 @bp.post("/profiel/passkey/opties")

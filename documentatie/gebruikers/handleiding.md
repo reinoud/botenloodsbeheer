@@ -2,7 +2,7 @@
 
 Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
 
-Alle schermen werken in een gewone browser, ook op een telefoon. Elk scherm met gegevens toont onderaan het log van de mutaties die erbij horen. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
+Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
 ## Inloggen
 
@@ -152,11 +152,20 @@ Blijft een verzoek op aangevraagd staan, dan draait de integratiecontainer waars
 
 ## Het mutatielog
 
-Elke wijziging van een beheerder en elke wijziging door een robottoken komt in het log, met tijdstip, wie het deed, de handeling, waarop die betrekking had en een paar gegevens. Het log kan niet worden aangepast. Een wijziging van een lid door de import staat er niet in, een wijziging in de botenadministratie als gevolg daarvan wel.
+Elke wijziging van een beheerder en elke wijziging door een robottoken komt in een log, met tijdstip, wie het deed, de handeling, waarop die betrekking had en een paar gegevens. Een log kan niet worden aangepast. Een wijziging van een lid door de import staat er niet in, een wijziging in de botenadministratie als gevolg daarvan wel. De handeling heeft de vorm onderwerp.handeling, zoals `plaats.toegewezen` of `boot.aangemaakt`.
 
-`/log` toont de nieuwste 50 mutaties. Elk overzicht en elke detailpagina toont de regels die erbij horen, bijvoorbeeld de geschiedenis van één plaats of boot. De handeling heeft de vorm onderwerp.handeling, zoals `plaats.toegewezen` of `boot.aangemaakt`.
+Er zijn twee logs. Elke beheerder ziet ze allebei.
+
+| Log | Menu | Inhoud |
+|---|---|---|
+| Mutatielog (`/log`) | **Log** | Boten aangemaakt of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling: rekken en plaatsen aanmaken, wijzigen of verwijderen |
+
+Beide tonen de nieuwste 50 regels bovenaan. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
 ![Het mutatielog met tijdstip, wie, handeling, betreft en gegevens.](afbeeldingen/log.png)
+
+![Het technische log met een importverzoek, uitnodigingen en inlogs van beheerders.](afbeeldingen/log-techniek.png)
 
 ## Naam, kleuren en logo
 
@@ -170,7 +179,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 
 | Adres | Pagina |
 |---|---|
-| `/` | Startpagina met je eigen laatste mutaties |
+| `/` | Startpagina |
 | `/inloggen` | Inloggen |
 | `/inloggen/code` | Code uit de authenticator-app |
 | `/uitnodiging/{code}` | Account instellen met een uitnodigingslink |
@@ -186,7 +195,8 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/opzeggend` | Boten van leden die gaan opzeggen |
 | `/leden` | Leden en de import |
 | `/leden/{nummer}` | Een lid |
-| `/log` | Mutatielog |
+| `/log` | Mutatielog: boten en plaatsen |
+| `/log/techniek` | Technisch log |
 | `/instellingen` | Naam, kleuren en logo |
 | `/p/{sleutel}` | Openbare pagina van een plaats |
 | `/afbeelding/{sleutel}` | Foto op de pagina van een boot of plaats |

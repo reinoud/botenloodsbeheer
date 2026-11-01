@@ -1,4 +1,8 @@
-"""Mutatielog: inhoud zonder geheimen en afscherming in de database (ADR-006, BLB-024)."""
+"""Mutatielog: inhoud zonder geheimen, afscherming in de database en de indeling in twee logs
+(ADR-006, BLB-024, BLB-043)."""
+
+import ast
+from pathlib import Path
 
 import pytest
 from sqlalchemy import create_engine, select, text
@@ -34,7 +38,7 @@ def test_uitnodigen_en_instellen_geven_logregels_zonder_geheimen(app):
 def test_log_filtert_op_verwijzing_nieuwste_eerst(app):
     beheerders.uitnodigen("anna", CLI)
     beheerder_met_wachtwoord("bert")
-    regels = log.regels(["beheerder:2"])
+    regels = log.regels(["beheerder:2"], technisch=True)
     assert [r.actie for r in regels] == ["beheerder.methode_ingesteld", "beheerder.uitgenodigd"]
 
 
@@ -42,7 +46,7 @@ def test_vergrendeling_staat_in_het_log(app):
     beheerder_met_wachtwoord()
     for _ in range(5):
         beheerders.wachtwoord_controleren("anna", "fout wachtwoord!")
-    regel = log.regels()[0]
+    regel = log.regels(technisch=True)[0]
     assert regel.actie == "beheerder.vergrendeld"
     assert (regel.actor_soort, regel.actor_naam) == ("systeem", "systeem")  # #7
 
@@ -63,3 +67,41 @@ def test_taakgebruiker_mag_log_opschonen(app):
         with pytest.raises(ProgrammingError, match="permission denied"):
             c.execute(text("UPDATE logregel SET actie = 'x'"))
     taken.dispose()
+
+
+def gelogde_acties(map_="app"):
+    """Elke handeling uit een aanroep van log.schrijf in de code, ook beide takken van een
+    voorwaardelijke expressie. Een handeling die geen letterlijke tekst is, faalt."""
+    acties = set()
+    for pad in Path(map_).rglob("*.py"):
+        for knoop in ast.walk(ast.parse(pad.read_text(encoding="utf-8"))):
+            if (isinstance(knoop, ast.Call) and isinstance(knoop.func, ast.Attribute)
+                    and knoop.func.attr == "schrijf" and getattr(knoop.func.value, "id", "") == "log"):
+                teksten = [c.value for c in ast.walk(knoop.args[1]) if isinstance(c, ast.Constant)]
+                assert teksten, f"{pad}:{knoop.lineno}: handeling is geen letterlijke tekst"
+                acties.update(teksten)
+    return acties
+
+
+def test_elke_handeling_hoort_bij_precies_een_log():
+    acties = gelogde_acties()
+    assert {"boot.foto_toegevoegd", "plaats.toegewezen", "api.geweigerd"} <= acties  # scan werkt
+    assert not log.BOOTMUTATIES & log.TECHNISCH, "in beide logs"
+    assert not acties - log.BOOTMUTATIES - log.TECHNISCH, "in geen enkel log"
+    assert not (log.BOOTMUTATIES | log.TECHNISCH) - acties, "staat in een log maar wordt nergens geschreven"
+
+
+def test_overzichten_tonen_alleen_bootmutaties(app):
+    beheerders.uitnodigen("anna", CLI)
+    log.schrijf(CLI, "plaats.toegewezen", ["beheerder:1"])
+    db.session.commit()
+    assert [r.actie for r in log.regels(["beheerder:1"])] == ["plaats.toegewezen"]
+    assert [r.actie for r in log.regels(["beheerder:1"], technisch=True)] == [
+        "beheerder.uitgenodigd"]
+
+
+def test_technisch_log_toont_ook_oude_soorten(app):
+    log.schrijf(CLI, "lid.aangemaakt", ["lid:1"])  # oude soort uit een eerdere versie
+    db.session.commit()
+    assert [r.actie for r in log.regels(technisch=True)] == ["lid.aangemaakt"]
+    assert log.regels() == []

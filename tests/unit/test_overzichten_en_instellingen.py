@@ -230,7 +230,7 @@ def test_opslaan_met_log_en_overal_zichtbaar(app, ingelogd):  # noqa: F811
     r = ingelogd.post("/instellingen", data={"naam": "KV De Fuut", "kleur_primair": "#1A4D2E",
                                              "kleur_secundair": "#333333"}, follow_redirects=True)
     assert "De instellingen zijn opgeslagen." in r.text and "slecht leesbaar" not in r.text
-    assert "instelling.gewijzigd" in r.text
+    assert "instelling.gewijzigd" in ingelogd.get("/log/techniek").text  # BLB-043
     regel = db.session.scalar(select(Logregel).where(Logregel.actie == "instelling.gewijzigd"))
     assert regel.gegevens["kleur_primair"] == ["#3f6fb5", "#1a4d2e"]
     assert regel.gegevens["naam"] == ["Botenloods", "KV De Fuut"]

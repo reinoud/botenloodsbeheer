@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
 {% block titel %}Instellingen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Instellingen</h1>
@@ -29,5 +28,4 @@
   <p>Het logo staat in de installatie, niet in de applicatie. Wie de installatie beheert, zet het in de map <code>huisstijl</code> en herstart de applicatie.</p>
 </section>
 
-{{ logtabel(regels) }}
 {% endblock %}
