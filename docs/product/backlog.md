@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.7
+**Versie:** v0.3.8
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -403,6 +403,17 @@ Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zi
 - Gegeven een overzicht of detailscherm voor beheerders, wanneer de beheerder het opent, dan staat onder het scherm het log met de mutaties die erbij horen, de nieuwste bovenaan.
 - Gegeven een plaats met een wijziging, wanneer de beheerder het detail van die plaats opent, dan staat de wijziging in het log onder het detail.
 - Gegeven de openbare pagina, wanneer een bezoeker die opent, dan staat daar geen log.
+
+#### BLB-043 Twee logs: bootmutaties en techniek
+
+Prioriteit: Should. Bron: stakeholder 2026-11-01. Afhankelijk van: BLB-024, BLB-025. Status: concept, apex verfijnt; open vragen in issue #37.
+
+Als beheerder wil ik het log van de bootmutaties los zien van het technische log zodat ik snel vind wat er met de boten in de loods is gebeurd.
+
+- Gegeven het log, wanneer de beheerder het log van de bootmutaties opent, dan staan daar alleen mutaties van boten en hun plaats: een boot aangemaakt, gewijzigd of verwijderd, een foto vervangen, een plaats toegewezen of vrijgegeven.
+- Gegeven het log, wanneer de beheerder het technische log opent, dan staan daar de overige regels: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en wijzigingen in de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen).
+- Gegeven een nieuwe soort logregel, wanneer die wordt toegevoegd, dan hoort die bij precies één van beide logs; een test faalt als een soort bij geen of bij beide hoort.
+- Gegeven beide logs, wanneer de beheerder ze bekijkt, dan gelden de regels van BLB-024 (niet te wijzigen, geen persoonsgegevens of geheimen) en BLB-026 (bewaartermijn) voor beide.
 
 #### BLB-026 Bewaartermijn van 5 jaar
 
