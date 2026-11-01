@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.12
-**Datum:** 2026-10-31
+**Versie:** v0.3.13
+**Datum:** 2026-11-01
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -123,6 +123,8 @@ Als beheerder wil ik een boot met naam, bootsoort, eigenaar en eventueel een fot
 - Gegeven een clubboot, wanneer de beheerder die aanmaakt, dan heeft de vereniging de boot als eigenaar en is er geen lid aan gekoppeld.
 - Gegeven een bestand dat geen afbeelding is, wanneer de beheerder dat als foto uploadt, dan weigert de applicatie het bestand en blijft de eerdere foto staan.
 - Gegeven een boot met een toegewezen plaats, wanneer de beheerder de boot wil verwijderen, dan weigert de applicatie tot de plaats is vrijgegeven.
+- Gegeven een boot, wanneer de beheerder naam, bootsoort of eigenaar (een actief lid of de vereniging) wijzigt, dan staat de wijziging met oude en nieuwe waarde in het log van de bootmutaties (`boot.gewijzigd`), onder de boot en onder het oude en het nieuwe lid. Een wijziging zonder verschil geeft geen logregel (besluit stakeholder 2026-11-01, issue #39).
+- Gegeven een boot met een plaats, wanneer de nieuwe bootsoort niet bij de plaats past, of de boot van clubboot naar lid gaat of andersom, dan weigert de applicatie en zegt waarom. Een oud-lid kan geen nieuwe eigenaar worden.
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
