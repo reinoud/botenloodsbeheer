@@ -1,5 +1,5 @@
 {# Gedeelde weergave van het mutatielog onder een overzicht (ADR-002, ADR-006). #}
-{% macro logtabel(regels) %}
+{% macro logtabel(regels, naar_log=true) %}
 <section class="log" aria-labelledby="log-kop">
   <h2 id="log-kop">Log</h2>
   {% if regels %}
@@ -17,6 +17,8 @@
     {% endfor %}
     </tbody>
   </table>
+  {# shortcut: de link opent het hele log zonder het filter van dit scherm; een filter in de url als een scherm vaak meer dan 50 regels heeft. #}
+  {% if naar_log and regels|length >= 50 %}<p><a href="{{ url_for('web.logboek') }}">Meer in het log</a></p>{% endif %}
   {% else %}
   <p>Nog geen mutaties.</p>
   {% endif %}

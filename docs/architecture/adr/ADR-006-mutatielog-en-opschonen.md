@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.1.1
+**Versie:** v1.1.2
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -42,7 +42,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
 | `/indeling`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
 
-Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst (slice 7) komen bij de bouw in `BOOTMUTATIES`; de wachtlijst toont dan zijn bootmutaties. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels met een link naar meer.
+Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst (slice 7) komen bij de bouw in `BOOTMUTATIES`; de wachtlijst toont dan zijn bootmutaties. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
 
 **Opschonen.** Een dagelijkse taak (ADR-007) doet in één transactie:
 
@@ -73,6 +73,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst (slice 7) k
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.2 | 2026-11-01 | Bladeren per 50 regels en link naar het log | Issue #42 |
 | v1.1.1 | 2026-11-01 | Wachtlijstacties zijn bootmutaties | Besluit stakeholder 2026-11-01, issue #41 |
 | v1.1.0 | 2026-11-01 | Twee logs: bootmutaties en techniek, indeling per actie, filter per scherm; rek en tokenoverzicht zonder log; wachtlijst open | Besluit stakeholder 2026-11-01, BLB-043, issue #38 |
 | v1.0.0 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; versie en wijzigingslog toegevoegd | Besluit stakeholder 2026-10-31 (backlog vraag 20) |

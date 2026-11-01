@@ -121,16 +121,28 @@ def start():
     return render_template("start.html")
 
 
+PER_PAGINA = 50
+
+
+def _logpagina(technisch):
+    # Bovengrens houdt de offset binnen bigint; zoveel pagina's krijgt het log in 5 jaar niet.
+    pagina = min(max(request.args.get("pagina", 1, type=int), 1), 100_000)
+    regels = log.regels(limiet=PER_PAGINA + 1, overslaan=(pagina - 1) * PER_PAGINA,
+                        technisch=technisch)
+    return render_template("log.html", regels=regels[:PER_PAGINA], technisch=technisch,
+                           pagina=pagina, ouder=len(regels) > PER_PAGINA)
+
+
 @bp.get("/log")
 @inloggen_vereist
 def logboek():
-    return render_template("log.html", regels=log.regels(), technisch=False)
+    return _logpagina(technisch=False)
 
 
 @bp.get("/log/techniek")
 @inloggen_vereist
 def technisch_log():
-    return render_template("log.html", regels=log.regels(technisch=True), technisch=True)
+    return _logpagina(technisch=True)
 
 
 from app.web import beheer, huisstijl, inloggen, openbaar, overzichten  # noqa: F401

@@ -41,14 +41,14 @@ def schrijf(actor, actie, verwijzingen, gegevens=None, soort="mutatie"):
     )
 
 
-def regels(verwijzingen=None, acties=None, limiet=50, technisch=False):
+def regels(verwijzingen=None, acties=None, limiet=50, technisch=False, overslaan=0):
     """Nieuwste regels eerst, uit één logboek: standaard de bootmutaties, zodat geen overzicht
     technische regels toont. Het technische log toont alles wat geen bootmutatie is, ook oude
     soorten die de code niet meer schrijft. Filtert op regels met minstens één van de verwijzingen (zoals
     'plaats:12') en op acties die beginnen met een van de voorvoegsels (zoals 'boot.')."""
     soort = Logregel.actie.not_in(BOOTMUTATIES) if technisch else Logregel.actie.in_(BOOTMUTATIES)
     q = (select(Logregel).where(soort)
-         .order_by(Logregel.tijdstip.desc(), Logregel.id.desc()).limit(limiet))
+         .order_by(Logregel.tijdstip.desc(), Logregel.id.desc()).limit(limiet).offset(overslaan))
     if verwijzingen is not None:
         q = q.where(Logregel.verwijzingen.overlap(list(verwijzingen)))
     if acties:

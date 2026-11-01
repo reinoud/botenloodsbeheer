@@ -4,10 +4,17 @@
 {% block inhoud %}
 {% if technisch %}
 <h1>Technisch log</h1>
-<p>De nieuwste 50 regels over tokens, geweigerde API-aanroepen, beheerders, instellingen, importverzoeken en de indeling. De mutaties van boten staan in het <a href="{{ url_for('web.logboek') }}">log</a>.</p>
+<p>Per pagina 50 regels, de nieuwste eerst, over tokens, geweigerde API-aanroepen, beheerders, instellingen, importverzoeken en de indeling. De mutaties van boten staan in het <a href="{{ url_for('web.logboek') }}">log</a>.</p>
 {% else %}
 <h1>Mutatielog</h1>
-<p>De nieuwste 50 mutaties van boten en hun plaats. Tokens, beheerders, instellingen en de indeling staan in het <a href="{{ url_for('web.technisch_log') }}">technische log</a>.</p>
+<p>Per pagina 50 mutaties van boten en hun plaats, de nieuwste eerst. Tokens, beheerders, instellingen en de indeling staan in het <a href="{{ url_for('web.technisch_log') }}">technische log</a>.</p>
 {% endif %}
-{{ logtabel(regels) }}
+{{ logtabel(regels, naar_log=false) }}
+{% set eigen = 'web.technisch_log' if technisch else 'web.logboek' %}
+{% if pagina > 1 or ouder %}
+<nav aria-label="Pagina's van het log"><p>
+  {% if pagina > 1 %}<a href="{{ url_for(eigen, pagina=pagina - 1) }}">Nieuwere regels</a>{% endif %}
+  {% if ouder %}<a href="{{ url_for(eigen, pagina=pagina + 1) }}">Oudere regels</a>{% endif %}
+</p></nav>
+{% endif %}
 {% endblock %}

@@ -5,7 +5,7 @@ import io
 import pytest
 from sqlalchemy import select
 
-from app.domein import CLI, boten, indeling, toewijzing
+from app.domein import CLI, boten, indeling, log, toewijzing
 from app.models import Plaats, Rek, db
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, png
 from tests.unit.test_web import inloggen
@@ -184,3 +184,32 @@ def test_twee_logs_gescheiden(ingelogd):
         tekst = ingelogd.get(pad).text
         assert "plaats.toegewezen" in tekst and "plaats.aangemaakt" not in tekst, pad
     assert "beheerder." not in ingelogd.get("/").text
+
+
+def _bootmutaties(aantal):
+    for _ in range(aantal):
+        log.schrijf(CLI, "boot.aangemaakt", ["boot:1"])
+    db.session.commit()
+
+
+def test_log_bladert_per_50_regels(ingelogd):
+    _bootmutaties(51)
+    eerste = ingelogd.get("/log").text
+    assert eerste.count("<td data-label=\"Actie\">") == 50
+    assert "pagina=2" in eerste and "Nieuwere regels" not in eerste
+    tweede = ingelogd.get("/log?pagina=2").text
+    assert tweede.count("<td data-label=\"Actie\">") == 1
+    assert "Nieuwere regels" in tweede and "Oudere regels" not in tweede
+    assert "Meer in het log" not in eerste
+    assert "Meer in het log" in ingelogd.get("/boten").text
+
+
+def test_log_met_precies_50_regels_heeft_geen_volgende_pagina(ingelogd):
+    _bootmutaties(50)
+    tekst = ingelogd.get("/log").text
+    assert "Oudere regels" not in tekst and "Nieuwere regels" not in tekst
+
+
+@pytest.mark.parametrize("pagina", ["abc", "0", "-3", "1" + "0" * 30])
+def test_ongeldige_pagina_geeft_geen_fout(ingelogd, pagina):
+    assert ingelogd.get(f"/log/techniek?pagina={pagina}").status_code == 200
