@@ -1,0 +1,17 @@
+# Voorbeeld: kant-en-klare images uit ghcr.io binnenhalen in plaats van bouwen
+# (documentatie/beheer/voorbeelden.md). Naast docker-compose.yml en docker/db-init.sh van dezelfde
+# versie, met VERSIE in .env (bijvoorbeeld 1.2.3 bij release v1.2.3):
+#   docker compose -f docker-compose.yml -f compose.images.yml pull
+#   docker compose -f docker-compose.yml -f compose.images.yml up -d
+x-image: &image
+  image: ghcr.io/reinoud/botenloods-app:${VERSIE:?VERSIE ontbreekt, bijvoorbeeld 1.2.3}
+  build: !reset null
+
+services:
+  migrate: *image
+  web: *image
+  api: *image
+  worker: *image
+  integratie:
+    image: ghcr.io/reinoud/botenloods-integratie:${VERSIE:?VERSIE ontbreekt}
+    build: !reset null

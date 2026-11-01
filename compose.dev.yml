@@ -1,17 +1,27 @@
 # Lokaal: docker compose -f docker-compose.yml -f compose.dev.yml up --build
-# Draait op http://localhost:8080 zonder TLS, met herladen van de code.
+# Draait op http://localhost:8080 zonder TLS, met herladen van de code, achter een eigen Traefik.
+# Compose maakt de netwerken voorkant en koppeling hier zelf aan (in productie de beheerder).
 
 services:
   # Lokaal is de database ook op 127.0.0.1 te bereiken; daarvoor moet hij op een netwerk met uitgang.
   db:
     ports: !override ["127.0.0.1:5432:5432"]
-    networks: [achterkant, voorkant]
+    networks: [achterkant, lokaal]
 
   # Lokaal het testlogo uit tests/fixtures.
+  # Lokaal zonder TLS: de routers op het entrypoint web, de doorverwijzing naar https uit.
   web:
     environment:
       GUNICORN_CMD_ARGS: --reload
       LOGO_BESTAND: /app/tests/fixtures/logo.png
+    labels:
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.tls=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.tls=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.tls=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-http.entrypoints=websecure
     volumes:
       - ./app:/app/app:ro
       - ./tests/fixtures:/app/tests/fixtures:ro
@@ -34,13 +44,28 @@ services:
     volumes:
       - ./tests/fixtures/leden.json:/data/leden.json:ro
 
-  nginx:
-    ports: !override ["127.0.0.1:8080:8080"]
+  # Eigen Traefik met dezelfde tag als in productie (ADR-013). De statische instellingen staan hier
+  # en niet in een bestand, omdat de constraint INSTALLATIE nodig heeft: zo ziet deze Traefik
+  # alleen de containers van deze installatie, ook als een tweede stack draait (screenshots).
+  # Toegangslog aan, zoals een gedeelde Traefik: de routers zetten hem uit.
+  traefik:
+    image: traefik:v3.7.17
+    restart: unless-stopped
+    command:
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.constraints=Label(`traefik.docker.network`,`${INSTALLATIE:-botenloods}_voorkant`)
+      - --entrypoints.web.address=:8080
+      - --entrypoints.websecure.address=:8443
+      - --entrypoints.intern.address=:8081
+      - --accesslog=true
+      - --log.level=INFO
+    ports: ["127.0.0.1:8080:8080"]
     volumes:
-      - ./docker/nginx/dev.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./docker/nginx/http.inc:/etc/nginx/conf.d/http.inc:ro
-      - ./docker/nginx/app.inc:/etc/nginx/conf.d/app.inc:ro
-      - ./docker/nginx/api.inc:/etc/nginx/conf.d/api.inc:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      voorkant: {}
+      koppeling: {aliases: [traefik]}
+      lokaal: {}
 
   # Unit- en integratietests tegen een eigen database botenloods_test op dezelfde server:
   # docker compose -f docker-compose.yml -f compose.dev.yml run --rm test
@@ -64,17 +89,19 @@ services:
       - ./migrations:/app/migrations:ro
       - ./integratie:/app/integratie:ro
       - ./documentatie:/app/documentatie:ro
+      - ./.env.example:/app/.env.example:ro
       - ./docker-compose.yml:/app/docker-compose.yml:ro
       - ./compose.dev.yml:/app/compose.dev.yml:ro
     depends_on:
       db: {condition: service_healthy}
 
-  # E2E met Playwright tegen de draaiende stack: tests/e2e/draai.sh
+  # E2E met Playwright tegen de draaiende stack: tests/e2e/draai.sh. Deelt het netwerk van
+  # traefik: http://localhost:8080 is Traefik, en de API is bereikbaar via zijn adres op koppeling.
   e2e:
     profiles: [e2e]
     build:
       context: tests/e2e
-    network_mode: "service:nginx"
+    network_mode: "service:traefik"
     environment:
       E2E_BASIS_URL: http://localhost:8080
     volumes:
@@ -82,3 +109,16 @@ services:
       - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
     working_dir: /e2e
     command: ["pytest", "-p", "no:cacheprovider"]
+
+# Lokaal maakt compose de netwerken zelf aan; lokaal is alleen voor de poorten naar de host.
+networks:
+  voorkant:
+    external: false
+    internal: true
+  koppeling:
+    external: false
+    internal: true
+    ipam:
+      config:
+        - subnet: ${KOPPELNET:-10.203.0.0/24}
+  lokaal: {}

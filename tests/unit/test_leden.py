@@ -136,7 +136,7 @@ def test_5000_records_mag(importeer):
 
 
 def test_boven_2_mb_413_zonder_wijziging(importeer):
-    """BLB-007 criterium 3; Nginx heeft dezelfde grens (E2E)."""
+    """BLB-007 criterium 3; boven 3 MB weigert Traefik al (E2E)."""
     groot = [record(str(n), adres="x" * 500) for n in range(4000)]
     assert len(json.dumps({"leden": groot})) > 2 * 1024 * 1024  # zonder de grens geldig
     r = importeer(groot)

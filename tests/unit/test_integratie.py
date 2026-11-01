@@ -212,7 +212,7 @@ def test_ongeldige_instelling(omgeving, melding):
 def test_instellingen_uit_de_omgeving_met_standaarden():
     cfg = instellingen({})
     assert (cfg["api_url"], cfg["token_bestand"], str(cfg["tijdstip"]), cfg["bron"]) == (
-        "http://nginx:8081/api/v1", "/run/secrets/api_token", "03:00:00", None)
+        "http://traefik:8081/api/v1", "/run/secrets/api_token", "03:00:00", None)
     cfg = instellingen({"API_URL": "http://x/api/v1/", "SYNC_TIJDSTIP": "05:30", "TZ": "UTC",
                         "LEDENBRON": "stub", "LEDENBRON_STUB_BESTAND": "/data/x.json"})
     assert (cfg["api_url"], str(cfg["tijdstip"]), str(cfg["tz"]), cfg["bron"].pad) == (
@@ -282,12 +282,41 @@ DIENSTEN = COMPOSE["services"]
 
 
 def test_integratie_alleen_op_koppeling_en_buiten():
-    """BLB-039 criterium 1: de container bereikt db en api niet rechtstreeks."""
+    """BLB-039 criterium 1: de container bereikt db en api niet rechtstreeks. Op koppeling staat
+    verder alleen de gedeelde Traefik, buiten deze compose (ADR-013)."""
     assert set(DIENSTEN["integratie"]["networks"]) == {"koppeling", "buiten"}
     op_koppeling = {n for n, d in DIENSTEN.items() if "koppeling" in d.get("networks", [])}
-    assert op_koppeling == {"nginx", "integratie"}
-    assert COMPOSE["networks"]["koppeling"]["internal"] is True
-    assert DIENSTEN["integratie"]["environment"]["API_URL"] == "http://nginx:8081/api/v1"
+    assert op_koppeling == {"integratie"}
+    assert COMPOSE["networks"]["koppeling"]["external"] is True
+    assert DIENSTEN["integratie"]["environment"]["API_URL"] == (
+        "${API_URL:-http://traefik:8081/api/v1}")
+
+
+def test_web_en_api_alleen_op_de_netwerken_van_de_installatie():
+    """ADR-013: web en api niet op het gedeelde netwerk van Traefik; api heeft geen router op
+    websecure of web, alleen op intern vanaf KOPPELNET. Geen eigen proxy in deze compose."""
+    assert not {"nginx", "traefik"} & set(DIENSTEN)
+    for naam in ("web", "api"):
+        assert set(DIENSTEN[naam]["networks"]) == {"achterkant", "voorkant"}
+    assert COMPOSE["networks"]["voorkant"] == {
+        "name": "${INSTALLATIE:-botenloods}_voorkant", "external": True}
+    labels = dict(regel.split("=", 1) for regel in DIENSTEN["api"]["labels"])
+    entrypoints = {v for k, v in labels.items() if k.endswith(".entrypoints")}
+    assert entrypoints == {"intern"}
+    assert labels["traefik.http.routers.${INSTALLATIE:-botenloods}-api.rule"].startswith(
+        "ClientIP(`${KOPPELNET:-10.203.0.0/24}`) && ")
+
+
+def test_elke_router_zonder_toegangslog_van_traefik():
+    """ADR-013, #5, #14: de toegangslog staat in web en api, niet in de gedeelde Traefik."""
+    for naam in ("web", "api"):
+        labels = dict(regel.split("=", 1) for regel in DIENSTEN[naam]["labels"])
+        routers = {k.split(".")[3] for k in labels if k.startswith("traefik.http.routers.")}
+        assert routers
+        for router in routers:
+            sleutel = f"traefik.http.routers.{router}.observability.accesslogs"
+            assert labels[sleutel] == "false", sleutel
+            assert f"traefik.http.routers.{router}.entrypoints" in labels
 
 
 def test_integratie_zonder_root_en_alleen_lezen():

@@ -15,7 +15,9 @@ COPY app app
 RUN useradd --system --uid 10001 app
 USER 10001
 EXPOSE 8000
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "app:create_app()"]
+# Toegangslog in het formaat zonder_code naar stdout (ADR-013); Traefik logt deze routes niet.
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--access-logfile", "-", \
+     "--logger-class", "app.toegangslog.Toegangslog", "app:create_app()"]
 
 # Alleen voor ontwikkeling en tests: voegt pytest en ruff toe.
 FROM app AS dev

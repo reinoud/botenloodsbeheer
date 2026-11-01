@@ -3,7 +3,6 @@
 __pycache__/
 .pytest_cache/
 .ruff_cache/
-certs/
 huisstijl/
 tests/e2e/resultaten/
 secrets/

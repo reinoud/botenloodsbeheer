@@ -3,7 +3,7 @@
 services:
   db:
     ports: !override []
-  nginx:
+  traefik:
     ports: !override []
   e2e:
     volumes:

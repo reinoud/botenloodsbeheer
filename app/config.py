@@ -29,8 +29,8 @@ def _verplicht(naam):
 
 
 DIENSTEN = ("web", "worker", "api")
-UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan client_max_body_size van /boten (ADR-008)
-IMPORT_MAX = 2 * 1024 * 1024  # PUT /api/v1/leden, gelijk aan client_max_body_size in api.inc
+UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan de buffering van de router /boten (ADR-008)
+IMPORT_MAX = 2 * 1024 * 1024  # PUT /api/v1/leden; Traefik heeft 3 MB als buitengrens
 
 
 def _schakelaar(naam, standaard):
@@ -49,6 +49,12 @@ def laad():
     basis_url = _verplicht("BASIS_URL").rstrip("/")
     if omgeving == "productie" and not basis_url.startswith("https://"):
         raise ConfigFout("BASIS_URL moet in productie met https:// beginnen")
+    # De routers van Traefik gebruiken DOMEIN; de applicatie BASIS_URL (ADR-013).
+    if _verplicht("DOMEIN") != urlsplit(basis_url).hostname:
+        raise ConfigFout("DOMEIN moet gelijk zijn aan de host uit BASIS_URL")
+    # Alleen web draagt de routers met TLS; zonder certresolver toont Traefik zijn eigen certificaat.
+    if dienst == "web" and omgeving == "productie" and not _lees("TRAEFIK_CERTRESOLVER"):
+        raise ConfigFout("TRAEFIK_CERTRESOLVER ontbreekt in de omgeving (verplicht in productie)")
 
     koppelnet = _lees("KOPPELNET", "10.203.0.0/24")
     try:

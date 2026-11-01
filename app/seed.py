@@ -46,7 +46,7 @@ def seed(echo=print):
         return
     if not db.session.scalar(select(Lid).limit(1)):
         raise SeedFout("Er zijn nog geen leden. Laat eerst de integratiecontainer met de stub "
-                       "importeren (docs/beheer/integratiecontainer.md).")
+                       "importeren (documentatie/beheer/integratiecontainer.md).")
     r = random.Random(2026)
 
     if db.session.get(Instelling, "naam") is None:

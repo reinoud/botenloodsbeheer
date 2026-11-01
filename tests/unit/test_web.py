@@ -121,9 +121,39 @@ def test_config_weigert_ontbrekende_of_onveilige_waarden(monkeypatch, tmp_path):
     with pytest.raises(config.ConfigFout, match="https"):
         config.laad()
     monkeypatch.setenv("BASIS_URL", "https://loods.example.org")
+    monkeypatch.setenv("DOMEIN", "loods.example.org")
+    monkeypatch.setenv("TRAEFIK_CERTRESOLVER", "letsencrypt")
     monkeypatch.setenv("TOTP_SLEUTEL", "geen-sleutel")
     with pytest.raises(config.ConfigFout, match="TOTP_SLEUTEL"):
         config.laad()
+
+
+PRODUCTIE = {"APP_OMGEVING": "productie", "BASIS_URL": "https://loods.example.org",
+             "DOMEIN": "loods.example.org"}
+
+
+@pytest.mark.parametrize("omgeving,melding", [
+    ({"DOMEIN": ""}, "DOMEIN ontbreekt"),
+    ({"DOMEIN": "loods.example.org"}, "DOMEIN moet gelijk"),
+    (PRODUCTIE, "TRAEFIK_CERTRESOLVER"),
+    (PRODUCTIE | {"TRAEFIK_CERTRESOLVER": ""}, "TRAEFIK_CERTRESOLVER"),
+], ids=["domein-leeg", "domein-anders", "certresolver-ontbreekt", "certresolver-leeg"])
+def test_ongeldige_traefik_instelling_stopt_het_starten(monkeypatch, omgeving, melding):
+    """ADR-013: DOMEIN is de host uit BASIS_URL; web vraagt in productie een certresolver."""
+    for naam, waarde in omgeving.items():
+        monkeypatch.setenv(naam, waarde)
+    with pytest.raises(config.ConfigFout, match=melding):
+        create_app({"TESTING": True})
+
+
+def test_geldige_traefik_instellingen(monkeypatch):
+    for naam, waarde in (PRODUCTIE | {"TRAEFIK_CERTRESOLVER": "letsencrypt"}).items():
+        monkeypatch.setenv(naam, waarde)
+    assert create_app({"TESTING": True}).config["BASIS_URL"] == "https://loods.example.org"
+    # De api draagt geen router met TLS en heeft de certresolver niet nodig.
+    monkeypatch.delenv("TRAEFIK_CERTRESOLVER")
+    monkeypatch.setenv("DIENST", "api")
+    assert create_app({"TESTING": True}).config["DIENST"] == "api"
 
 
 def test_totp_code_met_andere_tekens_geeft_gewone_melding(client):

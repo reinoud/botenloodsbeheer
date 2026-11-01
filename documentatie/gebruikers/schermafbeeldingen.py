@@ -17,7 +17,6 @@ import pyotp
 from playwright.sync_api import expect, sync_playwright
 
 BASIS = "http://localhost:8080"
-API = "http://localhost:8081/api/v1"
 UIT = Path("/documentatie/gebruikers/afbeeldingen")
 LEDEN = json.loads(Path("/fixtures/leden.json").read_text(encoding="utf-8"))
 WACHTWOORD = "voorbeeld wachtwoord voor de loods"
@@ -25,7 +24,8 @@ WACHTWOORD = "voorbeeld wachtwoord voor de loods"
 
 def importeren(leden):
     verzoek = urllib.request.Request(
-        f"{API}/leden", data=json.dumps({"leden": leden}).encode(), method="PUT",
+        f"{os.environ['DOC_API']}/leden", data=json.dumps({"leden": leden}).encode(),
+        method="PUT",
         headers={"Authorization": f"Bearer {os.environ['DOC_TOKEN']}",
                  "Content-Type": "application/json"})
     with urllib.request.urlopen(verzoek, timeout=60) as r:

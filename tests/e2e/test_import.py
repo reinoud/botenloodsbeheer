@@ -1,7 +1,8 @@
-"""Slice 6: de import van leden via de interne Nginx-server en de integratiecontainer (ADR-012;
-BLB-006, 007, 032, 034, 041). De container deelt het netwerk van nginx, dus de aanroepen komen
-van 127.0.0.1. Twee inlogverzoeken. Een test die de leden wijzigt, zet de fixture terug."""
+"""Slice 6: de import van leden via Traefik en de integratiecontainer (ADR-012, ADR-013;
+BLB-006, 007, 032, 034, 041). De container deelt het netwerk van traefik en roept E2E_API_URL aan
+(zie test_api.py). Twee inlogverzoeken. Een test die de leden wijzigt, zet de fixture terug."""
 
+import http.client
 import json
 import os
 import re
@@ -9,11 +10,12 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from conftest import wachtwoord_instellen
 from playwright.sync_api import expect
 
-API = "http://localhost:8081/api/v1"
+API = os.environ["E2E_API_URL"]
 FIXTURE = json.loads(Path("/fixtures/leden.json").read_text(encoding="utf-8"))
 
 
@@ -42,14 +44,26 @@ def test_fixture_importeren_en_veiligheidsgrens():
     assert status == 200 and uitkomst["uit_bron"] == 0 and uitkomst["bijgewerkt"] == 0
 
 
-def test_vorm_en_grootte_via_nginx():
-    """BLB-007 criterium 3: 422 en 413, ook de 413 van Nginx als JSON."""
+def test_vorm_en_grootte_via_traefik():
+    """BLB-007 criterium 3: 422 en 413. Tot 3 MB laat Traefik het verzoek door en geeft de
+    applicatie de 413 als JSON; daarboven weigert Traefik zelf (ADR-013)."""
     assert roep("PUT", "/leden", {"leden": "geen lijst"})[0] == 422
     assert roep("PUT", "/leden", {"leden": [{"lidnummer": "1"}] * 5001})[0] == 422
     groot = json.dumps({"leden": [{"lidnummer": str(n), "naam": "x" * 600}
                                   for n in range(4000)]}).encode()
     assert len(groot) > 2 * 1024 * 1024
+    assert len(groot) < 3 * 1024 * 1024
     assert roep("PUT", "/leden", ruw=groot) == (413, {"fout": "Het verzoek is groter dan 2 MB."})
+    # Traefik weigert op Content-Length, vóór het lichaam; daarom alleen de kop sturen.
+    deel = urlsplit(API)
+    verbinding = http.client.HTTPConnection(deel.hostname, deel.port, timeout=30)
+    verbinding.putrequest("PUT", f"{deel.path}/leden")
+    verbinding.putheader("Authorization", f"Bearer {os.environ['E2E_TOKEN_IMPORT']}")
+    verbinding.putheader("Content-Length", str(3 * 1024 * 1024 + 1))
+    verbinding.endheaders()
+    antwoord = verbinding.getresponse()
+    assert antwoord.status == 413 and b"fout" not in antwoord.read()
+    verbinding.close()
     assert roep("POST", "/leden/import-mislukt", {"reden": "vrije tekst"})[0] == 422
 
 

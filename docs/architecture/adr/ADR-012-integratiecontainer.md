@@ -40,7 +40,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 **Token en aanmelden.** De integratiecontainer krijgt een robottoken met alleen `leden:importeren` en `bootaantallen:lezen`. Het eerste token ontstaat met de CLI in `web`: `flask token robot <naam> --recht ... [--whitelist CIDR] [--dagen N]`. De whitelist is standaard `KOPPELNET`, de geldigheid standaard 365 dagen en hooguit 3 jaar. De CLI toont het token één keer en schrijft een logregel met actor `cli`. Intrekken kan met `flask token intrekken <naam>`, ook met een logregel; vervangen is een nieuw token maken en het oude intrekken. De beheerder zet het in `secrets/api_token` (mode 0600); compose levert dat als secret op `/run/secrets/api_token` (`API_TOKEN_FILE`). Compose start niet zonder dat bestand. De installatie maakt het daarom leeg aan (`install -m 600 /dev/null secrets/api_token`), en een leeg bestand geldt als "zonder token". Op Linux moet gebruiker 10001, waaronder de container draait, het bestand kunnen lezen (`chown 10001`). De container leest het bij elke run opnieuw, dus een nieuw token vraagt geen herstart. Zonder token meldt de container dat in zijn log en wacht een minuut.
 
-**Beheerdocumentatie.** Forge schrijft `docs/beheer/integratiecontainer.md`: token maken en instellen, de aanroepen met voorbeeldcode (de vijfde vanaf slice 9), en wat een eigen container moet doen.
+**Beheerdocumentatie.** Forge schrijft `documentatie/beheer/integratiecontainer.md`: token maken en instellen, de aanroepen met voorbeeldcode (de vijfde vanaf slice 9), en wat een eigen container moet doen.
 
 ## Alternatieven
 

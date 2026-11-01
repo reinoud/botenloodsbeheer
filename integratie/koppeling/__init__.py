@@ -1,6 +1,6 @@
 """Integratiecontainer (ADR-012): haalt de leden uit de bron en stuurt ze naar de API.
 
-Alleen de standaardbibliotheek en alleen de aanroepen uit docs/beheer/integratiecontainer.md.
+Alleen de standaardbibliotheek en alleen de aanroepen uit documentatie/beheer/integratiecontainer.md.
 Elke ronde: is er een importverzoek, of is SYNC_TIJDSTIP gepasseerd zonder geslaagde import die
 dag, dan importeert hij. Na een fout hooguit één geplande poging per uur; een verzoek van een
 beheerder wacht niet (#28). De log bevat nooit het token,
@@ -34,7 +34,7 @@ def instellingen(omgeving):
     except ValueError:
         raise ValueError("SYNC_TIJDSTIP moet een tijd zijn als 03:00") from None
     return {
-        "api_url": omgeving.get("API_URL", "http://nginx:8081/api/v1").rstrip("/"),
+        "api_url": omgeving.get("API_URL", "http://traefik:8081/api/v1").rstrip("/"),
         "token_bestand": omgeving.get("API_TOKEN_FILE", "/run/secrets/api_token"),
         "tijdstip": tijdstip,
         "tz": ZoneInfo(omgeving.get("TZ", "Europe/Amsterdam")),

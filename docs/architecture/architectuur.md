@@ -107,7 +107,8 @@ botenloods/
   compose.dev.yml        aanvulling voor lokaal: poorten, herladen, testdatabase
   .env.example           alle variabelen, zonder geheimen
   pyproject.toml         afhankelijkheden met vaste versies, ruff, pytest
-  docs/
+  documentatie/
+    gebruikers/          handleiding met screenshots (issue #30)
     beheer/              beheerdocumentatie, onder meer integratiecontainer.md (ADR-012)
 ```
 
@@ -126,7 +127,7 @@ Lokaal start de ontwikkelaar de stack met:
 1. `cp .env.example .env` en een eigen `SECRET_KEY` invullen. `compose.dev.yml` zet `LEDENBRON=stub` aan in `integratie`, koppelt `tests/fixtures/leden.json` als bron van de stub en koppelt een testlogo aan `web`.
 2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`. Zonder dit bestand start compose niet; een leeg bestand geldt als "zonder token" (ADR-012).
 3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build`.
-4. `docker compose exec -T web flask token robot integratie --recht leden:importeren --recht bootaantallen:lezen 2>/dev/null | tail -n 1 > secrets/api_token`. Op Linux krijgt gebruiker 10001 het bestand (`chown 10001`). Binnen een minuut importeert de integratiecontainer de leden via `PUT /api/v1/leden` (`docs/beheer/integratiecontainer.md`).
+4. `docker compose exec -T web flask token robot integratie --recht leden:importeren --recht bootaantallen:lezen 2>/dev/null | tail -n 1 > secrets/api_token`. Op Linux krijgt gebruiker 10001 het bestand (`chown 10001`). Binnen een minuut importeert de integratiecontainer de leden via `PUT /api/v1/leden` (`documentatie/beheer/integratiecontainer.md`).
 5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
 6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
@@ -183,7 +184,7 @@ De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import 
 |----------|-----|--------|----------------------|-------|
 | A | nieuw | Logo uit de installatie en "(geschikt voor …)" in de Excel-export (issue #17) | `web` (logo uit `LOGO_BESTAND`, route `/logo/<hash>`), migratie die logo en route verwijdert, proxylocatie weg, `domein/indeling` (export) | 008, 009 |
 | B | deel van 7 | API-basis: robottoken via de CLI, controle per aanroep, logging, rate limit, `GET /api/v1/ik` (deel van BLB-029, 031, 033, 034) | model `token`, `domein/tokens`, dienst `api` met rol `botenloods_api`, netwerken, interne server op 8081 (sinds ADR-013 een entrypoint van Traefik), `openapi.yaml` | 005, 009, 011, 012 |
-| C | nieuw | Integratiecontainer met stub; import, importverzoek en gemelde fout via de API; BLB-006, 007 en 008 opnieuw groen via de nieuwe route | `integratie/`, `domein/leden` (import), `taken` zonder synchronisatie, `app/ledenbron/` weg, seed in de worker zonder leden, `docs/beheer/integratiecontainer.md` | 004, 007, 012 |
+| C | nieuw | Integratiecontainer met stub; import, importverzoek en gemelde fout via de API; BLB-006, 007 en 008 opnieuw groen via de nieuwe route | `integratie/`, `domein/leden` (import), `taken` zonder synchronisatie, `app/ledenbron/` weg, seed in de worker zonder leden, `documentatie/beheer/integratiecontainer.md` | 004, 007, 012 |
 | D | 4 | BLB-013, 014 | model `wachtlijst`, `domein/wachtlijst`, koppeling met `domein/toewijzing` | 006 |
 | E | 5 | BLB-021 | `web` (printpagina met kaartjes), QR-generatie | 003, 011 |
 | F | 6 | BLB-026, 037, 009 | `domein/opschonen`, `taken` (opschoning), statuspagina, `GET /api/v1/bootaantallen`, `schrijf_bootaantallen` in de integratiecontainer (uit) | 004, 006, 007, 010, 012 |

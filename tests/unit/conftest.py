@@ -33,6 +33,7 @@ os.environ.update(
     SECRET_KEY="test-" + "x" * 40,
     TOTP_SLEUTEL=Fernet.generate_key().decode(),
     BASIS_URL="http://localhost:8080",
+    DOMEIN="localhost",
     DATABASE_URL=WEB,
     LEDENBRON="stub",
     LEDENBRON_STUB_BESTAND="tests/fixtures/leden.json",

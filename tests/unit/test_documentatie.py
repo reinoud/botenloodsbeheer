@@ -1,9 +1,12 @@
-"""De gebruikershandleiding noemt elke webroute van de dienst web (issue #30)."""
+"""De handleiding noemt elke webroute van web; de beheerdocumentatie elke variabele uit
+.env.example (issue #30)."""
 
 import re
 from pathlib import Path
 
 HANDLEIDING = Path("documentatie/gebruikers/handleiding.md")
+BEHEER = Path("documentatie/beheer")
+VOORBEELD = Path(".env.example")
 
 
 def webroutes(app):
@@ -25,3 +28,22 @@ def test_handleiding_noemt_elke_webroute(app):
 def test_mutant_route_uit_de_handleiding_faalt(app):
     tekst = HANDLEIDING.read_text(encoding="utf-8").replace("`/vrij`", "")
     assert ontbrekend(app, tekst) == {"/vrij"}
+
+
+def variabelen(voorbeeld):
+    return set(re.findall(r"^([A-Z][A-Z0-9_]*)=", voorbeeld, re.MULTILINE))
+
+
+def niet_beschreven(voorbeeld, beheer):
+    genoemd = set(re.findall(r"`([A-Z][A-Z0-9_]*)`", beheer))
+    return variabelen(voorbeeld) - genoemd
+
+
+def beheertekst():
+    return "".join(p.read_text(encoding="utf-8") for p in sorted(BEHEER.glob("*.md")))
+
+
+def test_beheerdocumentatie_noemt_elke_variabele():
+    voorbeeld = VOORBEELD.read_text(encoding="utf-8")
+    assert len(variabelen(voorbeeld)) > 15
+    assert not niet_beschreven(voorbeeld, beheertekst())

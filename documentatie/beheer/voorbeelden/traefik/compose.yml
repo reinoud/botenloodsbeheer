@@ -1,0 +1,48 @@
+# Voorbeeld van een gedeelde Traefik in een eigen stack (ADR-013, documentatie/beheer/installatie.md).
+# Per installatie op de host staan haar twee netwerken hieronder; maak die eerst aan.
+# Start: ACME_EMAIL=beheer@example.org docker compose up -d
+services:
+  # Traefik leest de Docker-API via deze proxy, alleen lezen en alleen containers.
+  socketproxy:
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
+    restart: unless-stopped
+    environment:
+      CONTAINERS: 1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [socket]
+
+  traefik:
+    image: traefik:v3.7.17
+    restart: unless-stopped
+    command:
+      - --providers.docker.endpoint=tcp://socketproxy:2375
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      # Niet publiceren: alleen voor de integratiecontainer op koppeling.
+      - --entrypoints.intern.address=:8081
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL ontbreekt}
+      - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+    ports: ["80:80", "443:443"]
+    volumes:
+      - acme:/acme
+    networks:
+      socket: {}
+      extern: {}
+      botenloods_voorkant: {}
+      botenloods_koppeling: {aliases: [traefik]}
+    depends_on: [socketproxy]
+
+networks:
+  socket:
+    internal: true
+  extern: {}
+  botenloods_voorkant:
+    external: true
+  botenloods_koppeling:
+    external: true
+
+volumes:
+  acme:

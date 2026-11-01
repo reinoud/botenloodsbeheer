@@ -1,0 +1,14 @@
+# Voorbeeld: bouwen uit een git-checkout, met de versie in de naam van elk image, zodat de vorige
+# versie blijft staan om terug te gaan (documentatie/beheer/voorbeelden.md).
+#   git checkout v1.0.0
+#   VERSIE=v1.0.0 docker compose -f docker-compose.yml -f compose.git.yml up -d --build
+x-versie: &versie
+  image: botenloods-app:${VERSIE:?VERSIE ontbreekt, bijvoorbeeld de git-tag}
+
+services:
+  migrate: *versie
+  web: *versie
+  api: *versie
+  worker: *versie
+  integratie:
+    image: botenloods-integratie:${VERSIE:?VERSIE ontbreekt}

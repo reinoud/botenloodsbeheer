@@ -33,7 +33,7 @@ def create_app(overrides=None):
     logging.basicConfig(level=app.config["LOG_NIVEAU"], handlers=[handler], force=True)
     logging.getLogger("alembic").setLevel(logging.WARNING)
 
-    # Nginx is de enige vertrouwde proxy en overschrijft X-Forwarded-For (architectuur §8.1).
+    # Traefik is de enige vertrouwde proxy en overschrijft X-Forwarded-For (ADR-013).
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=app.config["PROXY_HOPS"], x_proto=1)
 
     db.init_app(app)

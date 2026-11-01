@@ -1,5 +1,7 @@
 # Productie-opbouw (architectuur §2). Lokaal: aanvullen met compose.dev.yml.
 # Geheimen komen uit .env naast dit bestand (mode 0600); zie .env.example.
+# Een gedeelde Traefik in een eigen stack vindt web en api via de labels (ADR-013); deze compose
+# bevat zelf geen Traefik. Beheerdocumentatie: documentatie/beheer/.
 
 x-app: &app
   build:
@@ -16,6 +18,7 @@ x-app: &app
 x-omgeving: &omgeving
   APP_OMGEVING: ${APP_OMGEVING:-productie}
   BASIS_URL: ${BASIS_URL:?BASIS_URL ontbreekt in .env}
+  DOMEIN: ${DOMEIN:?DOMEIN ontbreekt in .env}
   TZ: ${TZ:-Europe/Amsterdam}
   LOG_NIVEAU: ${LOG_NIVEAU:-INFO}
 
@@ -64,8 +67,58 @@ services:
       LOGO_BESTAND: ${LOGO_BESTAND:-/huisstijl/logo.png}
       # Standaardwhitelist van een robottoken uit de CLI (ADR-012).
       KOPPELNET: ${KOPPELNET:-10.203.0.0/24}
-    networks: [achterkant]
+      # Alleen gecontroleerd: in productie verplicht (ADR-013).
+      TRAEFIK_CERTRESOLVER: ${TRAEFIK_CERTRESOLVER:-}
+    networks: [achterkant, voorkant]
     # Het logo van de vereniging, gelezen bij het starten (ADR-008). Zonder bestand alleen de naam.
+    # ADR-013: routers en middlewares voor de gedeelde Traefik. Elke router noemt zijn entrypoint.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${INSTALLATIE:-botenloods}_voorkant
+      - traefik.http.services.${INSTALLATIE:-botenloods}-web.loadbalancer.server.port=8000
+      - "traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.contentSecurityPolicy=default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.referrerPolicy=same-origin
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.stsSeconds=31536000
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.customResponseHeaders.Server=
+      # Grenzen op de grootte, in het geheugen: 1 MB algemeen, 10 MB voor foto's (ADR-008).
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-1mb.buffering.maxRequestBodyBytes=1048576
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-1mb.buffering.memRequestBodyBytes=1048576
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-10mb.buffering.maxRequestBodyBytes=10485760
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-10mb.buffering.memRequestBodyBytes=10485760
+      # Inlogpogingen: 30 per minuut per verbindingsadres, burst 20 (ADR-001).
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-inlogrem.ratelimit.average=30
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-inlogrem.ratelimit.period=1m
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-inlogrem.ratelimit.burst=20
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-naar-https.redirectscheme.scheme=https
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-naar-https.redirectscheme.permanent=true
+      # De publieke kant kent /api/ niet (ADR-012). /health/* zonder rate limit (ADR-010).
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.rule=Host(`${DOMEIN}`) && !PathPrefix(`/api/`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.middlewares=${INSTALLATIE:-botenloods}-kop,${INSTALLATIE:-botenloods}-1mb
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-web.observability.accesslogs=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.rule=Host(`${DOMEIN}`) && PathPrefix(`/boten`)
+      # Even lange regels als die van web: zonder prioriteit kiest Traefik per herstart een van beide.
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.priority=500
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.middlewares=${INSTALLATIE:-botenloods}-kop,${INSTALLATIE:-botenloods}-10mb
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.observability.accesslogs=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.rule=Host(`${DOMEIN}`) && Method(`POST`) && (PathPrefix(`/inloggen`) || PathPrefix(`/uitnodiging`))
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.priority=1000
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.middlewares=${INSTALLATIE:-botenloods}-kop,${INSTALLATIE:-botenloods}-1mb,${INSTALLATIE:-botenloods}-inlogrem
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.observability.accesslogs=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-http.rule=Host(`${DOMEIN}`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-http.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-http.middlewares=${INSTALLATIE:-botenloods}-naar-https
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-http.observability.accesslogs=false
     volumes:
       - ./huisstijl:/huisstijl:ro
     depends_on:
@@ -76,7 +129,7 @@ services:
       timeout: 3s
       retries: 5
 
-  # De API (/api/v1), alleen via de interne Nginx-server op poort 8081 (ADR-012).
+  # De API (/api/v1), alleen via het entrypoint intern van Traefik op poort 8081 (ADR-012, 013).
   api:
     <<: *app
     environment:
@@ -85,7 +138,28 @@ services:
       API_INGESCHAKELD: ${API_INGESCHAKELD:-true}
       PROXY_HOPS: ${PROXY_HOPS:-1}
       DATABASE_URL: postgresql+psycopg://botenloods_api:${DB_API_WACHTWOORD}@db/botenloods
-    networks: [achterkant]
+    networks: [achterkant, voorkant]
+    # Geen router op websecure: alleen intern, en alleen vanaf het netwerk koppeling.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${INSTALLATIE:-botenloods}_voorkant
+      - traefik.http.services.${INSTALLATIE:-botenloods}-api.loadbalancer.server.port=8000
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-nosniff.headers.contentTypeNosniff=true
+      # 60 per minuut per token (de hele header, AEG-01) en 300 per minuut per adres (ADR-005).
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-tokenrem.ratelimit.average=60
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-tokenrem.ratelimit.period=1m
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-tokenrem.ratelimit.burst=10
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-tokenrem.ratelimit.sourcecriterion.requestheadername=Authorization
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-iprem.ratelimit.average=300
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-iprem.ratelimit.period=1m
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-iprem.ratelimit.burst=50
+      # Buitengrens 3 MB; de grens van 2 MB met een JSON-413 zit in de applicatie (ADR-012).
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-3mb.buffering.maxRequestBodyBytes=3145728
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-3mb.buffering.memRequestBodyBytes=3145728
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api.rule=ClientIP(`${KOPPELNET:-10.203.0.0/24}`) && PathPrefix(`/api/v1/`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api.entrypoints=intern
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api.middlewares=${INSTALLATIE:-botenloods}-nosniff,${INSTALLATIE:-botenloods}-tokenrem,${INSTALLATIE:-botenloods}-iprem,${INSTALLATIE:-botenloods}-3mb
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api.observability.accesslogs=false
     depends_on:
       migrate: {condition: service_completed_successfully}
     healthcheck:
@@ -111,25 +185,9 @@ services:
       start_period: 30s
       retries: 3
 
-  nginx:
-    image: nginxinc/nginx-unprivileged:1.29.1-alpine
-    restart: unless-stopped
-    ports:
-      - "443:8443"
-      - "80:8080"
-    volumes:
-      - ./docker/nginx/prod.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./docker/nginx/http.inc:/etc/nginx/conf.d/http.inc:ro
-      - ./docker/nginx/app.inc:/etc/nginx/conf.d/app.inc:ro
-      - ./docker/nginx/api.inc:/etc/nginx/conf.d/api.inc:ro
-      - ./certs:/etc/nginx/certs:ro
-    networks: [voorkant, achterkant, koppeling]
-    depends_on:
-      web: {condition: service_healthy}
-      api: {condition: service_healthy}
-
   # Integratiecontainer (ADR-012): eigen image zonder applicatiecode. Praat alleen met de API via
-  # de interne Nginx-server; bereikt db en api niet. Inloggegevens van de bron staan alleen hier.
+  # Traefik (alias traefik op koppeling); bereikt db en api niet. Inloggegevens van de bron staan
+  # alleen hier.
   integratie:
     build: integratie
     image: botenloods-integratie
@@ -139,7 +197,7 @@ services:
     security_opt: [no-new-privileges:true]
     environment:
       TZ: ${TZ:-Europe/Amsterdam}
-      API_URL: http://nginx:8081/api/v1
+      API_URL: ${API_URL:-http://traefik:8081/api/v1}
       API_TOKEN_FILE: /run/secrets/api_token
       LEDENBRON: ${LEDENBRON:-}
       LEDENBRON_STUB_BESTAND: ${LEDENBRON_STUB_BESTAND:-/data/leden.json}
@@ -147,24 +205,28 @@ services:
     # Het bestand moet bestaan, ook leeg: zonder token wacht de container (beheerdocumentatie).
     secrets: [api_token]
     networks: [koppeling, buiten]
-    depends_on: [nginx]
+    # Traefik slaat een api die nog start over (404); zonder wachten volgt een uur pauze.
+    depends_on:
+      api: {condition: service_healthy}
 
 secrets:
   api_token:
     file: ./secrets/api_token
 
-# ADR-012. Alleen voorkant en buiten hebben verkeer naar buiten. Op koppeling staan alleen nginx
-# en de integratiecontainer; het vaste subnet is de standaardwhitelist van zijn token.
+# ADR-012, ADR-013. voorkant en koppeling maakt de beheerder eenmalig aan, met
+# `docker network create --internal`; koppeling met het subnet KOPPELNET. Op voorkant staan
+# Traefik, web en api; op koppeling alleen Traefik (alias traefik) en de integratiecontainer.
+# Alleen buiten heeft verkeer naar buiten.
 networks:
-  voorkant: {}
+  voorkant:
+    name: ${INSTALLATIE:-botenloods}_voorkant
+    external: true
+  koppeling:
+    name: ${INSTALLATIE:-botenloods}_koppeling
+    external: true
   buiten: {}
   achterkant:
     internal: true
-  koppeling:
-    internal: true
-    ipam:
-      config:
-        - subnet: ${KOPPELNET:-10.203.0.0/24}
 
 volumes:
   dbdata:

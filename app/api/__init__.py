@@ -1,5 +1,5 @@
-"""API /api/v1 (ADR-005, ADR-012). Alleen de dienst api registreert deze blueprint; Nginx
-stuurt alleen de interne server op poort 8081 hierheen. Contract: openapi.yaml."""
+"""API /api/v1 (ADR-005, ADR-012). Alleen de dienst api registreert deze blueprint; Traefik
+stuurt alleen het entrypoint intern op poort 8081 hierheen (ADR-013). Contract: openapi.yaml."""
 
 from functools import wraps
 from zoneinfo import ZoneInfo

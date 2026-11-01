@@ -5,14 +5,15 @@ info:
   title: Botenloodsbeheer API
   version: 0.6.0
   description: >
-    Alleen bereikbaar over het interne netwerk, via de interne Nginx-server op poort 8081.
+    Alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van Traefik op
+    poort 8081.
     Elke aanroep heeft een token nodig (`Authorization: Bearer blb_...`). Het token moet bestaan,
     niet verlopen of ingetrokken zijn, de aanroep moet van een adres in de IP-whitelist komen en
     het token moet het recht van de aanroep hebben. Een weigering geeft 401, of 403 bij een
     ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
     dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`.
 servers:
-  - url: http://nginx:8081/api/v1
+  - url: http://traefik:8081/api/v1
 security:
   - token: []
 paths:
@@ -257,7 +258,9 @@ components:
           example:
             fout: Geen toegang.
     TeGroot:
-      description: Het verzoek is groter dan 2 MB; er is niets gewijzigd
+      description: >
+        Het verzoek is groter dan 2 MB; er is niets gewijzigd. Boven 3 MB antwoordt Traefik met
+        platte tekst (ADR-013).
       content:
         application/json:
           schema:
@@ -273,15 +276,16 @@ components:
           example:
             fout: leden moet een lijst zijn van hooguit 5000 records.
     TeVeel:
-      description: Meer dan 60 aanroepen per minuut met dit token
+      description: >
+        Meer dan 60 aanroepen per minuut met dit token, of meer dan 300 per minuut vanaf dit adres.
+        Het antwoord komt van Traefik, als platte tekst (ADR-013); lees alleen de status.
       headers:
         Retry-After:
           description: Aantal seconden tot het token weer mag
           schema:
             type: integer
       content:
-        application/json:
+        text/plain:
           schema:
-            $ref: "#/components/schemas/Fout"
-          example:
-            fout: Te veel aanroepen.
+            type: string
+          example: Too Many Requests

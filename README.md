@@ -2,16 +2,21 @@
 
 Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OVERLAY.md`. Architectuur: `docs/architecture/architectuur.md`.
 
+## Documentatie
+
+- Voor beheerders van de botenloods: [handleiding](documentatie/gebruikers/handleiding.md).
+- Voor systeembeheerders (installatie achter Traefik, voorbeelden, integratiecontainer, bijwerken): [beheerdocumentatie](documentatie/beheer/installatie.md).
+
 ## Lokaal starten
 
-1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand).
+1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand). De standaarden `DOMEIN=localhost` en een lege `TRAEFIK_CERTRESOLVER` passen bij lokaal.
 2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`: zonder dat bestand start compose niet.
-3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`
-4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `docs/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub.
+3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`. Lokaal start een eigen Traefik mee; de netwerken maakt compose zelf.
+4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub.
 5. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed maakt geen leden: alleen de import via de API schrijft leden.
 6. Een login aanmaken, zie hieronder.
 
-De applicatie draait op http://localhost:8080. De API (`/api/v1`) is alleen bereikbaar via de interne Nginx-server op poort 8081, vanaf het netwerk `koppeling` (ADR-012).
+De applicatie draait op http://localhost:8080. De API (`/api/v1`) is alleen bereikbaar via het entrypoint `intern` van Traefik op poort 8081, vanaf het netwerk `koppeling` (ADR-012, ADR-013).
 
 ### Een login aanmaken
 
@@ -28,12 +33,12 @@ Een passkey hangt aan de host uit `BASIS_URL` (of `WEBAUTHN_RP_ID`). Open de lin
 
 - Maken: `docker compose exec web flask token robot <naam> --recht leden:importeren --recht bootaantallen:lezen`. Het token verschijnt één keer. Zonder `--whitelist` geldt `KOPPELNET`, zonder `--dagen` 365 dagen (hooguit 1095).
 - Intrekken: `docker compose exec web flask token intrekken <naam>`. Vervangen is een nieuw token maken en het oude intrekken.
-- Controleren: `GET http://nginx:8081/api/v1/ik` met `Authorization: Bearer <token>`, vanaf het netwerk `koppeling`. Het contract staat in `app/api/openapi.yaml`.
+- Controleren: `GET http://traefik:8081/api/v1/ik` met `Authorization: Bearer <token>`, vanaf het netwerk `koppeling`. Het contract staat in `app/api/openapi.yaml`.
 - Uitzetten: `API_INGESCHAKELD=false` in `.env` en `docker compose up -d api`.
 
 ## Bijwerken
 
-Een update met een nieuwe databaserol (zoals `botenloods_api` in slice 5): zet het wachtwoord in `.env` (`DB_API_WACHTWOORD`) en draai vóór `up` eerst `docker compose up -d db` en `docker compose exec db sh /docker-entrypoint-initdb.d/rollen.sh`. Na een wijziging die `web` of `api` opnieuw aanmaakt: `docker compose restart nginx`.
+Een update met een nieuwe databaserol (zoals `botenloods_api` in slice 5): zet het wachtwoord in `.env` (`DB_API_WACHTWOORD`) en draai vóór `up` eerst `docker compose up -d db` en `docker compose exec db sh /docker-entrypoint-initdb.d/rollen.sh`. Traefik volgt de containers zelf; een herstart van de proxy is niet nodig.
 
 ## Tests
 
@@ -42,4 +47,4 @@ Een update met een nieuwe databaserol (zoals `botenloods_api` in slice 5): zet h
 
 ## Productie
 
-`docker compose up -d` met `APP_OMGEVING=productie`, een `https://`-adres in `BASIS_URL` en het certificaat in `certs/` (`fullchain.pem`, `privkey.pem`). Het logo van de vereniging staat in `huisstijl/logo.png` (JPEG, PNG of WebP); na het vervangen `docker compose restart web`. Ontbreekt het of is het ongeldig, dan staat dat in `docker compose logs web` en toont de kopbalk alleen de naam.
+Zie [installatie achter een gedeelde Traefik](documentatie/beheer/installatie.md). Het logo van de vereniging staat in `huisstijl/logo.png` (JPEG, PNG of WebP); na het vervangen `docker compose restart web`. Ontbreekt het of is het ongeldig, dan staat dat in `docker compose logs web` en toont de kopbalk alleen de naam.
