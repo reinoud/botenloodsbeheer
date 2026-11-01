@@ -15,7 +15,8 @@ def _verwijzingen(boot):
 def boten():
     return db.session.scalars(
         select(Boot).order_by(Boot.naam, Boot.id).options(
-            selectinload(Boot.lid), selectinload(Boot.plaats), selectinload(Boot.bootsoort)
+            selectinload(Boot.lid), selectinload(Boot.plaats), selectinload(Boot.bootsoort),
+            selectinload(Boot.wachtlijst)
         )
     ).all()
 
@@ -78,6 +79,9 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
                                    .execution_options(populate_existing=True))
         if eigenaar is not None and lid_id != b.lid_id and leden.is_oud_lid(eigenaar):
             raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
+        if lid_id is None and b.wachtlijst is not None:
+            raise Regelfout(f"Boot {b.naam} staat op de wachtlijst. Een clubboot kan daar niet "
+                            "op; haal de boot eerst van de wachtlijst.")
         oud_lid_id, oude_soort, oude_naam = b.lid_id, b.bootsoort, b.naam
         if plaats is not None and (soort != oude_soort or (lid_id is None) != (oud_lid_id is None)):
             controleer_past(plaats, naam, soort, lid_id is not None)

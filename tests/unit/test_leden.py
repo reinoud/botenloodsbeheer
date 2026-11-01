@@ -10,8 +10,8 @@ import pytest
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import ProgrammingError
 
-from app.domein import CLI, Regelfout, boten, indeling, leden, toewijzing, vandaag
-from app.models import Lid, Logregel, Plaats, Taakrun, db
+from app.domein import CLI, Regelfout, boten, indeling, leden, toewijzing, vandaag, wachtlijst
+from app.models import Lid, Logregel, Plaats, Taakrun, Token, Wachtlijst, db
 from tests.unit.conftest import API, TAKEN
 from tests.unit.hulp import als_web
 from tests.unit.test_tokens import KOPPEL, SPEC, bearer, maak_als_web
@@ -76,7 +76,7 @@ def test_nieuwe_en_gewijzigde_leden_op_lidnummer_met_alle_velden(importeer):
 
 def test_geen_logregel_per_lid_of_per_import(importeer):
     """BLB-024 criterium 2 en issue #21: een import die leden aanmaakt, wijzigt en oud-lid maakt,
-    schrijft geen logregel. Mutaties aan boten door de import volgen met de wachtlijst (slice 7)."""
+    schrijft geen logregel. Mutaties aan boten door de import wel: zie de volgende test (#27)."""
     importeer([record("1"), record("2")])
     importeer([record("1", adres="Geheimstraat 9"), record("3")])
     assert db.session.scalars(select(Logregel.actie)).all() == ["token.gemaakt"]
@@ -179,6 +179,60 @@ def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
     assert als_web(lambda: db.session.get(Plaats, p1).boot_id) == b1
     with pytest.raises(Regelfout, match="is oud-lid"):
         als_web(lambda: toewijzing.toewijzen(p2, b2, CLI))
+
+
+@pytest.mark.parametrize("oud", [True, False],
+                         ids=["opzegdatum", "uit_de_bron"])
+def test_boot_van_oud_lid_gaat_van_de_wachtlijst_met_het_token_als_actor(importeer, oud):
+    """BLB-008 criterium 3 en #27 (BLB-024 criterium 2): de import haalt de boot van de lijst en
+    schrijft een bootmutatie met de naam van het robottoken als actor. Boten van andere leden
+    blijven staan."""
+    importeer([record("1"), record("2")])
+    anna, bram = alle()["1"].id, alle()["2"].id
+
+    def op_lijst():
+        b1 = boten.boot_aanmaken("Zeemeeuw", 1, anna, None, CLI)
+        b2 = boten.boot_aanmaken("Fuut", 1, bram, None, CLI)
+        wachtlijst.erop_zetten(b1.id, "2024-01-01", CLI)
+        wachtlijst.erop_zetten(b2.id, "2024-01-01", CLI)
+        return b1.id, b2.id
+
+    b1, b2 = als_web(op_lijst)
+    gisteren = (vandaag() - timedelta(days=1)).isoformat()
+    lijst = [record("1", opzegdatum=gisteren)] if oud else []
+    assert importeer(lijst + [record("2")]).status_code == 200
+    assert als_web(lambda: [w.boot_id for _s, rij in wachtlijst.lijsten() for w in rij]) == [b2]
+    db.session.expire_all()
+    assert db.session.get(Wachtlijst, b1) is None
+    [r] = db.session.scalars(select(Logregel).where(Logregel.actie == "wachtlijst.verwijderd"))
+    token = db.session.scalar(select(Token))  # het enige token: dat van de import
+    assert (r.actor_soort, r.actor_id, r.actor_naam) == ("token", token.id, token.naam)
+    assert r.verwijzingen == [f"boot:{b1}", f"lid:{anna}"]
+    assert r.gegevens == {"boot": "Zeemeeuw", "aangemeld_op": "2024-01-01", "reden": "oud-lid"}
+    # Het lid zelf staat nog steeds niet in het log (ADR-004 v2.1.0)
+    assert {a for a in db.session.scalars(select(Logregel.actie))} == {
+        "token.gemaakt", "boot.aangemaakt", "wachtlijst.toegevoegd", "wachtlijst.verwijderd"}
+
+
+def test_import_haalt_boot_eraf_als_de_opzegdatum_inmiddels_verstreken_is(importeer, monkeypatch):
+    """BLB-041 en BLB-008: de eerste import na de opzegdatum maakt het lid oud-lid, ook als de
+    bron niets nieuws meldt."""
+    morgen = vandaag() + timedelta(days=1)
+    importeer([record("1", opzegdatum=morgen.isoformat())])
+    anna = alle()["1"].id
+
+    def op_lijst():
+        b = boten.boot_aanmaken("Zeemeeuw", 1, anna, None, CLI)
+        wachtlijst.erop_zetten(b.id, None, CLI)
+        return b.id
+
+    b = als_web(op_lijst)
+    importeer([record("1", opzegdatum=morgen.isoformat())])
+    assert db.session.get(Wachtlijst, b) is not None
+    monkeypatch.setattr(leden, "vandaag", lambda: morgen)
+    importeer([record("1", opzegdatum=morgen.isoformat())])
+    db.session.expire_all()
+    assert db.session.get(Wachtlijst, b) is None
 
 
 def test_opgeschoond_oud_lid_komt_niet_terug(importeer):

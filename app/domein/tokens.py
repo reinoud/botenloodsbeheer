@@ -45,7 +45,7 @@ def _hash(waarde):
     return hashlib.sha256(waarde.encode()).hexdigest()
 
 
-def _actor(token):
+def als_actor(token):
     return Actor("token", token.id, token.naam)
 
 
@@ -103,7 +103,7 @@ def intrekken(naam, actor):
 
 
 def _weiger(reden, token, endpoint, ip, status=401):
-    actor = _actor(token) if token else Actor("token", None, "onbekend")
+    actor = als_actor(token) if token else Actor("token", None, "onbekend")
     log.schrijf(actor, "api.geweigerd", [f"token:{token.id}"] if token else [],
                 {"endpoint": endpoint, "reden": reden, "ip": ip}, soort="api")
     db.session.commit()

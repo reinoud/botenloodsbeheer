@@ -1,5 +1,5 @@
 """Alle tabellen (architectuur §4). Slice 1a: beheerders, inloggen, log en techniek.
-Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen. Slice 5: token."""
+Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen. Slice 5: token. Slice 7: wachtlijst."""
 
 from datetime import date, datetime
 
@@ -235,6 +235,21 @@ class Boot(db.Model):
     lid: Mapped[Lid | None] = relationship(back_populates="boten")
     afbeelding: Mapped[Afbeelding | None] = relationship()
     plaats: Mapped[Plaats | None] = relationship(back_populates="boot")
+    # Verwijderen van de boot haalt hem van de wachtlijst (ON DELETE CASCADE).
+    wachtlijst: Mapped["Wachtlijst | None"] = relationship(
+        back_populates="boot", cascade="all, delete-orphan", passive_deletes=True)
+
+
+class Wachtlijst(db.Model):
+    """Een boot hooguit één keer; de bootsoort volgt uit de boot, dus elke soort heeft vanzelf een
+    eigen lijst (architectuur §3). De aanmelddatum is achteraf niet te wijzigen (intake)."""
+
+    __tablename__ = "wachtlijst"
+
+    boot_id: Mapped[int] = mapped_column(ForeignKey("boot.id", ondelete="CASCADE"), primary_key=True)
+    aangemeld_op: Mapped[date] = mapped_column(Date)
+
+    boot: Mapped[Boot] = relationship(back_populates="wachtlijst")
 
 
 class Token(db.Model):

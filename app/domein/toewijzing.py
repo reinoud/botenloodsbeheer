@@ -1,8 +1,8 @@
-"""Een boot een plaats geven (BLB-010) en een plaats vrijgeven (BLB-011), ADR-003."""
+"""Een boot een plaats geven (BLB-010, BLB-014) en een plaats vrijgeven (BLB-011), ADR-003."""
 
 from sqlalchemy import select
 
-from app.domein import Regelfout, leden, log
+from app.domein import Regelfout, leden, log, wachtlijst
 from app.models import Boot, Plaats, db
 
 
@@ -40,6 +40,7 @@ def toewijzen(plaats_id, boot_id, actor):
     log.schrijf(actor, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                              *([f"lid:{b.lid_id}"] if b.lid_id else [])],
                 {"plaats": p.code, "boot": b.naam})
+    wachtlijst.na_toewijzen(b, actor)
     db.session.commit()
 
 

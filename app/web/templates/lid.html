@@ -8,13 +8,14 @@
 <h2>Boten in de loods</h2>
 {% if lid.boten %}
 <table>
-  <thead><tr><th>Boot</th><th>Bootsoort</th><th>Plaats</th></tr></thead>
+  <thead><tr><th>Boot</th><th>Bootsoort</th><th>Plaats</th><th>Wachtlijst</th></tr></thead>
   <tbody>
   {% for b in lid.boten %}
     <tr>
       <td data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
       <td data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
       <td data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}Geen plaats{% endif %}</td>
+      <td data-label="Wachtlijst">{% if b.wachtlijst %}Sinds {{ b.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}Nee{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>

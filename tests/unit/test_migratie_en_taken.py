@@ -8,8 +8,8 @@ from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app import seed, taken
-from app.domein import leden
-from app.models import Boot, Lid, Logregel, Plaats, Rek, Taakrun, db
+from app.domein import CLI, leden, wachtlijst
+from app.models import Boot, Lid, Logregel, Plaats, Rek, Taakrun, Wachtlijst, db
 from tests.unit.conftest import nieuwe_database
 from tests.unit.hulp import als_api
 from tests.unit.test_leden import FIXTURE
@@ -72,7 +72,7 @@ def test_heartbeat(app):
 def test_seed_maakt_de_synthetische_loods(app):
     with pytest.raises(seed.SeedFout, match="nog geen leden"):
         seed.seed(echo=lambda _: None)
-    als_api(leden.importeer, FIXTURE)
+    als_api(leden.importeer, FIXTURE, CLI)
     seed.seed(echo=lambda _: None)
 
     def tel(model, *waar):
@@ -88,6 +88,10 @@ def test_seed_maakt_de_synthetische_loods(app):
     # #10: elke boot en elke toewijzing staat in het log, ook die van oud-leden.
     assert tel(Logregel, Logregel.actie == "boot.aangemaakt") == 180
     assert tel(Logregel, Logregel.actie == "plaats.toegewezen") == 150
+    # §6.3: 10 boten van leden op de wachtlijst, verdeeld over minstens drie bootsoorten.
+    rijen = wachtlijst.lijsten()
+    assert sum(len(rij) for _s, rij in rijen) == tel(Wachtlijst) == 10 and len(rijen) >= 3
+    assert tel(Logregel, Logregel.actie == "wachtlijst.toegevoegd") == 10
     seed.seed(echo=lambda _: None)  # tweede keer: niets
     assert tel(Rek) == 10
 

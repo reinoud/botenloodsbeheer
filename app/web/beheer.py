@@ -3,7 +3,17 @@ plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 
-from app.domein import Regelfout, beheerders, boten, indeling, leden, log, toewijzing
+from app.domein import (
+    Regelfout,
+    beheerders,
+    boten,
+    indeling,
+    leden,
+    log,
+    toewijzing,
+    vandaag,
+    wachtlijst,
+)
 from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
@@ -61,9 +71,12 @@ def plaats_aanmaken(rek_id):
 @inloggen_vereist
 def plaats_detail(plaats_id):
     p = _of_404(indeling.plaats, plaats_id)
+    # BLB-014: de wachtenden voor een passende bootsoort bovenaan, de langst wachtende eerst.
+    wachtend = sorted((w for s, rij in wachtlijst.lijsten() if s in p.bootsoorten for w in rij),
+                      key=lambda w: w.aangemeld_op) if p.boot is None else []
     return render_template(
         "plaats.html", plaats=p, oud_lid=p.boot and p.boot.lid and leden.is_oud_lid(p.boot.lid),
-        boten=boten.zonder_plaats() if p.boot is None else [],
+        boten=boten.zonder_plaats() if p.boot is None else [], wachtend=wachtend,
         bootsoorten=indeling.bootsoorten(),
         openbare_url=f"{current_app.config['BASIS_URL']}/p/{p.publieke_sleutel}",
         regels=log.regels([f"plaats:{p.id}"]))
@@ -137,7 +150,8 @@ def boot_aanmaken():
 def boot_detail(boot_id):
     b = _of_404(boten.boot, boot_id)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
-                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden())
+                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
+                           oud_lid=b.lid is not None and leden.is_oud_lid(b.lid), vandaag=vandaag())
 
 
 @bp.post("/boten/<int:boot_id>")
@@ -171,6 +185,33 @@ def boot_verwijderen(boot_id):
     if uitvoeren(boten.boot_verwijderen, boot_id, gelukt="De boot is verwijderd.") is None:
         return redirect(url_for("web.boot_detail", boot_id=boot_id))
     return redirect(url_for("web.boten_overzicht"))
+
+
+# Wachtlijst (BLB-013, BLB-014): de beheerder kiest zelf; de applicatie wijst niet toe
+
+
+@bp.get("/wachtlijst")
+@inloggen_vereist
+def wachtlijst_overzicht():
+    return render_template("wachtlijst.html", lijsten=wachtlijst.lijsten(),
+                           wachttijd=wachtlijst.wachttijd, regels=log.regels(acties=("wachtlijst.",)))
+
+
+@bp.post("/boten/<int:boot_id>/wachtlijst")
+@inloggen_vereist
+def boot_op_wachtlijst(boot_id):
+    uitvoeren(wachtlijst.erop_zetten, boot_id, request.form.get("aangemeld_op"),
+              gelukt="De boot staat op de wachtlijst.")
+    return redirect(url_for("web.boot_detail", boot_id=boot_id))
+
+
+@bp.post("/boten/<int:boot_id>/wachtlijst/verwijderen")
+@inloggen_vereist
+def boot_van_wachtlijst(boot_id):
+    uitvoeren(wachtlijst.eraf_halen, boot_id, gelukt="De boot is van de wachtlijst gehaald.")
+    if request.form.get("terug") == "wachtlijst":
+        return redirect(url_for("web.wachtlijst_overzicht"))
+    return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 
 # Leden (BLB-006): alleen lezen; de bron is leidend en de integratiecontainer importeert

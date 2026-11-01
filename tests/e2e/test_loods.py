@@ -166,7 +166,7 @@ def test_boot_wijzigen_en_weigeren_met_log(page):
     """BLB-005, issue #39: naam en bootsoort wijzigen, een bootsoort die de plaats niet past
     weigeren, en het log van de bootmutaties onder de boot."""
     wachtwoord_instellen(page, "bootwijzigen")
-    rek, code, bootnaam, nieuw = (f"E2E wijzigen {STEMPEL}", f"W{STEMPEL}", f"Wijzigboot {STEMPEL}",
+    rek, code, bootnaam, nieuw = (f"E2E wijzigen {STEMPEL}", f"B{STEMPEL}", f"Wijzigboot {STEMPEL}",
                                   f"Nieuwe naam {STEMPEL}")
     rek_met_plaats(page, rek, code, ["Kajak"])
     boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)

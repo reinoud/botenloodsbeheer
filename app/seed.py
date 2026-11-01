@@ -3,16 +3,16 @@
 Vaste random seed, dus elke run levert hetzelfde op. Alle gegevens zijn verzonnen.
 Afwijkingen van §6.3: seed draait in de worker en importeert geen leden. De leden komen uit
 tests/fixtures/leden.json via de integratiecontainer met de stub en PUT /api/v1/leden, de enige
-route die leden schrijft (ADR-012); seed weigert zonder leden. Wachtlijst en kleuren volgen met
-hun slice. Het testlogo komt niet uit seed maar uit compose.dev.yml (ADR-008).
+route die leden schrijft (ADR-012); seed weigert zonder leden. Kleuren volgen met hun slice. Het testlogo komt niet uit seed maar uit compose.dev.yml (ADR-008).
 """
 
 import random
+from datetime import timedelta
 
 from flask import current_app
 from sqlalchemy import select
 
-from app.domein import CLI, Regelfout, boten, indeling, leden, log, toewijzing
+from app.domein import CLI, Regelfout, boten, indeling, leden, log, toewijzing, vandaag, wachtlijst
 from app.models import Boot, Instelling, Lid, Plaats, Rek, db
 
 VERENIGING = "Kanovereniging De Voorbeeldplas"
@@ -32,6 +32,7 @@ BOTEN_LEDEN = 170
 BOTEN_OUD_LID = 4
 CLUBBOTEN = 6
 MET_PLAATS = 150
+OP_WACHTLIJST = 10
 
 
 class SeedFout(Exception):
@@ -107,6 +108,11 @@ def seed(echo=print):
                 continue
         vrij.remove(p)
         geplaatst += 1
+    # De eerste boten zonder plaats wachten, met een aanmelddatum tot drie jaar terug.
+    wachtend = [b for b in eigen if b.plaats is None][:OP_WACHTLIJST]
+    for b in wachtend:
+        wachtlijst.erop_zetten(b.id, vandaag() - timedelta(days=r.randint(1, 3 * 365)), CLI)
     echo(f"Seed klaar: {len(alle)} leden, {len(REKKEN)} rekken, "
          f"{len(REKKEN) * PLAATSEN_PER_REK} plaatsen, "
-         f"{len(clubboten) + len(oud_boten) + len(eigen)} boten, {geplaatst} met een plaats.")
+         f"{len(clubboten) + len(oud_boten) + len(eigen)} boten, {geplaatst} met een plaats, "
+         f"{len(wachtend)} op de wachtlijst.")

@@ -10,7 +10,7 @@ from datetime import UTC, date, datetime
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, log, vandaag
+from app.domein import Regelfout, log, vandaag, wachtlijst
 from app.models import Boot, Lid, Taakrun, db
 
 TAAK = "ledenimport"
@@ -76,7 +76,8 @@ def alle_leden(zoek=""):
 def lid(lid_id):
     gevonden = db.session.get(Lid, lid_id, options=[
         selectinload(Lid.boten).selectinload(Boot.plaats),
-        selectinload(Lid.boten).selectinload(Boot.bootsoort)])
+        selectinload(Lid.boten).selectinload(Boot.bootsoort),
+        selectinload(Lid.boten).selectinload(Boot.wachtlijst)])
     if gevonden is None:
         raise Regelfout("Dit lid bestaat niet.")
     return gevonden
@@ -122,12 +123,13 @@ def valideer(record):
     return velden
 
 
-def synchroniseer(records):
+def synchroniseer(records, actor):
     """Verwerkt de volledige lijst uit de bron in de lopende transactie; de aanroeper commit.
 
     Gooit Veiligheidsgrens als minder dan de helft van de actieve leden terugkomt; er is dan
     nog niets gewijzigd. Wijzigingen in leden komen niet in het log (ADR-004 v2.1.0); de
-    aantallen gaan naar taakrun.
+    aantallen gaan naar taakrun. Boten van oud-leden gaan van de wachtlijst, met actor in het
+    log (BLB-008, #27).
     """
     dag = vandaag()
     grens = jaren_terug(dag, BEWAARJAREN)
@@ -177,6 +179,7 @@ def synchroniseer(records):
         if nummer not in gezien and lid.uit_bron_op is None:
             lid.uit_bron_op = dag
             aantallen["uit_bron"] += 1
+    wachtlijst.oud_leden_eraf(actor, dag)
     return aantallen
 
 
@@ -192,17 +195,17 @@ def _run_afsluiten(status, aantallen=None, foutmelding=None):
     run.aantallen, run.foutmelding = aantallen or {}, foutmelding
 
 
-def importeer(records):
-    """PUT /api/v1/leden: de volledige lijst uit de bron (ADR-012). Gooit Ongeldig (422),
-    ImportLoopt (409) of Veiligheidsgrens (409); de laatste staat als mislukte run in taakrun.
-    Geeft de aantallen."""
+def importeer(records, actor):
+    """PUT /api/v1/leden: de volledige lijst uit de bron (ADR-012), met het token als actor.
+    Gooit Ongeldig (422), ImportLoopt (409) of Veiligheidsgrens (409); de laatste staat als
+    mislukte run in taakrun. Geeft de aantallen."""
     if not isinstance(records, list) or len(records) > MAX_RECORDS:
         raise Ongeldig(f"leden moet een lijst zijn van hooguit {MAX_RECORDS} records.")
     if not db.session.scalar(select(func.pg_try_advisory_xact_lock(IMPORT_SLOT))):
         db.session.rollback()
         raise ImportLoopt("Er loopt al een import.")
     try:
-        aantallen = synchroniseer(records)
+        aantallen = synchroniseer(records, actor)
     except Veiligheidsgrens as fout:
         db.session.rollback()
         _run_afsluiten("mislukt", foutmelding=str(fout))

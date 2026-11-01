@@ -69,9 +69,10 @@ def importverzoek(_token):
 @bp.put("/leden")
 @aanroep("leden:importeren")
 def leden_importeren(_token):
-    """De volledige lijst uit de bron (ADR-012). Wijzigingen in leden komen niet in het log."""
+    """De volledige lijst uit de bron (ADR-012). Wijzigingen in leden komen niet in het log;
+    boten die daardoor van de wachtlijst gaan wel, met het token als actor (#27)."""
     try:
-        return leden.importeer(_veld("leden"))
+        return leden.importeer(_veld("leden"), tokens.als_actor(_token))
     except leden.Ongeldig as fout:
         return {"fout": str(fout)}, 422
     except (leden.ImportLoopt, leden.Veiligheidsgrens) as fout:

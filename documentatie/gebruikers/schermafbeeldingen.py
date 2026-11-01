@@ -163,6 +163,9 @@ def schermen(browser):
     page.get_by_role("button", name="Boot vastleggen").click()
     expect(page.get_by_text("De boot is vastgelegd.")).to_be_visible()
     o.maak("boot", hoogte=1000)
+    page.get_by_label("Aanmelddatum (leeg is vandaag; een eerdere datum mag)").fill("2025-04-01")
+    o.maak("boot-wachtlijst", element=page.locator("section.kaart",
+                                                   has=page.get_by_role("heading", name="Wachtlijst")))
     page.goto(vrije_plaats)
     kies = page.locator("#boot option", has_text="Zwaluw 7").get_attribute("value")
     page.get_by_label("Boot zonder plaats").select_option(value=kies)
@@ -176,6 +179,8 @@ def schermen(browser):
     page.get_by_label("Geschikt voor").select_option(label="Kajak")
     page.get_by_role("button", name="Filteren").click()
     o.maak("vrij", hoogte=700)
+    page.goto("/wachtlijst")
+    o.maak("wachtlijst", hoogte=1000)
     page.goto("/opgezegd")
     o.maak("opgezegd", hoogte=600)
     page.goto("/opzeggend")

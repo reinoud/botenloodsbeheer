@@ -16,7 +16,7 @@ from sqlalchemy import create_engine, text
 TEST_DB = "botenloods_test"
 # bootsoort niet: de startlijst komt uit de migratie.
 TABELLEN = ("beheerder, passkey, uitnodiging, logregel, instelling, taakrun, rek, plaats, "
-            "plaats_bootsoort, lid, boot, afbeelding, token")
+            "plaats_bootsoort, lid, boot, wachtlijst, afbeelding, token")
 
 
 def db_url(gebruiker, wachtwoord, database=TEST_DB):

@@ -8,9 +8,33 @@
     <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
     <dt>Eigenaar</dt><dd>{{ boot.lid.naam if boot.lid else vereniging ~ ' (clubboot)' }}</dd>
     <dt>Plaats</dt><dd>{% if boot.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">{{ boot.plaats.code }}</a>{% else %}geen{% endif %}</dd>
+    {% if not boot.plaats %}<dt>Wachtlijst</dt><dd>{% if boot.wachtlijst %}sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}nee{% endif %}</dd>{% endif %}
   </dl>
   {% if boot.afbeelding %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}">{% endif %}
 </section>
+{% if not boot.plaats %}
+<section class="kaart">
+  <h2>Wachtlijst</h2>
+  {% if boot.wachtlijst %}
+  <p>{{ boot.naam }} staat sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }} op de wachtlijst voor {{ boot.bootsoort.naam|lower }}. De aanmelddatum is niet te wijzigen.</p>
+  <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=boot.id) }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="knop">Van de wachtlijst halen</button>
+  </form>
+  {% elif not boot.lid %}
+  <p>Een clubboot kan niet op de wachtlijst.</p>
+  {% elif oud_lid %}
+  <p>De eigenaar is oud-lid. De boot kan niet op de wachtlijst.</p>
+  {% else %}
+  <form method="post" action="{{ url_for('web.boot_op_wachtlijst', boot_id=boot.id) }}">
+    {% include "_csrf.html" %}
+    <label for="aangemeld-op">Aanmelddatum (leeg is vandaag; een eerdere datum mag)</label>
+    <input id="aangemeld-op" name="aangemeld_op" type="date" max="{{ vandaag.isoformat() }}">
+    <button type="submit" class="knop">Op de wachtlijst zetten</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
 <section class="kaart">
   <h2>Boot wijzigen</h2>
   <form method="post" action="{{ url_for('web.boot_wijzigen', boot_id=boot.id) }}">

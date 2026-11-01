@@ -83,13 +83,32 @@ Een nieuwe boot heeft nog geen plaats. Op de pagina van de boot wijzig je de naa
 
 ![De pagina van een boot met bootsoort, eigenaar, plaats en foto.](afbeeldingen/boot.png)
 
+## De wachtlijst
+
+Een boot van een lid zonder plaats kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid, de aanmelddatum en de wachttijd. De langst wachtende staat bovenaan. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+
+![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
+
+**Een boot op de wachtlijst zetten:** open de boot en kies onder **Wachtlijst** de knop **Op de wachtlijst zetten**. Laat je de aanmelddatum leeg, dan geldt vandaag. Een eerdere datum mag, zodat wie al op een oude lijst stond zijn wachttijd houdt. Een datum in de toekomst weigert de applicatie. De aanmelddatum is daarna niet te wijzigen. Wil je een andere datum, haal de boot dan van de lijst en zet hem er opnieuw op.
+
+![De pagina van een boot zonder plaats met het formulier om de boot op de wachtlijst te zetten.](afbeeldingen/boot-wachtlijst.png)
+
+De applicatie weigert een clubboot, een boot van een oud-lid, een boot met een plaats en een boot die al op de lijst staat. Een boot op de wachtlijst kan geen clubboot worden; haal hem eerst van de lijst. Krijgt een boot een andere bootsoort, dan staat hij op de lijst van die soort, met dezelfde aanmelddatum. Een verwijderde boot gaat van de lijst.
+
+**Van de lijst halen:** kies op `/wachtlijst` of op de pagina van de boot de knop om de boot van de lijst te halen. Twee gevallen gaan vanzelf:
+
+- een boot die een plaats krijgt, gaat van de lijst;
+- wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder.
+
+Op de pagina van een lid staat per boot of die op de wachtlijst staat en sinds wanneer.
+
 ## Een plaats toewijzen of vrijgeven
 
 De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 ![De pagina van een bezette plaats met boot, eigenaar, adresgegevens en de knop Vrijgeven.](afbeeldingen/plaats-bezet.png)
 
-**Toewijzen:** open een vrije plaats (via `/indeling` of `/vrij`), kies onder **Boot zonder plaats** de boot en kies **Plaats toewijzen**. De applicatie weigert in deze gevallen en zegt waarom:
+**Toewijzen:** open een vrije plaats (via `/indeling` of `/vrij`), kies onder **Boot zonder plaats** de boot en kies **Plaats toewijzen**. Bovenaan de keuzelijst staan de boten op de wachtlijst van een bootsoort die op de plaats past, de langst wachtende eerst. Daaronder staan de andere boten zonder plaats. De applicatie weigert in deze gevallen en zegt waarom:
 
 - de plaats is bezet, of de boot heeft al een plaats;
 - de plaats is niet geschikt voor de bootsoort;
@@ -98,7 +117,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 ![De pagina van een vrije plaats met de keuze van een boot zonder plaats.](afbeeldingen/plaats-vrij.png)
 
-**Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
+**Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. De plaats blijft vrij tot jij een boot kiest, ook als er een wachtlijst is. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
 
 Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, adres, telefoon en e-mail, en de link naar de openbare pagina. Die gegevens zijn alleen voor beheerders.
 
@@ -160,10 +179,10 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 
 | Log | Menu | Inhoud |
 |---|---|---|
-| Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven |
+| Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet (`wachtlijst.toegevoegd`, met de aanmelddatum) of eraf gehaald (`wachtlijst.verwijderd`) |
 | Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling: rekken en plaatsen aanmaken, wijzigen of verwijderen |
 
-Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
+Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
 ![Het mutatielog met tijdstip, wie, handeling, betreft en gegevens.](afbeeldingen/log.png)
 
@@ -193,6 +212,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/boten` | Boten |
 | `/boten/{nummer}` | Een boot |
 | `/vrij` | Vrije plaatsen |
+| `/wachtlijst` | Wachtlijst per bootsoort |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |
 | `/leden` | Leden en de import |
