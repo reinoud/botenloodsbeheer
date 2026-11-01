@@ -14,14 +14,15 @@
 </head>
 <body>
 <h1>Botenloodsbeheer</h1>
-<p class="meta">Gestart op 2026-10-30. Bijgewerkt op 2026-10-31.</p>
+<p class="meta">Gestart op 2026-10-30. Bijgewerkt op 2026-11-01.</p>
 
 <h2>Stand</h2>
 <table>
-  <tr><th>Fase</th><td>Delivery, slice 5</td></tr>
-  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Business outline bevestigd. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 42 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-012 (integratiecontainer, API standaard aan op een intern netwerk) in <code>docs/architecture/</code>, met alle besluiten verwerkt. Slice 1 tot en met 4 gebouwd en gereviewd (issues #1, #8, #11, #13 en #18).</td></tr>
-  <tr><th>Bezig</th><td>Niets. Geen besluit van de stakeholder open.</td></tr>
-  <tr><th>Volgende stap</th><td>Slice 5: API-basis met robottoken als eigen dienst op het interne netwerk. Daarna slice 6: de integratiecontainer.</td></tr>
+  <tr><th>Fase</th><td>Delivery, tussen slice 6 en slice 7</td></tr>
+  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 43 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-013 in <code>docs/architecture/</code>. Slice 1 tot en met 6 gebouwd en gereviewd: inloggen, indeling, overzichten, Excel-export, huisstijl, logo, de API als eigen dienst en de integratiecontainer voor leden. Traefik vervangt Nginx (#29), met certificaten via Let's Encrypt. Gebruikers- en beheerdocumentatie in <code>documentatie/</code> (#30). Workflow die bij een release de images naar ghcr.io pusht (#35).</td></tr>
+  <tr><th>Bezig</th><td>Foundation werkt ADR-013 en de architectuur bij op de afwijkingen bij de bouw van Traefik (#36).</td></tr>
+  <tr><th>Volgende stap</th><td>Twee logs, bootmutaties en techniek (#37, BLB-043): alle besluiten genomen, klaar voor de bouw. Daarna slice 7: de wachtlijst per bootsoort. De eerste release met images in ghcr.io staat nog open (#35).</td></tr>
+  <tr><th>Open werk</th><td>In de <a href="https://github.com/reinoud/botenloodsbeheer/issues">GitHub-issues</a>, met de kleinere restpunten en restrisico's.</td></tr>
 </table>
 
 <h2>Besluiten</h2>
@@ -35,6 +36,10 @@
   <li>Oud-leden 5 jaar na opzegging opgeschoond, zodra geen boot nog een plaats heeft.</li>
   <li>De API gaat aan of uit in de installatie, niet in de applicatie.</li>
   <li>Back-ups vallen buiten de applicatie.</li>
+  <li>Traefik als proxy, met certificaten via Let's Encrypt.</li>
+  <li>Imports en exports draaien in een aparte container die alleen via de API werkt.</li>
+  <li>Images in ghcr.io, packages openbaar.</li>
+  <li>Twee logs: bootmutaties en techniek; elke beheerder ziet beide.</li>
 </ul>
 
 <h2>Open besluiten</h2>
