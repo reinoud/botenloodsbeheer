@@ -170,3 +170,7 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Elke beheerder mag beide logs zien.
 - Onder de pagina van een plaats staan de bootmutaties op die plaats (toegewezen, vrijgegeven). Onder `/indeling` staat geen log meer.
 - `/log` wordt het log van de bootmutaties. Het technische log krijgt een eigen menuoptie ernaast.
+
+### Certificaten
+
+- De gedeelde Traefik vraagt de certificaten aan bij Let's Encrypt.

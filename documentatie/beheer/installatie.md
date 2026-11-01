@@ -26,7 +26,7 @@ De labels zijn getest met `traefik:v3.7.17`. Een andere versie vraagt dat de pro
 - `intern` niet publiceren naar de host;
 - op geen van de drie `forwardedHeaders.trustedIPs` of `forwardedHeaders.insecure` zetten, zodat hij een binnenkomende `X-Forwarded-For` niet vertrouwt;
 - aangesloten zijn op `<INSTALLATIE>_voorkant` en `<INSTALLATIE>_koppeling`;
-- een certresolver hebben voor het certificaat van `DOMEIN`.
+- een certresolver hebben die het certificaat van `DOMEIN` bij Let's Encrypt aanvraagt. In het voorbeeld heet die `letsencrypt` en gebruikt hij de TLS-challenge, dus poort 443 moet vanaf internet bereikbaar zijn en `DOMEIN` moet naar de host wijzen.
 
 Aanbevolen: zet `aliasHeadersStrategy` op `delete` of `reject`, zodat een kop als `X_Forwarded_For` niet ongewijzigd doorgaat. De botenloods gebruikt zo'n kop niet, maar een andere dienst achter dezelfde Traefik misschien wel.
 
@@ -64,7 +64,7 @@ Wachtwoorden en sleutels bevatten alleen letters en cijfers, want ze komen in ee
 | `BASIS_URL` | `https://` en de domeinnaam; QR-codes hangen eraan |
 | `DOMEIN` | de host uit `BASIS_URL`, voor de routers |
 | `INSTALLATIE` | naam voor netwerken en routers, uniek op de host |
-| `TRAEFIK_CERTRESOLVER` | naam van de certresolver in Traefik; verplicht in productie |
+| `TRAEFIK_CERTRESOLVER` | naam van de certresolver voor Let's Encrypt in Traefik, zoals `letsencrypt`; verplicht in productie |
 | `WEBAUTHN_RP_ID` | leeg: de host uit `BASIS_URL`; passkeys hangen eraan |
 | `SECRET_KEY` | ondertekent sessiecookies, minstens 32 tekens |
 | `TOTP_SLEUTEL` | Fernet-sleutel voor de TOTP-geheimen |

@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.0.1
+**Versie:** v1.0.2
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -44,7 +44,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 **Versie.** Getest en vereist is `traefik:v3.7.17`. Een andere versie vraagt dat de proeven opnieuw slagen.
 
-**Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, aangesloten op beide netwerken, en een certresolver. Staat er een load balancer vóór Traefik, dan gaat `PROXY_HOPS` naar 2 en krijgt alleen die het vertrouwen.
+**Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, aangesloten op beide netwerken, en een certresolver die certificaten bij Let's Encrypt aanvraagt (besluit stakeholder 2026-11-01). Staat er een load balancer vóór Traefik, dan gaat `PROXY_HOPS` naar 2 en krijgt alleen die het vertrouwen.
 
 **Nieuwe omgevingsvariabelen.** `DOMEIN` (verplicht, gelijk aan de host uit `BASIS_URL`), `INSTALLATIE` (standaard `botenloods`, voor netwerk- en routernamen, uniek per host) en `TRAEFIK_CERTRESOLVER` (verplicht in productie). `API_URL` wordt instelbaar, standaard `http://traefik:8081/api/v1`.
 
@@ -74,5 +74,6 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.0.2 | 2026-11-01 | Certresolver via Let's Encrypt | Besluit stakeholder 2026-11-01 |
 | v1.0.1 | 2026-10-31 | Proef health: 404 in plaats van 503 bij een ongezonde `web`; zekerheid na de proeven bij de bouw | Besluit stakeholder 2026-10-31, issue #36 |
 | v1.0.0 | 2026-10-31 | Eerste versie | Besluit stakeholder 2026-10-31, issue #29 |
