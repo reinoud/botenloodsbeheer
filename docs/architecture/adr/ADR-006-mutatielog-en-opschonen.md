@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -43,7 +43,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
 | `/indeling`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
 
-Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen` of `oud-lid`). Beide verwijzen naar de boot en het lid. Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
+Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen`, `oud-lid` of `andere eigenaar`). Beide verwijzen naar de boot en het lid. Krijgt een boot op de lijst een andere eigenaar, dan gaat hij van de lijst in dezelfde transactie als `boot.gewijzigd` (besluit stakeholder 2026-11-01). Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
 
 **Opschonen.** Een dagelijkse taak (ADR-007) doet in één transactie:
 
@@ -74,6 +74,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-11-02 | Reden `andere eigenaar` bij `wachtlijst.verwijderd` | Besluit stakeholder 2026-11-01, issue #43 |
 | v1.2.0 | 2026-11-01 | Actienamen en gegevens van de wachtlijst; scherm Wachtlijst in de tabel | Bouw slice 7, issue #43 |
 | v1.1.3 | 2026-11-01 | `boot.gewijzigd`: naam, bootsoort en eigenaar, eigenaar als verwijzing | Besluit stakeholder 2026-11-01, issue #39 |
 | v1.1.2 | 2026-11-01 | Bladeren per 50 regels en link naar het log | Issue #42 |

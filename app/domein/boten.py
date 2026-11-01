@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, afbeeldingen, leden, log
+from app.domein import Regelfout, afbeeldingen, leden, log, wachtlijst
 from app.domein.toewijzing import controleer_past
 from app.models import Boot, Bootsoort, Lid, Plaats, db
 
@@ -59,7 +59,8 @@ def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
 
 def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
     """Wijzigt naam, bootsoort en eigenaar (lid_id None is een clubboot). Een boot met een plaats
-    blijft passen bij die plaats. Het log krijgt alleen een regel bij een echt verschil.
+    blijft passen bij die plaats. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
+    eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
     toewijzing die vlak ervoor is gecommit (READ COMMITTED)."""
     naam = (naam or "").strip()
@@ -99,6 +100,8 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
     if not gegevens:
         db.session.rollback()  # geen verschil: geen logregel, en het slot vrij
         return b
+    if lid_id != oud_lid_id and b.wachtlijst is not None:
+        wachtlijst._eraf(b.wachtlijst, actor, "andere eigenaar")  # besluit stakeholder 2026-11-01
     b.naam, b.bootsoort, b.lid_id = naam, soort, lid_id
     leden_ids = dict.fromkeys(i for i in (oud_lid_id, lid_id) if i is not None)
     log.schrijf(actor, "boot.gewijzigd", [f"boot:{b.id}", *(f"lid:{i}" for i in leden_ids)], gegevens)

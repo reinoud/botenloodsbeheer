@@ -12,7 +12,7 @@ from app.domein import CLI, Actor, Regelfout, boten, leden, log, toewijzing, van
 from app.models import Boot, Logregel, Plaats, Wachtlijst, db
 from tests.unit.hulp import lid, race
 from tests.unit.test_boot_wijzigen import BOOTSLOT, wijzig
-from tests.unit.test_indeling_en_toewijzing import boot, plaats, soort
+from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats, soort
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401 (fixture)
 
 ANNA = Actor("beheerder", 1, "anna")
@@ -42,6 +42,13 @@ def test_zonder_datum_vandaag_met_logregel(app):
     assert (r.actor_naam, r.verwijzingen) == ("anna", [f"boot:{b.id}", f"lid:{b.lid_id}"])
     assert r.gegevens == {"boot": "Zeemeeuw", "bootsoort": "Kajak",
                           "aangemeld_op": vandaag().isoformat()}
+
+
+def test_lege_datum_is_vandaag(app):
+    """Het formulierveld stuurt een lege string; alleen None als leeg zien weigert die."""
+    b = boot(lid().id)
+    wachtlijst.erop_zetten(b.id, "", CLI)
+    assert op_lijst(b).aangemeld_op == vandaag()
 
 
 @pytest.mark.parametrize("dagen", [0, 1, 3650], ids=["vandaag", "gisteren", "tien_jaar_terug"])
@@ -234,6 +241,26 @@ def test_andere_bootsoort_verhuist_naar_die_lijst_met_dezelfde_datum(app):
     assert (s.naam, w.aangemeld_op) == ("Surfski", date(2024, 4, 1))
 
 
+def test_andere_eigenaar_haalt_de_boot_van_de_lijst_met_reden(app):
+    oud = lid()
+    b = boot(oud.id)
+    nieuw = lid("1002")
+    wachtlijst.erop_zetten(b.id, "2024-01-01", CLI)
+    wijzig(b, lid_id=nieuw.id, actor=ANNA)
+    assert op_lijst(b) is None
+    [r] = regels("wachtlijst.verwijderd")
+    assert r.gegevens == {"boot": "Zeemeeuw", "aangemeld_op": "2024-01-01", "reden": "andere eigenaar"}
+    assert r.verwijzingen == [f"boot:{b.id}", f"lid:{oud.id}"] and r.actor_naam == "anna"
+    assert acties()[-2:] == ["wachtlijst.verwijderd", "boot.gewijzigd"]
+
+
+def test_zelfde_eigenaar_houdt_de_boot_op_de_lijst(app):
+    b = boot(lid().id)
+    wachtlijst.erop_zetten(b.id, "2024-01-01", CLI)
+    wijzig(b, naam="Fuut")
+    assert op_lijst(b).aangemeld_op == date(2024, 1, 1) and not regels("wachtlijst.verwijderd")
+
+
 def test_boot_op_de_lijst_wordt_geen_clubboot(app):
     b = boot(lid().id)
     wachtlijst.erop_zetten(b.id, None, CLI)
@@ -268,6 +295,17 @@ def test_gelijktijdig_twee_keer_erop_zetten(app):
                   {"b": b.id}, lambda: wachtlijst.erop_zetten(b.id, None, CLI))
     assert fouten == ["Boot Zeemeeuw staat al op de wachtlijst."]
     assert op_lijst(b).aangemeld_op == date(2024, 1, 1)
+
+
+def test_gelijktijdig_eraf_halen_en_toewijzen(app):
+    """Toewijzen (eerste sessie, slot op de boot) haalt de boot van de lijst; eraf_halen wacht
+    en meldt netjes dat de boot er niet meer op staat."""
+    b = boot(lid().id)
+    wachtlijst.erop_zetten(b.id, None, CLI)
+    fouten = race(app, [BOOTSLOT, "DELETE FROM wachtlijst WHERE boot_id = :b"], {"b": b.id},
+                  lambda: wachtlijst.eraf_halen(b.id, CLI))
+    assert fouten == ["Deze boot staat niet op de wachtlijst."]
+    assert db.session.get(Wachtlijst, b.id) is None
 
 
 # Schermen
@@ -309,6 +347,25 @@ def test_plaats_toont_wachtenden_voor_passende_soort_eerst(ingelogd):  # noqa: F
     wachtend, overig = r.split("Andere boten zonder plaats")
     assert "Kievit" in wachtend and "sinds 01-01-2024" in wachtend
     assert "Snoek" in overig and "Otter" in overig and "Kievit" not in overig
+
+
+def test_clubplaats_toont_geen_wachtenden(ingelogd):  # noqa: F811
+    p = plaats(club=True)
+    wachtlijst.erop_zetten(boot(lid().id, naam="Kievit").id, None, CLI)
+    r = ingelogd.get(f"/plaatsen/{p.id}").text
+    assert "Op de wachtlijst, langst wachtend eerst" not in r
+
+
+def test_andere_eigenaar_geeft_een_melding_aan_de_beheerder(ingelogd):  # noqa: F811
+    b = boot(lid().id)
+    nieuw = lid("1002")
+    wachtlijst.erop_zetten(b.id, None, CLI)
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Zeemeeuw", "bootsoort": soort("Kajak"),
+                                              "eigenaar": nieuw.id}, follow_redirects=True)
+    assert "van de wachtlijst gehaald" in r.text and op_lijst(b) is None
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": soort("Kajak"),
+                                              "eigenaar": nieuw.id}, follow_redirects=True)
+    assert "van de wachtlijst gehaald" not in r.text
 
 
 def test_bezoeker_kan_wachtlijst_niet_zien_of_wijzigen(client):

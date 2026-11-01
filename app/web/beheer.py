@@ -72,8 +72,9 @@ def plaats_aanmaken(rek_id):
 def plaats_detail(plaats_id):
     p = _of_404(indeling.plaats, plaats_id)
     # BLB-014: de wachtenden voor een passende bootsoort bovenaan, de langst wachtende eerst.
+    # Een clubplaats krijgt nooit een boot van een lid (toewijzen weigert dat), dus geen wachtenden.
     wachtend = sorted((w for s, rij in wachtlijst.lijsten() if s in p.bootsoorten for w in rij),
-                      key=lambda w: w.aangemeld_op) if p.boot is None else []
+                      key=lambda w: w.aangemeld_op) if p.boot is None and not p.is_clubplaats else []
     return render_template(
         "plaats.html", plaats=p, oud_lid=p.boot and p.boot.lid and leden.is_oud_lid(p.boot.lid),
         boten=boten.zonder_plaats() if p.boot is None else [], wachtend=wachtend,
@@ -163,8 +164,12 @@ def boot_wijzigen(boot_id):
     if eigenaar != "club" and lid_id is None:
         flash("Kies een eigenaar.", "fout")
     else:
-        uitvoeren(boten.boot_wijzigen, boot_id, request.form.get("naam"),
-                  request.form.get("bootsoort", type=int), lid_id, gelukt="De boot is opgeslagen.")
+        was_wachtend = boten.boot(boot_id).wachtlijst is not None
+        if uitvoeren(boten.boot_wijzigen, boot_id, request.form.get("naam"),
+                     request.form.get("bootsoort", type=int), lid_id,
+                     gelukt="De boot is opgeslagen.") and was_wachtend \
+                and boten.boot(boot_id).wachtlijst is None:
+            flash("De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 

@@ -95,9 +95,10 @@ Een boot van een lid zonder plaats kan op de wachtlijst van zijn bootsoort. Op `
 
 De applicatie weigert een clubboot, een boot van een oud-lid, een boot met een plaats en een boot die al op de lijst staat. Een boot op de wachtlijst kan geen clubboot worden; haal hem eerst van de lijst. Krijgt een boot een andere bootsoort, dan staat hij op de lijst van die soort, met dezelfde aanmelddatum. Een verwijderde boot gaat van de lijst.
 
-**Van de lijst halen:** kies op `/wachtlijst` of op de pagina van de boot de knop om de boot van de lijst te halen. Twee gevallen gaan vanzelf:
+**Van de lijst halen:** kies op `/wachtlijst` of op de pagina van de boot de knop om de boot van de lijst te halen. Drie gevallen gaan vanzelf:
 
 - een boot die een plaats krijgt, gaat van de lijst;
+- krijgt de boot een andere eigenaar (een ander lid), dan gaat hij van de lijst. De applicatie meldt dat en het log noemt de reden `andere eigenaar`. Zet de boot er daarna zo nodig opnieuw op;
 - wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder.
 
 Op de pagina van een lid staat per boot of die op de wachtlijst staat en sinds wanneer.
@@ -108,7 +109,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 ![De pagina van een bezette plaats met boot, eigenaar, adresgegevens en de knop Vrijgeven.](afbeeldingen/plaats-bezet.png)
 
-**Toewijzen:** open een vrije plaats (via `/indeling` of `/vrij`), kies onder **Boot zonder plaats** de boot en kies **Plaats toewijzen**. Bovenaan de keuzelijst staan de boten op de wachtlijst van een bootsoort die op de plaats past, de langst wachtende eerst. Daaronder staan de andere boten zonder plaats. De applicatie weigert in deze gevallen en zegt waarom:
+**Toewijzen:** open een vrije plaats (via `/indeling` of `/vrij`), kies onder **Boot zonder plaats** de boot en kies **Plaats toewijzen**. Bovenaan de keuzelijst staan, bij een gewone plaats, de boten op de wachtlijst van een bootsoort die op de plaats past, de langst wachtende eerst. Daaronder staan de andere boten zonder plaats. De applicatie weigert in deze gevallen en zegt waarom:
 
 - de plaats is bezet, of de boot heeft al een plaats;
 - de plaats is niet geschikt voor de bootsoort;

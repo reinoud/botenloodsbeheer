@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, func, select, update
 from app import config
 from app.config import UPLOAD_MAX
 from app.domein import CLI, Regelfout, instellingen, toewijzing
+from app.domein import vandaag as domein_vandaag
 from app.models import Afbeelding, Instelling, Lid, Logregel, db
 from app.web import huisstijl
 from tests.unit.conftest import API
@@ -153,7 +154,7 @@ def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F8
     for p, eigenaar in ((p1, laat), (p2, vroeg), (p3, al)):
         toewijzing.toewijzen(p.id, boot(eigenaar.id, naam=f"Boot {eigenaar.naam}").id, CLI)
     boot(zonder.id, naam="Boot zonder plaats")
-    vandaag = date.today()
+    vandaag = domein_vandaag()  # tijdzone van de installatie, niet UTC van de container
     opzeggen(laat.id, opzegdatum=vandaag + timedelta(days=60))
     opzeggen(vroeg.id, opzegdatum=vandaag + timedelta(days=1))
     opzeggen(al.id, opzegdatum=vandaag)  # vandaag opgezegd: oud-lid, staat bij BLB-018
