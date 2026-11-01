@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.10
+**Versie:** v0.3.11
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -401,7 +401,7 @@ Prioriteit: Must. Bron: intake (logging), overlay §5. Afhankelijk van: BLB-024.
 Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zien zodat ik meteen zie wat er is gewijzigd.
 
 - Gegeven een overzicht of detailscherm voor beheerders, wanneer de beheerder het opent, dan staat onder het scherm het log met de mutaties die erbij horen, de nieuwste bovenaan. Regels uit het technische log staan alleen onder de eigen menuoptie (BLB-043, besluit 2026-11-01).
-- Gegeven een plaats met een wijziging, wanneer de beheerder het detail van die plaats opent, dan staat de wijziging in het log onder het detail.
+- Gegeven een plaats waaraan een boot is toegewezen of waarvan een boot is vrijgegeven, wanneer de beheerder het detail van die plaats opent, dan staat die mutatie in het log onder het detail. Een wijziging van de plaats zelf (code, bootsoorten, clubplaats) staat in het technische log (BLB-043).
 - Gegeven de openbare pagina, wanneer een bezoeker die opent, dan staat daar geen log.
 
 #### BLB-043 Twee logs: bootmutaties en techniek

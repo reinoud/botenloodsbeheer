@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.6
+**Versie overlay:** v0.3.7
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-01
@@ -131,7 +131,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 | Contract | Regel | Eigenaar | Controle |
 |----------|-------|----------|----------|
 | Openbare pagina | Toont per plaats alleen plaatscode, boot, foto van de boot en naam van de eigenaar. Nooit adres, telefoon of e-mail. | apex, aegis | E2E-test als niet-ingelogde gebruiker |
-| Mutatielog | Elke mutatie wordt gelogd. Onder elk overzicht staat het log met de mutaties die erbij horen. | foundation | Unit- en E2E-test per mutatie |
+| Mutatielog | Elke mutatie wordt gelogd. Onder een overzicht staan de bootmutaties die erbij horen; het technische log staat onder een eigen menuoptie (BLB-043, ADR-006). | foundation | Unit- en E2E-test per mutatie |
 | Bewaartermijn | Gegevens van oud-leden en het mutatielog worden 5 jaar bewaard en daarna verwijderd. | foundation | Test op opschoonroutine |
 | Wachtlijst | Per bootsoort, met zichtbare wachttijd. De beheerder kiest de toewijzing; de applicatie wijst niet automatisch toe. | apex | E2E-test |
 | Clubplaatsen | Gereserveerde plaatsen voor clubboten zijn niet aan leden toe te wijzen. | apex | Unhappy-flow-test |
@@ -189,6 +189,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.7 | 2026-11-01 | Contract Mutatielog: twee logs (#38) | Besluit stakeholder 2026-11-01 |
 | v0.3.6 | 2026-11-01 | Regel over ADR's die het tonen beschrijven uit de terugblik van forge (#37); regel over E2E-gegevens uit de controle door de regie (#37); regel over `draai.sh` uit de terugblik van sentinel (#37) | Lessen |
 | v0.3.5 | 2026-11-01 | Regel over voorbeeldbestanden in `documentatie/` uit de terugblik van foundation (#36); regel over niet-gestagede wijzigingen bij een testrun uit de terugblik van sentinel (#36) | Lessen |
 | v0.3.4 | 2026-10-31 | Regels over de proxy bijgewerkt na de bouw van Traefik (#29); regels uit de terugblikken van forge, sentinel en aegis; regel over `documentatie/` (#30); stand | Bouw #29, lessen |

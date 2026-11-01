@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.2
+**Versie:** v1.1.3
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -34,7 +34,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 ## Gevolgen
 
 - Een beheeractie is een formulier met CSRF-token en een redirect na verwerking (post/redirect/get). Meldingen van de domeinlaag (`Regelfout`) verschijnen als flashbericht.
-- Het mutatielog onder elk overzicht is een gedeelde template-macro die de logregels voor het scherm toont (ADR-006).
+- Het log onder een overzicht is een gedeelde template-macro (`_log.html`) die de regels voor het scherm toont. Overzichten tonen alleen bootmutaties; het technische log staat alleen op `/log/techniek`, onder een eigen menuoptie naast `/log`. Welk scherm welke regels toont en welke schermen geen log hebben (zoals `/indeling`), staat in ADR-006.
 - Andere verenigingen passen de uitstraling aan via instellingen en het logobestand van de installatie (ADR-008), niet via eigen templates. Wie meer wil dan naam, kleuren en logo, vraagt een wijziging in de tokens.
 - Komt er later behoefte aan deelupdates, dan is htmx per scherm toe te voegen zonder de aanpak te wijzigen. Dat besluit kan forge nemen.
 
@@ -42,6 +42,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.3 | 2026-11-01 | Twee logs: overzichten tonen alleen bootmutaties, technisch log onder een eigen menuoptie | Besluit stakeholder 2026-11-01, BLB-043, issue #38 |
 | v1.1.2 | 2026-10-31 | CSP uit Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.1 | 2026-10-31 | Reden bij het alternatief SPA bijgewerkt (de API is niet meer alleen-lezen); logo uit de installatie | Besluiten stakeholder 2026-10-31 |
 | v1.1.0 | 2026-10-31 | Tokens uit een aparte stylesheet `/huisstijl.css` in plaats van een `<style>`-blok met nonce | Slice 3 (issue #13); de CSP blijft ongewijzigd, beoordeeld door aegis |
