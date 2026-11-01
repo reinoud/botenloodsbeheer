@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.8
+**Versie overlay:** v0.3.9
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-01
@@ -76,6 +76,7 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een racetest voor een domeinfunctie laadt het object eerst in dezelfde sessie, zoals `laad_beheerder` dat doet, zodat verouderde attributen na `with_for_update` zichtbaar worden. Gebruik `populate_existing=True` bij een vergrendeling van een object dat al geladen kan zijn.
 - Een E2E-test die gedeelde instellingen wijzigt, zet ze ook terug als hij faalt (try/finally), of krijgt een eigen installatie.
 - Geef een nieuwe webmodule geen naam die al bestaat in `app.web` (zoals een domeinmodule of functie); controleer na het toevoegen dat de route bestaat met `flask routes` of een unittest.
+- Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt.
 - Draai een mutant tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam.
 - Een racetest moet falen met een mutant zonder de vergrendeling. Overleeft de mutant, meld dan waarom de vergrendeling toch nodig is.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
@@ -190,6 +191,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.9 | 2026-11-01 | Regel over grenstests uit de terugblik van sentinel (#42) | Lessen |
 | v0.3.8 | 2026-11-01 | Regel over mutanten tegen het hele testbestand uit de terugblik van sentinel (#42) | Lessen |
 | v0.3.7 | 2026-11-01 | Contract Mutatielog: twee logs (#38) | Besluit stakeholder 2026-11-01 |
 | v0.3.6 | 2026-11-01 | Regel over ADR's die het tonen beschrijven uit de terugblik van forge (#37); regel over E2E-gegevens uit de controle door de regie (#37); regel over `draai.sh` uit de terugblik van sentinel (#37) | Lessen |
