@@ -204,6 +204,11 @@ def test_log_bladert_per_50_regels(ingelogd):
     assert "Meer in het log" in ingelogd.get("/boten").text
 
 
+def test_overzicht_met_49_regels_heeft_geen_link_naar_het_log(ingelogd):
+    _bootmutaties(49)
+    assert "Meer in het log" not in ingelogd.get("/boten").text
+
+
 def test_log_met_precies_50_regels_heeft_geen_volgende_pagina(ingelogd):
     _bootmutaties(50)
     tekst = ingelogd.get("/log").text
