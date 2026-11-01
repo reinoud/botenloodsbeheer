@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.1.0
+**Versie:** v1.1.1
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -50,7 +50,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 **Nieuwe omgevingsvariabelen.** `DOMEIN` (verplicht, gelijk aan de host uit `BASIS_URL`), `INSTALLATIE` (standaard `botenloods`, voor netwerk- en routernamen, uniek per host) en `TRAEFIK_CERTRESOLVER` (verplicht voor `web` in productie). `app/config.py` controleert `DOMEIN` en `TRAEFIK_CERTRESOLVER`. `INSTALLATIE` staat alleen in compose: de applicatie gebruikt de waarde niet, en bij een verkeerde waarde start compose niet, omdat het netwerk niet bestaat. `API_URL` wordt instelbaar in de config van de integratiecontainer, standaard `http://traefik:8081/api/v1`.
 
-**Lokaal.** `compose.dev.yml` krijgt een eigen `traefik` van dezelfde tag. De statische instellingen staan als `command` in `compose.dev.yml`, niet in een bestand: de Docker-provider krijgt de constraint `traefik.docker.network=${INSTALLATIE}_voorkant`, die interpolatie nodig heeft, en Traefik combineert een statisch bestand niet met argumenten. Zonder constraint ziet de lokale Traefik ook de containers van een tweede stack op dezelfde host, zoals die voor de screenshots. Het entrypoint `web` staat op 127.0.0.1:8080 zonder TLS, `intern` op 8081 zonder poort naar de host, en de toegangslog staat aan zoals bij een gedeelde Traefik. Compose maakt `voorkant` en `koppeling` zelf aan, beide intern. Een extra netwerk `lokaal` met uitgang geeft `traefik` en `db` hun poort op 127.0.0.1, omdat een intern netwerk geen poorten publiceert. `docker/nginx/` vervalt.
+**Lokaal.** `compose.dev.yml` krijgt een eigen `traefik` van dezelfde tag. De statische instellingen staan als `command` in `compose.dev.yml`, niet in een bestand: de Docker-provider krijgt de constraint `traefik.docker.network=${INSTALLATIE}_voorkant`, die interpolatie nodig heeft, en Traefik combineert een statisch bestand niet met argumenten. Zonder constraint ziet de lokale Traefik ook de containers van een tweede stack op dezelfde host, zoals die voor de screenshots. Het entrypoint `web` staat op 127.0.0.1:8080 zonder TLS, `intern` op 8081 zonder poort naar de host, en de toegangslog staat aan zoals bij een gedeelde Traefik. `aliasHeadersStrategy` staat lokaal niet: de eis geldt voor de gedeelde Traefik, en de lokale Traefik draait alleen op 127.0.0.1. Compose maakt `voorkant` en `koppeling` zelf aan, beide intern. Een extra netwerk `lokaal` met uitgang geeft `traefik` en `db` hun poort op 127.0.0.1, omdat een intern netwerk geen poorten publiceert. `docker/nginx/` vervalt.
 
 **Zekerheid.** Beide eigenschappen die Probable waren, zijn bij de bouw met een proef aangetoond (`werk/traefik-proeven.md`): `observability.accesslogs=false` per router werkt, en Traefik slaat ongezonde containers over. Een ongezonde of startende `web` heeft dan geen router meer, dus Traefik geeft 404 en geen 503. De stakeholder aanvaardde dat op 2026-10-31 (#36): het duurt alleen zolang `web` start, en een 503 vraagt extra configuratie in Traefik.
 
@@ -76,6 +76,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.1 | 2026-11-01 | Lokaal: `aliasHeadersStrategy` alleen bij de gedeelde Traefik | Review Sentinel, issue #36 |
 | v1.1.0 | 2026-11-01 | Bouw beschreven (issue #36): lokale Traefik met instellingen in `compose.dev.yml` en netwerk `lokaal`, `INSTALLATIE` alleen in compose, `integratie` wacht op een gezonde `api`, 429 zonder `Content-Type`, eis `aliasHeadersStrategy=delete` | Afwijkingen bij de bouw van #29 |
 | v1.0.2 | 2026-11-01 | Certresolver via Let's Encrypt | Besluit stakeholder 2026-11-01 |
 | v1.0.1 | 2026-10-31 | Proef health: 404 in plaats van 503 bij een ongezonde `web`; zekerheid na de proeven bij de bouw | Besluit stakeholder 2026-10-31, issue #36 |
