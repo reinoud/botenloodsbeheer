@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.11
+**Versie overlay:** v0.3.12
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-01
+**Bijgewerkt:** 2026-11-02
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -31,7 +31,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 6 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
+| Stand | Slice 1 tot en met 7 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
@@ -137,6 +137,9 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - `flask seed` draait als de worker (`botenloods_taken`); een nieuwe tabel die seed vult, krijgt rechten voor die rol.
 - Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
 - Een E2E-test op een gedeelde lijst controleert de volgorde over de hele kolom, niet op de eerste rij; eerdere runs laten rijen achter.
+- Noem bij een domeinfunctie die een nieuwe databaserol raakt de test die als die rol draait (marker of fixture), zodat de reviewer de positieve controle niet zelf hoeft te zoeken.
+- Draai `tests/e2e/draai.sh` niet tussen 00:00 en `SYNC_TIJDSTIP` zolang het issue daarover open is.
+- Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam, niet naar hetzelfde bestand.
 
 ## 5. Projectcontracten
 
@@ -201,6 +204,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.12 | 2026-11-02 | Regels over tests per databaserol, de nachtelijke E2E-run en uitvoerbestanden uit de review van slice 7 (#43) | Lessen |
 | v0.3.11 | 2026-11-01 | Regels over migraties in het image, rechten voor seed en E2E-gegevens uit de bouw van slice 7 (#43) | Lessen |
 | v0.3.10 | 2026-11-01 | Regels over E2E-uitnodigingen, slotvolgorde, schermafbeeldingen, backlog tegen ADR en losse proeven uit de bouw en review van #39 | Lessen |
 | v0.3.9 | 2026-11-01 | Regel over grenstests uit de terugblik van sentinel (#42) | Lessen |
