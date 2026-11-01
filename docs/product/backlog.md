@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.13
+**Versie:** v0.3.14
 **Datum:** 2026-11-01
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -252,6 +252,8 @@ Prioriteit: Must. Bron: intake 4, besluit wachtlijst, overlay §5. Afhankelijk v
 Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoort zetten en zien hoe lang ze wachten zodat ik eerlijk kan kiezen wie een plaats krijgt.
 
 - Gegeven een boot zonder plaats, wanneer de beheerder de boot op de wachtlijst zet, dan staat de boot op de wachtlijst van zijn bootsoort, met de datum van aanmelding.
+- Gegeven een boot die op de wachtlijst komt, wanneer de beheerder geen datum invult, dan is de aanmelddatum vandaag; vult de beheerder een eerdere datum in, dan geldt die datum en staat die in het log. Een datum in de toekomst weigert de applicatie (besluit stakeholder 2026-11-01).
+- Gegeven een clubboot of een boot van een oud-lid, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie met de reden.
 - Gegeven de wachtlijst van een bootsoort, wanneer de beheerder die opent, dan toont de lijst per boot het lid, de aanmelddatum en de wachttijd, met de langst wachtende bovenaan. Lijsten van verschillende bootsoorten staan gescheiden.
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die van de lijst haalt, dan is de boot niet meer op de lijst en staat dat in het log.

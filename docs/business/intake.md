@@ -172,6 +172,11 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Onder de pagina van een plaats staan de bootmutaties op die plaats (toegewezen, vrijgegeven). Onder `/indeling` staat geen log meer.
 - `/log` wordt het log van de bootmutaties. Het technische log krijgt een eigen menuoptie ernaast.
 
+### Aanmelddatum op de wachtlijst (slice 7)
+
+- Een boot die op de wachtlijst komt, krijgt standaard de datum van vandaag als aanmelddatum. De beheerder mag een eerdere datum invullen, zodat wie nu op de lijst in de spreadsheet staat zijn wachttijd houdt. Een datum in de toekomst wordt geweigerd. De aanmelddatum staat in het log.
+- De aanmelddatum is achteraf niet te wijzigen. Een andere datum kan alleen door de boot van de lijst te halen en er opnieuw op te zetten.
+
 ### Certificaten
 
 - De gedeelde Traefik vraagt de certificaten aan bij Let's Encrypt.
