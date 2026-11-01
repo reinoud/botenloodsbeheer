@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.5
+**Versie overlay:** v0.3.6
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-01
@@ -122,6 +122,9 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat.
+- Verandert een story welke regels een scherm toont, noem dan ook de ADR's die het tonen beschrijven (zoals ADR-002 en ADR-006), zodat het agent ze in dezelfde ronde bijwerkt of er vooraf een issue voor is.
+- Een E2E-test leunt niet op gegevens van een eerder testbestand. Bestaat er geen route om ze in de test te maken (zoals een token), dan maakt `tests/e2e/draai.sh` ze vers vóór elke aanroep van pytest.
+- `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken.
 
 ## 5. Projectcontracten
 
@@ -186,6 +189,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.6 | 2026-11-01 | Regel over ADR's die het tonen beschrijven uit de terugblik van forge (#37); regel over E2E-gegevens uit de controle door de regie (#37); regel over `draai.sh` uit de terugblik van sentinel (#37) | Lessen |
 | v0.3.5 | 2026-11-01 | Regel over voorbeeldbestanden in `documentatie/` uit de terugblik van foundation (#36); regel over niet-gestagede wijzigingen bij een testrun uit de terugblik van sentinel (#36) | Lessen |
 | v0.3.4 | 2026-10-31 | Regels over de proxy bijgewerkt na de bouw van Traefik (#29); regels uit de terugblikken van forge, sentinel en aegis; regel over `documentatie/` (#30); stand | Bouw #29, lessen |
 | v0.3.3 | 2026-10-31 | Regel in de briefingchecklist uit de terugblik van sentinel (review release-workflow) | Lessen |
