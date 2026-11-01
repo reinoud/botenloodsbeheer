@@ -168,3 +168,5 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Onder elke boot staan de logregels over die boot. Onder elk lid staan de mutaties over de boten van dat lid.
 - Het technische log staat alleen onder een eigen menuoptie, niet onder de overzichten.
 - Elke beheerder mag beide logs zien.
+- Onder de pagina van een plaats staan de bootmutaties op die plaats (toegewezen, vrijgegeven). Onder `/indeling` staat geen log meer.
+- `/log` wordt het log van de bootmutaties. Het technische log krijgt een eigen menuoptie ernaast.

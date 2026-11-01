@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.0.0
+**Versie:** v1.0.1
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -40,7 +40,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 | Interne server op 8081 (ADR-012) | Entrypoint `intern` op 8081, niet gepubliceerd; router `ClientIP(KOPPELNET) && PathPrefix(/api/v1/)` alleen op `intern` | Vanaf `koppeling` 200 op `/api/v1/ik`; vanaf een ander netwerk van Traefik 404; poort 8081 van buiten dicht |
 | `X-Forwarded-For` overschrijven | Traefik vertrouwt geen binnenkomende `X-Forwarded-*` zonder `trustedIPs`; `PROXY_HOPS=1` blijft | Aanroep met `X-Forwarded-For: 10.203.0.99`: het log van de API toont het eigen adres; een token met alleen dat adres op de whitelist krijgt 403 |
 | Logformaat `zonder_code`, geen codes en zoektermen (#5, #14) | Applicatie: Gunicorn schrijft de toegangslog met een eigen loggerklasse, in hetzelfde formaat, pad zonder querystring, `/uitnodiging/...` gemaskeerd, de eigen healthcheck niet. Traefik: `observability.accesslogs=false` op elke router | Per verzoek precies één regel in de log van `web` of `api`; na een zoekopdracht en een uitnodiging staan zoekterm en code nergens, ook niet in de log van Traefik |
-| Health zonder rate limit (ADR-010) | `/health/*` via de algemene router van `web`, zonder `ratelimit`; Traefik stuurt alleen naar gezonde containers | 100 keer `/health/live` zonder 429; gestopte `web` geeft 503 |
+| Health zonder rate limit (ADR-010) | `/health/*` via de algemene router van `web`, zonder `ratelimit`; Traefik stuurt alleen naar gezonde containers | 100 keer `/health/live` zonder 429; een gestopte of startende `web` geeft 404 (besluit stakeholder 2026-10-31) |
 
 **Versie.** Getest en vereist is `traefik:v3.7.17`. Een andere versie vraagt dat de proeven opnieuw slagen.
 
@@ -50,7 +50,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 **Lokaal.** `compose.dev.yml` krijgt een eigen `traefik` van dezelfde tag met `docker/traefik/dev.yml`: `web` op 127.0.0.1:8080 zonder TLS, `intern` op 8081; compose maakt de netwerken zelf aan. `docker/nginx/` vervalt.
 
-**Zekerheid.** Twee eigenschappen zijn Probable tot de proef slaagt: `observability.accesslogs=false` per router, en het overslaan van ongezonde containers. Faalt de eerste, dan start de installatie niet in productie voordat foundation een andere logroute kiest.
+**Zekerheid.** Beide eigenschappen die Probable waren, zijn bij de bouw met een proef aangetoond (`werk/traefik-proeven.md`): `observability.accesslogs=false` per router werkt, en Traefik slaat ongezonde containers over. Een ongezonde of startende `web` heeft dan geen router meer, dus Traefik geeft 404 en geen 503. De stakeholder aanvaardde dat op 2026-10-31 (#36): het duurt alleen zolang `web` start, en een 503 vraagt extra configuratie in Traefik.
 
 ## Alternatieven
 
@@ -74,4 +74,5 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.0.1 | 2026-10-31 | Proef health: 404 in plaats van 503 bij een ongezonde `web`; zekerheid na de proeven bij de bouw | Besluit stakeholder 2026-10-31, issue #36 |
 | v1.0.0 | 2026-10-31 | Eerste versie | Besluit stakeholder 2026-10-31, issue #29 |

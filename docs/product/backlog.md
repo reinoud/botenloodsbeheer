@@ -1,10 +1,10 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.9
+**Versie:** v0.3.10
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
-**Status:** Slice 1 tot en met 3 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
+**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
 
 ## 1. Uitgangspunten
@@ -414,6 +414,9 @@ Als beheerder wil ik het log van de bootmutaties los zien van het technische log
 - Gegeven het log, wanneer de beheerder het technische log opent via de eigen menuoptie, dan staan daar de overige regels: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en wijzigingen in de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen).
 - Gegeven een boot, wanneer de beheerder de pagina van die boot opent, dan staan daaronder de logregels over die boot.
 - Gegeven een lid, wanneer de beheerder de pagina van dat lid opent, dan staan daaronder de bootmutaties over de boten van dat lid.
+- Gegeven een plaats, wanneer de beheerder de pagina van die plaats opent, dan staan daaronder de bootmutaties op die plaats (toegewezen, vrijgegeven).
+- Gegeven `/indeling`, wanneer de beheerder die opent, dan staat daaronder geen log.
+- Gegeven het menu, wanneer de beheerder `/log` opent, dan ziet die het log van de bootmutaties; het technische log heeft een eigen menuoptie ernaast.
 - Gegeven een overzicht, wanneer de beheerder het opent, dan staan daaronder geen regels uit het technische log.
 - Gegeven een nieuwe soort logregel, wanneer die wordt toegevoegd, dan hoort die bij precies één van beide logs; een test faalt als een soort bij geen of bij beide hoort.
 - Gegeven elke beheerder, wanneer die een van beide logs opent, dan ziet die het hele log.

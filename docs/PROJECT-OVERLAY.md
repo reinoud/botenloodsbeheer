@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.3
+**Versie overlay:** v0.3.4
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-10-31
@@ -27,11 +27,11 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Product | Webapplicatie voor het beheer van stallingsplaatsen in de botenloods, met wachtlijst per bootsoort, overzichten, Excel-export, printbare kaartjes met QR-code en een openbare pagina per plaats. |
 | Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
 | Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
-| Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013; tot de bouw van #29 nog Nginx). |
+| Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013). |
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 5 gebouwd. Slice 6 (integratiecontainer, import via de API) gebouwd en in review. |
+| Stand | Slice 1 tot en met 6 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
@@ -78,31 +78,31 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Geef een nieuwe webmodule geen naam die al bestaat in `app.web` (zoals een domeinmodule of functie); controleer na het toevoegen dat de route bestaat met `flask routes` of een unittest.
 - Een racetest moet falen met een mutant zonder de vergrendeling. Overleeft de mutant, meld dan waarom de vergrendeling toch nodig is.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
-- Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan het maskeren in de toegangslog (Gunicorn na ADR-013; tot dan de `$log_uri`-map in `docker/nginx/http.inc`).
+- Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan het maskeren in de toegangslog van Gunicorn (`app/toegangslog.py`).
 - Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen.
 - Raakt een besluit van de stakeholder ook de overlay, dan noemt foundation de verouderde regels in de overlay; de regie werkt ze bij.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
 - Draai vóór de oplevering `git diff` op de leidende bronnen; een besluit dat tijdens het werk is bijgekomen, gaat voor de opdracht. Meld het in je antwoord.
-- Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, herstart ook de proxy (`nginx`, na ADR-013 `traefik`) voordat je E2E-tests of curl-controles draait; anders geeft de API via de proxy 404.
+- Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, wacht je tot de containers healthy zijn voordat je E2E-tests of curl-controles draait; tot dan geeft Traefik 404. Een herstart van de proxy is niet nodig.
 - Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - ADR-008 "zonder metadata" betekent zonder EXIF, tekstblokken en ICC-profiel; de test en de reviewer gebruiken een bronbestand met alle drie.
 - Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
 - Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
 - Draai geen compose-commando terwijl een `git stash` actief is; vergelijk een baseline in een aparte worktree.
-- Controleer na elke wijziging aan de proxy of de toegangslog dat elk verzoek precies één logregel geeft, in het formaat `zonder_code` (na ADR-013 in de log van `web` of `api`, en niets in de log van Traefik).
+- Controleer na elke wijziging aan de proxy of de toegangslog dat elk verzoek precies één logregel geeft, in het formaat `zonder_code`, in de log van `web` of `api`, en niets in de log van Traefik.
 - Elke nieuwe omgevingsvariabele krijgt een test die de variabele zet en `create_app` aanroept (geldige en ongeldige waarde); een test die alleen `app.config` overschrijft, telt niet.
 - Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
 - Geef een reviewer van de API een container op het netwerk `koppeling` mee (`docker run --rm -i --network botenloods_koppeling --entrypoint python botenloods-app`), zodat hij whitelist en rate limit positief kan controleren.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
-- Een proef op een gedeelde rate limit doe je in een losse proxycontainer op de gestagede bestanden (eigen teller, stub als upstream); de gedeelde proxy alleen voor proeven onder de grens.
+- Een proef op een gedeelde rate limit doe je in een losse Traefik met de gestagede labels (eigen teller, stub als upstream); de gedeelde proxy alleen voor proeven onder de grens.
 - Een gemelde afwijking van een ADR krijgt vóór de review een issue of een ADR-wijziging; een melding alleen in een terugblik of issuecommentaar telt niet.
 - Draai na elke nieuwe schrijfroute in de API één aanroep via de proxy tegen de draaiende stack voordat je unittests als bewijs telt; de unittests zetten CSRF en de proxy niet altijd zoals productie.
 - Noem bij een story die een aanroep uit een latere slice beschrijft (zoals BLB-040 en de bootaantallen) of die aanroep in deze slice gebouwd wordt.
 - Geef een reviewer van de API een tweede token zonder het recht van de nieuwe route mee (of zeg dat hij er een mag maken), zodat hij de 403 via de proxy kan controleren.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet.
-- Bij de logcontrole tellen regels uit de foutlog van de proxy (zoals `client intended to send too large body`) apart; meld of zo'n regel gewenst is.
+- Bij de logcontrole tellen regels die Traefik zelf logt (zoals een verzoek zonder router) apart; meld of zo'n regel gewenst is.
 - Verandert een afwijking wat een beheerder ziet of hoe lang die moet wachten, leg die dan vóór de bouw aan apex en de stakeholder voor; een melding achteraf in een issue is te laat.
 - Een uitzondering op een besluit van de stakeholder komt ook in het acceptatiecriterium van de backlog, niet alleen in de ADR.
 - Noem bij een wijziging in de herhaallogica van de container welke API-uitkomsten een open importverzoek sluiten en welke het openlaten, en welke aanroepen de API in het log schrijft (alleen geweigerde).
@@ -114,6 +114,12 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Noem bij een review van screenshots welke schermen geheimen of persoonsgegevens kunnen tonen; de reviewer bekijkt die eerst en de rest steekproefsgewijs.
 - Een script met een eigen compose-project noemt welke images het bouwt en of het die na afloop laat staan.
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
+- Kijk aan het begin en halverwege een bouwopdracht met `git log --oneline` of er commits op de leidende bronnen zijn bijgekomen; een besluit dat tijdens het werk binnenkomt, verwerk je direct en meld je.
+- Een proef boven de grens van een proxy stuurt alleen de kop met `Content-Length`, niet het hele lichaam.
+- Geef elk agent een eigen submap in de scratchpad (`<scratchpad>/<agent>-<taak>/`); de scratchpad wordt gedeeld tussen agents van dezelfde sessie.
+- Een proef op routering in Traefik (welke router een pad krijgt) draait na minstens drie herstarts van Traefik; twee routers die hetzelfde pad kunnen raken, krijgen een expliciete `priority`.
+- Een losse Traefik-proef gebruikt een stub die de body leest en 200 geeft; render de labels met `docker compose config` met dummywaarden voor de verplichte variabelen.
+- Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat.
 
 ## 5. Projectcontracten
 
@@ -178,6 +184,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.4 | 2026-10-31 | Regels over de proxy bijgewerkt na de bouw van Traefik (#29); regels uit de terugblikken van forge, sentinel en aegis; regel over `documentatie/` (#30); stand | Bouw #29, lessen |
 | v0.3.3 | 2026-10-31 | Regel in de briefingchecklist uit de terugblik van sentinel (review release-workflow) | Lessen |
 | v0.3.2 | 2026-10-31 | Twee regels in de briefingchecklist uit de terugblik van sentinel (review gebruikersdocumentatie) | Lessen |
 | v0.3.1 | 2026-10-31 | Drie regels in de briefingchecklist uit de terugblik van prism (gebruikersdocumentatie) | Lessen |
