@@ -165,6 +165,7 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 ### Twee logs (issue #37)
 
 - Er zijn twee logs. Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto vervangen en plaats toegewezen of vrijgegeven. Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling (rekken en plaatsen).
+- Handelingen op de wachtlijst (een boot erop zetten of eraf halen) horen bij het log van de bootmutaties: de beheerder van de botenloods doet ze (besluit stakeholder 2026-11-01, issue #41).
 - Onder elke boot staan de logregels over die boot. Onder elk lid staan de mutaties over de boten van dat lid.
 - Het technische log staat alleen onder een eigen menuoptie, niet onder de overzichten.
 - Elke beheerder mag beide logs zien.

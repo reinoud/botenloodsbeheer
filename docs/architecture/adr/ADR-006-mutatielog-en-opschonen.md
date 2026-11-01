@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.1.0
+**Versie:** v1.1.1
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -26,7 +26,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 
 **Afscherming.** De applicatie heeft geen functie om logregels te wijzigen of te verwijderen. De database-gebruiker van de applicatie heeft op `logregel` alleen `INSERT` en `SELECT`. De opschoning draait in de worker met een aparte database-gebruiker die ook `DELETE` mag. Een fout in de webcode kan het log zo niet aantasten.
 
-**Twee logs.** Er zijn twee logs (BLB-043, besluit stakeholder 2026-11-01). Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto toegevoegd of vervangen, en plaats toegewezen of vrijgegeven. Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen) en de opschoning. Beide staan in dezelfde tabel. De indeling hoort bij de actie en staat in `domein/log` (`BOOTMUTATIES`, `TECHNISCH`); een unittest faalt als een actie bij geen of bij beide hoort. Het veld `soort` blijft `mutatie` of `api` en bepaalt niet in welk log een regel staat. Het technische log toont alles wat geen bootmutatie is, ook acties die de code niet meer schrijft. Een wijziging van een plaats zelf (code, bootsoorten, clubplaats) staat dus in het technische log, niet onder de plaats. De actie `boot.gewijzigd` wordt nog niet geschreven (issue #39).
+**Twee logs.** Er zijn twee logs (BLB-043, besluit stakeholder 2026-11-01). Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto toegevoegd of vervangen, plaats toegewezen of vrijgegeven, en een boot op de wachtlijst gezet of eraf gehaald (besluit stakeholder 2026-11-01, issue #41). Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen) en de opschoning. Beide staan in dezelfde tabel. De indeling hoort bij de actie en staat in `domein/log` (`BOOTMUTATIES`, `TECHNISCH`); een unittest faalt als een actie bij geen of bij beide hoort. Het veld `soort` blijft `mutatie` of `api` en bepaalt niet in welk log een regel staat. Het technische log toont alles wat geen bootmutatie is, ook acties die de code niet meer schrijft. Een wijziging van een plaats zelf (code, bootsoorten, clubplaats) staat dus in het technische log, niet onder de plaats. De actie `boot.gewijzigd` wordt nog niet geschreven (issue #39).
 
 **Tonen.** Elk scherm heeft een vaste filter, altijd binnen één log. Geen overzicht toont regels uit het technische log.
 
@@ -42,7 +42,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
 | `/indeling`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
 
-Elke beheerder ziet beide logs helemaal. De wachtlijst (slice 7) staat nog niet in de indeling; de intake deelt wachtlijstacties niet in bij een van beide logs. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels met een link naar meer.
+Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst (slice 7) komen bij de bouw in `BOOTMUTATIES`; de wachtlijst toont dan zijn bootmutaties. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels met een link naar meer.
 
 **Opschonen.** Een dagelijkse taak (ADR-007) doet in één transactie:
 
@@ -73,5 +73,6 @@ Elke beheerder ziet beide logs helemaal. De wachtlijst (slice 7) staat nog niet 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.1 | 2026-11-01 | Wachtlijstacties zijn bootmutaties | Besluit stakeholder 2026-11-01, issue #41 |
 | v1.1.0 | 2026-11-01 | Twee logs: bootmutaties en techniek, indeling per actie, filter per scherm; rek en tokenoverzicht zonder log; wachtlijst open | Besluit stakeholder 2026-11-01, BLB-043, issue #38 |
 | v1.0.0 | 2026-10-31 | Geslaagde API-aanroepen en wijzigingen in leden door de import niet in het log; versie en wijzigingslog toegevoegd | Besluit stakeholder 2026-10-31 (backlog vraag 20) |

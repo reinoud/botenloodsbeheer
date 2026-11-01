@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.11
+**Versie:** v0.3.12
 **Datum:** 2026-10-31
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -253,6 +253,7 @@ Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoo
 - Gegeven de wachtlijst van een bootsoort, wanneer de beheerder die opent, dan toont de lijst per boot het lid, de aanmelddatum en de wachttijd, met de langst wachtende bovenaan. Lijsten van verschillende bootsoorten staan gescheiden.
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die van de lijst haalt, dan is de boot niet meer op de lijst en staat dat in het log.
+- Gegeven een boot die op de wachtlijst komt of eraf gaat, wanneer de beheerder het log van de bootmutaties of de pagina van de boot opent, dan staat die handeling daar en niet in het technische log (BLB-043, besluit 2026-11-01).
 
 #### BLB-014 Vanaf de wachtlijst een plaats kiezen
 
@@ -410,7 +411,7 @@ Prioriteit: Should. Bron: stakeholder 2026-11-01, intake (Twee logs). Afhankelij
 
 Als beheerder wil ik het log van de bootmutaties los zien van het technische log zodat ik snel vind wat er met de boten in de loods is gebeurd.
 
-- Gegeven het log, wanneer de beheerder het log van de bootmutaties opent, dan staan daar alleen mutaties van boten en hun plaats: een boot aangemaakt, gewijzigd of verwijderd, een foto vervangen, een plaats toegewezen of vrijgegeven.
+- Gegeven het log, wanneer de beheerder het log van de bootmutaties opent, dan staan daar alleen mutaties van boten en hun plaats: een boot aangemaakt, gewijzigd of verwijderd, een foto vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet of eraf gehaald (besluit 2026-11-01).
 - Gegeven het log, wanneer de beheerder het technische log opent via de eigen menuoptie, dan staan daar de overige regels: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en wijzigingen in de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen).
 - Gegeven een boot, wanneer de beheerder de pagina van die boot opent, dan staan daaronder de logregels over die boot.
 - Gegeven een lid, wanneer de beheerder de pagina van dat lid opent, dan staan daaronder de bootmutaties over de boten van dat lid.
