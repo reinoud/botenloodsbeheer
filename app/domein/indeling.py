@@ -122,6 +122,16 @@ def export(vereniging):
     return uit.getvalue()
 
 
+def kaartjes(plaats_ids=(), rek_ids=(), alle=False):
+    """Alleen wat op een kaartje mag (BLB-021, overlay §8), in de volgorde van de loods. Een
+    clubplaats krijgt de naam van de vereniging (een clubboot ligt altijd op een clubplaats);
+    eigenaar is None bij een vrije plaats."""
+    return [{"code": p.code, "sleutel": p.publieke_sleutel, "club": p.is_clubplaats,
+             "eigenaar": p.boot.lid.naam if p.boot and p.boot.lid else None}
+            for r in rekken() for p in r.plaatsen
+            if alle or r.id in rek_ids or p.id in plaats_ids]
+
+
 def rek(rek_id):
     r = db.session.get(Rek, rek_id)
     if r is None:

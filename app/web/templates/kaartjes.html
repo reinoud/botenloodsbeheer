@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titel %}Kaartjes · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Kaartjes</h1>
+<p>Kies de plaatsen, een heel rek of alle plaatsen. Je krijgt een pagina met acht kaartjes per A4, die je print via de browser.</p>
+<form method="get" action="{{ url_for('web.kaartjes_print') }}">
+  <label class="keuze"><input type="checkbox" name="alle" value="1"> Alle plaatsen</label>
+  {% for rek in rekken if rek.plaatsen %}
+  <fieldset>
+    <legend>{{ rek.naam }}</legend>
+    <label class="keuze"><input type="checkbox" name="rek" value="{{ rek.id }}"> Heel {{ rek.naam }}</label>
+    {% for p in rek.plaatsen %}
+    <label class="keuze"><input type="checkbox" name="plaats" value="{{ p.id }}"> {{ p.code }}</label>
+    {% endfor %}
+  </fieldset>
+  {% else %}
+  <p>Er zijn nog geen plaatsen.</p>
+  {% endfor %}
+  <button type="submit" class="knop">Kaartjes maken</button>
+</form>
+{% endblock %}

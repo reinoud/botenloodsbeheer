@@ -1,7 +1,9 @@
 """Overzichten voor de beheerder: vrije plaatsen (BLB-015), plaatsen van oud-leden (BLB-018), van
-leden die gaan opzeggen (BLB-041) en de export van de indeling (BLB-017). Alleen lezen."""
+leden die gaan opzeggen (BLB-041), de export van de indeling (BLB-017) en de kaartjes met
+QR-code (BLB-021). Alleen lezen."""
 
-from flask import render_template, request
+import segno
+from flask import current_app, flash, redirect, render_template, request, url_for
 
 from app.domein import indeling, instellingen, log
 from app.web import bp, inloggen_vereist
@@ -43,3 +45,27 @@ def indeling_export():
         "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": 'attachment; filename="indeling.xlsx"',
     }
+
+
+@bp.get("/kaartjes")
+@inloggen_vereist
+def kaartjes_kiezen():
+    return render_template("kaartjes.html", rekken=indeling.rekken())
+
+
+def qr(sleutel):
+    """De QR-code van de openbare pagina als inline SVG (ADR-011); alleen BASIS_URL en de
+    publieke sleutel, zodat hernoemen het kaartje niet breekt (ADR-003)."""
+    url = f"{current_app.config['BASIS_URL']}/p/{sleutel}"
+    return segno.make(url, error="m").svg_inline(omitsize=True, svgclass="qr-kaartje")
+
+
+@bp.get("/kaartjes/print")
+@inloggen_vereist
+def kaartjes_print():
+    kaartjes = indeling.kaartjes(request.args.getlist("plaats", type=int),
+                                 request.args.getlist("rek", type=int), "alle" in request.args)
+    if not kaartjes:
+        flash("Kies een of meer plaatsen, een rek of alle plaatsen.", "fout")
+        return redirect(url_for("web.kaartjes_kiezen"))
+    return render_template("kaartjes_print.html", kaartjes=kaartjes, qr=qr)

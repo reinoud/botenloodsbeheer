@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.15
-**Datum:** 2026-11-01
+**Versie:** v0.3.16
+**Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -347,6 +347,7 @@ Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen m
 - Gegeven een QR-code op een kaartje, wanneer een bezoeker die scant, dan opent de openbare pagina van die plaats (BLB-020).
 - Gegeven een kaartje, wanneer de beheerder het bekijkt, dan staan er geen adres, telefoonnummer of e-mailadres op.
 - Gegeven een vrije plaats, wanneer de beheerder het kaartje maakt, dan staat er de plaatscode en de vermelding vrij in plaats van een naam.
+- Gegeven een clubplaats, met of zonder clubboot, wanneer de beheerder het kaartje maakt, dan staat er de plaatscode en de naam van de vereniging in plaats van een naam van een lid (ADR-011).
 
 ### EP-07 Inloggen en beheerders
 

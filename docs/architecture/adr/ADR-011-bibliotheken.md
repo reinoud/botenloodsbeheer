@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
-**Versie:** v1.2.1
+**Versie:** v1.3.0
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
@@ -31,7 +31,7 @@ De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die 
 | Lint en opmaak | ruff | Eén snelle tool |
 | Pakketbeheer | uv met lockbestand | Vaste versies en reproduceerbare builds |
 
-**Kaartjes.** De printpagina toont per plaats een kaartje met logo, plaatscode, naam van de eigenaar (of "vrij", of de naam van de vereniging bij een clubplaats) en de QR-code als inline SVG. Print-CSS zet een vast aantal kaartjes per A4 met snijlijnen en voorkomt dat een kaartje over twee pagina's valt. De beheerder kiest één, meerdere of alle plaatsen met selectievakjes of per rek.
+**Kaartjes.** De printpagina toont per plaats een kaartje met logo, plaatscode, naam van de eigenaar (of "vrij", of de naam van de vereniging bij een clubplaats) en de QR-code als inline SVG. Print-CSS zet een vast aantal kaartjes per A4 met snijlijnen en voorkomt dat een kaartje over twee pagina's valt. De beheerder kiest één, meerdere of alle plaatsen met selectievakjes of per rek. Formaat (slice 8): acht kaartjes per A4, in twee kolommen en vier rijen van 95 bij 68 mm binnen een marge van 10 mm. De QR-code is 40 mm breed met foutcorrectie M; een link van zo'n 40 tekens geeft 37 modules van ruim 1 mm, wat een telefoon op een armlengte leest. De server deelt de kaartjes in bladen van acht, zodat elk blad één A4 is, ook in browsers die een raster slecht over pagina's verdelen.
 
 **OpenAPI.** De beschrijving staat in `app/api/openapi.yaml` in de repository (BLB-034). Er is geen route die hem serveert: dat zou PyYAML in het productie-image vragen. Een test vergelijkt de routes van de blueprint met de paden in de beschrijving en controleert de voorbeeldantwoorden tegen de schema's. Een route zonder beschrijving laat de test falen.
 
@@ -57,6 +57,7 @@ De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-02 | Formaat van de kaartjes: acht per A4, QR-code van 40 mm | Slice 8, issue #46; ADR liet het formaat open |
 | v1.2.1 | 2026-10-31 | Traefik in plaats van Nginx in de stack | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.2.0 | 2026-10-31 | Geen `/api/v1/openapi.json` en HTML-pagina; het contract staat in de repository | Afwijking uit slice 5, door de regie overgenomen |
 | v1.1.0 | 2026-10-31 | OpenAPI met schrijvende endpoints; integratiecontainer zonder extra afhankelijkheden | Besluiten stakeholder 2026-10-31, ADR-012 |

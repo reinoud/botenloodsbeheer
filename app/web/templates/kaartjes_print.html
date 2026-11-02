@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{# Alleen plaatscode, naam van de eigenaar (of vrij, of de vereniging) en de QR-code (BLB-021). #}
+{% block titel %}Kaartjes · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<div class="niet-printen">
+  <h1>Kaartjes</h1>
+  <p>{{ kaartjes|length }} {{ 'kaartje' if kaartjes|length == 1 else 'kaartjes' }}, acht per A4. Print deze pagina via de browser of bewaar haar als pdf. Knip langs de stippellijnen.</p>
+  <p><a href="{{ url_for('web.kaartjes_kiezen') }}">Andere plaatsen kiezen</a></p>
+</div>
+{% for blad in kaartjes|batch(8) %}
+<div class="blad">
+  {% for k in blad %}
+  <section class="kaartje" aria-label="Kaartje {{ k.code }}">
+    <div>
+      {% if logo %}<img class="kaartje-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="{{ vereniging }}">{% else %}<p>{{ vereniging }}</p>{% endif %}
+      <p class="kaartje-code">{{ k.code }}</p>
+      <p class="kaartje-eigenaar">{{ vereniging if k.club else k.eigenaar or 'vrij' }}</p>
+    </div>
+    <div role="img" aria-label="QR-code naar de openbare pagina van {{ k.code }}">{{ qr(k.sleutel)|safe }}</div>
+  </section>
+  {% endfor %}
+</div>
+{% endfor %}
+{% endblock %}

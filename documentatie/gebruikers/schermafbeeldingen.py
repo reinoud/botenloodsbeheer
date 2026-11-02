@@ -186,6 +186,12 @@ def schermen(browser):
     page.goto("/opzeggend")
     o.maak("opzeggend", hoogte=600)
 
+    # Kaartjes van het eerste rek (BLB-021).
+    page.goto("/kaartjes")
+    page.locator("fieldset").first.get_by_label("Heel ", exact=False).check()
+    page.get_by_role("button", name="Kaartjes maken").click()
+    o.maak("kaartjes", hoogte=900)
+
     # Leden en import.
     page.goto("/leden")
     page.get_by_role("button", name="Leden nu ophalen").click()

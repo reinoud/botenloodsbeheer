@@ -68,3 +68,21 @@ dd { margin: 0; }
 .log { margin-top: var(--ruimte-4); }
 .status-vrij { color: var(--kleur-primair); font-weight: 600; }
 .status-clubplaats { font-style: italic; }
+
+/* Kaartjes (BLB-021, ADR-011): acht per A4, twee kolommen van 95 mm bij vier rijen van 68 mm,
+   binnen een marge van 10 mm. De stippellijn is de snijlijn. Een blad is één A4. */
+@page { size: A4; margin: 10mm; }
+.blad { display: grid; width: max-content; grid-template-columns: repeat(2, 95mm); grid-auto-rows: 68mm; margin-bottom: var(--ruimte-4); }
+.kaartje { display: grid; grid-template-columns: 1fr 40mm; gap: 4mm; align-items: center; padding: 5mm; border: 1px dashed var(--kleur-tekst); background: var(--kleur-vlak); overflow: hidden; overflow-wrap: anywhere; }
+.kaartje p { margin: 0 0 2mm; }
+.kaartje-logo { display: block; max-width: 100%; max-height: 15mm; margin-bottom: 3mm; }
+.kaartje-code { font-size: 20pt; font-weight: 700; }
+.kaartje-eigenaar { font-size: 12pt; }
+.qr-kaartje { display: block; width: 40mm; height: 40mm; }
+@media print {
+  .kop, .niet-printen, .melding { display: none; }
+  body { background: var(--kleur-vlak); }
+  .inhoud { max-width: none; padding: 0; }
+  .blad { margin: 0; break-after: page; }
+  .blad:last-child { break-after: auto; }
+}

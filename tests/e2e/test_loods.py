@@ -28,6 +28,11 @@ def rek_met_plaats(page, rek, code, soorten, club=False):
     page.get_by_label("Naam van het rek").fill(rek)
     page.get_by_role("button", name="Rek aanmaken").click()
     expect(page.get_by_text("Het rek is aangemaakt.")).to_be_visible()
+    plaats_erbij(page, rek, code, soorten, club)
+
+
+def plaats_erbij(page, rek, code, soorten, club=False):
+    """Een plaats in een bestaand rek, vanaf /indeling."""
     sectie = page.locator("section.kaart", has=page.get_by_role("heading", name=rek, exact=True))
     sectie.get_by_text(f"Plaats toevoegen aan {rek}").click()
     sectie.get_by_label("Plaatscode").fill(code)

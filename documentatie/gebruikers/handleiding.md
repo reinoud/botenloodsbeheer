@@ -146,6 +146,18 @@ Een lid verhuist van **Gaan opzeggen** naar **Opgezegd** zodra de opzegdatum is 
 
 Bovenaan `/indeling` staat **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
 
+## Kaartjes printen
+
+Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
+
+Elk kaartje toont het logo (zonder logo de naam van de vereniging), de plaatscode, de naam van de eigenaar en een QR-code. Bij een vrije plaats staat er "vrij", bij een clubplaats de naam van de vereniging. Adres, telefoon, e-mail en lidnummer staan er niet op.
+
+Print de pagina met **Afdrukken** in de browser, of bewaar haar als pdf. Zet de schaal op 100 procent en de marges op standaard. Knip langs de stippellijnen.
+
+![De printpagina met kaartjes: logo, plaatscode, eigenaar en QR-code, met stippellijnen om te knippen.](afbeeldingen/kaartjes.png)
+
+De QR-code opent de openbare pagina van de plaats. Krijgt een plaats een andere code, dan blijft het oude kaartje naar dezelfde plaats wijzen; alleen de tekst op het kaartje is verouderd. Print dan een nieuw kaartje.
+
 ## De openbare pagina
 
 Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de plaatscode en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam, kleuren en het logo van de vereniging.
@@ -209,6 +221,8 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/beheerders` | Beheerders uitnodigen en beheren |
 | `/indeling` | Rekken en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
+| `/kaartjes` | Plaatsen kiezen voor kaartjes |
+| `/kaartjes/print` | Kaartjes met QR-code om te printen |
 | `/plaatsen/{nummer}` | Een plaats, toewijzen en vrijgeven |
 | `/boten` | Boten |
 | `/boten/{nummer}` | Een boot |
