@@ -30,6 +30,8 @@ Ontbreekt `API_EXTERN_BRONNEN` of is hij leeg, dan start compose met dit bestand
 
 Een aanroep van buiten gaat langs twee controles. Traefik laat alleen adressen uit `API_EXTERN_BRONNEN` door en geeft anders 403; zo'n weigering komt in geen log van de applicatie. Daarna toetst de applicatie de whitelist van het token, op het adres dat Traefik vaststelt. Een adres dat de client zelf in een kop als `X-Forwarded-For` meestuurt, telt niet. Een token buiten zijn whitelist krijgt 401, met een regel `api.geweigerd` in het technische log.
 
+Staat er een load balancer vóór Traefik, dan ziet Traefik het adres van de load balancer. Dan toetsen `externtoegang` en `iprem` dat adres, en niet dat van de client. Zet dan `ipStrategy.depth=1` op beide middlewares en vertrouw in Traefik alleen het adres van de load balancer, zoals bij `inlogrem` ([installatie](installatie.md)).
+
 Een persoonlijk token zonder whitelist werkt vanaf elk adres in `API_EXTERN_BRONNEN`. `0.0.0.0/0,::/0` opent de API voor elk adres; dan begrenst alleen de whitelist van het token. Kies dat alleen als elk token dat buiten gebruikt wordt een whitelist heeft.
 
 De gedeelde Traefik moet aan dezelfde eisen voldoen als bij de installatie, ook op `websecure`: geen `forwardedHeaders.trustedIPs` en `aliasHeadersStrategy=delete` ([installatie](installatie.md)). Anders kan een client zijn adres vervalsen.

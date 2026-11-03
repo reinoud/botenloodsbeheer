@@ -242,7 +242,7 @@ Er zijn twee soorten tokens:
 
 1. Kies **Token maken** (`/tokens/nieuw`).
 2. Kies de soort, een naam (a-z, cijfers, punt, - en _) en hoeveel dagen het geldig is: standaard 365, hooguit 1095 (3 jaar).
-3. Vink minstens één recht aan. `leden:importeren` kan alleen bij een robottoken.
+3. Vink minstens één recht aan. `leden:importeren` staat er niet bij: dat recht geeft wie de installatie beheert met de CLI, aan het robottoken van de integratiecontainer.
 4. Vul de IP-whitelist in: adressen of reeksen, gescheiden door komma's. Het formulier vult het netwerk van de integratiecontainer voor. Een robottoken heeft altijd een whitelist; een persoonlijk token zonder whitelist werkt vanaf elk adres dat de installatie doorlaat.
 5. Kopieer de waarde die verschijnt. Hij is daarna niet meer te zien; ben je hem kwijt, maak dan een nieuw token en trek het oude in.
 
@@ -259,12 +259,12 @@ Een persoonlijk token werkt alleen als wie de installatie beheert de API van bui
 | `leden:lezen` | alle leden met naam, lidnummer en of het een oud-lid is |
 | `wachtlijst:lezen` | de wachtlijst per bootsoort met aanmelddatum |
 | `persoonsgegevens` | bij boten, leden en wachtlijst ook adres, telefoon en e-mail, en bij leden de datums van lidmaatschap en opzegging |
-| `leden:importeren` | de import van leden, alleen voor de integratiecontainer |
+| `leden:importeren` | de import van leden, alleen voor de integratiecontainer en alleen met de CLI te geven |
 | `bootaantallen:lezen` | het aantal boten per bootsoort per lid |
 
 ### Rechten wijzigen en intrekken
 
-Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vinkjes aan en kies je **Rechten opslaan**. De nieuwe rechten gelden vanaf de volgende aanroep.
+Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vinkjes aan en kies je **Rechten opslaan**. De nieuwe rechten gelden vanaf de volgende aanroep. Heeft een token `leden:importeren`, dan blijft dat recht staan; het is alleen met de CLI te geven of af te nemen.
 
 ![Het blok Rechten wijzigen met een uitgeklapt token en de vinkjes per recht.](afbeeldingen/token-rechten.png)
  **Intrekken** werkt direct: de volgende aanroep met dat token wordt geweigerd. Naam, whitelist en vervaldatum zijn niet te wijzigen; daarvoor maak je een nieuw token.

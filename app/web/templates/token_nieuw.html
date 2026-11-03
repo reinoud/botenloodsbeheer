@@ -17,7 +17,7 @@
     <fieldset>
       <legend>Rechten (minstens één)</legend>
       {% for r in rechten %}
-      <label class="keuze"><input type="checkbox" name="recht" value="{{ r }}"{% if r in invoer.rechten %} checked{% endif %}> {{ r }}{% if r == 'leden:importeren' %} (alleen robot){% endif %}</label>
+      <label class="keuze"><input type="checkbox" name="recht" value="{{ r }}"{% if r in invoer.rechten %} checked{% endif %}> {{ r }}</label>
       {% endfor %}
     </fieldset>
     <label for="whitelist">IP-whitelist: adressen of reeksen, gescheiden door komma's. Verplicht bij een robot. Leeg bij een persoonlijk token: elk adres dat de installatie doorlaat.</label>

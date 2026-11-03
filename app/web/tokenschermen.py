@@ -10,11 +10,11 @@ from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
 @bp.get("/tokens")
 @inloggen_vereist
 def tokens_overzicht():
-    return render_template("tokens.html", tokens=tokens.alle(), rechten=tokens.RECHTEN)
+    return render_template("tokens.html", tokens=tokens.alle(), rechten=tokens.WEBRECHTEN)
 
 
 def _formulier(invoer):
-    return render_template("token_nieuw.html", invoer=invoer, rechten=tokens.RECHTEN,
+    return render_template("token_nieuw.html", invoer=invoer, rechten=tokens.WEBRECHTEN,
                            standaard=tokens.STANDAARD_DAGEN, max_dagen=tokens.MAX_DAGEN)
 
 

@@ -19,6 +19,8 @@ from app.models import Beheerder, Token, db
 # Vaste lijst in code (ADR-005, ADR-009).
 RECHTEN = ("plaatsen:lezen", "boten:lezen", "leden:lezen", "wachtlijst:lezen",
            "persoonsgegevens", "leden:importeren", "bootaantallen:lezen")
+CLI_RECHT = "leden:importeren"  # alleen met de CLI te geven (besluit stakeholder 2026-11-03, #52)
+WEBRECHTEN = tuple(r for r in RECHTEN if r != CLI_RECHT)
 MAX_DAGEN = 3 * 365  # hooguit 3 jaar (besluit stakeholder, vraag 1)
 STANDAARD_DAGEN = 365
 NAAM = re.compile(r"[a-z0-9._-]{2,50}")
@@ -83,6 +85,8 @@ def maken(soort, naam, rechten, whitelist, dagen, actor):
     if not NAAM.fullmatch(naam):
         raise Regelfout("Naam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
     rechten = _rechten(rechten, soort)
+    if actor.soort == "beheerder" and CLI_RECHT in rechten:
+        raise Regelfout(f"Het recht {CLI_RECHT} geef je alleen met de CLI (flask token robot).")
     netten = whitelist_lezen(whitelist)
     if soort == "robot" and not netten:
         raise Regelfout("Een robottoken heeft een whitelist nodig.")
@@ -136,13 +140,19 @@ def rechten_wijzigen(token_id, rechten, actor):
     if token is None:
         db.session.rollback()
         raise Regelfout("Er is geen actief token met dit nummer.")
+    oud = list(token.rechten)
     try:
+        if actor.soort == "beheerder":
+            # De webinterface kan het CLI-recht niet geven of afnemen: het blijft zoals het was.
+            if CLI_RECHT in rechten and CLI_RECHT not in oud:
+                raise Regelfout(f"Het recht {CLI_RECHT} geef je alleen met de CLI "
+                                "(flask token robot).")
+            rechten = [r for r in rechten if r != CLI_RECHT] + [r for r in oud if r == CLI_RECHT]
         nieuw = _rechten(rechten, token.soort)
     except Regelfout:
         db.session.rollback()  # het slot niet vasthouden tot het einde van het verzoek
         raise
-    oud = list(token.rechten)
-    if nieuw != oud:
+    if set(nieuw) != set(oud):
         token.rechten = nieuw
         log.schrijf(actor, "token.rechten_gewijzigd", [f"token:{token.id}"],
                     {"naam": token.naam, "oud": oud, "nieuw": nieuw})

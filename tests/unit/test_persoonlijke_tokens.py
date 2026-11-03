@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError, ProgrammingError
 from app.domein import CLI, Actor, Regelfout, beheerders, tokens
 from app.models import Logregel, Token, db
 from tests.unit.conftest import API, EIGENAAR
-from tests.unit.hulp import beheerder_met_wachtwoord
+from tests.unit.hulp import beheerder_met_wachtwoord, race
 from tests.unit.test_tokens import KOPPEL, app_uit_omgeving, bearer
 from tests.unit.test_web import inloggen
 
@@ -84,13 +84,49 @@ def test_persoonlijk_token_hooguit_3_jaar(app, twee):
 
 
 def test_persoonlijk_token_zonder_leden_importeren(app, twee):
-    """BLB-030 criterium 4: weigeren; een robottoken mag het recht wel krijgen."""
+    """BLB-030 criterium 4: weigeren. Een robottoken krijgt het recht alleen met de CLI (#52)."""
     anna, _, _ = twee
     with pytest.raises(Regelfout, match="alleen bij een robottoken"):
         persoonlijk(anna, rechten=("boten:lezen", "leden:importeren"))
+    with pytest.raises(Regelfout, match="alleen met de CLI"):
+        robot(anna, rechten=("leden:importeren",))
     assert db.session.scalar(select(Token)) is None
-    robot(anna, rechten=("leden:importeren",))
+    tokens.robot_maken("koppeling", ["leden:importeren"], [], None, CLI)
     assert db.session.scalar(select(Token.soort)) == "robot"
+
+
+def test_web_geeft_leden_importeren_niet_en_neemt_het_niet_af(app, twee):
+    """#52: het web voegt het CLI-recht niet toe; een token met het recht uit de CLI houdt het.
+    Ongewijzigd opslaan in een andere volgorde geeft geen logregel."""
+    anna, _, _ = twee
+    robot(anna, "zonder")
+    tokens.robot_maken("met", ["leden:importeren", "bootaantallen:lezen"], [], None, CLI)
+    zonder, met = db.session.scalars(select(Token).order_by(Token.naam.desc())).all()
+    with pytest.raises(Regelfout, match="alleen met de CLI"):
+        tokens.rechten_wijzigen(zonder.id, ["boten:lezen", "leden:importeren"], Actor.van(anna))
+    tokens.rechten_wijzigen(met.id, ["bootaantallen:lezen"], Actor.van(anna))  # zoals het formulier
+    assert not logregels("token.rechten_gewijzigd")
+    tokens.rechten_wijzigen(met.id, ["leden:lezen"], Actor.van(anna))
+    db.session.expire_all()
+    assert db.session.get(Token, zonder.id).rechten == ["boten:lezen"]
+    assert db.session.get(Token, met.id).rechten == ["leden:lezen", "leden:importeren"]
+    tokens.rechten_wijzigen(met.id, ["boten:lezen"], CLI)  # de CLI kan het wel afnemen
+    db.session.expire_all()
+    assert db.session.get(Token, met.id).rechten == ["boten:lezen"]
+
+
+def test_rechten_wijzigen_wacht_op_intrekken(app, twee):
+    """FOR UPDATE in _actief: wie de rechten wijzigt terwijl een ander het token intrekt, wacht
+    en krijgt daarna een fout; het ingetrokken token krijgt geen nieuwe rechten."""
+    anna, _, _ = twee
+    persoonlijk(anna)
+    t = db.session.scalar(select(Token))
+    fouten = race(app, ["SELECT id FROM token WHERE id = :t FOR UPDATE",
+                        "UPDATE token SET ingetrokken_op = now() WHERE id = :t"],
+                  {"t": t.id}, lambda: tokens.rechten_wijzigen(t.id, ["leden:lezen"],
+                                                               Actor.van(anna)))
+    assert fouten == ["Er is geen actief token met dit nummer."]
+    assert db.session.get(Token, t.id).rechten == ["boten:lezen"]
 
 
 def test_persoonlijk_token_alleen_door_een_beheerder(app):
@@ -207,7 +243,7 @@ def test_rechten_gelden_vanaf_de_volgende_aanroep_met_logregel(app, api, twee):
 
 @pytest.mark.parametrize("rechten,melding", [
     ([], "minstens één recht"), (["leden:schrijven"], "Onbekend recht"),
-    (["leden:importeren"], "alleen bij een robottoken")])
+    (["leden:importeren"], "alleen met de CLI")])
 def test_ongeldige_rechten_wijzigen_niets(app, twee, rechten, melding):
     anna, _, _ = twee
     persoonlijk(anna)
@@ -285,6 +321,15 @@ def test_nieuw_token_geweigerd_houdt_de_invoer(app, scherm, data, melding):
     r = scherm.post("/tokens/nieuw", data=invoer)
     assert r.status_code == 200 and melding in r.text and 'value="anna-laptop"' in r.text
     assert db.session.scalar(select(Token)) is None
+
+
+def test_formulieren_tonen_leden_importeren_niet(app, scherm):
+    """#52: niet te kiezen bij maken en wijzigen; bij een token dat het heeft een uitleg."""
+    assert 'value="leden:importeren"' not in scherm.get("/tokens/nieuw").text
+    tokens.robot_maken("koppeling", ["leden:importeren"], [], None, CLI)
+    html = scherm.get("/tokens").text
+    assert 'value="leden:importeren"' not in html and 'value="boten:lezen"' in html
+    assert "alleen met de CLI te geven of af te nemen" in html
 
 
 def test_formulier_vult_koppelnet_voor(app, scherm):

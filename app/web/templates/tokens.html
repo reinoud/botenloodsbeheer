@@ -56,6 +56,7 @@
         {% for r in rechten %}
         <label class="keuze"><input type="checkbox" name="recht" value="{{ r }}"{% if r in t.rechten %} checked{% endif %}> {{ r }}</label>
         {% endfor %}
+        {% if 'leden:importeren' in t.rechten %}<p>Dit token heeft ook het recht leden:importeren. Dat blijft staan; het is alleen met de CLI te geven of af te nemen.</p>{% endif %}
       </fieldset>
       <button type="submit" class="knop" aria-label="Rechten opslaan: {{ t.naam }}">Rechten opslaan</button>
     </form>

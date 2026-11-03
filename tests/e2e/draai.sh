@@ -7,6 +7,21 @@ cd "$(dirname "$0")/../.."
 c=(docker compose -f docker-compose.yml -f compose.dev.yml)
 stempel=$(date +%s)
 
+# BLB-042 criterium 7: compose.api-extern.yml start niet zonder API_EXTERN_BRONNEN, en met een
+# waarde komt die in de whitelist van Traefik. Dummywaarden, zodat .env niet meetelt.
+dummy=$(mktemp)
+trap 'rm -f "$dummy"' EXIT
+for v in BASIS_URL DB_API_WACHTWOORD DB_TAKEN_WACHTWOORD DB_WEB_WACHTWOORD DOMEIN \
+         POSTGRES_PASSWORD SECRET_KEY TOTP_SLEUTEL; do echo "$v=x"; done > "$dummy"
+extern=(docker compose --env-file "$dummy" -f docker-compose.yml -f compose.api-extern.yml config)
+for leeg in "-u API_EXTERN_BRONNEN" "API_EXTERN_BRONNEN="; do
+  if env $leeg "${extern[@]}" -q 2>/dev/null; then
+    echo "compose.api-extern.yml start zonder API_EXTERN_BRONNEN ($leeg)." >&2; exit 1
+  fi
+done
+API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0/24" \
+  || { echo "API_EXTERN_BRONNEN komt niet in de whitelist van Traefik." >&2; exit 1; }
+
 # De leden komen via de integratiecontainer met de stub (ADR-012), zoals in de
 # beheerdocumentatie. Een nieuw token in secrets/api_token; na de herstart importeert de
 # container meteen, omdat hij nog geen geslaagde import van vandaag kent.
