@@ -14,7 +14,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import InvalidHashError, VerificationError
 from cryptography.fernet import Fernet
 from flask import current_app
-from sqlalchemy import select
+from sqlalchemy import func, select
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -32,7 +32,7 @@ from webauthn.helpers.structs import (
 )
 
 from app.domein import SYSTEEM, Actor, Regelfout, log
-from app.models import Beheerder, Passkey, Uitnodiging, db
+from app.models import Beheerder, Passkey, Token, Uitnodiging, db
 
 UITNODIGING_GELDIG = timedelta(hours=24)
 MAX_POGINGEN = 5
@@ -385,10 +385,12 @@ def deblokkeren(beheerder_id, actor):
 
 
 def verwijderen(beheerder_id, actor):
-    """Passkeys en uitnodigingen gaan mee (ON DELETE CASCADE); het log blijft."""
+    """Passkeys, uitnodigingen en persoonlijke tokens gaan mee (ON DELETE CASCADE, met de rechten
+    van de eigenaar van de tabel); het log blijft en noemt het aantal tokens (ADR-005)."""
     b = _ander_account(beheerder_id, actor, "verwijderen")
+    aantal = db.session.scalar(select(func.count(Token.id)).where(Token.beheerder_id == b.id))
     log.schrijf(actor, "beheerder.verwijderd", [f"beheerder:{b.id}"],
-                {"gebruikersnaam": b.gebruikersnaam})
+                {"gebruikersnaam": b.gebruikersnaam, "tokens": aantal})
     db.session.delete(b)
     db.session.commit()
 

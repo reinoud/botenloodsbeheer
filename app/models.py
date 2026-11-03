@@ -254,7 +254,7 @@ class Wachtlijst(db.Model):
 
 class Token(db.Model):
     """API-token (ADR-005). De waarde staat nergens; alleen de prefix en een SHA-256-hash.
-    Persoonlijke tokens (met beheerder) volgen in slice 10."""
+    Een persoonlijk token hoort bij een beheerder en gaat mee als die wordt verwijderd."""
 
     __tablename__ = "token"
     __table_args__ = (
@@ -262,6 +262,8 @@ class Token(db.Model):
         CheckConstraint("cardinality(rechten) > 0", name="minstens_een_recht"),
         CheckConstraint("soort <> 'robot' OR cardinality(ip_whitelist) > 0",
                         name="robot_met_whitelist"),
+        CheckConstraint("(soort = 'persoonlijk') = (beheerder_id IS NOT NULL)",
+                        name="persoonlijk_met_beheerder"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -275,3 +277,8 @@ class Token(db.Model):
     verloopt_op: Mapped[datetime] = mapped_column(Tijdstip)
     ingetrokken_op: Mapped[datetime | None] = mapped_column(Tijdstip)
     laatst_gebruikt_op: Mapped[datetime | None] = mapped_column(Tijdstip)
+    beheerder_id: Mapped[int | None] = mapped_column(ForeignKey("beheerder.id", ondelete="CASCADE"))
+    gemaakt_door: Mapped[str] = mapped_column(String(50))  # gebruikersnaam of cli (BLB-031)
+
+    # Alleen web laadt deze relatie: api mag van beheerder alleen id en actief lezen.
+    beheerder: Mapped[Beheerder | None] = relationship()

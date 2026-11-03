@@ -3,17 +3,22 @@
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.7.0
+  version: 0.8.0
   description: >
-    Alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van Traefik op
-    poort 8081.
+    Standaard alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van
+    Traefik op poort 8081. Met compose.api-extern.yml ook via https://DOMEIN/api/v1, alleen vanaf
+    adressen in API_EXTERN_BRONNEN (anders 403 van Traefik).
     Elke aanroep heeft een token nodig (`Authorization: Bearer blb_...`). Het token moet bestaan,
     niet verlopen of ingetrokken zijn, de aanroep moet van een adres in de IP-whitelist komen en
-    het token moet het recht van de aanroep hebben. Een weigering geeft 401, of 403 bij een
+    het token moet het recht van de aanroep hebben. Een persoonlijk token werkt alleen zolang de
+    beheerder actief is; een lege whitelist betekent elk adres dat de installatie doorlaat. Een
+    weigering geeft 401, of 403 bij een
     ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
     dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`.
 servers:
   - url: http://traefik:8081/api/v1
+  - url: https://DOMEIN/api/v1
+    description: Alleen met compose.api-extern.yml
 security:
   - token: []
 paths:
@@ -58,6 +63,39 @@ paths:
         "429":
           $ref: "#/components/responses/TeVeel"
   /leden:
+    get:
+      summary: Alle leden en oud-leden, op lidnummer
+      description: >
+        Recht: `leden:lezen`. Argumenten: geen. De hele lijst. Adres, telefoon, e-mail, lid sinds
+        en opzegdatum alleen met het recht `persoonsgegevens`; zonder dat recht ontbreken die
+        velden. Een veld zonder waarde is `null`.
+      responses:
+        "200":
+          description: Eén element per lid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Leden"
+              examples:
+                zonder_persoonsgegevens:
+                  value:
+                    - {lidnummer: "1001", naam: Anna Voorbeeld, oud_lid: false}
+                met_persoonsgegevens:
+                  value:
+                    - lidnummer: "1001"
+                      naam: Anna Voorbeeld
+                      oud_lid: false
+                      adres: Proefweg 1, 1234 AB Voorbeelddorp
+                      telefoon: 06-00000000
+                      email: anna@example.org
+                      lid_sinds: "2020-04-01"
+                      opzegdatum: null
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
     put:
       summary: Importeert de volledige ledenlijst uit de bron
       description: >
@@ -101,9 +139,11 @@ paths:
           $ref: "#/components/responses/GeenToegang"
         "409":
           description: >
-            Er loopt al een import, of de lijst bevat minder dan de helft van het aantal actieve
-            leden (veiligheidsgrens). Er is niets gewijzigd; de veiligheidsgrens staat als
-            mislukte import bij de leden.
+            Er loopt al een import of de dagelijkse opschoning (die hetzelfde slot neemt), of de
+            lijst bevat minder dan de helft van het aantal actieve leden (veiligheidsgrens). Er is
+            niets gewijzigd; de veiligheidsgrens staat als mislukte import bij de leden. Bij een
+            lopende import of opschoning is de tekst "Er loopt al een import."; probeer later
+            opnieuw.
           content:
             application/json:
               schema:
@@ -145,6 +185,97 @@ paths:
           $ref: "#/components/responses/GeenToegang"
         "422":
           $ref: "#/components/responses/Ongeldig"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+  /plaatsen:
+    get:
+      summary: Alle plaatsen, in de volgorde van het overzicht
+      description: >
+        Recht: `plaatsen:lezen`. Argumenten: geen. De hele lijst, zonder filters of paginering.
+        Geen persoonsgegevens. `boot` is `null` bij een lege plaats.
+      responses:
+        "200":
+          description: Eén element per plaats, per rek in de volgorde van de loods
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plaatsen"
+              example:
+                - code: A01
+                  rek: Rek A
+                  clubplaats: false
+                  bootsoorten: [Kajak, Surfski]
+                  boot: {id: 7, naam: Zeemeeuw}
+                - code: A02
+                  rek: Rek A
+                  clubplaats: true
+                  bootsoorten: [Kajak]
+                  boot: null
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+  /boten:
+    get:
+      summary: Alle boten, op naam
+      description: >
+        Recht: `boten:lezen`. Argumenten: geen. De hele lijst. `plaats` is de plaatscode of
+        `null`; `eigenaar` is `null` bij een clubboot. Adres, telefoon en e-mail van de eigenaar
+        staan er alleen in met het recht `persoonsgegevens`; zonder dat recht ontbreken die velden.
+      responses:
+        "200":
+          description: Eén element per boot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Boten"
+              examples:
+                zonder_persoonsgegevens:
+                  value:
+                    - id: 7
+                      naam: Zeemeeuw
+                      bootsoort: Kajak
+                      plaats: A01
+                      eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld}
+                met_persoonsgegevens:
+                  value:
+                    - id: 7
+                      naam: Zeemeeuw
+                      bootsoort: Kajak
+                      plaats: A01
+                      eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld,
+                                 adres: "Proefweg 1, 1234 AB Voorbeelddorp",
+                                 telefoon: 06-00000000, email: anna@example.org}
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
+  /wachtlijst:
+    get:
+      summary: De wachtlijst, per bootsoort de langst wachtende eerst
+      description: >
+        Recht: `wachtlijst:lezen`. Argumenten: geen. Boten van oud-leden staan er niet in, net als
+        op het scherm. Adres, telefoon en e-mail van de eigenaar alleen met `persoonsgegevens`.
+      responses:
+        "200":
+          description: Eén element per boot op de wachtlijst
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wachtlijst"
+              example:
+                - bootsoort: Kajak
+                  boot: {id: 12, naam: Reiger}
+                  eigenaar: {lidnummer: "1002", naam: Bert Voorbeeld}
+                  aangemeld_op: "2026-03-01"
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
         "429":
           $ref: "#/components/responses/TeVeel"
   /bootaantallen:
@@ -199,6 +330,108 @@ components:
           type: string
           format: date
           description: Dag waarop het token verloopt, JJJJ-MM-DD
+    Bootkort:
+      type: [object, "null"]
+      required: [id, naam]
+      additionalProperties: false
+      properties:
+        id:
+          type: integer
+        naam:
+          type: string
+    Eigenaar:
+      type: [object, "null"]
+      description: "`null` bij een clubboot. Adres, telefoon en e-mail alleen met `persoonsgegevens`."
+      required: [lidnummer, naam]
+      additionalProperties: false
+      properties:
+        lidnummer:
+          type: string
+        naam:
+          type: string
+        adres:
+          type: [string, "null"]
+        telefoon:
+          type: [string, "null"]
+        email:
+          type: [string, "null"]
+    Plaatsen:
+      type: array
+      items:
+        type: object
+        required: [code, rek, clubplaats, bootsoorten, boot]
+        additionalProperties: false
+        properties:
+          code:
+            type: string
+          rek:
+            type: string
+          clubplaats:
+            type: boolean
+          bootsoorten:
+            type: array
+            items:
+              type: string
+          boot:
+            $ref: "#/components/schemas/Bootkort"
+    Boten:
+      type: array
+      items:
+        type: object
+        required: [id, naam, bootsoort, plaats, eigenaar]
+        additionalProperties: false
+        properties:
+          id:
+            type: integer
+          naam:
+            type: string
+          bootsoort:
+            type: string
+          plaats:
+            type: [string, "null"]
+          eigenaar:
+            $ref: "#/components/schemas/Eigenaar"
+    Leden:
+      type: array
+      items:
+        type: object
+        required: [lidnummer, naam, oud_lid]
+        additionalProperties: false
+        properties:
+          lidnummer:
+            type: string
+          naam:
+            type: string
+          oud_lid:
+            type: boolean
+          adres:
+            type: [string, "null"]
+          telefoon:
+            type: [string, "null"]
+          email:
+            type: [string, "null"]
+          lid_sinds:
+            type: [string, "null"]
+            format: date
+          opzegdatum:
+            type: [string, "null"]
+            format: date
+    Wachtlijst:
+      type: array
+      items:
+        type: object
+        required: [bootsoort, boot, eigenaar, aangemeld_op]
+        additionalProperties: false
+        properties:
+          bootsoort:
+            type: string
+          boot:
+            $ref: "#/components/schemas/Bootkort"
+          eigenaar:
+            $ref: "#/components/schemas/Eigenaar"
+          aangemeld_op:
+            type: string
+            format: date
     Bootaantallen:
       type: array
       items:

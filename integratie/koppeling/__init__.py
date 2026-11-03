@@ -109,7 +109,9 @@ class Koppeling:
         except bronnen.LedenbronFout as fout:
             self._fout(nu, token, str(fout), van_api=False)
         except ApiFout as fout:
-            # Een 409 sluit het verzoek (veiligheidsgrens) of een lopende import doet dat.
+            # Een 409 is geen fout van de API: de veiligheidsgrens sluit het verzoek, en een
+            # lopende import of opschoning houdt het importslot (#49). Een verzoek dat dan nog
+            # open staat, pakt de volgende ronde van de lus op.
             self._fout(nu, token, str(fout), van_api=str(fout) != "HTTP 409")
         except Exception as fout:  # noqa: BLE001  de lus draait door; alleen het soort fout
             self._fout(nu, token, type(fout).__name__, van_api=True)

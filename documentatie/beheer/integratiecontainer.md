@@ -1,7 +1,7 @@
 # Integratiecontainer
 
-**Versie:** v2.0.0
-**Datum:** 2026-10-31
+**Versie:** v2.2.0
+**Datum:** 2026-11-03
 **Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`
 
 De integratiecontainer haalt de leden uit de ledenbron en stuurt ze naar de API, via het entrypoint `intern` van Traefik over het netwerk `koppeling`. De database en de dienst `api` bereikt hij niet. De inloggegevens van de bron staan alleen in zijn omgeving.
@@ -73,7 +73,7 @@ roep("GET", "/bootaantallen")
 #                                             "C11": 0, "Supboard": 0}}])
 ```
 
-Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import (409), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum van meer dan 5 jaar geleden telt als `overgeslagen`, zodat een opgeschoond oud-lid niet terugkomt.
+Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import of opschoning (409, "Er loopt al een import."; de opschoning houdt hetzelfde slot), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum van meer dan 5 jaar geleden telt als `overgeslagen`, zodat een opgeschoond oud-lid niet terugkomt.
 
 ## Bootaantallen
 
@@ -99,6 +99,7 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.2.0 | 2026-11-03 | 409 ook tijdens de opschoning | Restpunt review #49, issue #51 |
 | v2.1.0 | 2026-11-02 | `GET /bootaantallen` gebouwd, met voorbeeldcode | BLB-009, BLB-040, slice 9 |
 | v2.0.0 | 2026-10-31 | Verplaatst uit `docs/beheer/`; via Traefik; export van bootaantallen; ingekort | ADR-013, issue #30 |
 | v1.0.0 | 2026-10-31 | Eerste versie | BLB-040, slice 6 |

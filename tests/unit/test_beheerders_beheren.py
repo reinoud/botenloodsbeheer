@@ -85,7 +85,7 @@ def test_verwijderen_met_passkeys_en_log(app, twee):
     assert db.session.get(Beheerder, bert.id) is None
     assert db.session.scalar(select(Passkey)) is None
     r = db.session.scalars(select(Logregel).order_by(Logregel.id.desc())).first()
-    assert r.actie == "beheerder.verwijderd" and r.gegevens == {"gebruikersnaam": "bert"}
+    assert r.actie == "beheerder.verwijderd" and r.gegevens == {"gebruikersnaam": "bert", "tokens": 0}
 
 
 def test_herstel_trekt_alles_in_en_geeft_nieuwe_link(app, twee):

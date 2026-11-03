@@ -340,3 +340,23 @@ def test_applicatie_kent_de_bron_niet():
         assert not [k for k in omgeving if k.startswith(("LEDENBRON", "SYNC", "EBOEKHOUDEN"))]
     assert not (ROOT / "app/ledenbron").exists()
     assert not [k for k in config.laad() if "LEDENBRON" in k or "SYNC" in k]
+
+
+def test_api_van_buiten_alleen_met_compose_api_extern():
+    """BLB-042, ADR-013 v1.2.0: alleen labels op api; een router op websecure met de whitelist
+    van de installatie vóór de rate limits van intern; zonder API_EXTERN_BRONNEN start compose
+    niet (de proef met een losse Traefik toont de werking)."""
+    extern = yaml.safe_load((ROOT / "compose.api-extern.yml").read_text())
+    assert set(extern) == {"services"} and set(extern["services"]) == {"api"}
+    assert set(extern["services"]["api"]) == {"labels"}
+    labels = dict(regel.split("=", 1) for regel in extern["services"]["api"]["labels"])
+    i, router = "${INSTALLATIE:-botenloods}", "traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern"
+    assert labels[f"{router}.entrypoints"] == "websecure"
+    assert labels[f"{router}.rule"] == "Host(`${DOMEIN}`) && PathPrefix(`/api/v1/`)"
+    assert labels[f"{router}.priority"] == "2000" and labels[f"{router}.tls"] == "true"
+    assert labels[f"{router}.observability.accesslogs"] == "false"
+    assert labels[f"{router}.middlewares"].split(",") == [
+        f"{i}-nosniff", f"{i}-externtoegang", f"{i}-tokenrem", f"{i}-iprem", f"{i}-3mb"]
+    bronnen = labels[f"traefik.http.middlewares.{i}-externtoegang.ipallowlist.sourcerange"]
+    assert bronnen.startswith("${API_EXTERN_BRONNEN:?")
+    assert not [k for k in labels if "ipstrategy" in k.lower()]  # het verbindingsadres telt

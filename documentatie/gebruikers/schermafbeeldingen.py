@@ -71,7 +71,8 @@ class Opnamen:
 
 
 def verberg_geheimen(page):
-    """QR-code en sleutel zijn een TOTP-geheim; de uitnodigingslink bevat de eenmalige code."""
+    """QR-code en sleutel zijn een TOTP-geheim; de uitnodigingslink bevat de eenmalige code; de
+    tokenwaarde is een geheim."""
     page.evaluate("""() => {
         const qr = document.querySelector('img.qr');
         if (qr) { const b = qr.getBoundingClientRect(); qr.removeAttribute('src'); qr.alt = '';
@@ -80,6 +81,8 @@ def verberg_geheimen(page):
         if (sleutel) sleutel.textContent = 'ABCD EFGH IJKL MNOP';
         const link = document.querySelector('#uitnodigingslink');
         if (link) link.textContent = link.textContent.replace(/\\/uitnodiging\\/.*/, '/uitnodiging/<code>');
+        const token = document.querySelector('#tokenwaarde');
+        if (token) token.textContent = 'blb_<waarde>';
     }""")
 
 
@@ -133,6 +136,19 @@ def schermen(browser):
     o.maak("uitnodiging-link", hoogte=400)
     page.goto("/beheerders")
     o.maak("beheerders", hoogte=700)
+    # Tokens: een persoonlijk token en een robottoken, binnen 10 minuten na het inloggen.
+    page.goto("/tokens/nieuw")
+    page.get_by_label("Naam (a-z, cijfers, punt, - en _)").fill("laptop-penningmeester")
+    for recht in ("boten:lezen", "leden:lezen"):
+        page.get_by_label(recht, exact=True).check()
+    o.maak("token-nieuw", hoogte=900)
+    page.get_by_role("button", name="Token maken").click()
+    verberg_geheimen(page)
+    o.maak("token-waarde", hoogte=400)
+    page.goto("/tokens")
+    o.maak("tokens", hoogte=900)
+    page.locator("summary", has_text="laptop-penningmeester").click()
+    o.maak("token-rechten", element=page.locator("section.kaart").nth(1))
     page.goto("/profiel")
     o.maak("profiel", hoogte=700)
 

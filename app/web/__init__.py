@@ -145,5 +145,5 @@ def technisch_log():
     return _logpagina(technisch=True)
 
 
-from app.web import beheer, huisstijl, inloggen, openbaar, overzichten  # noqa: F401
+from app.web import beheer, huisstijl, inloggen, openbaar, overzichten, tokenschermen  # noqa: F401
 from app.web.health import health  # noqa: F401

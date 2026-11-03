@@ -1,5 +1,6 @@
 """API /api/v1 (ADR-005, ADR-012). Alleen de dienst api registreert deze blueprint; Traefik
-stuurt alleen het entrypoint intern op poort 8081 hierheen (ADR-013). Contract: openapi.yaml."""
+stuurt het entrypoint intern op poort 8081 hierheen, en met compose.api-extern.yml ook websecure
+(ADR-013). Contract: openapi.yaml."""
 
 from functools import wraps
 from zoneinfo import ZoneInfo
@@ -7,7 +8,7 @@ from zoneinfo import ZoneInfo
 from flask import Blueprint, current_app, request
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from app.domein import boten, leden, tokens
+from app.domein import boten, leden, tokens, uitlezen
 
 bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -95,3 +96,34 @@ def bootaantallen(_token):
     """Per lid het aantal boten met een plaats per bootsoort (BLB-009); terugschrijven doet de
     integratiecontainer pas als de vereniging dat aanzet (ADR-004)."""
     return boten.bootaantallen_ophalen()
+
+
+# Leesaanroepen (ADR-012 v1.6.0): de hele lijst, zonder filters. persoonsgegevens voegt velden toe.
+
+
+def _met_persoonsgegevens(token):
+    return "persoonsgegevens" in token.rechten
+
+
+@bp.get("/plaatsen")
+@aanroep("plaatsen:lezen")
+def plaatsen(_token):
+    return uitlezen.plaatsen()
+
+
+@bp.get("/boten")
+@aanroep("boten:lezen")
+def boten_lezen(token):
+    return uitlezen.boten(_met_persoonsgegevens(token))
+
+
+@bp.get("/leden")
+@aanroep("leden:lezen")
+def leden_lezen(token):
+    return uitlezen.leden(_met_persoonsgegevens(token))
+
+
+@bp.get("/wachtlijst")
+@aanroep("wachtlijst:lezen")
+def wachtlijst(token):
+    return uitlezen.wachtlijst(_met_persoonsgegevens(token))

@@ -334,6 +334,7 @@ def test_openapi_is_geldig_en_beschrijft_elke_route(app):
     routes = {r.rule.removeprefix("/api/v1") for r in api_app.url_map.iter_rules()
               if r.endpoint.startswith(api.bp.name + ".")}
     assert routes == set(SPEC["paths"]) == {"/ik", "/leden", "/leden/importverzoek",
-                                            "/leden/import-mislukt", "/bootaantallen"}
+                                            "/leden/import-mislukt", "/bootaantallen",
+                                            "/plaatsen", "/boten", "/wachtlijst"}
     voorbeeld = SPEC["paths"]["/ik"]["get"]["responses"]["200"]["content"]["application/json"]
     jsonschema.validate(voorbeeld["example"], SPEC["components"]["schemas"]["Ik"])

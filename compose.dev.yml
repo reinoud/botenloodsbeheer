@@ -92,6 +92,7 @@ services:
       - ./.env.example:/app/.env.example:ro
       - ./docker-compose.yml:/app/docker-compose.yml:ro
       - ./compose.dev.yml:/app/compose.dev.yml:ro
+      - ./compose.api-extern.yml:/app/compose.api-extern.yml:ro
     depends_on:
       db: {condition: service_healthy}
 

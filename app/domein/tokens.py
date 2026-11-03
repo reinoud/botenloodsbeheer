@@ -1,5 +1,5 @@
-"""API-tokens (ADR-005, ADR-012): robottoken maken en intrekken, controle per aanroep en de
-logregel van elke weigering. Persoonlijke tokens en de tokenschermen volgen in slice 10."""
+"""API-tokens (ADR-005, ADR-012): robottokens en persoonlijke tokens maken, rechten wijzigen en
+intrekken, de controle per aanroep en de logregel van elke weigering."""
 
 import base64
 import hashlib
@@ -11,9 +11,10 @@ from datetime import UTC, datetime, timedelta
 
 from flask import current_app
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.domein import Actor, Regelfout, log
-from app.models import Token, db
+from app.models import Beheerder, Token, db
 
 # Vaste lijst in code (ADR-005, ADR-009).
 RECHTEN = ("plaatsen:lezen", "boten:lezen", "leden:lezen", "wachtlijst:lezen",
@@ -59,17 +60,32 @@ def whitelist_lezen(reeksen):
                         "10.203.0.0/24 of fd00::/64.") from None
 
 
-def robot_maken(naam, rechten, whitelist, dagen, actor):
-    """Maakt een robottoken en geeft de waarde terug; die is daarna nergens meer te zien.
-    Zonder whitelist het netwerk van de integratiecontainer (KOPPELNET), zonder dagen 365."""
-    if not NAAM.fullmatch(naam):
-        raise Regelfout("Naam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
+def _rechten(rechten, soort):
     rechten = list(dict.fromkeys(rechten))
     if not rechten:
         raise Regelfout("Kies minstens één recht.")
     if onbekend := [r for r in rechten if r not in RECHTEN]:
         raise Regelfout(f"Onbekend recht: {', '.join(onbekend)}. Kies uit: {', '.join(RECHTEN)}.")
-    netten = whitelist_lezen(whitelist or [current_app.config["KOPPELNET"]])
+    if soort == "persoonlijk" and "leden:importeren" in rechten:
+        # Een import hoort bij de integratiecontainer, niet bij een persoon (ADR-005).
+        raise Regelfout("Het recht leden:importeren kan alleen bij een robottoken.")
+    return rechten
+
+
+def maken(soort, naam, rechten, whitelist, dagen, actor):
+    """Maakt een token en geeft de waarde terug; die is daarna nergens meer te zien. Een
+    persoonlijk token hoort bij de beheerder die het maakt; een lege whitelist betekent dan elk
+    adres. Een robottoken heeft een whitelist nodig. Zonder dagen 365."""
+    if soort not in ("persoonlijk", "robot"):
+        raise Regelfout("Kies persoonlijk of robot.")
+    if soort == "persoonlijk" and actor.soort != "beheerder":
+        raise Regelfout("Een persoonlijk token maakt een beheerder in de webinterface.")
+    if not NAAM.fullmatch(naam):
+        raise Regelfout("Naam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
+    rechten = _rechten(rechten, soort)
+    netten = whitelist_lezen(whitelist)
+    if soort == "robot" and not netten:
+        raise Regelfout("Een robottoken heeft een whitelist nodig.")
     dagen = STANDAARD_DAGEN if dagen is None else dagen
     if not 1 <= dagen <= MAX_DAGEN:
         raise Regelfout(f"Geldigheid: 1 tot en met {MAX_DAGEN} dagen (3 jaar).")
@@ -78,27 +94,70 @@ def robot_maken(naam, rechten, whitelist, dagen, actor):
 
     prefix = _b32(5)
     waarde = f"{VOORVOEGSEL}{prefix}{_b32(32)}"
-    token = Token(naam=naam, soort="robot", prefix=prefix, hash=_hash(waarde), rechten=rechten,
-                  ip_whitelist=netten, verloopt_op=_nu() + timedelta(days=dagen))
+    token = Token(naam=naam, soort=soort, prefix=prefix, hash=_hash(waarde), rechten=rechten,
+                  ip_whitelist=netten, verloopt_op=_nu() + timedelta(days=dagen),
+                  beheerder_id=actor.id if soort == "persoonlijk" else None,
+                  gemaakt_door=actor.naam)
     db.session.add(token)
     db.session.flush()
     log.schrijf(actor, "token.gemaakt", [f"token:{token.id}"],
-                {"naam": naam, "soort": "robot", "rechten": rechten,
+                {"naam": naam, "soort": soort, "rechten": rechten,
                  "whitelist": [str(n) for n in netten],
-                 "verloopt_op": token.verloopt_op.isoformat(timespec="minutes")})
+                 "verloopt_op": token.verloopt_op.isoformat(timespec="minutes"),
+                 **({"eigenaar": actor.naam} if soort == "persoonlijk" else {})})
     db.session.commit()
     return waarde
 
 
-def intrekken(naam, actor):
-    """Trekt een token in; de volgende aanroep wordt geweigerd (ADR-012 v1.1.0)."""
-    token = db.session.scalar(
-        select(Token).where(Token.naam == naam, Token.ingetrokken_op.is_(None)).with_for_update()
-    )
+def robot_maken(naam, rechten, whitelist, dagen, actor):
+    """De CLI (ADR-012): zonder whitelist het netwerk van de integratiecontainer (KOPPELNET)."""
+    return maken("robot", naam, rechten, whitelist or [current_app.config["KOPPELNET"]], dagen,
+                 actor)
+
+
+def alle():
+    """Voor het overzicht (BLB-035): actieve tokens eerst, dan op naam. Geen waarde of hash."""
+    return db.session.scalars(
+        select(Token).options(selectinload(Token.beheerder))
+        .order_by(Token.ingetrokken_op.is_not(None), Token.naam)).all()
+
+
+def _actief(sleutel):
+    """Vergrendelt een actief token op id (webinterface) of naam (CLI)."""
+    gelijk = Token.id == sleutel if isinstance(sleutel, int) else Token.naam == sleutel
+    return db.session.scalar(
+        select(Token).where(gelijk, Token.ingetrokken_op.is_(None))
+        .with_for_update().execution_options(populate_existing=True))
+
+
+def rechten_wijzigen(token_id, rechten, actor):
+    """Nieuwe rechten gelden vanaf de volgende aanroep (BLB-032 criterium 4)."""
+    token = _actief(token_id)
     if token is None:
+        db.session.rollback()
+        raise Regelfout("Er is geen actief token met dit nummer.")
+    try:
+        nieuw = _rechten(rechten, token.soort)
+    except Regelfout:
+        db.session.rollback()  # het slot niet vasthouden tot het einde van het verzoek
+        raise
+    oud = list(token.rechten)
+    if nieuw != oud:
+        token.rechten = nieuw
+        log.schrijf(actor, "token.rechten_gewijzigd", [f"token:{token.id}"],
+                    {"naam": token.naam, "oud": oud, "nieuw": nieuw})
+    db.session.commit()
+
+
+def intrekken(sleutel, actor):
+    """Trekt een token in, ook van een andere beheerder; de volgende aanroep wordt geweigerd
+    (ADR-012 v1.1.0, BLB-035). sleutel: id uit de webinterface of naam uit de CLI."""
+    token = _actief(sleutel)
+    if token is None:
+        db.session.rollback()
         raise Regelfout("Er is geen actief token met deze naam.")
     token.ingetrokken_op = _nu()
-    log.schrijf(actor, "token.ingetrokken", [f"token:{token.id}"], {"naam": naam})
+    log.schrijf(actor, "token.ingetrokken", [f"token:{token.id}"], {"naam": token.naam})
     db.session.commit()
 
 
@@ -125,11 +184,15 @@ def controleer(authorization, ip, recht, endpoint):
         _weiger("ingetrokken", token, endpoint, ip)
     if _nu() >= token.verloopt_op:
         _weiger("verlopen", token, endpoint, ip)
+    if token.beheerder_id is not None and not db.session.scalar(
+            select(Beheerder.actief).where(Beheerder.id == token.beheerder_id)):
+        _weiger("eigenaar_inactief", token, endpoint, ip)
     try:
         adres = ipaddress.ip_address(ip)
     except ValueError:
         adres = None
-    if not adres or not any(adres in net for net in token.ip_whitelist):
+    # Een lege whitelist (alleen bij een persoonlijk token) betekent elk adres (ADR-005).
+    if token.ip_whitelist and (not adres or not any(adres in net for net in token.ip_whitelist)):
         _weiger("buiten_whitelist", token, endpoint, ip)
     if recht and recht not in token.rechten:
         _weiger("zonder_recht", token, endpoint, ip, 403)

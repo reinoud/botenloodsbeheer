@@ -44,7 +44,7 @@ Achter elk ander account staan drie knoppen. Je eigen account kun je hier niet w
 |---|---|
 | Blokkeren | De beheerder kan niet meer inloggen. **Deblokkeren** maakt dat ongedaan. |
 | Toegang herstellen | Oude inlogmethodes en sessies vervallen. Je krijgt een nieuwe link van 24 uur voor de collega, bijvoorbeeld na een verloren telefoon. |
-| Verwijderen | Het account verdwijnt. Het log blijft. |
+| Verwijderen | Het account verdwijnt, met de persoonlijke tokens van die beheerder. Het log blijft. |
 
 ### Je eigen inlogmethodes
 
@@ -225,6 +225,52 @@ Een waarschuwing bij de import betekent meestal dat de integratiecontainer niet 
 
 ![De technische status met per onderdeel de status en een waarschuwing voor een token dat binnenkort verloopt.](afbeeldingen/status.png)
 
+## Tokens voor de API
+
+Met een token gebruik je de API (`/api/v1`) zonder je wachtwoord te delen. Onder **Tokens** (`/tokens`) staan alle tokens van de installatie, met naam, soort, eigenaar of maker, rechten, whitelist, vervaldatum, laatste gebruik en de datum van intrekken. De waarde van een token staat er nooit. Elke beheerder ziet en beheert alle tokens, ook die van een collega.
+
+![De pagina Tokens met een persoonlijk token en een robottoken, hun rechten en de knop Intrekken.](afbeeldingen/tokens.png)
+
+Er zijn twee soorten tokens:
+
+| Soort | Hoort bij | Werkt niet meer als |
+|---|---|---|
+| Persoonlijk | de beheerder die het maakt | het verloopt, is ingetrokken, of het account geblokkeerd of verwijderd is. Na deblokkeren werkt het weer; na toegang herstellen blijft het werken |
+| Robot | een koppeling, zoals de integratiecontainer | het verloopt of is ingetrokken. Het blijft werken als de maker vertrekt; de naam van de maker blijft in het overzicht staan |
+
+### Een token maken
+
+1. Kies **Token maken** (`/tokens/nieuw`).
+2. Kies de soort, een naam (a-z, cijfers, punt, - en _) en hoeveel dagen het geldig is: standaard 365, hooguit 1095 (3 jaar).
+3. Vink minstens één recht aan. `leden:importeren` kan alleen bij een robottoken.
+4. Vul de IP-whitelist in: adressen of reeksen, gescheiden door komma's. Het formulier vult het netwerk van de integratiecontainer voor. Een robottoken heeft altijd een whitelist; een persoonlijk token zonder whitelist werkt vanaf elk adres dat de installatie doorlaat.
+5. Kopieer de waarde die verschijnt. Hij is daarna niet meer te zien; ben je hem kwijt, maak dan een nieuw token en trek het oude in.
+
+![Het formulier Token maken met soort, naam, geldigheid, rechten en whitelist.](afbeeldingen/token-nieuw.png)
+
+![Het scherm na het maken met de tokenwaarde, hier onherkenbaar gemaakt.](afbeeldingen/token-waarde.png)
+
+Een persoonlijk token werkt alleen als wie de installatie beheert de API van buiten heeft opengezet. Zonder dat laat de installatie alleen de integratiecontainer bij de API.
+
+| Recht | Geeft |
+|---|---|
+| `plaatsen:lezen` | alle plaatsen met rek, clubplaats, bootsoorten en boot |
+| `boten:lezen` | alle boten met bootsoort, plaats en naam en lidnummer van de eigenaar |
+| `leden:lezen` | alle leden met naam, lidnummer en of het een oud-lid is |
+| `wachtlijst:lezen` | de wachtlijst per bootsoort met aanmelddatum |
+| `persoonsgegevens` | bij boten, leden en wachtlijst ook adres, telefoon en e-mail, en bij leden de datums van lidmaatschap en opzegging |
+| `leden:importeren` | de import van leden, alleen voor de integratiecontainer |
+| `bootaantallen:lezen` | het aantal boten per bootsoort per lid |
+
+### Rechten wijzigen en intrekken
+
+Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vinkjes aan en kies je **Rechten opslaan**. De nieuwe rechten gelden vanaf de volgende aanroep.
+
+![Het blok Rechten wijzigen met een uitgeklapt token en de vinkjes per recht.](afbeeldingen/token-rechten.png)
+ **Intrekken** werkt direct: de volgende aanroep met dat token wordt geweigerd. Naam, whitelist en vervaldatum zijn niet te wijzigen; daarvoor maak je een nieuw token.
+
+Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud. Elke handeling staat in het technische log, zonder de waarde van het token.
+
 ## Naam, kleuren en logo
 
 Op `/instellingen` pas je de naam van de vereniging en twee kleuren aan. Ze staan op elke pagina, ook de openbare. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het hier alleen.
@@ -243,6 +289,8 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/uitnodiging/{code}` | Account instellen met een uitnodigingslink |
 | `/profiel` | Je inlogmethodes |
 | `/beheerders` | Beheerders uitnodigen en beheren |
+| `/tokens` | Tokens voor de API |
+| `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
 | `/kaartjes` | Plaatsen kiezen voor kaartjes |

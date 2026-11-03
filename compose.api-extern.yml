@@ -1,0 +1,20 @@
+# API van buiten (BLB-042, ADR-013): alleen bewust toevoegen, zie
+# documentatie/beheer/api-van-buiten.md.
+#   docker compose -f docker-compose.yml -f compose.api-extern.yml up -d
+# Voegt alleen labels toe aan api, dat al op voorkant staat: een router op websecure met dezelfde
+# rate limits als intern. Traefik laat alleen adressen uit API_EXTERN_BRONNEN door (403); daarna
+# toetst de applicatie de whitelist van het token op het adres dat Traefik vaststelt.
+
+services:
+  api:
+    labels:
+      - traefik.http.middlewares.${INSTALLATIE:-botenloods}-externtoegang.ipallowlist.sourcerange=${API_EXTERN_BRONNEN:?API_EXTERN_BRONNEN ontbreekt in .env; zie documentatie/beheer/api-van-buiten.md}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.rule=Host(`${DOMEIN}`) && PathPrefix(`/api/v1/`)
+      # Hoger dan de routers van web, die /api/ al uitsluiten: zo kan geen andere router dit pad krijgen.
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.priority=2000
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.service=${INSTALLATIE:-botenloods}-api
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.middlewares=${INSTALLATIE:-botenloods}-nosniff,${INSTALLATIE:-botenloods}-externtoegang,${INSTALLATIE:-botenloods}-tokenrem,${INSTALLATIE:-botenloods}-iprem,${INSTALLATIE:-botenloods}-3mb
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-api-extern.observability.accesslogs=false

@@ -2,14 +2,14 @@
 
 Deze handleiding is voor de systeembeheerder van een vereniging. Eén installatie dient één vereniging. De applicatie draait in docker-compose achter een Traefik die op dezelfde host ook andere diensten bedient. Die Traefik draait in een eigen compose-stack; de compose van de botenloods levert alleen labels (ADR-013).
 
-Andere delen: [voorbeelden](voorbeelden.md) (images binnenhalen of zelf bouwen), [integratiecontainer](integratiecontainer.md) (leden importeren) en [bijwerken, tokens en logs](bijwerken.md).
+Andere delen: [voorbeelden](voorbeelden.md) (images binnenhalen of zelf bouwen), [integratiecontainer](integratiecontainer.md) (leden importeren), [API van buiten](api-van-buiten.md) en [bijwerken, tokens en logs](bijwerken.md).
 
 ## Opbouw
 
 | Dienst | Taak | Netwerken |
 |--------|------|-----------|
 | `web` | webinterface voor de beheerders en de openbare pagina | `achterkant`, `voorkant` |
-| `api` | `/api/v1`, alleen voor de integratiecontainer | `achterkant`, `voorkant` |
+| `api` | `/api/v1`, standaard alleen voor de integratiecontainer; van buiten alleen met `compose.api-extern.yml` ([API van buiten](api-van-buiten.md)) | `achterkant`, `voorkant` |
 | `worker` | achtergrondtaken, zoals de opschoning | `achterkant` |
 | `migrate` | databasemigraties bij het starten | `achterkant` |
 | `db` | PostgreSQL 17 | `achterkant` |
@@ -102,5 +102,5 @@ Daarna volgt het token van de integratiecontainer, zie [integratiecontainer](int
 
 - `curl -I http://DOMEIN/` geeft 308 naar `https://`.
 - `curl -I https://DOMEIN/inloggen` geeft 200 met `Strict-Transport-Security` en `Content-Security-Policy`, zonder `Server`.
-- `https://DOMEIN/api/v1/ik` geeft 404.
+- `https://DOMEIN/api/v1/ik` geeft 404, zolang `compose.api-extern.yml` er niet bij staat.
 - `docker compose logs integratie` meldt na het token binnen een minuut `Import geslaagd`.

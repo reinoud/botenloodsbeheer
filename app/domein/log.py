@@ -16,7 +16,7 @@ BOOTMUTATIES = frozenset(
      "plaats.toegewezen", "plaats.vrijgegeven", "wachtlijst.toegevoegd", "wachtlijst.verwijderd"}
 )
 TECHNISCH = frozenset(
-    {"token.gemaakt", "token.ingetrokken", "api.geweigerd", "instelling.gewijzigd",
+    {"token.gemaakt", "token.rechten_gewijzigd", "token.ingetrokken", "api.geweigerd", "instelling.gewijzigd",
      "leden.import_aangevraagd", "rek.aangemaakt", "rek.gewijzigd", "rek.verwijderd",
      "plaats.aangemaakt", "plaats.gewijzigd", "plaats.verwijderd", "beheerder.uitgenodigd",
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
