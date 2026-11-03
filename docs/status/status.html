@@ -18,9 +18,9 @@
 
 <h2>Stand</h2>
 <table>
-  <tr><th>Fase</th><td>Delivery, tussen slice 10 en slice 11</td></tr>
-  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 43 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-013 in <code>docs/architecture/</code>. Slice 1 tot en met 10 gebouwd en gereviewd: inloggen, indeling, overzichten, Excel-export, huisstijl, logo, de API als eigen dienst, de integratiecontainer voor leden en de wachtlijst per bootsoort (#43) en printbare kaartjes met QR-code, acht per A4 (#46), en de opschoning na 5 jaar, de technische statuspagina en de bootaantallen per lid, met terugschrijven uit (#48), en de vier leesaanroepen van de API, persoonlijke tokens, tokenschermen en de API van buiten met <code>compose.api-extern.yml</code> (#51). Traefik vervangt Nginx (#29), met certificaten via Let's Encrypt. Gebruikers- en beheerdocumentatie in <code>documentatie/</code> (#30). Workflow die bij een release de images naar ghcr.io pusht (#35).</td></tr>
-  <tr><th>Bezig</th><td>Slice 11: een andere vereniging voegt bootsoorten toe, hernoemt en verwijdert ze (BLB-028). Herstel #52 is af: het recht om leden te importeren alleen via de CLI.</td></tr>
+  <tr><th>Fase</th><td>Delivery, alle 11 slices gebouwd</td></tr>
+  <tr><th>Gedaan</th><td>Intake en besluiten in <code>docs/business/intake.md</code>. Projectoverlay in <code>docs/PROJECT-OVERLAY.md</code>. Backlog met 43 stories en 11 slices in <code>docs/product/backlog.md</code>. Architectuur en ADR-001 tot en met ADR-013 in <code>docs/architecture/</code>. Slice 1 tot en met 11 gebouwd en gereviewd: inloggen, indeling, overzichten, Excel-export, huisstijl, logo, de API als eigen dienst, de integratiecontainer voor leden en de wachtlijst per bootsoort (#43) en printbare kaartjes met QR-code, acht per A4 (#46), en de opschoning na 5 jaar, de technische statuspagina en de bootaantallen per lid, met terugschrijven uit (#48), en de vier leesaanroepen van de API, persoonlijke tokens, tokenschermen en de API van buiten met <code>compose.api-extern.yml</code> (#51), en bootsoorten toevoegen, hernoemen en verwijderen (#56). Traefik vervangt Nginx (#29), met certificaten via Let's Encrypt. Gebruikers- en beheerdocumentatie in <code>documentatie/</code> (#30). Workflow die bij een release de images naar ghcr.io pusht (#35).</td></tr>
+  <tr><th>Bezig</th><td>Niets; slice 1 tot en met 11 zijn af.</td></tr>
   <tr><th>Volgende stap</th><td>Na slice 11 de securityronde na de mijlpaal (aegis en probe). De eerste release met images in ghcr.io staat nog open (#35).</td></tr>
   <tr><th>Open werk</th><td>In de <a href="https://github.com/reinoud/botenloodsbeheer/issues">GitHub-issues</a>, met de kleinere restpunten en restrisico's.</td></tr>
 </table>
@@ -51,6 +51,8 @@
 <h2>Open besluiten</h2>
 <ul>
   <li>Bootnaam blijft na opschonen van het oud-lid in jongere logregels staan: accepteren of verfijnen (#50). Voorstel: accepteren.</li>
+  <li>Twee gelijktijdige bootsoorten die alleen in hoofdletters verschillen: accepteren of een index met migratie (#57). Voorstel: accepteren.</li>
+  <li>Een lege kaart op de wachtlijstpagina voor een soort zonder wachtenden: wel of niet tonen. Nu niet, zoals voor alle soorten.</li>
 </ul>
 </body>
 </html>

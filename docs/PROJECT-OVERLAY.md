@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.18
+**Versie overlay:** v0.3.19
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -31,7 +31,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 10 gebouwd; #52 af. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
+| Stand | Slice 1 tot en met 11 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
@@ -167,6 +167,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - De testcontainer heeft geen docker; een controle op `docker compose config` staat bovenin `tests/e2e/draai.sh` en draait op de host.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
+- Voeg je rijen toe aan een tabel met een startlijst uit een migratie (zoals `bootsoort`), zet die lijst dan in `tests/unit/conftest.py` terug na elke test.
+- Een criterium noemt alleen schermen die het gegeven echt tonen; controleer dat vóór de bouw (kaartjes en `/p/` tonen geen bootsoort).
 
 ## 5. Projectcontracten
 
@@ -231,6 +233,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.19 | 2026-11-03 | Regels over startlijsten in tests en schermen in criteria, uit de bouw en review van slice 11 (#56); stand | Lessen |
 | v0.3.18 | 2026-11-03 | Regels over compose-controles op de host, gereviewde paden en mutanten bij parallelle reviews, uit de reviews van #52 | Lessen |
 | v0.3.17 | 2026-11-03 | Regels over brede tabellen, templates, variabelen die alleen compose leest, proeven met geweigerde aanroepen en regels die na de bouw zijn toegevoegd, uit bouw en review van slice 10 (#51); stand | Lessen |
 | v0.3.16 | 2026-11-03 | `API_EXTERN_BRONNEN` in §6; regels over foutcodes in de API-documentatie en over ADR-zinnen die als gebouwd gelden, uit de terugblikken van #49 en het ontwerp van slice 10 | Besluit stakeholder 2026-11-03, lessen |

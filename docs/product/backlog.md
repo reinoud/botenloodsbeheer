@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.21
+**Versie:** v0.3.22
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -468,7 +468,7 @@ Als beheerder wil ik de lijst met bootsoorten aanpassen zodat een andere verenig
 
 - Gegeven de standaardlijst (kajak, Canadese kano, surfski, C11, supboard), wanneer de beheerder een soort toevoegt, dan is die soort te kiezen bij boten en plaatsen en heeft die een eigen wachtlijst.
 - Gegeven een bootsoort waarvoor boten of plaatsen bestaan, wanneer de beheerder de soort wil verwijderen, dan weigert de applicatie.
-- Gegeven een bootsoort, wanneer de beheerder de naam wijzigt, dan tonen boten, plaatsen, wachtlijst, export, kaartjes en API de nieuwe naam, blijven toewijzingen en wachtlijst gelijk, en staat de wijziging met oude en nieuwe naam in het technische log (besluit stakeholder 2026-11-03).
+- Gegeven een bootsoort, wanneer de beheerder de naam wijzigt, dan tonen boten, plaatsen, wachtlijst, export en API de nieuwe naam, blijven toewijzingen en wachtlijst gelijk, en staat de wijziging met oude en nieuwe naam in het technische log (besluit stakeholder 2026-11-03).
 
 ### EP-10 API
 
@@ -607,7 +607,7 @@ Als beheerder wil ik een technische statuspagina zodat ik de toestand van de ins
 
 ## 5. Volgorde van slices
 
-Slice 1 tot en met 9 zijn af. De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import van leden niet meer. De volgorde vanaf slice 4 volgt architectuur §7.1; de letter staat in de kolom "Architectuur". Een story die over meer slices loopt, noemt per criterium de slice.
+Slice 1 tot en met 11 zijn af. De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import van leden niet meer. De volgorde vanaf slice 4 volgt architectuur §7.1; de letter staat in de kolom "Architectuur". Een story die over meer slices loopt, noemt per criterium de slice.
 
 | Slice | Architectuur | Stories en criteria | Doel |
 |-------|--------------|---------------------|------|
@@ -621,7 +621,7 @@ Slice 1 tot en met 9 zijn af. De besluiten van 2026-10-31 halen de API naar vore
 | 8 | E | BLB-021; BLB-027 criteria 1 en 2, deel kaartjes | Af. Elke plaats krijgt een printbaar kaartje met QR-code en logo |
 | 9 | F | BLB-026; BLB-037 criteria 1 tot en met 5; BLB-009 | Af. De bewaartermijn werkt, de installatie is te bewaken en de bootaantallen staan klaar, terugschrijven staat uit |
 | 10 | G | BLB-030, 035, 042; BLB-031 criteria 4 en 5; BLB-032 criteria 3 en 4; BLB-034 criterium 2 | Leesendpoints, persoonlijke tokens, tokenschermen, en de keuze om de API van buiten bereikbaar te maken |
-| 11 | H | BLB-028 | Een andere vereniging past de bootsoorten aan |
+| 11 | H | BLB-028 | Af. Een andere vereniging past de bootsoorten aan |
 
 Slice 5 gaat vóór slice 6, omdat de integratiecontainer het contract en het robottoken uit slice 5 nodig heeft. Slice 6 gaat vóór de wachtlijst, zodat BLB-008 criterium 3 meteen op de definitieve importroute wordt gebouwd. Slice 4 staat los van de API.
 
