@@ -291,6 +291,13 @@ def test_te_groot_getal_bij_toewijzen_bootsoort_en_overzicht(ingelogd):
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": groot, "eigenaar": "club"},
                       follow_redirects=True)
     assert "Kies een bootsoort." in r.text
+    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": groot},
+                      follow_redirects=True)
+    assert "Kies een eigenaar." in r.text
+    r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Fuut", "bootsoort": groot,
+                                                   "eigenaar": "club"}, follow_redirects=True)
+    assert "Kies een bootsoort." in r.text
+    assert ingelogd.post(f"/plaatsen/{p.id}", data={"code": "A01", "bootsoort": groot}).status_code == 302
     assert ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": groot}).status_code == 302
     assert ingelogd.post(f"/rekken/{p.rek_id}/plaatsen",
                          data={"code": "A02", "bootsoort": groot}).status_code == 302
