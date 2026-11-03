@@ -30,7 +30,8 @@ def verwerk(inhoud, soort="foto"):
             uit = io.BytesIO()
             # Opnieuw opslaan zonder exif of andere metadata (GPS-locatie).
             if soort == "foto":
-                img.convert("RGB").save(uit, "JPEG", quality=85)
+                # Pillow schrijft het COM-segment van de bron anders terug.
+                img.convert("RGB").save(uit, "JPEG", quality=85, comment=b"")
                 mime = "image/jpeg"
             else:
                 # PNG kent geen CMYK of YCbCr; met alfakanaal blijft transparantie staan.

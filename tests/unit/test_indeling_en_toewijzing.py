@@ -133,10 +133,12 @@ def test_boot_van_lid_en_clubboot(app):
 def test_foto_wordt_verkleind_en_zonder_exif_opgeslagen(app):
     exif = Image.Exif()
     exif[0x010F] = "Telefoonmerk"  # Make
-    b = boot(lid().id, foto=png(3200, 2000, exif=exif.tobytes(), formaat="JPEG"))
+    b = boot(lid().id, foto=png(3200, 2000, exif=exif.tobytes(), formaat="JPEG",
+                                comment=b"Vakantie bij oma"))
     foto = Image.open(io.BytesIO(b.afbeelding.inhoud))
     assert foto.format == "JPEG" and max(foto.size) == 1600
     assert not foto.getexif() and b"Telefoonmerk" not in b.afbeelding.inhoud
+    assert "comment" not in foto.info and b"Vakantie bij oma" not in b.afbeelding.inhoud
     assert len(b.afbeelding.sleutel) == 16
 
 
