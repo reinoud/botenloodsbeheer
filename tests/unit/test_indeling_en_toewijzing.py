@@ -140,6 +140,13 @@ def test_foto_wordt_verkleind_en_zonder_exif_opgeslagen(app):
     assert len(b.afbeelding.sleutel) == 16
 
 
+@pytest.mark.parametrize("formaat", ["TIFF", "GIF", "BMP"])
+def test_andere_formaten_worden_niet_eens_gedecodeerd(app, formaat):
+    # Zonder formats= opent Pillow elk geregistreerd formaat en weigert pas daarna.
+    with pytest.raises(Regelfout, match="geen geldige afbeelding"):
+        afbeeldingen.verwerk(png(formaat=formaat))
+
+
 @pytest.mark.parametrize("inhoud", [b"geen afbeelding",
                                     b'<svg xmlns="http://www.w3.org/2000/svg"></svg>',
                                     png(formaat="GIF")])

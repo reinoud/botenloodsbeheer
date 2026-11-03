@@ -22,7 +22,7 @@ Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 def verwerk(inhoud, soort="foto"):
     """Geeft een nieuwe, nog niet opgeslagen Afbeelding, of een Regelfout."""
     try:
-        with Image.open(io.BytesIO(inhoud)) as img:
+        with Image.open(io.BytesIO(inhoud), formats=sorted(TOEGESTAAN)) as img:
             if img.format not in TOEGESTAAN or img.width * img.height > MAX_PIXELS:
                 raise Regelfout(f"Kies een {soort} in JPEG, PNG of WebP.")
             img = ImageOps.exif_transpose(img)
@@ -41,7 +41,8 @@ def verwerk(inhoud, soort="foto"):
     except Regelfout:
         raise
     except (OSError, ValueError, SyntaxError, Image.DecompressionBombError):
-        raise Regelfout("Dit bestand is geen geldige afbeelding. De vorige blijft staan.") from None
+        raise Regelfout("Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP. "
+                        "De vorige blijft staan.") from None
     return Afbeelding(soort=soort, mime_type=mime, inhoud=uit.getvalue(), breedte=img.width,
                       hoogte=img.height, sleutel=secrets.token_urlsafe(12))
 
