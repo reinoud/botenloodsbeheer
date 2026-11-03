@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.3.0
+**Versie:** v1.3.1
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -70,7 +70,7 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 | Applicatie, verplicht | `create_app`: `before_request` op de app, dus voor `web` en `api` | `abort(400)` als het pad in `RAW_URI` (zonder querystring) een `%` bevat |
 | Traefik, aanbevolen | Entrypoints `web`, `websecure` en `intern` in het voorbeeld en in `compose.dev.yml` | `http.encodedcharacters.allowencodedslash`, `allowencodedbackslash`, `allowencodednullcharacter` en `allowencodedpercent` op `false`: 400 van Traefik |
 
-De applicatielaag beschermt elke installatie vanzelf, ook achter een bestaande Traefik zonder de opties. Geen route van de botenloods heeft procentcodering in het pad nodig: padparameters zijn getallen of tokens. Een nieuwe route met vrije tekst in het pad vraagt een nieuw besluit. De opties op het entrypoint zijn geen eis aan de gedeelde Traefik, omdat ze ook andere diensten op die entrypoints raken.
+De applicatielaag beschermt elke installatie vanzelf, ook achter een bestaande Traefik zonder de opties. Geen route van de botenloods heeft procentcodering in het pad nodig: padparameters zijn getallen of tokens. Een nieuwe route met vrije tekst in het pad vraagt een nieuw besluit. De opties op het entrypoint zijn geen eis aan de gedeelde Traefik, omdat ze ook andere diensten op die entrypoints raken. `allowEncodedSemicolon`, `allowEncodedQuestionMark` en `allowEncodedHash` blijven bewust aan: de applicatielaag weigert ze al, aegis vond er geen omweg mee, en elke extra weigering raakt die andere diensten ook (review #65).
 
 Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, `/%2finloggen/code`, `/%2Fuitnodiging/abc`, `%5C`, `%00`, `%252F`, `/.%2F` en `GET /api%2Fv1/ik` geven 400 met elk van beide lagen; zonder lagen verwerkt Flask de inlog. Traefik decodeert `%2E` en gecodeerde letters zelf, dus `/%69nloggen` krijgt 429.
 
@@ -105,6 +105,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.1 | 2026-11-03 | Waarom drie opties voor gecodeerde tekens ontbreken | Review aegis, issue #65 |
 | v1.3.0 | 2026-11-03 | Gecodeerd pad: 400 in de applicatie, opties voor gecodeerde tekens aanbevolen op de entrypoints, proef | Securityronde na slice 11, PRB-01, issue #65 |
 | v1.2.0 | 2026-11-03 | API van buiten: router, `API_EXTERN_BRONNEN`, rate limit, proeven | Ontwerp slice 10, issue #51 |
 | v1.1.1 | 2026-11-01 | Lokaal: `aliasHeadersStrategy` alleen bij de gedeelde Traefik | Review Sentinel, issue #36 |

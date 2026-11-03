@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.22
+**Versie overlay:** v0.3.23
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -122,6 +122,8 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een proef op routering in Traefik (welke router een pad krijgt) draait na minstens drie herstarts van Traefik; twee routers die hetzelfde pad kunnen raken, krijgen een expliciete `priority`.
 - Een losse Traefik-proef gebruikt een stub die de body leest en 200 geeft; render de labels met `docker compose config` met dummywaarden voor de verplichte variabelen.
 - Toetst een Traefik-proef ook wat de applicatie doet (zoals een omzeilde rate limit), gebruik dan als upstream Flask achter Gunicorn met dezelfde routes, niet alleen de stub.
+- Noem bij een proef op een weigering welke laag de 400 geeft (Traefik of de applicatie) en hoe dat te zien is: een regel in de log van `web` of geen regel. Weigert de lokale Traefik zelf, laat de reviewer de applicatielaag dan direct op Gunicorn in de container proeven.
+- Bij een optie of vlag van een externe component komen de namen en de volledige lijst uit de gebruikte versie (binary of `--help`), en de ADR zegt welke opties bewust ontbreken.
 - Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat.
@@ -245,6 +247,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.23 | 2026-11-03 | Regels over de laag van een weigering in een proef en over opties van externe componenten, uit de terugblikken van bedrock, aegis en sentinel (#65) | Lessen |
 | v0.3.22 | 2026-11-03 | Regel over Flask als upstream in een Traefik-proef, uit de terugblik van foundation (#65) | Lessen |
 | v0.3.21 | 2026-11-03 | Negen regels over lockbestand, e2e-image, invoerformaten, metadata en DAST, uit de terugblikken van bedrock (#58), de reviews van #58 en #66 en probe (securityronde na slice 11) | Lessen |
 | v0.3.20 | 2026-11-03 | Twee regels over leesquery's en trivy, uit de terugblik van aegis (securityronde na slice 11) | Lessen |
