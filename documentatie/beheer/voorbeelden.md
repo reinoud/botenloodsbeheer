@@ -6,7 +6,7 @@ Er zijn twee manieren om de images te krijgen. Beide gebruiken `docker-compose.y
 
 `voorbeelden/compose.images.yml` haalt de images op uit een registry en bouwt niets. Kopieer het naast `docker-compose.yml`. Op de host staan alleen `docker-compose.yml`, `docker/db-init.sh`, `.env`, `secrets/` en `huisstijl/`.
 
-Bij elke release zet GitHub Actions de images openbaar in ghcr.io: `ghcr.io/reinoud/botenloods-app` en `ghcr.io/reinoud/botenloods-integratie`, alleen voor linux/amd64. Release `v1.2.3` geeft de tags `1.2.3`, `1.2` en `latest`. Er is nog geen release; tot dan werkt alleen de route met een git-checkout.
+Bij elke release zet GitHub Actions de images openbaar in ghcr.io: `ghcr.io/reinoud/botenloods-app` en `ghcr.io/reinoud/botenloods-integratie`, alleen voor linux/amd64. Release `v1.2.3` geeft de tags `1.2.3`, `1.2` en `latest`. De eerste release is `v0.1.0`.
 
 Zet in `.env` de versie, bijvoorbeeld `VERSIE=1.2.3`, en start:
 
