@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.20
+**Versie overlay:** v0.3.21
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -171,6 +171,15 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Een criterium noemt alleen schermen die het gegeven echt tonen; controleer dat vóór de bouw (kaartjes en `/p/` tonen geen bootsoort).
 - Een leesquery op `information_schema` of de rechten in de gedeelde database mag; proeven die rate limits of vergrendelingen raken niet.
 - Scan images met `trivy --ignore-unfixed`; meldingen zonder oplossing komen alleen als aantal in het rapport.
+- Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog).
+- Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
+- Beperkt een wijziging de invoerformaten, zeg dan in de brief welke melding de gebruiker daarna ziet.
+- Wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`; `draai.sh` bouwt niet.
+- Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert.
+- Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
+- Een proef op een rate limit van Traefik probeert ook het pad met `%2F` en andere gecodeerde tekens.
+- Een issue over metadata noemt in de acceptatiecriteria alle drie de soorten (EXIF, tekstblokken, ICC); vul het aan vóór de bouw.
+- Noem bij elke bronsoort die een reviewer laat toetsen het verwachte gedrag (opslaan of afwijzen).
 
 ## 5. Projectcontracten
 
@@ -235,6 +244,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.21 | 2026-11-03 | Negen regels over lockbestand, e2e-image, invoerformaten, metadata en DAST, uit de terugblikken van bedrock (#58), de reviews van #58 en #66 en probe (securityronde na slice 11) | Lessen |
 | v0.3.20 | 2026-11-03 | Twee regels over leesquery's en trivy, uit de terugblik van aegis (securityronde na slice 11) | Lessen |
 | v0.3.19 | 2026-11-03 | Regels over startlijsten in tests en schermen in criteria, uit de bouw en review van slice 11 (#56); stand | Lessen |
 | v0.3.18 | 2026-11-03 | Regels over compose-controles op de host, gereviewde paden en mutanten bij parallelle reviews, uit de reviews van #52 | Lessen |
