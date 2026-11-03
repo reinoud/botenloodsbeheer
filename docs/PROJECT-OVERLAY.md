@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.17
+**Versie overlay:** v0.3.18
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -31,7 +31,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 10 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
+| Stand | Slice 1 tot en met 10 gebouwd; #52 af. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
@@ -164,6 +164,9 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - Noem bij elke review welke regels in de overlay na de bouw zijn toegevoegd; een ontbrekende test op zo'n regel is een restpunt (ernst laag) en blokkeert de review niet.
 - Wijzig je templates of CSS, maak `web` dan opnieuw aan; `--reload` laadt alleen Python opnieuw.
 - Een omgevingsvariabele die alleen compose leest (zoals `API_EXTERN_BRONNEN`), krijgt een test op `docker compose config` met en zonder waarde, in plaats van een test met `create_app`.
+- De testcontainer heeft geen docker; een controle op `docker compose config` staat bovenin `tests/e2e/draai.sh` en draait op de host.
+- Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
+- Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 
 ## 5. Projectcontracten
 
@@ -228,6 +231,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.18 | 2026-11-03 | Regels over compose-controles op de host, gereviewde paden en mutanten bij parallelle reviews, uit de reviews van #52 | Lessen |
 | v0.3.17 | 2026-11-03 | Regels over brede tabellen, templates, variabelen die alleen compose leest, proeven met geweigerde aanroepen en regels die na de bouw zijn toegevoegd, uit bouw en review van slice 10 (#51); stand | Lessen |
 | v0.3.16 | 2026-11-03 | `API_EXTERN_BRONNEN` in §6; regels over foutcodes in de API-documentatie en over ADR-zinnen die als gebouwd gelden, uit de terugblikken van #49 en het ontwerp van slice 10 | Besluit stakeholder 2026-11-03, lessen |
 | v0.3.15 | 2026-11-03 | Regels over routes en menu-items, tabelselectors, de E2E-run 's nachts, gedeelde omgevingsvariabelen, verwijderen op id's, de proxypoort, uitsluitingen en mutanten en runs in de achtergrond uit de bouw en review van slice 9 (#48); stand | Lessen |

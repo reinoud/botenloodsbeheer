@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.20
+**Versie:** v0.3.21
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -468,6 +468,7 @@ Als beheerder wil ik de lijst met bootsoorten aanpassen zodat een andere verenig
 
 - Gegeven de standaardlijst (kajak, Canadese kano, surfski, C11, supboard), wanneer de beheerder een soort toevoegt, dan is die soort te kiezen bij boten en plaatsen en heeft die een eigen wachtlijst.
 - Gegeven een bootsoort waarvoor boten of plaatsen bestaan, wanneer de beheerder de soort wil verwijderen, dan weigert de applicatie.
+- Gegeven een bootsoort, wanneer de beheerder de naam wijzigt, dan tonen boten, plaatsen, wachtlijst, export, kaartjes en API de nieuwe naam, blijven toewijzingen en wachtlijst gelijk, en staat de wijziging met oude en nieuwe naam in het technische log (besluit stakeholder 2026-11-03).
 
 ### EP-10 API
 
