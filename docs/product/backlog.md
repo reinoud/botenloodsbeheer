@@ -1,17 +1,17 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.4.0
+**Versie:** v0.5.0
 **Datum:** 2026-11-03
 **Opgesteld door:** Apex, Senior Product Owner
-**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt
+**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
 
 ## 1. Uitgangspunten
 
 Dit backlog beschrijft wat de beheerder en de bezoeker moeten kunnen. Het kiest geen techniek: de inlogmethode, het datamodel en de bibliotheken zijn aan foundation.
 
-De loods heeft ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. Drie beheerders hebben dezelfde rechten. Er is geen aparte rol voor systeembeheer. Een bezoeker is iedereen die niet is ingelogd, dus ook een lid. Alleen beheerders hebben een account.
+De loods heeft 11 rekken met 224 plaatsen (de echte indeling, issue #80), 210 leden en 180 boten. Drie beheerders hebben dezelfde rechten. Er is geen aparte rol voor systeembeheer. Een bezoeker is iedereen die niet is ingelogd, dus ook een lid. Alleen beheerders hebben een account.
 
 Deze eisen gelden voor elke story en staan niet bij elke story herhaald:
 
@@ -78,10 +78,11 @@ Prioriteit: Must. Bron: intake 12, issue #80. Afhankelijk van: BLB-022.
 
 Als beheerder wil ik rekken aanmaken, hernoemen en verwijderen, met per rek verdiepingen en vakken, zodat de indeling in de applicatie klopt met de rekken in de loods.
 
-- Gegeven een ingelogde beheerder, wanneer die een rek aanmaakt met een naam en per verdieping een aantal vakken, dan staat elk vak als plaats in de indeling, met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1`.
-- Gegeven een nieuw rek, wanneer de beheerder 1 tot en met 5 verdiepingen opgeeft met elk 1 tot en met 6 vakken, dan slaat de applicatie het rek op. Verdiepingen in hetzelfde rek mogen een verschillend aantal vakken hebben.
-- Gegeven een nieuw rek, wanneer de beheerder 0 of 6 verdiepingen opgeeft, of 0 of 7 vakken op een verdieping, dan weigert de applicatie met een duidelijke melding.
+- Gegeven een ingelogde beheerder, wanneer die een rek aanmaakt met een naam, een omschrijving en per verdieping de vakken die aan staan, dan staat elk vak dat aan staat als plaats in de indeling, met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1`.
+- Gegeven een nieuw rek, wanneer de beheerder 1 tot en met 5 verdiepingen opgeeft en per verdieping in een raster van vak 1 tot en met 12 elk vak los aan of uit zet, dan slaat de applicatie het rek op. Vak 1 en vak 12 kunnen aan. Gaten in de nummering mogen: een verdieping met alleen vak 1, 3, 4 en 6 is geldig.
+- Gegeven een nieuw rek, wanneer de beheerder 0 of 6 verdiepingen opgeeft, een verdieping zonder vak dat aan staat, of vak 0 of vak 13, dan weigert de applicatie met een duidelijke melding.
 - Gegeven een reknaam die al bestaat (ook met andere hoofdletters), die langer is dan 10 tekens of die een `/` bevat, wanneer de beheerder die invoert, dan weigert de applicatie met een duidelijke melding.
+- Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een kaartje print, of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. De aanduiding houdt de korte naam, zoals `A/1/1`. Lengte en verplichting: vraag 24.
 - Gegeven een plaats, wanneer de beheerder die bewerkt, dan is de aanduiding niet los te wijzigen. Ze verandert alleen met de naam van het rek; toewijzing, publieke sleutel en instellingen blijven staan.
 - Gegeven een kaartje dat vóór een nieuwe reknaam is geprint, wanneer een bezoeker de QR-code scant, dan opent de pagina van dezelfde plaats, met de nieuwe aanduiding.
 - Gegeven een rek met een toegewezen boot, wanneer de beheerder het wil verwijderen, dan weigert de applicatie en wijst op het vrijgeven van de plaats.
@@ -116,20 +117,21 @@ Status: vervallen door issue #80. De aanduiding volgt uit rek, verdieping en vak
 
 Prioriteit: Must. Bron: issue #80. Afhankelijk van: BLB-001.
 
-Als beheerder wil ik verdiepingen en vakken van een rek toevoegen en weghalen zodat de indeling meegroeit met de loods.
+Als beheerder wil ik verdiepingen van een rek toevoegen en weghalen en per verdieping elk vak aan- of uitzetten zodat de indeling meegroeit met de loods.
 
-- Gegeven een rek met minder dan 5 verdiepingen, wanneer de beheerder een verdieping toevoegt met 1 tot en met 6 vakken, dan staan de nieuwe plaatsen in de indeling. Een zesde verdieping weigert de applicatie.
-- Gegeven een verdieping, wanneer de beheerder het aantal vakken verhoogt tot ten hoogste 6, dan komen de nieuwe vakken erbij en blijven de bestaande plaatsen met boot, publieke sleutel en instellingen staan. Een zevende vak weigert de applicatie.
-- Gegeven een verdieping zonder boten op de vakken die verdwijnen, wanneer de beheerder de verdieping weghaalt of het aantal vakken verlaagt, dan verdwijnen die plaatsen.
-- Gegeven een vak met een boot dat zou verdwijnen, wanneer de beheerder de verdieping weghaalt of het aantal vakken verlaagt, dan weigert de applicatie met dezelfde melding als bij het verwijderen van een rek met een boot (BLB-001), en verandert er niets.
+- Gegeven een rek met minder dan 5 verdiepingen, wanneer de beheerder een verdieping toevoegt en in het raster vakken aanzet, dan staan de nieuwe plaatsen in de indeling. Een zesde verdieping weigert de applicatie.
+- Gegeven een verdieping, wanneer de beheerder in het raster een vak aanzet, dan komt die plaats erbij en blijven de andere plaatsen met boot, publieke sleutel en instellingen staan. Vak 1 en vak 12 kunnen aan; vak 0 en vak 13 weigert de applicatie.
+- Gegeven een vak zonder boot, wanneer de beheerder het uitzet, dan verdwijnt die plaats en ontstaat er een gat in de nummering. De andere vakken houden hun nummer.
+- Gegeven een verdieping zonder boten, wanneer de beheerder haar weghaalt, dan verdwijnen haar plaatsen. Wat er met de nummers van de andere verdiepingen gebeurt: vraag 24.
+- Gegeven een vak met een boot, wanneer de beheerder het uitzet of de verdieping weghaalt, dan weigert de applicatie met dezelfde melding als bij het verwijderen van een rek met een boot (BLB-001), en verandert er niets.
 
 Route voor een mens (issue #80):
 
 1. Log in als beheerder en open de indeling.
-2. Maak rek `X` met verdieping 1 met 6 vakken en verdieping 2 met 4 vakken.
-3. Controleer dat `X/1/1` tot en met `X/1/6` en `X/2/1` tot en met `X/2/4` er staan.
-4. Wijs een boot toe aan `X/2/3` en probeer verdieping 2 naar 2 vakken te verkleinen: dat wordt geweigerd.
-5. Print het kaartje van `X/2/3` en open de QR-link: de openbare pagina toont `X/2/3`.
+2. Maak rek `X` met omschrijving "Testrek bij de deur", op verdieping 1 vak 1, 3, 4 en 12 aan en op verdieping 2 vak 1 tot en met 4 aan.
+3. Controleer dat `X/1/1`, `X/1/3`, `X/1/4`, `X/1/12` en `X/2/1` tot en met `X/2/4` er staan, en `X/1/2` niet.
+4. Wijs een boot toe aan `X/2/3` en probeer vak 3 van verdieping 2 uit te zetten: dat wordt geweigerd.
+5. Print het kaartje van `X/2/3` en open de QR-link: kaartje en openbare pagina tonen `X/2/3` en de omschrijving.
 
 ### EP-02 Leden en boten
 
@@ -309,7 +311,7 @@ Prioriteit: Must. Bron: intake 5. Afhankelijk van: BLB-010.
 
 Als beheerder wil ik de huidige indeling per rek op het scherm zien zodat ik de loods in één oogopslag overzie.
 
-- Gegeven de indeling, wanneer de beheerder het overzicht opent, dan staan per rek alle plaatsen met aanduiding en status (vrij, bezet, clubplaats), en bij bezette plaatsen de boot en de naam van de eigenaar.
+- Gegeven de indeling, wanneer de beheerder het overzicht opent, dan staan per rek de naam, de omschrijving en alle plaatsen met aanduiding en status (vrij, bezet, clubplaats), en bij bezette plaatsen de boot en de naam van de eigenaar.
 - Gegeven een plaats in het overzicht, wanneer de beheerder erop kiest, dan opent het plaatsdetail (BLB-012).
 - Gegeven een telefoon, wanneer de beheerder het overzicht opent, dan is de basisinformatie leesbaar zonder zijwaarts scrollen.
 
@@ -349,7 +351,7 @@ Prioriteit: Must. Bron: intake 2, 11, overlay §5. Afhankelijk van: BLB-010. Bes
 
 Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de eigenaar is zodat ik kan zien of een boot op de juiste plaats ligt.
 
-- Gegeven een bezette plaats, wanneer een bezoeker de pagina zonder in te loggen opent, dan ziet die de aanduiding van de plaats, de naam van de boot, de foto als die er is en alleen de naam van de eigenaar.
+- Gegeven een bezette plaats, wanneer een bezoeker de pagina zonder in te loggen opent, dan ziet die de aanduiding van de plaats, de omschrijving van het rek, de naam van de boot, de foto als die er is en alleen de naam van de eigenaar.
 - Gegeven de openbare pagina, wanneer een bezoeker de gegevens bekijkt die de pagina ontvangt, dan staan daar geen adres, telefoonnummer, e-mailadres of lidnummer in.
 - Gegeven de link naar de openbare pagina van een plaats, wanneer iemand die bekijkt, dan bevat die geen aanduiding, volgnummer of andere afleidbare waarde, maar een willekeurige, niet te voorspellen sleutel per plaats. Wie één link kent, kan daaruit de link van een andere plaats niet afleiden (besluit stakeholder 2026-10-30).
 - Gegeven een plaats waarvan de aanduiding wijzigt door een nieuwe reknaam, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
@@ -363,7 +365,7 @@ Prioriteit: Must. Bron: intake 11. Afhankelijk van: BLB-020, BLB-027.
 
 Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de aanduiding van de plaats, de naam van de eigenaar en een QR-code zodat elke plaats in de loods herkenbaar is.
 
-- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, aanduiding, naam van de eigenaar en QR-code.
+- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, aanduiding, omschrijving van het rek, naam van de eigenaar en QR-code.
 - Gegeven een QR-code op een kaartje, wanneer een bezoeker die scant, dan opent de openbare pagina van die plaats (BLB-020).
 - Gegeven een kaartje, wanneer de beheerder het bekijkt, dan staan er geen adres, telefoonnummer of e-mailadres op.
 - Gegeven een vrije plaats, wanneer de beheerder het kaartje maakt, dan staat er de aanduiding en de vermelding vrij in plaats van een naam.
@@ -725,8 +727,10 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | 18 | De waarschuwing voor tokens die binnen een maand verlopen (BLB-037 criterium 5) staat in architectuur §7.1 bij slice 10, maar ADR-010 zet hem op de statuspagina van slice 9. Het robottoken bestaat al vanaf slice 5 en verloopt na 365 dagen. | Regie en foundation | Nee | Besloten door de regie: slice 9, met BLB-037 (ADR-010) |
 | 19 | Geldt "(geschikt voor …)" in de export ook voor een clubplaats zonder boot? Het besluit noemt alleen een vrije plaats. | Stakeholder | Nee; slice 4 bouwt het voor een vrije plaats | Besloten door de stakeholder 2026-10-31: ja, ook voor een clubplaats zonder boot |
 | 21 | BLB-040 vraagt de vijf aanroepen van de container met voorbeeldcode, maar `GET /api/v1/bootaantallen` hoort bij BLB-009 in slice 9. Slice 6 beschrijft vier aanroepen en noemt de vijfde voor slice 9 (issue #22). Blijft dat zo, of gaat de aanroep naar voren? | Apex en foundation | Nee; de container gebruikt de aanroep pas als terugschrijven aan kan | Besloten door foundation: zo laten, zoals forge adviseerde. Het contract in ADR-012 v1.3.0 kent vijf aanroepen; slice 6 bouwt er vier. BLB-040 criterium 1 en 3 gelden in slice 9 ook voor de vijfde aanroep |
-| 22 | Welk vak verdwijnt bij verkleinen, en welke verdieping bij weghalen (BLB-044)? Issue #80 noemt het niet. | Regie | Nee | Besloten door de regie 2026-11-03: de hoogste nummers. Het besluit van de stakeholder noemt een aantal vakken per verdieping en een aantal verdiepingen, dus de nummering is altijd 1 tot en met dat aantal |
+| 22 | Welk vak verdwijnt bij verkleinen, en welke verdieping bij weghalen (BLB-044)? Issue #80 noemt het niet. | Regie | Nee | Het besluit van de regie (de hoogste nummers) is vervallen. Besloten door de stakeholder 2026-11-03 (issue #80): de beheerder zet elk vak los aan of uit, gaten in de nummering mogen, en een vak met een boot kan niet uit. Voor verdiepingen: vraag 24 |
 | 23 | In welke slice komen BLB-001 (nieuw) en BLB-044? | Regie | Nee | Besloten door de regie 2026-11-03: slice 12, voor issue #80 |
+| 24 | (a) Mag een gat in de verdiepingen ontstaan als de beheerder een verdieping weghaalt, net als bij vakken? (b) Is de omschrijving van een rek verplicht, en wat is de grens? Het besluit noemt "tot 52 tekens" als voorbeeld. | Stakeholder | Nee, BLB-001 en BLB-044 zijn te bouwen; de test op deze twee grenzen wacht | Besloten door de regie 2026-11-03: (a) ja, een verdieping bestaat zolang er een vak aan staat en houdt haar nummer; (b) niet verplicht, ten hoogste 60 tekens (ADR-003 v2.1.0) |
+| 25 | Issue #80 noemt een nieuwe bootsoort, wildwaterkano. Hoort die in de startlijst (§8, BLB-002)? | Regie | Nee | Besloten door de regie 2026-11-03: nee. De stakeholder besloot "alleen als seed"; de seed voegt wildwaterkano toe, een echte installatie via BLB-028 |
 
 ## 8. Aannames
 

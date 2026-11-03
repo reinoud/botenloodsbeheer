@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.5.0
+**Versie:** v0.6.0
 **Datum:** 2026-11-03
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -9,7 +9,7 @@
 
 ## 1. Samenvatting
 
-Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 160 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
+Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 224 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
 
 De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de aanduiding (`A/1/1`) zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
 
@@ -45,7 +45,7 @@ De applicatie heeft drie lagen. De regel is eenvoudig: alleen de domeinlaag wijz
 
 Elke domeinfunctie die iets wijzigt, krijgt de handelende partij mee: een beheerder, een token of een taak. De functie controleert de regel, wijzigt, en schrijft de logregel in dezelfde transactie. Een wijziging zonder logregel kan daardoor niet bestaan. Een geweigerde wijziging levert een `Regelfout` met een vaste reden op. De webinterface toont die reden als melding; de API geeft dezelfde reden terug met status 409 of 422. Zo geldt BLB-034 vanzelf: er is geen tweede codepad.
 
-De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: zonder het recht persoonsgegevens geeft de domeinlaag geen adres, telefoonnummer en e-mailadres terug. De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
+De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: zonder het recht persoonsgegevens geeft de domeinlaag geen adres, telefoonnummer en e-mailadres terug. De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
 
 De applicatie praat met geen enkel extern systeem. De integratiecontainer haalt de leden uit de bron en stuurt ruwe records naar `PUT /api/v1/leden`; `domein/leden` valideert en slaat op (ADR-004, ADR-012).
 
@@ -57,8 +57,8 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 
 | Entiteit | Belangrijkste velden | Relaties en regels |
 |----------|----------------------|--------------------|
-| `rek` | naam (ten hoogste 10 tekens, zonder `/`, uniek zonder hoofdletters), volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. Het aantal verdiepingen en vakken volgt uit de plaatsen (ADR-003). |
-| `plaats` | verdieping (1 tot en met 5), vak (1 tot en met 6), `publieke_sleutel` (uniek, vast), is_clubplaats, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek, uniek per rek, verdieping en vak. `code` is afgeleid: `<rek>/<verdieping>/<vak>`. Ten hoogste één boot (ADR-003). |
+| `rek` | naam (ten hoogste 10 tekens, zonder `/`, uniek zonder hoofdletters), omschrijving (ten hoogste 60 tekens), volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. Welke verdiepingen en vakken er zijn, volgt uit de plaatsen; gaten mogen (ADR-003). |
+| `plaats` | verdieping (1 tot en met 5), vak (1 tot en met 12), `publieke_sleutel` (uniek, vast), is_clubplaats, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek, uniek per rek, verdieping en vak. `code` is afgeleid: `<rek>/<verdieping>/<vak>`. Ten hoogste één boot (ADR-003). |
 | `bootsoort` | naam | Startlijst van vijf soorten. Een tabel, geen vaste lijst in code, zodat BLB-028 later geen migratie vraagt. |
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
 | `lid` | lidnummer (uniek), naam, adres, telefoon, e-mail, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
@@ -137,9 +137,9 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 
 ### 6.3 Seeddata
 
-`flask seed` maakt een volledige, synthetische loods op de omvang van de vereniging, met een vaste random seed zodat elke run hetzelfde oplevert:
+`flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
-- 10 rekken met samen 160 plaatsen, waarvan 8 clubplaatsen en een mix van geschikte bootsoorten;
+- 11 rekken met samen 224 plaatsen, waarvan 27 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
 - 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam en kleuren voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
@@ -201,7 +201,7 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 |----------|--------|------|--------|-----------|-----|
 | Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkey: phishingbestendig. Wachtwoord met TOTP: argon2id, TOTP-code eenmalig bruikbaar, vergrendeling per account na vijf pogingen, rate limit per IP; phishing blijft mogelijk en is door de stakeholder geaccepteerd (restrisico) | 001 |
 | Overgenomen open sessie voegt een eigen passkey toe, trekt een methode in, nodigt een beheerder uit of herstelt een collega | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
-| Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vier velden, E2E-test op het antwoord | 003 |
+| Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vijf velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
 | Kwaadaardig bestand als foto of logo (XSS via SVG, verborgen locatiegegevens) | Upload van een foto; logobestand in de installatie | M | M | Alleen JPEG, PNG en WebP, opnieuw coderen met Pillow, EXIF verwijderen; een ongeldig logo wordt niet getoond | 008 |
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.6.0 | 2026-11-03 | Nieuwe besluiten issue #80: vak 1 tot en met 12 met gaten, omschrijving van het rek, seed uit de echte indeling (§1, §3, §4, §6.3); ADR-003 v2.1.0 |
 | v0.5.0 | 2026-11-03 | Indeling in rek, verdieping en vak (issue #80): §1, §3, §4; ADR-003 v2.0.0 |
 | v0.4.1 | 2026-11-01 | §5: geen `docker/traefik/`, de lokale Traefik staat in `compose.dev.yml`; voorbeeld van een gedeelde Traefik; ADR-013 v1.1.0 (issue #36) |
 | v0.4.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013, issue #29): §2, §6, §7.1, §8, §9 besluit 2 en 8, §10.2 vragen 7 en 8; ADR-001 v1.2.0, ADR-002 v1.1.2, ADR-005 v1.3.0, ADR-008 v1.2.0, ADR-009 v1.2.0, ADR-010 v1.1.1, ADR-011 v1.2.1, ADR-012 v1.4.0 |
