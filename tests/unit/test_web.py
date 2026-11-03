@@ -174,3 +174,25 @@ def test_worker_heeft_geen_sessie_of_totp_sleutel_nodig(monkeypatch):
     monkeypatch.setenv("DIENST", "web")
     with pytest.raises(config.ConfigFout, match="TOTP_SLEUTEL"):
         config.laad()
+
+
+# Gecodeerd pad (ADR-013, issue #65): 400 voor web en api, nooit een inlog of doorverwijzing.
+@pytest.mark.parametrize("methode, pad", [
+    ("post", "/%2Finloggen"),
+    ("post", "/%2finloggen/code"),
+    ("get", "/%2Fuitnodiging/abc"),
+    ("get", "/%69nloggen"),
+], ids=["inloggen", "code", "uitnodiging", "gecodeerde_letter"])
+def test_gecodeerd_pad_geeft_400(client, methode, pad):
+    assert getattr(client, methode)(pad).status_code == 400
+
+
+@pytest.mark.api
+def test_gecodeerd_api_pad_geeft_400(client):
+    assert client.get("/api%2Fv1/ik").status_code == 400
+
+
+def test_procent_in_querystring_wordt_niet_geweigerd(client):
+    # Andere kant van de grens: alleen het pad telt, niet de querystring.
+    assert client.get("/inloggen?volgende=%2Flog").status_code == 200
+    assert client.get("/inloggen").status_code == 200

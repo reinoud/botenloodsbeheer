@@ -26,6 +26,19 @@ services:
       - --entrypoints.web.http.aliasheadersstrategy=delete
       - --entrypoints.websecure.http.aliasheadersstrategy=delete
       - --entrypoints.intern.http.aliasheadersstrategy=delete
+      # Gecodeerde tekens in het pad weigeren: Traefik geeft zelf 400 (ADR-013).
+      - --entrypoints.web.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.web.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.web.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.web.http.encodedcharacters.allowencodedpercent=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedpercent=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedpercent=false
       - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?ACME_EMAIL ontbreekt}
       - --certificatesresolvers.letsencrypt.acme.storage=/acme/acme.json
       - --certificatesresolvers.letsencrypt.acme.tlschallenge=true

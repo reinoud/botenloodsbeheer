@@ -4,7 +4,7 @@ import json
 import logging
 import sys
 
-from flask import Flask
+from flask import Flask, abort, request
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -35,6 +35,15 @@ def create_app(overrides=None):
 
     # Traefik is de enige vertrouwde proxy en overschrijft X-Forwarded-For (ADR-013).
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=app.config["PROXY_HOPS"], x_proto=1)
+
+    @app.before_request
+    def gecodeerd_pad_weigeren():
+        # Traefik kiest de router op het gecodeerde pad (%2F blijft staan), Werkzeug decodeert het.
+        # Geen route heeft procentcodering nodig; zo omzeilt niemand de rate limit (ADR-013, #65).
+        # RAW_URI zet Gunicorn en ook de testclient; shortcut: andere servers zonder RAW_URI
+        # laten alles door, de app draait alleen achter Gunicorn.
+        if "%" in request.environ.get("RAW_URI", "").split("?", 1)[0]:
+            abort(400)
 
     db.init_app(app)
     csrf.init_app(app)

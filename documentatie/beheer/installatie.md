@@ -29,6 +29,8 @@ De labels zijn getest met `traefik:v3.7.17`. Een andere versie vraagt dat de pro
 - aangesloten zijn op `<INSTALLATIE>_voorkant` en `<INSTALLATIE>_koppeling`;
 - een certresolver hebben die het certificaat van `DOMEIN` bij Let's Encrypt aanvraagt. In het voorbeeld heet die `letsencrypt` en gebruikt hij de TLS-challenge, dus poort 443 moet vanaf internet bereikbaar zijn en `DOMEIN` moet naar de host wijzen.
 
+Aanbevolen, geen eis: zet op de drie entrypoints `http.encodedCharacters.allowEncodedSlash`, `allowEncodedBackSlash`, `allowEncodedNullCharacter` en `allowEncodedPercent` op `false` (`--entrypoints.<naam>.http.encodedcharacters.<optie>=false`, zoals in het voorbeeld). Traefik weigert dan een pad als `/%2Finloggen` zelf met 400. De botenloods weigert zo'n pad ook zelf met 400, dus zonder de opties is de rate limit op inloggen niet te omzeilen. De opties raken wel andere diensten op dezelfde entrypoints, controleer eerst dat die geen gecodeerde schuine strepen nodig hebben.
+
 De toegangslog van Traefik mag aan staan: elke router van de botenloods zet hem voor zichzelf uit. Een verzoek dat bij geen enkele router past, zoals `https://DOMEIN/api/...`, schrijft Traefik wel in zijn log. Dat geldt ook zolang `web` start of gestopt is: dan heeft `web` geen router, en komen alle paden, ook codes en zoektermen, in de log van de gedeelde Traefik.
 
 Traefik leest de Docker-socket. Wie die socket leest, heeft de rechten van root op de host. Laat Traefik daarom via een socketproxy lezen die alleen leesrechten op containers geeft, zoals in het voorbeeld. Ook met alleen leesrechten zijn via `inspect` alle omgevingsvariabelen van de containers leesbaar, dus ook de geheimen in `.env`. Geef de socketproxy daarom alleen aan Traefik.

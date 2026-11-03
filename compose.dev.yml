@@ -57,6 +57,19 @@ services:
       - --entrypoints.web.address=:8080
       - --entrypoints.websecure.address=:8443
       - --entrypoints.intern.address=:8081
+      # Gecodeerde tekens in het pad weigeren (ADR-013, #65): Traefik geeft zelf 400.
+      - --entrypoints.web.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.web.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.web.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.web.http.encodedcharacters.allowencodedpercent=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.websecure.http.encodedcharacters.allowencodedpercent=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedslash=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedbackslash=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodednullcharacter=false
+      - --entrypoints.intern.http.encodedcharacters.allowencodedpercent=false
       - --accesslog=true
       - --log.level=INFO
     ports: ["127.0.0.1:8080:8080"]

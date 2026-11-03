@@ -11,7 +11,7 @@ docker compose up -d db
 docker compose exec db sh /docker-entrypoint-initdb.d/rollen.sh
 ```
 
-Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
+Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
 
 ## Tokens
 
