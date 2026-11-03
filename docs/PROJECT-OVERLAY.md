@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.1
+**Versie overlay:** v0.4.2
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -142,6 +142,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog). Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
+- Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
 
 #### Documentatie, backlog en ADR's
@@ -224,6 +225,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.2 | 2026-11-03 | Controle van de tags na de eerste release | Terugblik aegis, herstel CI (#59) |
 | v0.4.1 | 2026-11-03 | Regels over `exclude-newer` met Dependabot, de trivy-stap in de release en het opschonen van teksten | Review aegis (#59), terugblik #71 |
 | v0.4.0 | 2026-11-03 | Briefingchecklist opgeschoond: 137 regels samengevoegd tot 91 en gegroepeerd per soort opdracht (algemeen, bouw, review, E2E, migratie en database, security en proxy, documentatie); geen inhoud vervallen (#71) | Retrospective mijlpaal slice 1 tot en met 11 |
 | v0.3.23 | 2026-11-03 | Regels over de laag van een weigering in een proef en over opties van externe componenten, uit de terugblikken van bedrock, aegis en sentinel (#65) | Lessen |
