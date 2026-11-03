@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.4.1
-**Datum:** 2026-11-01
+**Versie:** v0.5.0
+**Datum:** 2026-11-03
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -11,7 +11,7 @@
 
 Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 160 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
 
-De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de plaatscode zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
+De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de aanduiding (`A/1/1`) zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
 
 **Architectuurgezondheid:** Sound. De besluiten van de stakeholder van 2026-10-30 en 2026-10-31 zijn verwerkt (§9).
 
@@ -45,7 +45,7 @@ De applicatie heeft drie lagen. De regel is eenvoudig: alleen de domeinlaag wijz
 
 Elke domeinfunctie die iets wijzigt, krijgt de handelende partij mee: een beheerder, een token of een taak. De functie controleert de regel, wijzigt, en schrijft de logregel in dezelfde transactie. Een wijziging zonder logregel kan daardoor niet bestaan. Een geweigerde wijziging levert een `Regelfout` met een vaste reden op. De webinterface toont die reden als melding; de API geeft dezelfde reden terug met status 409 of 422. Zo geldt BLB-034 vanzelf: er is geen tweede codepad.
 
-De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: zonder het recht persoonsgegevens geeft de domeinlaag geen adres, telefoonnummer en e-mailadres terug. De openbare pagina gebruikt een eigen leesfunctie die alleen plaatscode, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
+De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: zonder het recht persoonsgegevens geeft de domeinlaag geen adres, telefoonnummer en e-mailadres terug. De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
 
 De applicatie praat met geen enkel extern systeem. De integratiecontainer haalt de leden uit de bron en stuurt ruwe records naar `PUT /api/v1/leden`; `domein/leden` valideert en slaat op (ADR-004, ADR-012).
 
@@ -57,8 +57,8 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 
 | Entiteit | Belangrijkste velden | Relaties en regels |
 |----------|----------------------|--------------------|
-| `rek` | naam, volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. |
-| `plaats` | code (uniek, te wijzigen), `publieke_sleutel` (uniek, vast), is_clubplaats, volgorde, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek. Ten hoogste één boot (ADR-003). |
+| `rek` | naam (ten hoogste 10 tekens, zonder `/`, uniek zonder hoofdletters), volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. Het aantal verdiepingen en vakken volgt uit de plaatsen (ADR-003). |
+| `plaats` | verdieping (1 tot en met 5), vak (1 tot en met 6), `publieke_sleutel` (uniek, vast), is_clubplaats, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek, uniek per rek, verdieping en vak. `code` is afgeleid: `<rek>/<verdieping>/<vak>`. Ten hoogste één boot (ADR-003). |
 | `bootsoort` | naam | Startlijst van vijf soorten. Een tabel, geen vaste lijst in code, zodat BLB-028 later geen migratie vraagt. |
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
 | `lid` | lidnummer (uniek), naam, adres, telefoon, e-mail, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
@@ -73,7 +73,7 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 
 Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor naam en kleuren die de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
 
-De regels die de database zelf kan bewaken, staan als constraint in de database: unieke code, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (code, bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
+De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna de plaatsen die verdwijnen. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
 
 Verplaatsen van een boot is vrijgeven gevolgd door toewijzen, binnen één domeinfunctie en één transactie (aanname uit de backlog §8).
 
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.5.0 | 2026-11-03 | Indeling in rek, verdieping en vak (issue #80): §1, §3, §4; ADR-003 v2.0.0 |
 | v0.4.1 | 2026-11-01 | §5: geen `docker/traefik/`, de lokale Traefik staat in `compose.dev.yml`; voorbeeld van een gedeelde Traefik; ADR-013 v1.1.0 (issue #36) |
 | v0.4.0 | 2026-10-31 | Traefik vervangt Nginx (ADR-013, issue #29): §2, §6, §7.1, §8, §9 besluit 2 en 8, §10.2 vragen 7 en 8; ADR-001 v1.2.0, ADR-002 v1.1.2, ADR-005 v1.3.0, ADR-008 v1.2.0, ADR-009 v1.2.0, ADR-010 v1.1.1, ADR-011 v1.2.1, ADR-012 v1.4.0 |
 | v0.3.3 | 2026-10-31 | Bouw slice 6 (issue #22): seed in de worker zonder leden, de leden komen via de integratiecontainer (§6.2, §6.3, §7.1); secretbestand leeg aanmaken; ADR-004 v2.2.0, ADR-007 v1.2.0, ADR-012 v1.3.0 |

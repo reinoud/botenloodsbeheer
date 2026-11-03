@@ -1,10 +1,10 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.23
+**Versie:** v0.4.0
 **Datum:** 2026-11-03
 **Opgesteld door:** Apex, Senior Product Owner
-**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
+**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
 
 ## 1. Uitgangspunten
@@ -27,9 +27,9 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 
 | Meting | Waarde |
 |--------|--------|
-| Aantal stories | 42 |
+| Aantal stories | 44, waarvan BLB-004 vervallen (issue #80) |
 | Must | 34 |
-| Should | 7 |
+| Should | 8 |
 | Could | 1 |
 | Af (slice 1 tot en met 3) | 24, waarvan BLB-006, 007, 008, 017, 024 en 027 nieuwe criteria hebben voor slice 4 of 6 |
 | Gereed voor bouw | Slice 4 tot en met 11 (§5) |
@@ -66,7 +66,7 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 | 9 | BLB-018 |
 | 10 | BLB-019 |
 | 11 | BLB-021 |
-| 12 | BLB-001, BLB-002, BLB-003, BLB-004 |
+| 12 | BLB-001, BLB-002, BLB-003, BLB-044 (BLB-004 vervallen) |
 
 ## 4. Stories
 
@@ -74,13 +74,19 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 
 #### BLB-001 Rekken en plaatsen beheren
 
-Prioriteit: Must. Bron: intake 12. Afhankelijk van: BLB-022.
+Prioriteit: Must. Bron: intake 12, issue #80. Afhankelijk van: BLB-022.
 
-Als beheerder wil ik rekken en plaatsen aanmaken, wijzigen en verwijderen zodat de indeling in de applicatie klopt met de loods.
+Als beheerder wil ik rekken aanmaken, hernoemen en verwijderen, met per rek verdiepingen en vakken, zodat de indeling in de applicatie klopt met de rekken in de loods.
 
-- Gegeven een ingelogde beheerder, wanneer die een rek met een naam aanmaakt en daarin plaatsen met een code, dan staan het rek en de plaatsen in de indeling.
-- Gegeven een code die al bij een andere plaats hoort, wanneer de beheerder die code opnieuw invoert, dan weigert de applicatie dat met een duidelijke melding.
-- Gegeven een plaats of rek waarop een boot is toegewezen, wanneer de beheerder het wil verwijderen, dan weigert de applicatie en wijst op het vrijgeven van de plaats.
+- Gegeven een ingelogde beheerder, wanneer die een rek aanmaakt met een naam en per verdieping een aantal vakken, dan staat elk vak als plaats in de indeling, met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1`.
+- Gegeven een nieuw rek, wanneer de beheerder 1 tot en met 5 verdiepingen opgeeft met elk 1 tot en met 6 vakken, dan slaat de applicatie het rek op. Verdiepingen in hetzelfde rek mogen een verschillend aantal vakken hebben.
+- Gegeven een nieuw rek, wanneer de beheerder 0 of 6 verdiepingen opgeeft, of 0 of 7 vakken op een verdieping, dan weigert de applicatie met een duidelijke melding.
+- Gegeven een reknaam die al bestaat (ook met andere hoofdletters), die langer is dan 10 tekens of die een `/` bevat, wanneer de beheerder die invoert, dan weigert de applicatie met een duidelijke melding.
+- Gegeven een plaats, wanneer de beheerder die bewerkt, dan is de aanduiding niet los te wijzigen. Ze verandert alleen met de naam van het rek; toewijzing, publieke sleutel en instellingen blijven staan.
+- Gegeven een kaartje dat vóór een nieuwe reknaam is geprint, wanneer een bezoeker de QR-code scant, dan opent de pagina van dezelfde plaats, met de nieuwe aanduiding.
+- Gegeven een rek met een toegewezen boot, wanneer de beheerder het wil verwijderen, dan weigert de applicatie en wijst op het vrijgeven van de plaats.
+- Gegeven een lijst met plaatsen, dan staan de plaatsen op volgorde van het rek, daarna verdieping, daarna vak.
+- Gegeven de API, de export en het log, wanneer die een plaats tonen, dan staat de aanduiding in het bestaande veld `code`; er komen geen velden bij.
 - Gegeven een bezoeker, wanneer die de pagina voor het beheer van de indeling opent, dan gaat die naar het inlogscherm en verandert er niets.
 
 #### BLB-002 Geschikte bootsoorten per plaats
@@ -102,14 +108,28 @@ Als beheerder wil ik plaatsen als clubplaats markeren zodat ze gereserveerd blij
 - Gegeven een clubplaats, wanneer de beheerder er de boot van een lid aan wil toewijzen, dan weigert de applicatie met de reden dat de plaats gereserveerd is.
 - Gegeven een plaats waarop de boot van een lid ligt, wanneer de beheerder de plaats als clubplaats wil markeren, dan weigert de applicatie tot de plaats is vrijgegeven.
 
-#### BLB-004 Plaatscode wijzigen
+#### BLB-004 Plaatscode wijzigen (vervallen)
 
-Prioriteit: Must. Bron: intake (domein), overlay §5. Afhankelijk van: BLB-001.
+Status: vervallen door issue #80. De aanduiding volgt uit rek, verdieping en vak en is niet los te wijzigen; hernoemen gaat via de naam van het rek (BLB-001).
 
-Als beheerder wil ik de code van een plaats wijzigen zodat de nummering kan meegroeien met de loods.
+#### BLB-044 Verdiepingen en vakken per rek instellen
 
-- Gegeven een toegewezen plaats, wanneer de beheerder de code wijzigt, dan blijft de toewijzing staan en tonen alle schermen de nieuwe code.
-- Gegeven een kaartje dat met de oude code is geprint, wanneer een bezoeker de QR-code scant, dan opent de pagina van dezelfde plaats, met de nieuwe code.
+Prioriteit: Must. Bron: issue #80. Afhankelijk van: BLB-001.
+
+Als beheerder wil ik verdiepingen en vakken van een rek toevoegen en weghalen zodat de indeling meegroeit met de loods.
+
+- Gegeven een rek met minder dan 5 verdiepingen, wanneer de beheerder een verdieping toevoegt met 1 tot en met 6 vakken, dan staan de nieuwe plaatsen in de indeling. Een zesde verdieping weigert de applicatie.
+- Gegeven een verdieping, wanneer de beheerder het aantal vakken verhoogt tot ten hoogste 6, dan komen de nieuwe vakken erbij en blijven de bestaande plaatsen met boot, publieke sleutel en instellingen staan. Een zevende vak weigert de applicatie.
+- Gegeven een verdieping zonder boten op de vakken die verdwijnen, wanneer de beheerder de verdieping weghaalt of het aantal vakken verlaagt, dan verdwijnen die plaatsen.
+- Gegeven een vak met een boot dat zou verdwijnen, wanneer de beheerder de verdieping weghaalt of het aantal vakken verlaagt, dan weigert de applicatie met dezelfde melding als bij het verwijderen van een rek met een boot (BLB-001), en verandert er niets.
+
+Route voor een mens (issue #80):
+
+1. Log in als beheerder en open de indeling.
+2. Maak rek `X` met verdieping 1 met 6 vakken en verdieping 2 met 4 vakken.
+3. Controleer dat `X/1/1` tot en met `X/1/6` en `X/2/1` tot en met `X/2/4` er staan.
+4. Wijs een boot toe aan `X/2/3` en probeer verdieping 2 naar 2 vakken te verkleinen: dat wordt geweigerd.
+5. Print het kaartje van `X/2/3` en open de QR-link: de openbare pagina toont `X/2/3`.
 
 ### EP-02 Leden en boten
 
@@ -205,7 +225,7 @@ Als beheerder wil ik zien welke leden met een opzegdatum in de toekomst nog een 
 
 - Gegeven een import met een lid met een opzegdatum in de toekomst, wanneer de import slaagt, dan is het lid aangemaakt of bijgewerkt en blijft het lid tot die datum.
 - Gegeven een lid met een opzegdatum in de toekomst, wanneer de eerste import na die datum draait, dan is het lid oud-lid (BLB-008) en staat het niet meer in dit overzicht maar bij de plaatsen van opgezegde leden (BLB-018).
-- Gegeven leden met een opzegdatum in de toekomst en een boot met een plaats, wanneer de beheerder het overzicht opent, dan staan per boot de naam van het lid, de boot, rek en code van de plaats en de opzegdatum, met de vroegste opzegdatum bovenaan.
+- Gegeven leden met een opzegdatum in de toekomst en een boot met een plaats, wanneer de beheerder het overzicht opent, dan staan per boot de naam van het lid, de boot, de aanduiding van de plaats en de opzegdatum, met de vroegste opzegdatum bovenaan.
 - Gegeven een lid met een opzegdatum in de toekomst en alleen een boot zonder plaats, wanneer de beheerder het overzicht opent, dan staat die boot er niet in.
 - Gegeven geen enkel lid met een opzegdatum in de toekomst en een boot met een plaats, wanneer de beheerder het overzicht opent, dan staat er dat er geen boten zijn.
 
@@ -279,7 +299,7 @@ Prioriteit: Must. Bron: intake 3. Afhankelijk van: BLB-002, BLB-011.
 
 Als beheerder wil ik een overzicht van vrije plaatsen, te filteren op bootsoort, zodat ik snel een passende plaats vind.
 
-- Gegeven vrije en bezette plaatsen, wanneer de beheerder het overzicht opent, dan staan alleen vrije plaatsen in de lijst, met rek, code en geschikte bootsoorten. Clubplaatsen staan er niet in.
+- Gegeven vrije en bezette plaatsen, wanneer de beheerder het overzicht opent, dan staan alleen vrije plaatsen in de lijst, met aanduiding en geschikte bootsoorten. Clubplaatsen staan er niet in.
 - Gegeven het filter surfski, wanneer de beheerder dat kiest, dan staan alleen vrije plaatsen die voor surfski geschikt zijn in de lijst.
 - Gegeven een filter waarvoor geen vrije plaats bestaat, wanneer de beheerder dat kiest, dan staat er dat er geen vrije plaatsen zijn.
 
@@ -289,7 +309,7 @@ Prioriteit: Must. Bron: intake 5. Afhankelijk van: BLB-010.
 
 Als beheerder wil ik de huidige indeling per rek op het scherm zien zodat ik de loods in één oogopslag overzie.
 
-- Gegeven de indeling, wanneer de beheerder het overzicht opent, dan staan per rek alle plaatsen met code en status (vrij, bezet, clubplaats), en bij bezette plaatsen de boot en de naam van de eigenaar.
+- Gegeven de indeling, wanneer de beheerder het overzicht opent, dan staan per rek alle plaatsen met aanduiding en status (vrij, bezet, clubplaats), en bij bezette plaatsen de boot en de naam van de eigenaar.
 - Gegeven een plaats in het overzicht, wanneer de beheerder erop kiest, dan opent het plaatsdetail (BLB-012).
 - Gegeven een telefoon, wanneer de beheerder het overzicht opent, dan is de basisinformatie leesbaar zonder zijwaarts scrollen.
 
@@ -299,7 +319,7 @@ Prioriteit: Should. Bron: intake 6, besluit 2026-10-31 (issue #17). Afhankelijk 
 
 Als beheerder wil ik de huidige indeling naar Excel exporteren zodat ik die buiten de applicatie kan gebruiken.
 
-- Gegeven de indeling, wanneer de beheerder de export start, dan komt er een Excel-bestand met een rij per plaats met rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer (besluit vraag 8; de kolommen kunnen later veranderen).
+- Gegeven de indeling, wanneer de beheerder de export start, dan komt er een Excel-bestand met een rij per plaats met rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer (besluit vraag 8; de kolommen kunnen later veranderen). De kolom code bevat de aanduiding, zoals `A/1/1` (issue #80).
 - Gegeven het bestand, wanneer de beheerder het opent, dan bevat het geen adres, telefoonnummer, e-mailadres of foto.
 - Gegeven een vrije plaats die geschikt is voor kajak en surfski, wanneer de beheerder exporteert, dan staat in de kolom Bootsoort "(geschikt voor Kajak, Surfski)", met de namen zoals ingevoerd (besluit vraag 11; spelling besloten 2026-10-31). Voor een clubplaats zonder boot zie vraag 19. (slice 4)
 
@@ -309,7 +329,7 @@ Prioriteit: Must. Bron: intake 9. Afhankelijk van: BLB-008.
 
 Als beheerder wil ik een overzicht van toegewezen plaatsen van leden die hebben opgezegd zodat ik die plaatsen kan opvolgen en vrijgeven.
 
-- Gegeven oud-leden met een toegewezen plaats, wanneer de beheerder het overzicht opent, dan staan per plaats rek, code, boot, naam van het oud-lid en opzegdatum in de lijst, met de oudste opzegging bovenaan. Voor een lid dat zonder opzegdatum uit de bron verdween, is de opzegdatum de datum waarop de import het lid niet meer vond (besluit vraag 13).
+- Gegeven oud-leden met een toegewezen plaats, wanneer de beheerder het overzicht opent, dan staan per plaats aanduiding, boot, naam van het oud-lid en opzegdatum in de lijst, met de oudste opzegging bovenaan. Voor een lid dat zonder opzegdatum uit de bron verdween, is de opzegdatum de datum waarop de import het lid niet meer vond (besluit vraag 13).
 - Gegeven een plaats in dit overzicht, wanneer de beheerder erop kiest, dan kan die de plaats vrijgeven (BLB-011).
 
 #### BLB-019 Lijst per lid
@@ -329,11 +349,11 @@ Prioriteit: Must. Bron: intake 2, 11, overlay §5. Afhankelijk van: BLB-010. Bes
 
 Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de eigenaar is zodat ik kan zien of een boot op de juiste plaats ligt.
 
-- Gegeven een bezette plaats, wanneer een bezoeker de pagina zonder in te loggen opent, dan ziet die de plaatscode, de naam van de boot, de foto als die er is en alleen de naam van de eigenaar.
+- Gegeven een bezette plaats, wanneer een bezoeker de pagina zonder in te loggen opent, dan ziet die de aanduiding van de plaats, de naam van de boot, de foto als die er is en alleen de naam van de eigenaar.
 - Gegeven de openbare pagina, wanneer een bezoeker de gegevens bekijkt die de pagina ontvangt, dan staan daar geen adres, telefoonnummer, e-mailadres of lidnummer in.
-- Gegeven de link naar de openbare pagina van een plaats, wanneer iemand die bekijkt, dan bevat die geen plaatscode, volgnummer of andere afleidbare waarde, maar een willekeurige, niet te voorspellen sleutel per plaats. Wie één link kent, kan daaruit de link van een andere plaats niet afleiden (besluit stakeholder 2026-10-30).
-- Gegeven een plaats waarvan de plaatscode wijzigt, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
-- Gegeven een plaats die alleen via de QR-link op te vragen is, wanneer een bezoeker een plaatscode probeert in te typen of op te zoeken, dan biedt de applicatie daar geen mogelijkheid voor (besluit stakeholder 2026-10-30: anders zijn de namen van leden uit de applicatie te halen).
+- Gegeven de link naar de openbare pagina van een plaats, wanneer iemand die bekijkt, dan bevat die geen aanduiding, volgnummer of andere afleidbare waarde, maar een willekeurige, niet te voorspellen sleutel per plaats. Wie één link kent, kan daaruit de link van een andere plaats niet afleiden (besluit stakeholder 2026-10-30).
+- Gegeven een plaats waarvan de aanduiding wijzigt door een nieuwe reknaam, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
+- Gegeven een plaats die alleen via de QR-link op te vragen is, wanneer een bezoeker een aanduiding probeert in te typen of op te zoeken, dan biedt de applicatie daar geen mogelijkheid voor (besluit stakeholder 2026-10-30: anders zijn de namen van leden uit de applicatie te halen).
 - Gegeven een link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
 - Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een clubplaats staan de clubboot en de naam van de vereniging als eigenaar.
 
@@ -341,13 +361,13 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 
 Prioriteit: Must. Bron: intake 11. Afhankelijk van: BLB-020, BLB-027.
 
-Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de plaatscode, de naam van de eigenaar en een QR-code zodat elke plaats in de loods herkenbaar is.
+Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de aanduiding van de plaats, de naam van de eigenaar en een QR-code zodat elke plaats in de loods herkenbaar is.
 
-- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, plaatscode, naam van de eigenaar en QR-code.
+- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, aanduiding, naam van de eigenaar en QR-code.
 - Gegeven een QR-code op een kaartje, wanneer een bezoeker die scant, dan opent de openbare pagina van die plaats (BLB-020).
 - Gegeven een kaartje, wanneer de beheerder het bekijkt, dan staan er geen adres, telefoonnummer of e-mailadres op.
-- Gegeven een vrije plaats, wanneer de beheerder het kaartje maakt, dan staat er de plaatscode en de vermelding vrij in plaats van een naam.
-- Gegeven een clubplaats, met of zonder clubboot, wanneer de beheerder het kaartje maakt, dan staat er de plaatscode en de naam van de vereniging in plaats van een naam van een lid (ADR-011).
+- Gegeven een vrije plaats, wanneer de beheerder het kaartje maakt, dan staat er de aanduiding en de vermelding vrij in plaats van een naam.
+- Gegeven een clubplaats, met of zonder clubboot, wanneer de beheerder het kaartje maakt, dan staat er de aanduiding en de naam van de vereniging in plaats van een naam van een lid (ADR-011).
 
 ### EP-07 Inloggen en beheerders
 
@@ -410,7 +430,7 @@ Prioriteit: Must. Bron: intake (logging), overlay §5. Afhankelijk van: BLB-024.
 Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zien zodat ik meteen zie wat er is gewijzigd.
 
 - Gegeven een overzicht of detailscherm voor beheerders, wanneer de beheerder het opent, dan staat onder het scherm het log met de mutaties die erbij horen, de nieuwste bovenaan. Regels uit het technische log staan alleen onder de eigen menuoptie (BLB-043, besluit 2026-11-01).
-- Gegeven een plaats waaraan een boot is toegewezen of waarvan een boot is vrijgegeven, wanneer de beheerder het detail van die plaats opent, dan staat die mutatie in het log onder het detail. Een wijziging van de plaats zelf (code, bootsoorten, clubplaats) staat in het technische log (BLB-043).
+- Gegeven een plaats waaraan een boot is toegewezen of waarvan een boot is vrijgegeven, wanneer de beheerder het detail van die plaats opent, dan staat die mutatie in het log onder het detail. Een wijziging van de plaats zelf (bootsoorten, clubplaats) of van de indeling staat in het technische log (BLB-043).
 - Gegeven de openbare pagina, wanneer een bezoeker die opent, dan staat daar geen log.
 
 #### BLB-043 Twee logs: bootmutaties en techniek
@@ -705,6 +725,8 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | 18 | De waarschuwing voor tokens die binnen een maand verlopen (BLB-037 criterium 5) staat in architectuur §7.1 bij slice 10, maar ADR-010 zet hem op de statuspagina van slice 9. Het robottoken bestaat al vanaf slice 5 en verloopt na 365 dagen. | Regie en foundation | Nee | Besloten door de regie: slice 9, met BLB-037 (ADR-010) |
 | 19 | Geldt "(geschikt voor …)" in de export ook voor een clubplaats zonder boot? Het besluit noemt alleen een vrije plaats. | Stakeholder | Nee; slice 4 bouwt het voor een vrije plaats | Besloten door de stakeholder 2026-10-31: ja, ook voor een clubplaats zonder boot |
 | 21 | BLB-040 vraagt de vijf aanroepen van de container met voorbeeldcode, maar `GET /api/v1/bootaantallen` hoort bij BLB-009 in slice 9. Slice 6 beschrijft vier aanroepen en noemt de vijfde voor slice 9 (issue #22). Blijft dat zo, of gaat de aanroep naar voren? | Apex en foundation | Nee; de container gebruikt de aanroep pas als terugschrijven aan kan | Besloten door foundation: zo laten, zoals forge adviseerde. Het contract in ADR-012 v1.3.0 kent vijf aanroepen; slice 6 bouwt er vier. BLB-040 criterium 1 en 3 gelden in slice 9 ook voor de vijfde aanroep |
+| 22 | Welk vak verdwijnt bij verkleinen, en welke verdieping bij weghalen (BLB-044)? Issue #80 noemt het niet. | Regie | Nee | Besloten door de regie 2026-11-03: de hoogste nummers. Het besluit van de stakeholder noemt een aantal vakken per verdieping en een aantal verdiepingen, dus de nummering is altijd 1 tot en met dat aantal |
+| 23 | In welke slice komen BLB-001 (nieuw) en BLB-044? | Regie | Nee | Besloten door de regie 2026-11-03: slice 12, voor issue #80 |
 
 ## 8. Aannames
 

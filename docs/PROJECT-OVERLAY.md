@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.7
+**Versie overlay:** v0.4.8
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -52,6 +52,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
 - Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal.
 - Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
+- Tel een woordbudget voor nieuwe of gewijzigde tekst met `git diff --word-diff=porcelain <bestand> | grep '^+[^+]' | wc -w`; `wc -w` op de plusregels telt ongewijzigde woorden in aangepaste regels mee.
 - Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
 - Wijkt de bouw bewust af van een acceptatiecriterium, pas dan vóór de review het criterium in het issue aan en noem de bron die voorgaat.
 - Geef elk agent een eigen submap in de scratchpad (`<scratchpad>/<agent>-<taak>/`); de scratchpad wordt gedeeld tussen agents van dezelfde sessie.
@@ -238,6 +239,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.8 | 2026-11-03 | Woordbudget tellen met een word-diff | Terugblikken apex en foundation (#80) |
 | v0.4.7 | 2026-11-03 | Einddatum van een uitzondering, trivy per architectuur, semver-tag, uv via Docker, passkeytest bij webauthn | Terugblikken sentinel en aegis (release v0.1.0, #63) |
 | v0.4.6 | 2026-11-03 | Foutpad in een shellscript per aanroepcontext proeven; draai.sh niet bewerken tijdens een run | Terugblik sentinel (#40) |
 | v0.4.5 | 2026-11-03 | Afwijking van een acceptatiecriterium vóór de review in het issue; mutant per vervangen aanroep; geen bewerking tijdens een logcontrole | Terugblikken sentinel en aegis (#73, #74) |
