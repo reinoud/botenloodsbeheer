@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.5
+**Versie overlay:** v0.4.6
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -107,6 +107,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een E2E-test leunt niet op gegevens van een eerder testbestand. Bestaat er geen route om ze in de test te maken (zoals een token), dan maakt `tests/e2e/draai.sh` ze vers vóór elke aanroep van pytest. Een E2E-test die gedeelde instellingen wijzigt, zet ze ook terug als hij faalt (try/finally), of krijgt een eigen installatie.
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
+- Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
+- Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
 - Draai `tests/e2e/draai.sh` niet tussen 00:00 en `SYNC_TIJDSTIP` zolang het issue daarover open is. Moet de volledige E2E-run toch in dat venster draaien: `docker compose stop integratie`, vraag in `web` een import aan (`leden.import_aanvragen`) en start dan `draai.sh` (#45).
 - Eerdere runs laten rijen achter. Een E2E-test op een gedeelde lijst controleert daarom de volgorde over de hele kolom, niet op de eerste rij. Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
 - Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
@@ -231,6 +233,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.6 | 2026-11-03 | Foutpad in een shellscript per aanroepcontext proeven; draai.sh niet bewerken tijdens een run | Terugblik sentinel (#40) |
 | v0.4.5 | 2026-11-03 | Afwijking van een acceptatiecriterium vóór de review in het issue; mutant per vervangen aanroep; geen bewerking tijdens een logcontrole | Terugblikken sentinel en aegis (#73, #74) |
 | v0.4.4 | 2026-11-03 | Mutant per behouden recht; live ACL melden | Terugblikken sentinel en aegis (#60) |
 | v0.4.3 | 2026-11-03 | Rechten van een rol: UPDATE voor vergrendelingen, tests met marker nalopen | Terugblik bedrock (#60) |
