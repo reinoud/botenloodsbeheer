@@ -10,7 +10,8 @@ stempel=$(date +%s)
 # BLB-042 criterium 7: compose.api-extern.yml start niet zonder API_EXTERN_BRONNEN, en met een
 # waarde komt die in de whitelist van Traefik. Dummywaarden, zodat .env niet meetelt.
 dummy=$(mktemp)
-trap 'rm -f "$dummy"' EXIT
+fout=$(mktemp)
+trap 'rm -f "$dummy" "$fout"' EXIT
 for v in BASIS_URL DB_API_WACHTWOORD DB_TAKEN_WACHTWOORD DB_WEB_WACHTWOORD DOMEIN \
          POSTGRES_PASSWORD SECRET_KEY TOTP_SLEUTEL; do echo "$v=x"; done > "$dummy"
 extern=(docker compose --env-file "$dummy" -f docker-compose.yml -f compose.api-extern.yml config)
@@ -25,8 +26,12 @@ API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0
 # De leden komen via de integratiecontainer met de stub (ADR-012), zoals in de
 # beheerdocumentatie. Een nieuw token in secrets/api_token; na de herstart importeert de
 # container meteen, omdat hij nog geen geslaagde import van vandaag kent.
-"${c[@]}" exec -T web flask token robot "e2e-integratie-$stempel" --recht leden:importeren \
-  --recht bootaantallen:lezen 2>/dev/null | tail -n 1 > secrets/api_token
+# Maakt een robottoken en geeft alleen de waarde; de uitleg op stderr komt alleen bij een fout.
+robot() {
+  "${c[@]}" exec -T web flask token robot "$@" 2>"$fout" | tail -n 1 \
+    || { echo "Token $1 aanmaken mislukt:" >&2; cat "$fout" >&2; return 1; }; }
+robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:lezen \
+  > secrets/api_token
 chmod 600 secrets/api_token
 start=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 "${c[@]}" restart integratie >/dev/null
@@ -49,29 +54,28 @@ done
 koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n}} {{$v.IPAddress}}
 {{end}}' "$("${c[@]}" ps -q traefik)" | awk '$1 ~ /_koppeling$/ {print $2}')
 eigen=(--whitelist "$koppel_ip/32")
-token() { "${c[@]}" exec -T web flask token robot "e2e-$1-$stempel" --recht leden:importeren \
-  "${@:2}" 2>/dev/null | tail -n 1; }
+token() { robot "e2e-$1-$stempel" --recht leden:importeren "${@:2}"; }
 # Zonder leden:importeren, voor BLB-032 criterium 2.
-tokens_lezen=(-e "E2E_TOKEN_LEZEN=$("${c[@]}" exec -T web flask token robot "e2e-lezen-$stempel" \
-  --recht bootaantallen:lezen "${eigen[@]}" 2>/dev/null | tail -n 1)")
+tokens_lezen=(-e "E2E_TOKEN_LEZEN=$(robot "e2e-lezen-$stempel" --recht bootaantallen:lezen \
+  "${eigen[@]}")")
+# Elk token in een eigen toewijzing: in een array met meer $(...) telt alleen de laatste voor set -e.
+tokens=(-e "E2E_API_URL=http://$koppel_ip:8081/api/v1")
+for soort in api tempo prefix ingetrokken import; do
+  waarde=$(token "$soort" "${eigen[@]}")
+  tokens+=(-e "E2E_TOKEN_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$waarde")
+done
 # VERVALST staat alleen 10.203.0.99 toe: het adres dat test_api.py in X-Forwarded-For zet.
-tokens=(-e "E2E_API_URL=http://$koppel_ip:8081/api/v1"
-        -e "E2E_TOKEN_API=$(token api "${eigen[@]}")"
-        -e "E2E_TOKEN_TEMPO=$(token tempo "${eigen[@]}")"
-        -e "E2E_TOKEN_PREFIX=$(token prefix "${eigen[@]}")"
-        -e "E2E_TOKEN_VERVALST=$(token vervalst --whitelist 10.203.0.99/32)"
-        -e "E2E_TOKEN_INGETROKKEN=$(token ingetrokken "${eigen[@]}")"
-        -e "E2E_TOKEN_IMPORT=$(token import "${eigen[@]}")")
+waarde=$(token vervalst --whitelist 10.203.0.99/32)
+tokens+=(-e "E2E_TOKEN_VERVALST=$waarde")
 "${c[@]}" exec -T web flask token intrekken "e2e-ingetrokken-$stempel" >/dev/null
 # Verloopt binnen 31 dagen: de waarschuwing op de statuspagina (BLB-037 criterium 5).
-"${c[@]}" exec -T web flask token robot "e2e-kort-$stempel" --recht bootaantallen:lezen \
-  --dagen 10 >/dev/null 2>&1
+robot "e2e-kort-$stempel" --recht bootaantallen:lezen --dagen 10 >/dev/null
 
 # Per aanroep een vers token, zodat test_loods.py het in de nieuwste 50 regels van het technische
 # log vindt, los of in de hele suite (BLB-043).
 e2e() {
   local nieuw="e2e-nieuw-$stempel-$((++aanroep))"
-  "${c[@]}" exec -T web flask token robot "$nieuw" --recht bootaantallen:lezen >/dev/null 2>&1
+  robot "$nieuw" --recht bootaantallen:lezen >/dev/null || exit 1  # set -e telt niet achter ||
   "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" -e E2E_TOKEN_NIEUW_NAAM="$nieuw" \
     "${links[@]}" "${tokens[@]}" "${tokens_lezen[@]}" e2e pytest -p no:cacheprovider "$@"; }
 aanroep=0

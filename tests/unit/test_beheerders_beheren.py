@@ -211,8 +211,8 @@ def test_gelijktijdig_intrekken_met_vooraf_geladen_account(app):
     anna, _ = beheerder_met_wachtwoord()
     passkey = met_passkey(anna)
     fouten = race(app, ["SELECT id FROM beheerder WHERE id = :a FOR UPDATE",
-                        "UPDATE beheerder SET wachtwoordhash = NULL, totp_geheim = NULL "
-                        "WHERE id = :a"],
+                        ("UPDATE beheerder SET wachtwoordhash = NULL, totp_geheim = NULL "
+                         "WHERE id = :a")],
                   {"a": anna.id}, lambda: _geladen_en_intrekken(anna.id, passkey.id))
     assert fouten == ["Dit is je enige inlogmethode. Voeg eerst een andere toe."]
     assert db.session.get(Passkey, passkey.id) is not None
