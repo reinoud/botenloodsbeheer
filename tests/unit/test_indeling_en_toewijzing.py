@@ -134,18 +134,19 @@ def test_foto_wordt_verkleind_en_zonder_exif_opgeslagen(app):
     exif = Image.Exif()
     exif[0x010F] = "Telefoonmerk"  # Make
     b = boot(lid().id, foto=png(3200, 2000, exif=exif.tobytes(), formaat="JPEG",
-                                comment=b"Vakantie bij oma"))
+                                comment=b"Vakantie bij oma", icc=b"bron-kleurprofiel"))
     foto = Image.open(io.BytesIO(b.afbeelding.inhoud))
     assert foto.format == "JPEG" and max(foto.size) == 1600
     assert not foto.getexif() and b"Telefoonmerk" not in b.afbeelding.inhoud
     assert "comment" not in foto.info and b"Vakantie bij oma" not in b.afbeelding.inhoud
+    assert "icc_profile" not in foto.info and b"bron-kleurprofiel" not in b.afbeelding.inhoud
     assert len(b.afbeelding.sleutel) == 16
 
 
 @pytest.mark.parametrize("formaat", ["TIFF", "GIF", "BMP"])
 def test_andere_formaten_worden_niet_eens_gedecodeerd(app, formaat):
     # Zonder formats= opent Pillow elk geregistreerd formaat en weigert pas daarna.
-    with pytest.raises(Regelfout, match="geen geldige afbeelding"):
+    with pytest.raises(Regelfout, match="geen geldige afbeelding in JPEG, PNG of WebP"):
         afbeeldingen.verwerk(png(formaat=formaat))
 
 

@@ -246,3 +246,22 @@ def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):
     r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "1"}, follow_redirects=True)
     assert "Kies een eigenaar." in r.text
     assert ingelogd.post("/boten/999", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club"}).status_code == 404
+
+
+# Id buiten het bereik van integer en een NUL-teken (#67). Met TESTING komt een onafgevangen fout
+# als exceptie in de test, dus geen exceptie betekent ook geen ERROR-regel in de log.
+@pytest.mark.parametrize("pad,status", [
+    ("/boten/2147483647", 404), ("/boten/2147483648", 404), ("/plaatsen/99999999999", 404),
+    ("/leden/2147483648", 404), ("/leden?zoek=%00", 400), ("/leden?zoek=Jansen", 200),
+    ("/p/%00", 400), ("/afbeelding/%00", 400),
+], ids=["grens_binnen", "grens_buiten", "plaats", "lid", "zoek_nul", "zoek_gewoon", "p_nul",
+        "afbeelding_nul"])
+def test_te_groot_id_of_nul_teken_geeft_geen_500(ingelogd, pad, status):
+    assert ingelogd.get(pad).status_code == status
+
+
+def test_nul_teken_in_formulier_geeft_400(ingelogd):
+    p = bezette_plaats()
+    r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Zee\x00meeuw", "bootsoort": "1",
+                                                   "eigenaar": "club"})
+    assert r.status_code == 400

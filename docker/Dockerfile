@@ -2,6 +2,7 @@ FROM python:3.14-slim AS app
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
+    UV_NO_CACHE=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     FLASK_APP=app
@@ -15,7 +16,9 @@ COPY app app
 # Versie op de statuspagina (ADR-010); de workflow geeft de tag van de release mee.
 ARG APP_VERSIE=ontwikkeling
 ENV APP_VERSIE=$APP_VERSIE
-RUN useradd --system --uid 10001 app
+# pip uit het basisimage is niet nodig (uv installeert) en brengt eigen kopieën van urllib3 en
+# msgpack mee die trivy meldt (#59).
+RUN pip uninstall --yes --no-cache-dir pip && useradd --system --uid 10001 app
 USER 10001
 EXPOSE 8000
 # Toegangslog in het formaat zonder_code naar stdout (ADR-013); Traefik logt deze routes niet.

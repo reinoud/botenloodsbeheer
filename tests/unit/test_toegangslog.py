@@ -27,7 +27,9 @@ def log(capsys, raw_uri, xff=True, methode="GET"):
     ("/leden?zoek=Jansen", "/leden"),
     ("/uitnodiging/GEHEIMECODE", "/uitnodiging/..."),
     ("/uitnodiging/GEHEIMECODE/wachtwoord?x=1", "/uitnodiging/..."),
-    ("/boten/%0a12", "/boten/%0a12"),
+    ("/boten/%0a12", "/boten/..."),
+    ("/%2Fuitnodiging/GEHEIMECODE", "/..."),
+    ("/uit%6Eodiging/GEHEIMECODE", "/uit..."),
     ("/health/live", "/health/live"),
 ])
 def test_een_regel_zonder_querystring_en_code(capsys, raw_uri, pad):

@@ -7,11 +7,20 @@ import sys
 from flask import Flask, abort, request
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.routing import IntegerConverter
 
 from app import config
 from app.models import db
 
 csrf = CSRFProtect()
+
+
+class _Id(IntegerConverter):
+    """<int:...> met de bovengrens van integer in PostgreSQL: een groter id geeft 404, geen 500 (#67)."""
+
+    def __init__(self, url_map, **kwargs):
+        kwargs.setdefault("max", 2**31 - 1)
+        super().__init__(url_map, **kwargs)
 
 
 class _JsonLog(logging.Formatter):
@@ -25,6 +34,7 @@ class _JsonLog(logging.Formatter):
 
 def create_app(overrides=None):
     app = Flask(__name__, template_folder="web/templates", static_folder="web/static")
+    app.url_map.converters["int"] = _Id
     app.config.update(config.laad())
     app.config.update(overrides or {})
 
@@ -43,6 +53,9 @@ def create_app(overrides=None):
         # RAW_URI zet Gunicorn en ook de testclient; shortcut: andere servers zonder RAW_URI
         # laten alles door, de app draait alleen achter Gunicorn.
         if "%" in request.environ.get("RAW_URI", "").split("?", 1)[0]:
+            abort(400)
+        # PostgreSQL weigert een NUL-teken in tekst; zonder deze controle wordt dat een 500 (#67).
+        if any("\x00" in v for vs in request.values.listvalues() for v in vs):
             abort(400)
 
     db.init_app(app)

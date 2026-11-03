@@ -56,6 +56,19 @@ def te_groot(_fout):
     return {"fout": "Het verzoek is groter dan 2 MB."}, 413
 
 
+# app_errorhandler: een onbekend pad of een verkeerde methode raakt geen view van de blueprint, en
+# alleen de dienst api registreert hem (#68).
+@bp.app_errorhandler(404)
+def onbekend_pad(_fout):
+    return {"fout": "Onbekend pad."}, 404
+
+
+@bp.app_errorhandler(405)
+def verkeerde_methode(fout):
+    allow = ", ".join(fout.valid_methods or ())
+    return {"fout": "Deze methode kan niet op dit pad."}, 405, {"Allow": allow}
+
+
 def _veld(naam):
     gegevens = request.get_json(silent=True)
     return gegevens.get(naam) if isinstance(gegevens, dict) else None

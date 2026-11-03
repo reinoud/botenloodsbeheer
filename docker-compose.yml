@@ -13,6 +13,7 @@ x-app: &app
   read_only: true
   tmpfs: [/tmp]
   security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
 
 # Gedeeld door web, api en worker. Geheimen krijgt elke dienst apart: alleen wat hij gebruikt.
 x-omgeving: &omgeving

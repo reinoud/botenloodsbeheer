@@ -141,3 +141,13 @@ def test_openapi_voorbeelden_passen_bij_de_schemas():
             v["value"] for v in inhoud["examples"].values()]
         for voorbeeld in voorbeelden:
             jsonschema.validate(voorbeeld, schema(naam))
+
+
+def test_onbekend_pad_en_verkeerde_methode_geven_json(api, client):
+    """#68: 404 en 405 in het foutformaat van de API; web houdt zijn eigen pagina."""
+    r = api.get("/api/v1/bestaatniet")
+    assert r.status_code == 404 and r.json == {"fout": "Onbekend pad."}
+    r = api.delete("/api/v1/plaatsen")
+    assert r.status_code == 405 and r.json == {"fout": "Deze methode kan niet op dit pad."}
+    assert "GET" in r.headers["Allow"] and "DELETE" not in r.headers["Allow"]
+    assert client.get("/bestaatniet").content_type.startswith("text/html")

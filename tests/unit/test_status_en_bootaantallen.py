@@ -1,6 +1,7 @@
 """Bootaantallen per lid in de lijst per lid en via GET /api/v1/bootaantallen (BLB-009, ADR-004,
 ADR-012) en de technische statuspagina (BLB-037, ADR-010)."""
 
+import os
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -121,7 +122,7 @@ def test_html_en_json_uit_dezelfde_gegevens(app, ingelogd):
     run(leden.TAAK, aantallen={"nieuw": 3, "bijgewerkt": 1})
     run(opschonen.TAAK, aantallen={"logregels": 7, "leden": 2, "boten": 3, "fotos": 1})
     s = json_status(ingelogd)
-    assert s["status"] == "ok" and s["versie"] == "onbekend"
+    assert s["status"] == "ok" and s["versie"] == os.environ.get("APP_VERSIE", "onbekend")
     assert s["database"]["status"] == "ok" and s["database"]["migratie"] == s["database"]["verwacht"]
     assert s["opschoning"]["aantallen"] == {"logregels": 7, "leden": 2, "boten": 3, "fotos": 1}
     assert s["api"] == {"status": "ok", "ingeschakeld": True}

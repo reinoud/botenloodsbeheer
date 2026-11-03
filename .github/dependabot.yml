@@ -1,0 +1,17 @@
+# Updates van afhankelijkheden en actions (#59, #61), pas na twee weken (cooldown), net als de
+# regel voor exclude-newer. Let op: exclude-newer in pyproject.toml is een vaste datum. Dependabot
+# lockt binnen die grens en stelt voor uv dus pas iets voor nadat de regie die datum ophoogt.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14

@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.3.1
+**Versie:** v1.3.2
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -39,7 +39,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 | Publieke server kent `/api/` niet | Geen router naar `api` op `websecure`; regel van `web`: `Host(DOMEIN) && !PathPrefix(/api/)` | `https://DOMEIN/api/v1/ik` geeft 404 |
 | Interne server op 8081 (ADR-012) | Entrypoint `intern` op 8081, niet gepubliceerd; router `ClientIP(KOPPELNET) && PathPrefix(/api/v1/)` alleen op `intern` | Vanaf `koppeling` 200 op `/api/v1/ik`; vanaf een ander netwerk van Traefik 404; poort 8081 van buiten dicht |
 | `X-Forwarded-For` overschrijven | Traefik vertrouwt geen binnenkomende `X-Forwarded-*` zonder `trustedIPs`; `PROXY_HOPS=1` blijft | Aanroep met `X-Forwarded-For: 10.203.0.99`, en ook met `X_Forwarded_For`, `X-Real-Ip` en `Forwarded`: het log van de API toont het eigen adres; een token met alleen dat adres op de whitelist krijgt 403 |
-| Logformaat `zonder_code`, geen codes en zoektermen (#5, #14) | Applicatie: Gunicorn schrijft de toegangslog met een eigen loggerklasse, in hetzelfde formaat, pad zonder querystring, `/uitnodiging/...` gemaskeerd, de eigen healthcheck niet. Traefik: `observability.accesslogs=false` op elke router | Per verzoek precies één regel in de log van `web` of `api`; na een zoekopdracht en een uitnodiging staan zoekterm en code nergens, ook niet in de log van Traefik |
+| Logformaat `zonder_code`, geen codes en zoektermen (#5, #14) | Applicatie: Gunicorn schrijft de toegangslog met een eigen loggerklasse, in hetzelfde formaat, pad zonder querystring, `/uitnodiging/...` gemaskeerd, een pad met procentcodering tot het eerste `%` (#72), de eigen healthcheck niet. Traefik: `observability.accesslogs=false` op elke router | Per verzoek precies één regel in de log van `web` of `api`; na een zoekopdracht en een uitnodiging staan zoekterm en code nergens, ook niet in de log van Traefik |
 | Health zonder rate limit (ADR-010) | `/health/*` via de algemene router van `web`, zonder `ratelimit`; Traefik stuurt alleen naar gezonde containers | 100 keer `/health/live` zonder 429; een gestopte of startende `web` geeft 404 (besluit stakeholder 2026-10-31) |
 
 **API van buiten (BLB-042).** `compose.api-extern.yml` voegt alleen labels toe aan `api`, dat al op `voorkant` staat. Zonder het bestand blijft de proef "`https://DOMEIN/api/v1/ik` geeft 404" gelden.
@@ -105,6 +105,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.2 | 2026-11-03 | Toegangslog: pad met procentcodering afgekapt bij het eerste `%` | Issue #72 |
 | v1.3.1 | 2026-11-03 | Waarom drie opties voor gecodeerde tekens ontbreken | Review aegis, issue #65 |
 | v1.3.0 | 2026-11-03 | Gecodeerd pad: 400 in de applicatie, opties voor gecodeerde tekens aanbevolen op de entrypoints, proef | Securityronde na slice 11, PRB-01, issue #65 |
 | v1.2.0 | 2026-11-03 | API van buiten: router, `API_EXTERN_BRONNEN`, rate limit, proeven | Ontwerp slice 10, issue #51 |

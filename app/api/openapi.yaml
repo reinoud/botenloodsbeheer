@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.8.0
+  version: 0.8.1
   description: >
     Standaard alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van
     Traefik op poort 8081. Met compose.api-extern.yml ook via https://DOMEIN/api/v1, alleen vanaf
@@ -14,7 +14,8 @@ info:
     beheerder actief is; een lege whitelist betekent elk adres dat de installatie doorlaat. Een
     weigering geeft 401, of 403 bij een
     ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
-    dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`.
+    dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`. Een onbekend pad geeft 404
+    en een methode die het pad niet kent 405 (met `Allow`), beide als JSON met `fout`.
 servers:
   - url: http://traefik:8081/api/v1
   - url: https://DOMEIN/api/v1
