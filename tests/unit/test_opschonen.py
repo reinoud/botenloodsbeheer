@@ -183,6 +183,23 @@ def test_nooit_twee_tegelijk(app):
     assert opschonen.draai() is not None
 
 
+def test_niet_tijdens_een_import_die_het_oud_lid_weer_actief_maakt(app):
+    """#49: de import houdt het importslot; de opschoning wacht een ronde en het lid blijft."""
+    oud = lid()
+    boot(oud.id)
+    zeg_op(oud, grens() - timedelta(days=1))
+    engine = create_engine(TAKEN)
+    with engine.connect() as import_:
+        import_.execute(text("SELECT pg_advisory_lock(:s)"), {"s": leden.IMPORT_SLOT})
+        assert opschonen.draai() is None and runs() == []
+        assert bestaat(oud.id) and tel(Boot) == 1
+        eigenaar("UPDATE lid SET opzegdatum = NULL WHERE id = :i", i=oud.id)  # weer in de bron
+        import_.execute(text("SELECT pg_advisory_unlock(:s)"), {"s": leden.IMPORT_SLOT})
+    engine.dispose()
+    assert opschonen.draai()["leden"] == 0
+    assert bestaat(oud.id) and tel(Boot) == 1
+
+
 @pytest.mark.parametrize("uur,minuut,gedraaid", [(3, 59, False), (4, 0, True)],
                          ids=["voor_het_tijdstip", "op_het_tijdstip"])
 def test_ronde_draait_de_opschoning_vanaf_het_tijdstip(app, uur, minuut, gedraaid):

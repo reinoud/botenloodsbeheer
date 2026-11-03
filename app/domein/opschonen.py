@@ -15,7 +15,7 @@ from flask import current_app
 from sqlalchemy import delete, func, select
 
 from app.domein import Actor, log, vandaag
-from app.domein.leden import BEWAARJAREN, jaren_terug
+from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug
 from app.models import Afbeelding, Boot, Lid, Logregel, Taakrun, db
 
 TAAK = "opschoning"
@@ -38,7 +38,8 @@ def opschonen(dag):
         func.coalesce(Lid.opzegdatum, Lid.uit_bron_op) < grens, Lid.id.not_in(op_een_plaats))
     ).all()
     # Een boot die intussen een andere eigenaar kreeg, valt hier buiten: DELETE leest de rij
-    # opnieuw na het slot. Een oud-lid krijgt geen nieuwe boot of plaats (BLB-005, BLB-008).
+    # opnieuw na het slot. Een oud-lid krijgt geen nieuwe boot of plaats (BLB-005, BLB-008); alleen
+    # de import kan het weer actief maken, en die wacht op het importslot uit draai (#49).
     boten = db.session.scalars(
         delete(Boot).where(Boot.lid_id.in_(ids)).returning(Boot.afbeelding_id)
         .execution_options(synchronize_session=False)).all()
@@ -59,9 +60,13 @@ def gedraaid_op(dag):
 
 def draai(dag=None):
     """Eén keer per dag, ook na een fout: dan volgt de volgende dag een nieuwe poging (ADR-007).
-    Nooit twee tegelijk. Geeft de aantallen, of None als er niets te doen was."""
+    Nooit twee tegelijk, en niet tijdens een import: die kan een oud-lid weer actief maken (#49).
+    Loopt er een import, dan volgt de volgende ronde een nieuwe poging. Geeft de aantallen, of None
+    als er niets te doen was."""
     dag = dag or vandaag()
-    if not db.session.scalar(select(func.pg_try_advisory_xact_lock(SLOT))) or gedraaid_op(dag):
+    if (not db.session.scalar(select(func.pg_try_advisory_xact_lock(SLOT)))
+            or not db.session.scalar(select(func.pg_try_advisory_xact_lock(IMPORT_SLOT)))
+            or gedraaid_op(dag)):
         db.session.rollback()
         return None
     gestart = datetime.now(UTC)

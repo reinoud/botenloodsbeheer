@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.3.0
+**Versie:** v1.3.1
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -52,7 +52,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 3. Van die oud-leden de boten, foto's en het lid zelf verwijderen.
 4. Aantallen vastleggen in `taakrun` (taak `opschoning`: logregels, leden, boten, foto's) en één logregel `opschoning.uitgevoerd` met alleen de aantallen en een verwijzing naar de run (BLB-026).
 
-De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een startdatum van precies 5 jaar geleden blijft staan. De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`: een oud-lid krijgt geen nieuwe boot of plaats, en een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
+De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een startdatum van precies 5 jaar geleden blijft staan. De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`. Een beheerder geeft een oud-lid geen nieuwe boot of plaats, maar de import kan het oud-lid weer actief maken. Daarom neemt de opschoning naast haar eigen slot ook het importslot; loopt er een import, dan wacht ze tot de volgende ronde van de worker (#49). Een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
 
 ## Alternatieven
 
@@ -76,6 +76,7 @@ De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een start
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.1 | 2026-11-03 | De opschoning neemt het importslot: de import kan een oud-lid weer actief maken | Issue #49 |
 | v1.3.0 | 2026-11-02 | Opschoning gebouwd; het log toont `lid:<id>` zonder naam, ook na opschonen; kopieën nagelopen | Bouw slice 9, issue #48 |
 | v1.2.1 | 2026-11-02 | Reden `andere eigenaar` bij `wachtlijst.verwijderd` | Besluit stakeholder 2026-11-01, issue #43 |
 | v1.2.0 | 2026-11-01 | Actienamen en gegevens van de wachtlijst; scherm Wachtlijst in de tabel | Bouw slice 7, issue #43 |
