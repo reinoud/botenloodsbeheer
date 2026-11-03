@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.17
+**Versie:** v0.3.18
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -597,19 +597,19 @@ Als beheerder wil ik een technische statuspagina zodat ik de toestand van de ins
 
 ## 5. Volgorde van slices
 
-Slice 1 tot en met 3 zijn af. De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import van leden niet meer. De volgorde vanaf slice 4 volgt architectuur §7.1; de letter staat in de kolom "Architectuur". Een story die over meer slices loopt, noemt per criterium de slice.
+Slice 1 tot en met 9 zijn af. De besluiten van 2026-10-31 halen de API naar voren: zonder API werkt de import van leden niet meer. De volgorde vanaf slice 4 volgt architectuur §7.1; de letter staat in de kolom "Architectuur". Een story die over meer slices loopt, noemt per criterium de slice.
 
 | Slice | Architectuur | Stories en criteria | Doel |
 |-------|--------------|---------------------|------|
 | 1 | | BLB-022, 001, 007, 006, 005, 010, 012, 020, 024, 025 | Af. Een beheerder logt in, legt een rek, een plaats en een boot van een lid vast, wijst de plaats toe, en een bezoeker ziet de openbare pagina, met een log |
 | 2 | | BLB-002, 003, 004, 008, 011, 023, 038, 036 | Af. De indeling is volledig te beheren, plaatsen zijn vrij te geven, oud-leden worden herkend, meerdere beheerders werken samen en elke beheerder beheert zijn eigen inlogmethodes |
 | 3 | | BLB-015, 016, 019, 018, 017, 027 | Af. De beheerder overziet de loods, exporteert naar Excel en stelt naam en kleuren in |
-| 4 | A | BLB-027 criteria 2 tot en met 5, BLB-017 criterium 3 | Het logo komt uit de installatie en de export toont "(geschikt voor …)" bij een vrije plaats; sluit issue #17 |
-| 5 | B | BLB-029; BLB-031 criteria 1 tot en met 3; BLB-032 criterium 1; BLB-033; BLB-034 criteria 1, 4, 5 en 6 | De API draait als eigen dienst op het interne netwerk, met een robottoken uit de CLI (maken en intrekken), controle per aanroep, rate limit en log |
-| 6 | C | BLB-039, 040, 041; BLB-006, 007; BLB-008 criteria 1, 2, 4 en 5; BLB-024 criterium 2; BLB-032 criterium 2; BLB-034 criterium 3 | De integratiecontainer haalt leden op via de API en de synchronisatie in de applicatie verdwijnt; BLB-006, 007 en 008 zijn opnieuw groen via de nieuwe route |
-| 7 | D | BLB-013, 014; BLB-008 criterium 3; BLB-011 criterium 3; BLB-019 criterium 1, deel wachtlijst | Boten wachten per bootsoort en de beheerder kiest zelf de plaats |
-| 8 | E | BLB-021; BLB-027 criteria 1 en 2, deel kaartjes | Elke plaats krijgt een printbaar kaartje met QR-code en logo |
-| 9 | F | BLB-026; BLB-037 criteria 1 tot en met 5; BLB-009 | De bewaartermijn werkt, de installatie is te bewaken en de bootaantallen staan klaar, terugschrijven staat uit |
+| 4 | A | BLB-027 criteria 2 tot en met 5, BLB-017 criterium 3 | Af. Het logo komt uit de installatie en de export toont "(geschikt voor …)" bij een vrije plaats; sluit issue #17 |
+| 5 | B | BLB-029; BLB-031 criteria 1 tot en met 3; BLB-032 criterium 1; BLB-033; BLB-034 criteria 1, 4, 5 en 6 | Af. De API draait als eigen dienst op het interne netwerk, met een robottoken uit de CLI (maken en intrekken), controle per aanroep, rate limit en log |
+| 6 | C | BLB-039, 040, 041; BLB-006, 007; BLB-008 criteria 1, 2, 4 en 5; BLB-024 criterium 2; BLB-032 criterium 2; BLB-034 criterium 3 | Af. De integratiecontainer haalt leden op via de API en de synchronisatie in de applicatie verdwijnt; BLB-006, 007 en 008 zijn opnieuw groen via de nieuwe route |
+| 7 | D | BLB-013, 014; BLB-008 criterium 3; BLB-011 criterium 3; BLB-019 criterium 1, deel wachtlijst | Af. Boten wachten per bootsoort en de beheerder kiest zelf de plaats |
+| 8 | E | BLB-021; BLB-027 criteria 1 en 2, deel kaartjes | Af. Elke plaats krijgt een printbaar kaartje met QR-code en logo |
+| 9 | F | BLB-026; BLB-037 criteria 1 tot en met 5; BLB-009 | Af. De bewaartermijn werkt, de installatie is te bewaken en de bootaantallen staan klaar, terugschrijven staat uit |
 | 10 | G | BLB-030, 035, 042; BLB-031 criteria 4 en 5; BLB-032 criteria 3 en 4; BLB-034 criterium 2 | Leesendpoints, persoonlijke tokens, tokenschermen, en de keuze om de API van buiten bereikbaar te maken |
 | 11 | H | BLB-028 | Een andere vereniging past de bootsoorten aan |
 

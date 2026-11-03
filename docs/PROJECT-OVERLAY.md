@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.3.14
+**Versie overlay:** v0.3.15
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-02
+**Bijgewerkt:** 2026-11-03
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -31,7 +31,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 8 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
+| Stand | Slice 1 tot en met 9 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
@@ -147,6 +147,16 @@ De regie loopt deze lijst na bij elke agentopdracht.
 - In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
 - Draai één E2E-test los met `tests/e2e/draai.sh -k <testnaam>`, zonder pad; de e2e-container werkt vanuit `tests/e2e`.
 - Een nieuw menu-item verandert alle schermafbeeldingen met de kopbalk; die blijven dan staan en worden niet teruggezet.
+- Een view met meer routes krijgt de route voor `url_for` als onderste decorator; controleer het menu-item met een unittest op de `href`.
+- Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`.
+- Plan de volledige E2E-run vóór 00:00 of na `SYNC_TIJDSTIP`. Moet hij toch in dat venster draaien: `docker compose stop integratie`, vraag in `web` een import aan (`leden.import_aanvragen`) en start dan `draai.sh` (#45).
+- Een nieuwe omgevingsvariabele die meer dan één dienst leest, staat in de gedeelde omgeving van compose; controleer per dienst met `docker compose config`.
+- Een domeinfunctie die rijen verwijdert op basis van een eerder gelezen lijst van id's, herhaalt de voorwaarde in de `DELETE` of neemt het slot van de taak die die voorwaarde kan wijzigen (zoals de import).
+- Noem de poort van de lokale proxy (`127.0.0.1:8080`, Host `localhost`) in elke brief aan een reviewer die via de proxy controleert.
+- Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
+- Verplaats je de dekking van een criterium van E2E naar unittests, noem dan per gegeven uit het criterium (zoals tijdstip en aantallen) de assert die het dekt, en draai een mutant die dat gegeven weghaalt.
+- Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests.
+- Een run in de achtergrond: wacht niet op een melding, maar kijk naar het uitvoerbestand.
 
 ## 5. Projectcontracten
 
@@ -211,6 +221,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.3.15 | 2026-11-03 | Regels over routes en menu-items, tabelselectors, de E2E-run 's nachts, gedeelde omgevingsvariabelen, verwijderen op id's, de proxypoort, uitsluitingen en mutanten en runs in de achtergrond uit de bouw en review van slice 9 (#48); stand | Lessen |
 | v0.3.14 | 2026-11-02 | Regels over pdf-tests in Playwright en schermafbeeldingen bij een nieuw menu-item en een losse E2E-test uit de bouw en review van slice 8 (#46) | Lessen |
 | v0.3.13 | 2026-11-02 | Regels over datums in tests, mutanten en racetests uit het vervolg op slice 7 (#43) | Lessen |
 | v0.3.12 | 2026-11-02 | Regels over tests per databaserol, de nachtelijke E2E-run en uitvoerbestanden uit de review van slice 7 (#43) | Lessen |
