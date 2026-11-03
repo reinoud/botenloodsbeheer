@@ -40,6 +40,14 @@ def opgezegd(dag, nummer="1001", veld="opzegdatum"):
     return lid(nummer, f"Lid {nummer}", **{veld: dag})
 
 
+def foto_erbij(boot_id, sleutel):
+    """De worker maakt geen foto's (#60); de eigenaar zet er een bij."""
+    eigenaar("WITH a AS (INSERT INTO afbeelding (soort, mime_type, inhoud, breedte, hoogte, sleutel) "
+             "VALUES ('foto', 'image/png', :inhoud, 40, 30, :sleutel) RETURNING id) "
+             "UPDATE boot SET afbeelding_id = (SELECT id FROM a) WHERE id = :boot",
+             inhoud=png(), sleutel=sleutel, boot=boot_id)
+
+
 def zeg_op(lid_, dag):
     """Na het aanmaken van de boten: een oud-lid krijgt geen nieuwe boot (BLB-005)."""
     eigenaar("UPDATE lid SET opzegdatum = :d WHERE id = :i", d=dag, i=lid_.id)
@@ -51,12 +59,13 @@ def zeg_op(lid_, dag):
 def test_oud_lid_weg_met_boten_fotos_en_wachtlijst(app):
     """Criterium 1: ook een boot zonder plaats en een boot op de wachtlijst gaan mee."""
     weg = lid()
-    eigen = boot(weg.id, foto=png()).id
+    eigen = boot(weg.id).id
+    foto_erbij(eigen, "foto-weg")
     wachtlijst.erop_zetten(boot(weg.id, naam="Reiger").id, None, CLI)
     zeg_op(weg, grens() - timedelta(days=1))
     weg = weg.id
     blijft = lid("1002", "Bert").id
-    boot(blijft, naam="Fuut", foto=png())
+    foto_erbij(boot(blijft, naam="Fuut").id, "foto-blijft")
 
     assert opschonen.draai() == {"logregels": 0, "leden": 1, "boten": 2, "fotos": 1}
     assert not bestaat(weg) and bestaat(blijft)

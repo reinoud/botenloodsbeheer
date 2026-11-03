@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.2
+**Versie overlay:** v0.4.3
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-03
@@ -121,6 +121,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vergrendelt een domeinfunctie boot en plaats, dan eerst de boot en daarna de plaats, net als `toewijzen` en `boot_wijzigen`; een andere volgorde kan een deadlock geven. Een wijziging in een vergrendelvolgorde krijgt een racetest die faalt met de oude volgorde (bijvoorbeeld met `FOR UPDATE NOWAIT` op de tweede rij).
 - Een domeinfunctie die rijen verwijdert op basis van een eerder gelezen lijst van id's, herhaalt de voorwaarde in de `DELETE` of neemt het slot van de taak die die voorwaarde kan wijzigen (zoals de import).
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
+- `FOR UPDATE` en `FOR KEY SHARE` vragen UPDATE-recht; tel dat mee bij het bepalen van de rechten van een rol.
+- Bij een rechtenwijziging: zoek in alle tests met de marker `worker` (of `api`) naar setup via de domeinlaag in tabellen die de rol straks niet meer mag schrijven (zoals `foto=` of `png()`), en noem ze vooraf in de opdracht.
 
 #### Security en proxy
 
@@ -225,6 +227,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.3 | 2026-11-03 | Rechten van een rol: UPDATE voor vergrendelingen, tests met marker nalopen | Terugblik bedrock (#60) |
 | v0.4.2 | 2026-11-03 | Controle van de tags na de eerste release | Terugblik aegis, herstel CI (#59) |
 | v0.4.1 | 2026-11-03 | Regels over `exclude-newer` met Dependabot, de trivy-stap in de release en het opschonen van teksten | Review aegis (#59), terugblik #71 |
 | v0.4.0 | 2026-11-03 | Briefingchecklist opgeschoond: 137 regels samengevoegd tot 91 en gegroepeerd per soort opdracht (algemeen, bouw, review, E2E, migratie en database, security en proxy, documentatie); geen inhoud vervallen (#71) | Retrospective mijlpaal slice 1 tot en met 11 |

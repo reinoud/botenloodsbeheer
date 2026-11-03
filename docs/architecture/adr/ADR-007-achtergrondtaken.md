@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.3.0
+**Versie:** v1.4.0
 **Stories:** BLB-006, BLB-026, BLB-037
 
 ## Context
@@ -38,6 +38,7 @@ De lus vangt elke fout per taak af, legt die vast en draait door. Bij `SIGTERM` 
 - Er is geen extra afhankelijkheid; de worker gebruikt dezelfde domeinlaag en hetzelfde log als de webinterface.
 - Draait de integratiecontainer niet, dan blijft een handmatig verzoek op `aangevraagd` staan. Draait de worker niet, dan toont de statuspagina een verouderde heartbeat (ADR-010).
 - De worker heeft geen ledenbron, geen `SYNC_TIJDSTIP` en geen recht meer om leden aan te maken of bij te werken; hij houdt het recht om op te schonen (ADR-006).
+- De databaserol `botenloods_taken` heeft alleen de rechten die de worker en `flask seed` gebruiken (migratie 0010): `taakrun` lezen, aanmaken en bijwerken (hartslag); `logregel` lezen, aanmaken en verwijderen; `lid` lezen en verwijderen; `boot` alle vier; `afbeelding` lezen en verwijderen; `wachtlijst` lezen, aanmaken en verwijderen. Alleen voor seed: `rek`, `plaats_bootsoort` en `instelling` lezen en aanmaken, `plaats` lezen, aanmaken en bijwerken, `bootsoort` lezen en bijwerken (`FOR KEY SHARE` vraagt dat recht). Op `beheerder`, `passkey`, `uitnodiging` en `token` heeft de rol niets. Een nieuwe taak of een nieuwe tabel in seed vraagt om een eigen grant in de migratie van die slice.
 - Valt de worker op het geplande tijdstip uit, dan draait de taak bij de eerstvolgende start nog dezelfde dag; een gemiste dag wordt niet ingehaald, de volgende run vangt alles op.
 - Een nieuwe taak is een functie en een regel in de lijst van taken in `taken/`.
 
@@ -45,6 +46,7 @@ De lus vangt elke fout per taak af, legt die vast en draait door. Bij `SIGTERM` 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.0 | 2026-11-03 | Rechten van `botenloods_taken` beperkt tot worker en seed, per tabel beschreven | Issue #60, securityronde AEG-04 |
 | v1.3.0 | 2026-11-02 | Opschoning gebouwd: sleutel van de lock, een mislukte run telt als run van die dag, `OPSCHOON_TIJDSTIP` bij `worker` | Bouw slice 9, issue #48 |
 | v1.2.0 | 2026-10-31 | Termen gelijk aan de bouw: taak `ledenimport`, logactie `leden.import_aangevraagd` | Issue #22, bouw slice 6 |
 | v1.1.0 | 2026-10-31 | Ledensynchronisatie uit de worker naar de integratiecontainer; de worker houdt heartbeat en opschoning | Besluiten stakeholder 2026-10-31, ADR-012 |

@@ -23,6 +23,32 @@ def test_migratie_omkeerbaar_en_gelijk_aan_modellen(database):
     command.upgrade(cfg, "head")
 
 
+def rechten_taken(cfg):
+    """De tabel- en reeksrechten van botenloods_taken in de database van cfg."""
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    with engine.connect() as c:
+        rijen = c.execute(text(
+            "SELECT table_name, privilege_type FROM information_schema.role_table_grants "
+            "WHERE grantee = 'botenloods_taken' "
+            "UNION ALL SELECT sequencename, 'USAGE' FROM pg_sequences WHERE has_sequence_privilege("
+            "'botenloods_taken', quote_ident(schemaname) || '.' || quote_ident(sequencename), "
+            "'USAGE')")).all()
+    engine.dispose()
+    return set(rijen)
+
+
+def test_migratie_0010_beperkt_rechten_taken_en_downgrade_zet_ze_terug(database):
+    """#60: de downgrade geeft precies de rechten van 0009 terug."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0009")
+    oud = rechten_taken(cfg)
+    command.upgrade(cfg, "head")
+    nieuw = rechten_taken(cfg)
+    assert nieuw < oud and ("beheerder", "INSERT") in oud - nieuw
+    command.downgrade(cfg, "0009")
+    assert rechten_taken(cfg) == oud
+
+
 def test_migratie_verwijdert_geupload_logo(database):
     """BLB-027 criterium 5: een logo uit slice 3 verdwijnt; alleen het logo uit de installatie
     geldt nog. Foto's blijven staan."""
@@ -57,6 +83,7 @@ def test_webgebruiker_leest_leden_alleen(app, sql):
     db.session.rollback()
 
 
+@pytest.mark.worker  # de tweede hartslag is een UPDATE op taakrun als botenloods_taken (#60)
 def test_heartbeat(app):
     assert not taken.gezond()
     taken.hartslag()
@@ -100,3 +127,17 @@ def test_seed_weigert_in_productie(app):
     app.config["APP_OMGEVING"] = "productie"
     with pytest.raises(seed.SeedFout):
         seed.seed()
+
+
+@pytest.mark.parametrize("sql", [
+    "INSERT INTO beheerder (naam, gebruikersnaam, actief, sessieversie) VALUES ('X', 'x', true, 1)",
+    "UPDATE beheerder SET actief = false", "DELETE FROM beheerder",
+    "SELECT 1 FROM passkey", "SELECT 1 FROM uitnodiging", "SELECT 1 FROM token", "UPDATE instelling SET waarde = 'x'",
+    "DELETE FROM rek", "DELETE FROM plaats", "INSERT INTO bootsoort (naam) VALUES ('X')",
+    "DELETE FROM taakrun"])
+@pytest.mark.worker
+def test_worker_heeft_geen_rechten_buiten_taken_en_seed(app, sql):
+    """#60: de worker kan geen beheerder aanmaken of de indeling en instellingen wijzigen."""
+    with pytest.raises(ProgrammingError, match="permission denied"):
+        db.session.execute(text(sql))
+    db.session.rollback()
