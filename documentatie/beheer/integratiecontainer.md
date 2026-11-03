@@ -40,6 +40,7 @@ Elke aanroep vraagt `Authorization: Bearer <token>` en een adres in de whitelist
 | `GET /leden/importverzoek` | `leden:importeren` | 200 met `{"aangevraagd": true}` of `false` |
 | `PUT /leden` | `leden:importeren` | 200 met de aantallen; 409, 413 of 422 bij een fout |
 | `POST /leden/import-mislukt` | `leden:importeren` | 201; 422 bij een onbekende reden |
+| `GET /bootaantallen` | `bootaantallen:lezen` | 200 met per lid elke bootsoort en het aantal |
 
 Een voorbeeld in Python, met een nep-token:
 
@@ -67,13 +68,18 @@ leden = [{"lidnummer": "1001", "naam": "Anna Voorbeeld", "adres": "Proefweg 1, 1
 roep("PUT", "/leden", {"leden": leden})
 # (200, {"ontvangen": 1, "nieuw": 1, "bijgewerkt": 0, "uit_bron": 0, "ongeldig": 0, "overgeslagen": 0})
 roep("POST", "/leden/import-mislukt", {"reden": "bron_onbereikbaar"})  # (201, {})
+roep("GET", "/bootaantallen")
+# (200, [{"lidnummer": "1001", "aantallen": {"Kajak": 1, "Canadese kano": 0, "Surfski": 0,
+#                                             "C11": 0, "Supboard": 0}}])
 ```
 
 Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import (409), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum van meer dan 5 jaar geleden telt als `overgeslagen`, zodat een opgeschoond oud-lid niet terugkomt.
 
-## Export van bootaantallen (nog niet gebouwd)
+## Bootaantallen
 
-De export van het aantal boten per bootsoort per lid is voorbereid. Het token heeft het recht `bootaantallen:lezen` al, maar `GET /api/v1/bootaantallen` bestaat nog niet; die komt in slice 9 (BLB-009). Volgens het ontwerp levert hij per lid elke bootsoort met het aantal, ook 0. Alleen boten met een toegewezen plaats tellen, clubboten niet (besluit 2026-10-31). Terugschrijven naar de bron kan de meegeleverde container niet: `schrijf_bootaantallen` geeft `NietBeschikbaar`.
+`GET /bootaantallen` levert voor elk lid elke bootsoort met het aantal boten, ook 0, op lidnummer gesorteerd. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst en een clubboot tellen niet (besluit 2026-10-31). De beheerder ziet dezelfde aantallen bij elk lid op `/leden/`, en op de statuspagina wanneer ze voor het laatst zijn opgehaald.
+
+Terugschrijven naar de bron staat uit. De meegeleverde container roept `GET /bootaantallen` niet aan, en `schrijf_bootaantallen` geeft `NietBeschikbaar`. Een eigen container mag de aanroep gebruiken om de aantallen in de eigen ledenadministratie te zetten.
 
 ## Een eigen container bouwen
 
@@ -93,5 +99,6 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.1.0 | 2026-11-02 | `GET /bootaantallen` gebouwd, met voorbeeldcode | BLB-009, BLB-040, slice 9 |
 | v2.0.0 | 2026-10-31 | Verplaatst uit `docs/beheer/`; via Traefik; export van bootaantallen; ingekort | ADR-013, issue #30 |
 | v1.0.0 | 2026-10-31 | Eerste versie | BLB-040, slice 6 |

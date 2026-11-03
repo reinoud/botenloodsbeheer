@@ -170,6 +170,10 @@ De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applic
 
 Op `/leden` zoek je op naam of lidnummer. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan.
 
+Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat uit.
+
+**Bewaartermijn.** Elke nacht om 04:00 verwijdert de applicatie gegevens die ouder zijn dan 5 jaar. Een oud-lid verdwijnt 5 jaar na de opzegdatum, met zijn boten en foto's. Heeft een boot van het oud-lid nog een plaats, dan blijft alles staan tot je de plaats vrijgeeft. Een regel in een log verdwijnt 5 jaar na de wijziging. Een verwijderd oud-lid komt niet terug met de volgende import. In de logs blijft een verwijderd lid staan als `lid:` met een nummer, zonder naam.
+
 **Een import aanvragen.** Kies op `/leden` bij **Import** de knop **Leden nu ophalen**. De integratiecontainer begint binnen een minuut. Ververs daarna de pagina. Een tweede verzoek terwijl er al een klaarstaat, weigert de applicatie.
 
 ![De pagina Leden met de melding dat de import is aangevraagd en de uitkomsten van eerdere imports.](afbeeldingen/leden.png)
@@ -193,13 +197,33 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 | Log | Menu | Inhoud |
 |---|---|---|
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet (`wachtlijst.toegevoegd`, met de aanmelddatum) of eraf gehaald (`wachtlijst.verwijderd`) |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en de indeling: rekken en plaatsen aanmaken, wijzigen of verwijderen |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen) en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
 
 Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
 ![Het mutatielog met tijdstip, wie, handeling, betreft en gegevens.](afbeeldingen/log.png)
 
 ![Het technische log met een importverzoek, uitnodigingen en inlogs van beheerders.](afbeeldingen/log-techniek.png)
+
+## De technische status
+
+Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel heeft de status ok, waarschuwing of fout.
+
+| Onderdeel | Wat je ziet | Waarschuwing als |
+|---|---|---|
+| Database | versie van PostgreSQL en van de migratie | de migratie niet de verwachte is (fout) |
+| Worker | laatste heartbeat | die ouder is dan 2 minuten |
+| Import van leden | laatste import met resultaat, aantallen en bij een fout de reden; laatste geslaagde import | de laatste import mislukte, of de laatste geslaagde is ouder dan 26 uur |
+| Opschoning | laatste opschoning met het aantal verwijderde logregels, leden, boten en foto's | de laatste opschoning mislukte; de worker probeert het de volgende nacht opnieuw |
+| API | aan of uit | |
+| Bootaantallen | wanneer de integratiecontainer ze voor het laatst ophaalde | |
+| Tokens die verlopen | tokens die binnen 31 dagen verlopen, met naam en vervaldatum | er zo'n token is |
+
+Onderaan staat per robottoken de laatste aanroep. De pagina toont geen tokenwaarden, wachtwoorden of gegevens van leden. Dezelfde gegevens staan als JSON op `/status.json`, voor wie de installatie bewaakt.
+
+Een waarschuwing bij de import betekent meestal dat de integratiecontainer niet draait of dat zijn token verlopen is. Een token dat bijna verloopt, vervang je op tijd; dat doet wie de installatie beheert.
+
+![De technische status met per onderdeel de status en een waarschuwing voor een token dat binnenkort verloopt.](afbeeldingen/status.png)
 
 ## Naam, kleuren en logo
 
@@ -235,6 +259,8 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/log` | Mutatielog: boten en plaatsen |
 | `/log/techniek` | Technisch log |
 | `/instellingen` | Naam, kleuren en logo |
+| `/status` | Technische status |
+| `/status.json` | Technische status als JSON |
 | `/p/{sleutel}` | Openbare pagina van een plaats |
 | `/afbeelding/{sleutel}` | Foto op de pagina van een boot of plaats |
 | `/logo/{kenmerk}` | Logo in de kopbalk |

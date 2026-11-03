@@ -1,13 +1,16 @@
-"""Worker-lus (ADR-007): heartbeat. De opschoning volgt in slice 9; de import van leden doet de
-integratiecontainer via de API (ADR-012)."""
+"""Worker-lus (ADR-007): heartbeat en de dagelijkse opschoning na OPSCHOON_TIJDSTIP (BLB-026). De
+import van leden doet de integratiecontainer via de API (ADR-012)."""
 
 import logging
 import signal
 import time
 from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
+from flask import current_app
 from sqlalchemy import select
 
+from app.domein import opschonen
 from app.models import Taakrun, db
 
 INTERVAL = 15
@@ -31,8 +34,11 @@ def gezond():
     return rij is not None and datetime.now(UTC) - rij.beeindigd_op < HEARTBEAT_MAX
 
 
-def ronde():
+def ronde(nu=None):
     hartslag()
+    nu = nu or datetime.now(ZoneInfo(current_app.config["TZ"]))
+    if nu.time() >= current_app.config["OPSCHOON_TIJDSTIP"]:
+        opschonen.draai(nu.date())
 
 
 def draai():

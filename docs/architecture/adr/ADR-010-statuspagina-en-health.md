@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.1.1
+**Versie:** v1.2.0
 **Stories:** BLB-036, BLB-037
 
 ## Context
@@ -24,9 +24,9 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 **Statuspagina**, na inloggen als beheerder:
 
-- `GET /status` (HTML) en `GET /status.json` (JSON) uit dezelfde functie, zodat ze niet uit elkaar lopen.
-- Inhoud: applicatieversie (uit een buildargument in het image), databaseversie en migratieversie, laatste heartbeat van de worker, laatste import van leden via de API (tijdstip, resultaat, aantallen nieuw, bijgewerkt, oud-lid, overgeslagen, en bij een fout de reden uit de vaste lijst van ADR-012), laatste opschoning (tijdstip en aantallen), API aan of uit, laatste aanroep per robottoken, wanneer de bootaantallen voor het laatst zijn opgehaald, tokens die binnen 31 dagen verlopen met naam en vervaldatum.
-- Statusregels per onderdeel: ok, waarschuwing of fout. Een heartbeat ouder dan 2 minuten, een mislukte laatste import of een geslaagde import ouder dan 26 uur geeft een waarschuwing. Die laatste vangt ook een integratiecontainer die niet draait.
+- `GET /status` (HTML) en `GET /status.json` (JSON) uit dezelfde functie (`domein/status`), zodat ze niet uit elkaar lopen. Menu-item **Status**. Zonder inlog verwijzen beide naar `/inloggen`.
+- Inhoud: applicatieversie (buildargument `APP_VERSIE` in het image, de workflow geeft de tag van de release mee), databaseversie en migratieversie, laatste heartbeat van de worker, laatste import van leden via de API (tijdstip, resultaat, aantallen nieuw, bijgewerkt, oud-lid, overgeslagen, en bij een fout de reden uit de vaste lijst van ADR-012), laatste opschoning (tijdstip en aantallen), API aan of uit, laatste aanroep per geldig robottoken, wanneer de bootaantallen voor het laatst zijn opgehaald (een rij in `taakrun` met taak `bootaantallen`), tokens die binnen 31 dagen verlopen met naam en vervaldatum (niet ingetrokken en nog niet verlopen). `web` leest `API_INGESCHAKELD` uit dezelfde omgeving als `api`.
+- Statusregels per onderdeel: ok, waarschuwing of fout. Een heartbeat ouder dan 2 minuten, een mislukte laatste import, een geslaagde import ouder dan 26 uur (of nog geen import), een mislukte laatste opschoning of een token dat binnen 31 dagen verloopt, geeft een waarschuwing. Een migratieversie die niet de verwachte is, geeft een fout. De grens van 26 uur vangt ook een integratiecontainer die niet draait.
 
 **Foutmeldingen zonder geheimen.** De worker en de API leggen bij een fout alleen de foutklasse en een vaste, door de applicatie gekozen omschrijving vast, bijvoorbeeld "ledenbron onbereikbaar". Ruwe exceptieteksten van HTTP-bibliotheken kunnen URL's met inloggegevens bevatten; de integratiecontainer stuurt ze alleen geschoond naar stdout. Een test zet een herkenbaar nepgeheim in de omgeving van `integratie` en controleert dat het niet op de statuspagina en niet in `taakrun` staat (BLB-007).
 
@@ -49,6 +49,7 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-11-02 | Gebouwd: `APP_VERSIE`, `API_INGESCHAKELD` ook bij `web`, waarschuwingen voor opschoning en tokens, tijdstip van de bootaantallen in `taakrun` | Bouw slice 9, issue #48 |
 | v1.1.1 | 2026-10-31 | Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | Healthcheck voor `api`; statuspagina toont de laatste import via de API, de laatste aanroep per robottoken en het ophalen van de bootaantallen, niet meer de ledenbron en de instelling terugschrijven | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

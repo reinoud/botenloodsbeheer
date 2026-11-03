@@ -220,11 +220,14 @@ def test_instellingen_uit_de_omgeving_met_standaarden():
 
 
 def test_terugschrijven_niet_beschikbaar():
-    """BLB-009 criterium 1, deel container."""
+    """BLB-009 criterium 1, deel container: ook geen taak die terugschrijft of de bootaantallen
+    ophaalt (slice 9)."""
     bron = bronnen.StubBron("x")
     assert not bron.kan_terugschrijven
     with pytest.raises(bronnen.NietBeschikbaar):
         bron.schrijf_bootaantallen({})
+    lus = (ROOT / "integratie/koppeling/__main__.py").read_text()
+    assert "schrijf_bootaantallen" not in lus and "bootaantallen" not in lus
 
 
 def lus(api, tmp_path, **omgeving):

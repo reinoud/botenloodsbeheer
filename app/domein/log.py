@@ -21,7 +21,8 @@ TECHNISCH = frozenset(
      "plaats.aangemaakt", "plaats.gewijzigd", "plaats.verwijderd", "beheerder.uitgenodigd",
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
      "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
-     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld"}
+     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld",
+     "opschoning.uitgevoerd"}
 )
 
 

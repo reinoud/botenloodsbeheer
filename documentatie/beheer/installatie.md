@@ -69,11 +69,12 @@ Wachtwoorden en sleutels bevatten alleen letters en cijfers, want ze komen in ee
 | `TOTP_SLEUTEL` | Fernet-sleutel voor de TOTP-geheimen |
 | `POSTGRES_PASSWORD` | eigenaar van de database, alleen voor migraties |
 | `DB_WEB_WACHTWOORD`, `DB_TAKEN_WACHTWOORD`, `DB_API_WACHTWOORD` | databaserollen van `web`, `worker` en `api` |
-| `API_INGESCHAKELD` | `true` of `false`; uit weigert elke aanroep |
+| `API_INGESCHAKELD` | `true` of `false`; uit weigert elke aanroep; `web` toont de stand op de statuspagina |
 | `KOPPELNET` | subnet van `koppeling`, ook de standaardwhitelist van een robottoken |
 | `LEDENBRON`, `LEDENBRON_STUB_BESTAND`, `SYNC_TIJDSTIP`, `API_URL` | integratiecontainer, zie [integratiecontainer](integratiecontainer.md) |
 | `LOGO_BESTAND` | logo in `huisstijl/`, JPEG, PNG of WebP |
 | `PROXY_HOPS` | aantal vertrouwde proxy's, achter Traefik 1 |
+| `OPSCHOON_TIJDSTIP` | dagelijkse opschoning na 5 jaar in `worker`, standaard `04:00`, in de tijdzone `TZ` |
 | `TZ`, `LOG_NIVEAU` | tijdzone en logniveau |
 
 Een verkeerde of ontbrekende waarde stopt het starten van `web`, met de naam van de variabele in `docker compose logs web`.

@@ -1,5 +1,7 @@
-"""Beheerschermen: indeling, plaatsdetail, boten, leden en beheerders. Schermen over boten en
-plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
+"""Beheerschermen: indeling, plaatsdetail, boten, leden, beheerders en de technische status.
+Schermen over boten en plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
+
+import json
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 
@@ -10,6 +12,7 @@ from app.domein import (
     indeling,
     leden,
     log,
+    status,
     toewijzing,
     vandaag,
     wachtlijst,
@@ -236,6 +239,7 @@ def lid_detail(lid_id):
     # BLB-019: boten met plaats. Adres, telefoon en e-mail staan alleen op het plaatsdetail.
     lid = _of_404(leden.lid, lid_id)
     return render_template("lid.html", lid=lid, oud_lid=leden.is_oud_lid(lid),
+                           aantallen=boten.bootaantallen(lid.id)[0]["aantallen"],
                            regels=log.regels([f"lid:{lid.id}"]))
 
 
@@ -293,3 +297,19 @@ def beheerder_wijzigen(beheerder_id, actie):
         "blokkeren": "Het account is geblokkeerd.", "deblokkeren": "Het account is gedeblokkeerd.",
         "verwijderen": "Het account is verwijderd."}[actie])
     return redirect(url_for("web.beheerders_overzicht"))
+
+
+# Technische status (BLB-037)
+
+
+@bp.get("/status.json")
+@bp.get("/status")  # de eerste regel: url_for geeft /status
+@inloggen_vereist
+def statuspagina():
+    """HTML en JSON uit dezelfde gegevens, zodat ze niet uit elkaar lopen (ADR-010)."""
+    s = status.status()
+    if request.path.endswith(".json"):
+        return current_app.response_class(
+            json.dumps(s, default=lambda t: t.isoformat(), ensure_ascii=False),
+            mimetype="application/json")
+    return render_template("status.html", s=s)

@@ -1,11 +1,17 @@
-"""Boten van leden en clubboten, met hooguit één foto (BLB-005, ADR-008)."""
+"""Boten van leden en clubboten, met hooguit één foto (BLB-005, ADR-008), en de bootaantallen per
+lid (BLB-009)."""
+
+from collections import Counter
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, afbeeldingen, leden, log, wachtlijst
 from app.domein.toewijzing import controleer_past
-from app.models import Boot, Bootsoort, Lid, Plaats, db
+from app.models import Boot, Bootsoort, Lid, Plaats, Taakrun, db
+
+BOOTAANTALLEN = "bootaantallen"  # taak in taakrun: wanneer de API ze voor het laatst leverde
 
 
 def _verwijzingen(boot):
@@ -138,3 +144,29 @@ def boot_verwijderen(boot_id, actor):
         db.session.flush()
         db.session.delete(foto)
     db.session.commit()
+
+
+def bootaantallen(lid_id=None):
+    """Per lid elke bootsoort met het aantal, ook 0 (ADR-004, ADR-012). Alleen boten met een
+    plaats tellen; clubboten hebben geen lid en vallen dus weg (besluit 2026-10-31). De lijst per
+    lid en de API gebruiken deze ene telling."""
+    soorten = db.session.scalars(select(Bootsoort.naam).order_by(Bootsoort.id)).all()
+    telling = Counter(db.session.execute(
+        select(Boot.lid_id, Bootsoort.naam).join(Boot.bootsoort).join(Boot.plaats)).all())
+    q = select(Lid.id, Lid.lidnummer).order_by(Lid.lidnummer)
+    if lid_id is not None:
+        q = q.where(Lid.id == lid_id)
+    return [{"lidnummer": nummer, "aantallen": {s: telling[(i, s)] for s in soorten}}
+            for i, nummer in db.session.execute(q)]
+
+
+def bootaantallen_ophalen():
+    """GET /api/v1/bootaantallen: legt het tijdstip vast voor de statuspagina (BLB-037)."""
+    aantallen = bootaantallen()
+    rij = db.session.scalar(select(Taakrun).where(Taakrun.taak == BOOTAANTALLEN)) or Taakrun(
+        taak=BOOTAANTALLEN, status="geslaagd")
+    db.session.add(rij)
+    rij.gestart_op = rij.beeindigd_op = datetime.now(UTC)
+    rij.aantallen = {"leden": len(aantallen)}
+    db.session.commit()
+    return aantallen

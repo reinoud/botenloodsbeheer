@@ -2,7 +2,7 @@
 
 import ipaddress
 import os
-from datetime import timedelta
+from datetime import datetime, timedelta
 from urllib.parse import urlsplit
 
 from cryptography.fernet import Fernet
@@ -38,6 +38,14 @@ def _schakelaar(naam, standaard):
     if waarde not in ("true", "false"):
         raise ConfigFout(f"{naam} moet true of false zijn")
     return waarde == "true"
+
+
+def _tijdstip(naam, standaard):
+    waarde = _lees(naam, standaard)
+    try:
+        return datetime.strptime(waarde, "%H:%M").time()
+    except ValueError:
+        raise ConfigFout(f"{naam} moet een tijdstip zijn zoals 04:00") from None
 
 
 def laad():
@@ -86,6 +94,10 @@ def laad():
         "WEBAUTHN_RP_ID": _lees("WEBAUTHN_RP_ID") or urlsplit(basis_url).hostname,
         "PROXY_HOPS": int(_lees("PROXY_HOPS", "1")),
         "TZ": _lees("TZ", "Europe/Amsterdam"),
+        # De dagelijkse opschoning in de worker, in de tijdzone TZ (ADR-007).
+        "OPSCHOON_TIJDSTIP": _tijdstip("OPSCHOON_TIJDSTIP", "04:00"),
+        # Buildargument van het image (ADR-010), voor de statuspagina.
+        "APP_VERSIE": _lees("APP_VERSIE", "onbekend"),
         "LOG_NIVEAU": _lees("LOG_NIVEAU", "INFO"),
         # Alleen web toont het logo; de worker leest het niet (ADR-008).
         "LOGO_BESTAND": _lees("LOGO_BESTAND", "/huisstijl/logo.png") if dienst == "web" else None,

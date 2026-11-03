@@ -13,7 +13,7 @@ from app.models import db
 health = Blueprint("health", __name__)
 
 _INI = Path(__file__).resolve().parents[2] / "alembic.ini"
-_HEAD = ScriptDirectory.from_config(Config(str(_INI))).get_current_head()
+HEAD = ScriptDirectory.from_config(Config(str(_INI))).get_current_head()
 
 
 @health.get("/health/live")
@@ -28,6 +28,6 @@ def ready():
     except SQLAlchemyError:
         db.session.rollback()
         versie = None
-    if versie != _HEAD:
+    if versie != HEAD:
         return {"status": "niet gereed"}, 503
     return {"status": "ok"}

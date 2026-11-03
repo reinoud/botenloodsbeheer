@@ -204,6 +204,8 @@ def schermen(browser):
     o.maak("log-techniek", hoogte=700)
     page.goto("/instellingen")
     o.maak("instellingen", hoogte=800)
+    page.goto("/status")
+    o.maak("status", hoogte=900)
 
     # De openbare pagina, zonder inloggen.
     bezoeker = browser.new_context(base_url=BASIS, viewport={"width": 700, "height": 600},

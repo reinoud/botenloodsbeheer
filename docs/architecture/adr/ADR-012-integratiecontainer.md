@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.4.0
+**Versie:** v1.5.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -24,7 +24,7 @@ Traefik heeft een niet gepubliceerd entrypoint `intern` op poort 8081, met een r
 
 Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat bestand komt pas met een story die erom vraagt (architectuur §10.2, vraag 5).
 
-**Aanroepen.** Het contract staat in `app/api/openapi.yaml` en kent vijf aanroepen voor de integratiecontainer; meer gebruikt hij niet. Slice 6 bouwt de eerste vier; `GET /api/v1/bootaantallen` komt met BLB-009 in slice 9 (backlog vraag 21).
+**Aanroepen.** Het contract staat in `app/api/openapi.yaml` en kent vijf aanroepen voor de integratiecontainer; meer gebruikt hij niet. Alle vijf zijn gebouwd; `GET /api/v1/bootaantallen` kwam met BLB-009 in slice 9 (backlog vraag 21). De rol `botenloods_api` leest daarvoor ook `plaats` en `bootsoort` (migratie 0008). De meegeleverde container roept hem niet aan, zolang terugschrijven uit staat.
 
 | Aanroep | Recht | Argumenten | Terugkeerwaarde |
 |---------|-------|------------|-----------------|
@@ -61,6 +61,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.0 | 2026-11-02 | Vijfde aanroep gebouwd | Bouw slice 9, issue #48 |
 | v1.4.0 | 2026-10-31 | Traefik in plaats van Nginx: netwerken, entrypoint `intern`, grens van 2 MB in de applicatie | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.3.1 | 2026-10-31 | Een verzoek van een beheerder wacht na een fout niet het uur af, behalve na een fout van de API zelf | Besluit stakeholder 2026-10-31, issue #28 |
 | v1.3.0 | 2026-10-31 | Gelijk aan de bouw van slice 6: vier aanroepen gebouwd, de vijfde in slice 9; `domein/leden.importeer`; uitkomsten in `taakrun` (taak `ledenimport`); secretbestand leeg aanmaken en uid 10001; nieuw token heft de wachttijd op; grens van 5000 records en 2 MB in de container; CSRF-vrijstelling van `/api/v1`; Nginx tot 2 MB | Issue #22 |

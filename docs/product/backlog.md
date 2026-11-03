@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.16
+**Versie:** v0.3.17
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -438,7 +438,7 @@ Als beheerder wil ik dat gegevens van oud-leden en het mutatielog na 5 jaar word
 
 - Gegeven een oud-lid dat langer dan 5 jaar geleden opzegde en van wie geen boot nog een plaats heeft, wanneer de opschoning draait, dan zijn de persoonsgegevens van dat oud-lid verwijderd, met zijn boten en foto's (besluit 2026-10-30). Een boot zonder plaats houdt het opschonen niet tegen.
 - Gegeven een oud-lid dat nog een toegewezen plaats heeft, wanneer de opschoning draait, dan blijven de gegevens staan.
-- Gegeven een logregel ouder dan 5 jaar, wanneer de opschoning draait, dan is de regel verwijderd.
+- Gegeven een logregel ouder dan 5 jaar, wanneer de opschoning draait, dan is de regel verwijderd. Een logregel over een opgeschoond lid toont `lid:` met een nummer, zonder naam (ADR-006).
 - Gegeven een lid dat geen oud-lid is, wanneer de opschoning draait, dan blijven de gegevens altijd staan.
 - Gegeven een uitgevoerde opschoning, wanneer een beheerder de technische status opent, dan staan daar het tijdstip en de aantallen verwijderde gegevens, zonder persoonsgegevens.
 
@@ -555,7 +555,7 @@ Prioriteit: Must. Bron: intake (besluiten 2026-10-31), ADR-012. Afhankelijk van:
 
 Als beheerder van een installatie wil ik een beschrijving van hoe de integratiecontainer zich bij de API aanmeldt, met voorbeeldcode, zodat ik het token kan instellen en een andere vereniging een eigen container kan bouwen.
 
-- Gegeven de beheerdocumentatie, wanneer een beheerder die opent, dan staan erin: hoe je met de CLI een robottoken maakt met alleen de rechten `leden:importeren` en `bootaantallen:lezen`, hoe je het in de installatie zet, hoe je het vernieuwt, de aanroepen die de container gebruikt met voorbeeldcode (in slice 6 vier; `GET /api/v1/bootaantallen` volgt met BLB-009 in slice 9), en wat een eigen container moet doen.
+- Gegeven de beheerdocumentatie, wanneer een beheerder die opent, dan staan erin: hoe je met de CLI een robottoken maakt met alleen de rechten `leden:importeren` en `bootaantallen:lezen`, hoe je het in de installatie zet, hoe je het vernieuwt, de vijf aanroepen die een container kan gebruiken met voorbeeldcode (`GET /api/v1/bootaantallen` sinds slice 9, met BLB-009), en wat een eigen container moet doen.
 - Gegeven een schone installatie, wanneer een tester alleen de stappen uit de documentatie volgt, dan slaagt een import met de stub.
 - Gegeven de voorbeeldcode, wanneer een tester die uitvoert tegen een testinstallatie, dan werkt elke aanroep zoals beschreven.
 - Gegeven de documentatie, wanneer een lezer die doorzoekt, dan staat er geen echte tokenwaarde of echt wachtwoord in; voorbeelden zijn herkenbaar nep.
@@ -593,7 +593,7 @@ Als beheerder wil ik een technische statuspagina zodat ik de toestand van de ins
 - Gegeven een mislukte import, wanneer de beheerder de pagina opent, dan staat de reden uit de vaste lijst erop (BLB-006), zonder tekst van buiten en zonder inloggegevens van de bron.
 - Gegeven een laatste geslaagde import van meer dan 26 uur geleden, wanneer de beheerder de pagina opent, dan staat er een waarschuwing. Zo valt ook een integratiecontainer op die niet draait.
 - Gegeven de statuspagina, wanneer de beheerder die bekijkt, dan staan er geen tokens, wachtwoorden of gegevens van leden op.
-- Gegeven een persoonlijk token of robottoken dat binnen een maand verloopt, wanneer de beheerder de pagina opent, dan staat er een waarschuwing met de naam van het token en de vervaldatum, zonder de tokenwaarde. (slice 10 volgens architectuur §7.1; zie vraag 18)
+- Gegeven een persoonlijk token of robottoken dat binnen een maand verloopt, wanneer de beheerder de pagina opent, dan staat er een waarschuwing met de naam van het token en de vervaldatum, zonder de tokenwaarde. Een ingetrokken of al verlopen token staat er niet in. (slice 9; vraag 18)
 
 ## 5. Volgorde van slices
 

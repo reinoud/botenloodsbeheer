@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 from flask import Blueprint, current_app, request
 from werkzeug.exceptions import RequestEntityTooLarge
 
-from app.domein import leden, tokens
+from app.domein import boten, leden, tokens
 
 bp = Blueprint("api", __name__, url_prefix="/api/v1")
 
@@ -87,3 +87,11 @@ def import_mislukt(_token):
     except leden.Ongeldig as fout:
         return {"fout": str(fout)}, 422
     return {}, 201
+
+
+@bp.get("/bootaantallen")
+@aanroep("bootaantallen:lezen")
+def bootaantallen(_token):
+    """Per lid het aantal boten met een plaats per bootsoort (BLB-009); terugschrijven doet de
+    integratiecontainer pas als de vereniging dat aanzet (ADR-004)."""
+    return boten.bootaantallen_ophalen()

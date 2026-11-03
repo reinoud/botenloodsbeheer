@@ -21,6 +21,8 @@ x-omgeving: &omgeving
   DOMEIN: ${DOMEIN:?DOMEIN ontbreekt in .env}
   TZ: ${TZ:-Europe/Amsterdam}
   LOG_NIVEAU: ${LOG_NIVEAU:-INFO}
+  # api weigert bij false; web toont de stand op de statuspagina (ADR-010).
+  API_INGESCHAKELD: ${API_INGESCHAKELD:-true}
 
 services:
   db:
@@ -135,7 +137,6 @@ services:
     environment:
       <<: *omgeving
       DIENST: api
-      API_INGESCHAKELD: ${API_INGESCHAKELD:-true}
       PROXY_HOPS: ${PROXY_HOPS:-1}
       DATABASE_URL: postgresql+psycopg://botenloods_api:${DB_API_WACHTWOORD}@db/botenloods
     networks: [achterkant, voorkant]
@@ -174,6 +175,7 @@ services:
     environment:
       <<: *omgeving
       DIENST: worker
+      OPSCHOON_TIJDSTIP: ${OPSCHOON_TIJDSTIP:-04:00}
       DATABASE_URL: postgresql+psycopg://botenloods_taken:${DB_TAKEN_WACHTWOORD}@db/botenloods
     networks: [achterkant]
     depends_on:

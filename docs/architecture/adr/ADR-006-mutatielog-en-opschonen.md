@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.2.1
+**Versie:** v1.3.0
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -22,7 +22,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | verwijzingen | Array van tekst als `plaats:12`, `rek:3`, `boot:40`, `lid:7` |
 | gegevens | JSON met oud en nieuw, alleen voor velden die er mogen staan |
 
-**Schrijven.** Alleen `domein/log` schrijft, aangeroepen vanuit elke wijzigende domeinfunctie in dezelfde transactie. Een lijst met verboden velden (adres, telefoon, e-mail, tokenwaarde) wordt bij schrijven gecontroleerd; bij die velden komt alleen "gewijzigd" in het log. Een lid staat in het log als verwijzing (`lid:7`), niet met naam: de naam wordt bij het tonen opgehaald. Na het opschonen van het lid toont het log "verwijderd lid". Zo blijft na opschonen geen naam achter in logregels die nog niet 5 jaar oud zijn.
+**Schrijven.** Alleen `domein/log` schrijft, aangeroepen vanuit elke wijzigende domeinfunctie in dezelfde transactie. Een lijst met verboden velden (adres, telefoon, e-mail, tokenwaarde) wordt bij schrijven gecontroleerd; bij die velden komt alleen "gewijzigd" in het log. Een lid staat in het log als verwijzing (`lid:7`), niet met naam. Het log toont die verwijzing zoals ze is, ook na het opschonen van het lid; een naam wordt niet opgehaald (bouw slice 9). Zo blijft na opschonen geen naam achter in logregels die nog niet 5 jaar oud zijn. De naam van een boot kan in jongere regels blijven staan; die is openbaar op de plaatspagina.
 
 **Afscherming.** De applicatie heeft geen functie om logregels te wijzigen of te verwijderen. De database-gebruiker van de applicatie heeft op `logregel` alleen `INSERT` en `SELECT`. De opschoning draait in de worker met een aparte database-gebruiker die ook `DELETE` mag. Een fout in de webcode kan het log zo niet aantasten.
 
@@ -50,7 +50,9 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 1. Logregels met een tijdstip van meer dan 5 jaar geleden verwijderen.
 2. Oud-leden zoeken waarvan de startdatum (opzegdatum, of `uit_bron_op` als die ontbreekt, besloten door de stakeholder op 2026-10-30, architectuur §9 besluit 4) meer dan 5 jaar geleden ligt en waarvan geen boot een plaats heeft (besloten, besluit 3). De boten en foto's van het oud-lid gaan mee.
 3. Van die oud-leden de boten, foto's en het lid zelf verwijderen.
-4. Aantallen vastleggen in `taakrun` en één logregel `opschoning.uitgevoerd` met alleen de aantallen (BLB-026).
+4. Aantallen vastleggen in `taakrun` (taak `opschoning`: logregels, leden, boten, foto's) en één logregel `opschoning.uitgevoerd` met alleen de aantallen en een verwijzing naar de run (BLB-026).
+
+De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een startdatum van precies 5 jaar geleden blijft staan. De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`: een oud-lid krijgt geen nieuwe boot of plaats, en een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
 
 ## Alternatieven
 
@@ -74,6 +76,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-02 | Opschoning gebouwd; het log toont `lid:<id>` zonder naam, ook na opschonen; kopieën nagelopen | Bouw slice 9, issue #48 |
 | v1.2.1 | 2026-11-02 | Reden `andere eigenaar` bij `wachtlijst.verwijderd` | Besluit stakeholder 2026-11-01, issue #43 |
 | v1.2.0 | 2026-11-01 | Actienamen en gegevens van de wachtlijst; scherm Wachtlijst in de tabel | Bouw slice 7, issue #43 |
 | v1.1.3 | 2026-11-01 | `boot.gewijzigd`: naam, bootsoort en eigenaar, eigenaar als verwijzing | Besluit stakeholder 2026-11-01, issue #39 |

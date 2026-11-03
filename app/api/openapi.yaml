@@ -1,9 +1,9 @@
 # Contract van de API (ADR-012, BLB-034). Elke route van de blueprint staat hier; een test
-# vergelijkt beide. Slice 9 voegt de bootaantallen toe.
+# vergelijkt beide.
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.6.0
+  version: 0.7.0
   description: >
     Alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van Traefik op
     poort 8081.
@@ -147,6 +147,33 @@ paths:
           $ref: "#/components/responses/Ongeldig"
         "429":
           $ref: "#/components/responses/TeVeel"
+  /bootaantallen:
+    get:
+      summary: Aantal boten per bootsoort per lid, voor terugschrijven naar de ledenbron
+      description: >
+        Recht: `bootaantallen:lezen`. Argumenten: geen. Voor elk lid elke bootsoort met het
+        aantal, ook 0. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst
+        zonder plaats en een clubboot tellen niet. Dezelfde aantallen staan in de lijst per lid.
+        Terugschrijven naar de bron staat in deze versie uit; de aanroep zet alleen het tijdstip
+        van ophalen op de statuspagina.
+      responses:
+        "200":
+          description: Eén regel per lid, op lidnummer gesorteerd
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bootaantallen"
+              example:
+                - lidnummer: "1001"
+                  aantallen: {Kajak: 1, Canadese kano: 0, Surfski: 0, C11: 0, Supboard: 0}
+                - lidnummer: "1002"
+                  aantallen: {Kajak: 0, Canadese kano: 0, Surfski: 0, C11: 0, Supboard: 0}
+        "401":
+          $ref: "#/components/responses/GeenToegang"
+        "403":
+          $ref: "#/components/responses/GeenToegang"
+        "429":
+          $ref: "#/components/responses/TeVeel"
 components:
   securitySchemes:
     token:
@@ -172,6 +199,21 @@ components:
           type: string
           format: date
           description: Dag waarop het token verloopt, JJJJ-MM-DD
+    Bootaantallen:
+      type: array
+      items:
+        type: object
+        required: [lidnummer, aantallen]
+        additionalProperties: false
+        properties:
+          lidnummer:
+            type: string
+          aantallen:
+            type: object
+            description: Bootsoort als sleutel, aantal als waarde; elke bootsoort staat erin
+            additionalProperties:
+              type: integer
+              minimum: 0
     Importverzoek:
       type: object
       required: [aangevraagd]

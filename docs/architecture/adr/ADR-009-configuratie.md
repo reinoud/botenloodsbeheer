@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5); herzien 2026-10-31 (logo en integratiecontainer)
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.3.0
 **Stories:** BLB-007, BLB-009, BLB-027, BLB-028, BLB-029
 
 ## Context
@@ -19,7 +19,7 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `DATABASE_URL`, per dienst een eigen waarde en databaserol: `web` mag het log alleen lezen en aanvullen, `api` mag leden aanmaken en bijwerken, `worker` mag opschonen, `migrate` is eigenaar | Omgeving | Geen | Geheim, ADR-006 en ADR-012. Eén naam per dienst in plaats van een aparte `DATABASE_URL_TAKEN` (slice 1a) |
 | `BASIS_URL` | Omgeving | Geen | Vast per installatie, altijd `https://` (besloten, §9 besluit 2); in QR-codes |
 | `TOTP_SLEUTEL` | Omgeving | Geen; de applicatie start niet zonder | Geheim; versleutelt de TOTP-geheimen (ADR-001) |
-| `API_INGESCHAKELD` | Omgeving | `true` | Besluit van de stakeholder: een installatiekeuze, standaard aan (2026-10-31); wijzigen vraagt een herstart van `api`. Uit betekent ook: geen import van leden |
+| `API_INGESCHAKELD` | Omgeving | `true` | Besluit van de stakeholder: een installatiekeuze, standaard aan (2026-10-31); wijzigen vraagt een herstart van `api` en `web` (statuspagina). Uit betekent ook: geen import van leden |
 | `KOPPELNET` | Omgeving (compose, `web`) | `10.203.0.0/24` | Subnet van het netwerk `koppeling` en standaardwhitelist van een nieuw robottoken (ADR-012) |
 | `DB_API_WACHTWOORD` | Omgeving (`db`, `api`) | Geen | Geheim, voor de rol `botenloods_api` (ADR-012) |
 | `WEBAUTHN_RP_ID` | Omgeving | Host uit `BASIS_URL` | Hoort bij de domeinnaam (ADR-001) |
@@ -28,7 +28,8 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `PROXY_HOPS` | Omgeving | 1 | Bepaalt het vertrouwde clientadres (ADR-005) |
 | `LEDENBRON`, `LEDENBRON_STUB_BESTAND` en inloggegevens van de bron | Omgeving van `integratie` | Leeg | Techniek en geheim (ADR-004); de applicatie kent ze niet |
 | `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://traefik:8081/api/v1` (instelbaar), `/run/secrets/api_token`, 03:00 | ADR-012, ADR-013 |
-| `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
+| `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving (`OPSCHOON_TIJDSTIP` alleen `worker`) | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
+| `APP_VERSIE` | Buildargument van het image | `ontwikkeling` | Versie op de statuspagina (ADR-010) |
 | `LOGO_BESTAND` | Omgeving (`web`), bestand in `./huisstijl` | `/huisstijl/logo.png`; zonder bestand alleen de naam | Besluit stakeholder 2026-10-31: logo in de installatie, wijzigen wordt niet gelogd (ADR-008) |
 | `LOG_NIVEAU` | Omgeving | `INFO` | Techniek |
 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` | Omgeving (compose-labels en netwerknamen) | Geen, `botenloods`, geen | `DOMEIN` gelijk aan de host uit `BASIS_URL`; `INSTALLATIE` uniek per host (ADR-013) |
@@ -61,6 +62,7 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-02 | `APP_VERSIE`; `OPSCHOON_TIJDSTIP` alleen bij `worker`; `API_INGESCHAKELD` ook bij `web` | Bouw slice 9, issue #48 |
 | v1.2.0 | 2026-10-31 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` toegevoegd; `API_URL` instelbaar | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | `API_INGESCHAKELD` standaard `true`; `KOPPELNET`, `DB_API_WACHTWOORD`, `LOGO_BESTAND` toegevoegd; ledenbron en `SYNC_TIJDSTIP` naar de integratiecontainer; logo en terugschrijven niet meer in de applicatie | Besluiten stakeholder 2026-10-31, ADR-008, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

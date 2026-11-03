@@ -24,5 +24,16 @@
 <p>Dit lid heeft geen boten in de loods.</p>
 {% endif %}
 
+<h2>Aantal boten per bootsoort</h2>
+<p>Alleen boten met een plaats tellen. Dit zijn de aantallen voor de ledenadministratie.</p>
+<table>
+  <thead><tr><th>Bootsoort</th><th>Aantal</th></tr></thead>
+  <tbody>
+  {% for soort, aantal in aantallen.items() %}
+    <tr><td data-label="Bootsoort">{{ soort }}</td><td data-label="Aantal">{{ aantal }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+
 {{ logtabel(regels) }}
 {% endblock %}

@@ -23,7 +23,7 @@ geimporteerd || { echo "De integratiecontainer importeerde niet; zie zijn log." 
 links=()
 for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
             methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen \
-            wachtlijst wachtlijstfout kaartjes; do
+            wachtlijst wachtlijstfout kaartjes status bootaantallen; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done
@@ -47,6 +47,9 @@ tokens=(-e "E2E_API_URL=http://$koppel_ip:8081/api/v1"
         -e "E2E_TOKEN_INGETROKKEN=$(token ingetrokken "${eigen[@]}")"
         -e "E2E_TOKEN_IMPORT=$(token import "${eigen[@]}")")
 "${c[@]}" exec -T web flask token intrekken "e2e-ingetrokken-$stempel" >/dev/null
+# Verloopt binnen 31 dagen: de waarschuwing op de statuspagina (BLB-037 criterium 5).
+"${c[@]}" exec -T web flask token robot "e2e-kort-$stempel" --recht bootaantallen:lezen \
+  --dagen 10 >/dev/null 2>&1
 
 # Per aanroep een vers token, zodat test_loods.py het in de nieuwste 50 regels van het technische
 # log vindt, los of in de hele suite (BLB-043).

@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012)
 **Datum:** 2026-10-30
-**Versie:** v2.2.1
+**Versie:** v2.3.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
 ## Context
@@ -32,7 +32,7 @@ De import in `domein/leden` werkt in deze stappen, bij elke aanroep van `PUT /ap
 
 De stub in de integratiecontainer leest leden uit een JSON-bestand (`LEDENBRON_STUB_BESTAND`). De tests van de applicatie sturen het fixturebestand `tests/fixtures/leden.json` rechtstreeks naar `PUT /api/v1/leden`; dat is de nepbron.
 
-Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, alleen voor boten met een toegewezen plaats en zonder clubboten (besluit stakeholder 2026-10-31); de vereniging rekent de contributie daarmee elders af per bootsoort; de lijst per lid toont ze en `GET /api/v1/bootaantallen` levert ze (BLB-009). De instelling "terugschrijven" in de applicatie vervalt. In de integratiecontainer gooit `schrijf_bootaantallen` `NietBeschikbaar` en draait geen taak die terugschrijft.
+Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, alleen voor boten met een toegewezen plaats en zonder clubboten (besluit stakeholder 2026-10-31); de vereniging rekent de contributie daarmee elders af per bootsoort; de lijst per lid toont ze en `GET /api/v1/bootaantallen` levert ze, uit één functie (`domein/boten.bootaantallen`, BLB-009). De instelling "terugschrijven" in de applicatie vervalt. In de integratiecontainer gooit `schrijf_bootaantallen` `NietBeschikbaar` en draait geen taak die terugschrijft.
 
 ## Alternatieven
 
@@ -53,6 +53,7 @@ Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, allee
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.3.0 | 2026-11-02 | Bootaantallen gebouwd, één telling voor lijst per lid en API | Bouw slice 9, issue #48 |
 | v2.2.1 | 2026-10-31 | Bootaantallen alleen voor boten met een plaats, zonder clubboten | Besluit stakeholder 2026-10-31 |
 | v2.2.0 | 2026-10-31 | Taak `ledenimport` in `taakrun`; de afbreking door de veiligheidsgrens is een mislukte run | Issue #22, bouw slice 6 |
 | v2.1.0 | 2026-10-31 | Geen logregels voor wijzigingen in leden; een gemelde fout alleen in `taakrun` | Besluit stakeholder 2026-10-31 (backlog vraag 20) |

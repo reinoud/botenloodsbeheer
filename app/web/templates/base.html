@@ -26,6 +26,7 @@
       <a href="{{ url_for('web.technisch_log') }}">Technisch log</a>
       <a href="{{ url_for('web.beheerders_overzicht') }}">Beheerders</a>
       <a href="{{ url_for('web.instellingen_scherm') }}">Instellingen</a>
+      <a href="{{ url_for('web.statuspagina') }}">Status</a>
       <a href="{{ url_for('web.profiel') }}">Profiel</a>
       <form method="post" action="{{ url_for('web.uitloggen') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

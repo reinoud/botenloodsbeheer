@@ -12,6 +12,9 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5,source=/uv,target=/bin/uv \
 COPY alembic.ini ./
 COPY migrations migrations
 COPY app app
+# Versie op de statuspagina (ADR-010); de workflow geeft de tag van de release mee.
+ARG APP_VERSIE=ontwikkeling
+ENV APP_VERSIE=$APP_VERSIE
 RUN useradd --system --uid 10001 app
 USER 10001
 EXPOSE 8000

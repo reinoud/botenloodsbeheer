@@ -18,7 +18,8 @@ Een herstart van Traefik is na een update niet nodig: hij volgt de containers vi
 - Maken: `docker compose exec web flask token robot <naam> --recht leden:importeren --recht bootaantallen:lezen`. Het token verschijnt één keer. Zonder `--whitelist` geldt `KOPPELNET`, zonder `--dagen` 365 dagen, hooguit 1095.
 - Vernieuwen: een nieuw token onder een andere naam maken, in `secrets/api_token` zetten en daarna het oude intrekken.
 - Intrekken: `docker compose exec web flask token intrekken <naam>`.
-- API uitzetten: `API_INGESCHAKELD=false` in `.env` en `docker compose up -d api`.
+- API uitzetten: `API_INGESCHAKELD=false` in `.env` en `docker compose up -d api web`.
+- De statuspagina (`/status`) waarschuwt 31 dagen voordat een token verloopt, met naam en vervaldatum, en toont per robottoken de laatste aanroep.
 
 ## Logs
 
@@ -33,3 +34,9 @@ Het pad staat er zonder querystring, dus zonder zoektermen, en de code van een u
 Een weigering door Traefik, zoals een 429 van een rate limit of een 413 boven 3 MB op de API, komt in geen enkele log. De routers van de botenloods schrijven niets in de toegangslog van Traefik.
 
 De toegangsregels bevatten IP-adressen. Bewaar de logs daarom niet langer dan nodig, en stem de bewaartermijn van logs en back-ups af op de termijn van 5 jaar voor gegevens van oud-leden.
+
+## Bewaartermijn
+
+De `worker` verwijdert elke dag na `OPSCHOON_TIJDSTIP` (standaard 04:00) de logregels van meer dan 5 jaar oud, en oud-leden van wie de opzegdatum meer dan 5 jaar geleden ligt, met hun boten en foto's. Zonder opzegdatum telt de datum waarop het lid uit de bron verdween. Een oud-lid met een boot op een plaats blijft staan. De worker gebruikt daarvoor de databaserol `botenloods_taken`, de enige rol die logregels mag verwijderen. Mislukt de opschoning, dan staat dat met de foutklasse op de statuspagina en volgt de volgende dag een nieuwe poging. De uitkomst staat ook in het technische log als `opschoning.uitgevoerd`.
+
+Back-ups vallen buiten de applicatie. Een back-up bevat verwijderde gegevens tot hij zelf wordt verwijderd; bewaar back-ups daarom niet langer dan nodig.

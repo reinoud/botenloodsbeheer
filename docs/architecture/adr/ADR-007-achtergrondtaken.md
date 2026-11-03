@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.3.0
 **Stories:** BLB-006, BLB-026, BLB-037
 
 ## Context
@@ -14,8 +14,8 @@ De dagelijkse opschoning na 5 jaar draait buiten het webproces (overlay §6) en 
 De container `worker` draait hetzelfde image als `web` met het commando `flask taken draai`. Dat is een eenvoudige lus in Python:
 
 1. Elke 15 seconden kijken of er werk is.
-2. Werk is: de opschoning na `OPSCHOON_TIJDSTIP` (standaard 04:00) als die vandaag nog niet draaide. Na een fout volgt de volgende dag een nieuwe poging.
-3. Voor elke taak een PostgreSQL advisory lock nemen, zodat de taak nooit dubbel draait, ook niet bij een tweede worker per ongeluk.
+2. Werk is: de opschoning na `OPSCHOON_TIJDSTIP` (standaard 04:00) als die vandaag nog niet draaide. Na een fout volgt de volgende dag een nieuwe poging: elke run van vandaag telt, ook een mislukte. `OPSCHOON_TIJDSTIP` staat alleen in de omgeving van `worker`.
+3. Voor elke taak een PostgreSQL advisory lock nemen (sleutel 1 de import, 2 de opschoning), zodat de taak nooit dubbel draait, ook niet bij een tweede worker per ongeluk.
 4. Start, einde, resultaat, aantallen en een foutmelding zonder geheimen vastleggen in `taakrun`.
 5. Na elke ronde de heartbeat bijwerken (een rij in `taakrun` met soort `heartbeat`), voor de healthcheck en de statuspagina.
 
@@ -45,6 +45,7 @@ De lus vangt elke fout per taak af, legt die vast en draait door. Bij `SIGTERM` 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-02 | Opschoning gebouwd: sleutel van de lock, een mislukte run telt als run van die dag, `OPSCHOON_TIJDSTIP` bij `worker` | Bouw slice 9, issue #48 |
 | v1.2.0 | 2026-10-31 | Termen gelijk aan de bouw: taak `ledenimport`, logactie `leden.import_aangevraagd` | Issue #22, bouw slice 6 |
 | v1.1.0 | 2026-10-31 | Ledensynchronisatie uit de worker naar de integratiecontainer; de worker houdt heartbeat en opschoning | Besluiten stakeholder 2026-10-31, ADR-012 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |
