@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.19
+**Versie:** v0.3.20
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -507,6 +507,7 @@ Als beheerder wil ik een robottoken maken dat niet aan een persoon hangt zodat k
 - Gegeven een robottoken dat met de CLI is gemaakt zonder whitelist en zonder geldigheidsduur, wanneer de beheerder `GET /api/v1/ik` aanroept, dan is de whitelist het interne netwerk van de integratiecontainer (`KOPPELNET`) en verloopt het token na 365 dagen. (slice 5)
 - Gegeven een geldigheidsduur boven 3 jaar, wanneer het token wordt gemaakt, dan weigert de CLI. (slice 5)
 - Gegeven een ingelogde beheerder, wanneer die in de webinterface een robottoken maakt met naam, geldigheidsduur, rechten en IP-whitelist, dan toont de applicatie de tokenwaarde één keer. (slice 10)
+- Gegeven een ingelogde beheerder, wanneer die in de webinterface een token maakt of de rechten wijzigt, dan is `leden:importeren` niet te kiezen; een token dat het recht via de CLI kreeg, houdt het (besluit stakeholder 2026-11-03, #52).
 - Gegeven een robottoken, wanneer de beheerder die het in de webinterface maakte wordt verwijderd, dan blijft het token werken tot het verloopt of wordt ingetrokken. (slice 10)
 - Gegeven een robottoken waarvan de maker is verwijderd, wanneer een beheerder het tokenoverzicht opent, dan staat de naam van de maker nog bij het token (ADR-005). (slice 10)
 

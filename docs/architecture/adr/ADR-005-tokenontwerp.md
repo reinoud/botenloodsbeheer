@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.4.0
+**Versie:** v1.4.1
 **Stories:** BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -13,7 +13,7 @@ De externe API `/api/v1` is aan en uit te zetten en staat standaard aan. Ze leve
 
 **Vorm en opslag.** Een token is `blb_` gevolgd door een prefix van 8 tekens en een geheim van 32 bytes uit `secrets`, base32. De database bewaart de prefix (voor weergave en opzoeken) en een SHA-256-hash van het hele token. Een trage hash zoals bcrypt is niet nodig: het geheim heeft 256 bits entropie. De applicatie toont de waarde één keer na aanmaken. Vergelijken gebeurt met `hmac.compare_digest`.
 
-**Rechten.** Een vaste lijst in code: `plaatsen:lezen`, `boten:lezen`, `leden:lezen`, `wachtlijst:lezen`, `persoonsgegevens`, `leden:importeren` en `bootaantallen:lezen`. Een token heeft minstens één recht. Zonder `persoonsgegevens` geeft de domeinlaag naam en lidnummer, maar geen adres, telefoon of e-mail (BLB-032). `leden:importeren` is het enige schrijfrecht en hoort alleen bij het robottoken van de integratiecontainer (ADR-012).
+**Rechten.** Een vaste lijst in code: `plaatsen:lezen`, `boten:lezen`, `leden:lezen`, `wachtlijst:lezen`, `persoonsgegevens`, `leden:importeren` en `bootaantallen:lezen`. Een token heeft minstens één recht. Zonder `persoonsgegevens` geeft de domeinlaag naam en lidnummer, maar geen adres, telefoon of e-mail (BLB-032). `leden:importeren` is het enige schrijfrecht en hoort alleen bij het robottoken van de integratiecontainer (ADR-012). Het is alleen met de CLI te geven, niet in de tokenschermen (besluit stakeholder 2026-11-03, #52).
 
 **Geldigheid.** `verloopt_op` is verplicht en ligt hooguit 3 jaar na aanmaken. Een persoonlijk token werkt niet meer zodra de beheerder geblokkeerd of verwijderd is. Een robottoken onthoudt wie het maakte, maar blijft werken als die beheerder vertrekt (BLB-031).
 
@@ -65,6 +65,7 @@ Naam, whitelist en vervaldatum zijn niet te wijzigen: daarvoor maakt de beheerde
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.1 | 2026-11-03 | `leden:importeren` alleen met de CLI | Besluit stakeholder 2026-11-03, issue #52 |
 | v1.4.0 | 2026-11-03 | Persoonlijke tokens, tokenschermen, log en migratie 0009 | Ontwerp slice 10, issue #51 |
 | v1.3.0 | 2026-10-31 | Rate limit en clientadres in Traefik; 429 als tekst | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.2.1 | 2026-10-31 | Sleutel van de rate limit is de hele header, geen hash: core-Nginx kan niet hashen, en de header staat toch al in het geheugen van Nginx | Herstel slice 5, oordeel aegis (AEG-01) |
