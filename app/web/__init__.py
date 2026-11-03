@@ -17,6 +17,7 @@ from flask import (
     url_for,
 )
 
+from app import INT_MAX
 from app.domein import Actor, Regelfout, instellingen, log
 from app.models import Beheerder, db
 
@@ -26,6 +27,15 @@ SESSIEDUUR = 12 * 3600
 # Recente inlog vereist voor inlogmethodes, uitnodigen, herstellen en instellingen (ADR-001).
 RECENT = 10 * 60
 OPNIEUW = "Log opnieuw in om dit te wijzigen. Je inlog is ouder dan 10 minuten."
+
+
+def getal(waarde):
+    """type= voor querystring en formulier: buiten integer van PostgreSQL geeft Werkzeug de
+    standaardwaarde, net als bij tekst die geen getal is (#74)."""
+    n = int(waarde)
+    if not -INT_MAX - 1 <= n <= INT_MAX:
+        raise ValueError(waarde)
+    return n
 
 
 @bp.before_request

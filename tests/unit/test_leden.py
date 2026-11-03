@@ -98,6 +98,13 @@ def test_ongeldige_records_overgeslagen_rest_verwerkt(importeer):
     assert "Zonder nummer" not in json.dumps([r.aantallen for r in runs()])
 
 
+def test_nul_teken_maakt_het_record_ongeldig(importeer):
+    """#74: PostgreSQL weigert NUL in tekst; het record telt als ongeldig, de rest gaat door."""
+    r = importeer([record("1", adres="Proef\x00weg 1"), record("2")])
+    assert r.status_code == 200 and (r.json["ongeldig"], r.json["nieuw"]) == (1, 1)
+    assert set(alle()) == {"2"}
+
+
 def test_ontbrekend_lid_wordt_oud_lid_met_importdatum_en_komt_terug(importeer):
     """BLB-008 criterium 2."""
     importeer([record("1"), record("2")])

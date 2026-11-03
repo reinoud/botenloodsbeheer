@@ -6,13 +6,13 @@ import segno
 from flask import current_app, flash, redirect, render_template, request, url_for
 
 from app.domein import indeling, instellingen, log
-from app.web import bp, inloggen_vereist
+from app.web import bp, getal, inloggen_vereist
 
 
 @bp.get("/vrij")
 @inloggen_vereist
 def vrije_plaatsen():
-    soort_id = request.args.get("bootsoort", type=int)
+    soort_id = request.args.get("bootsoort", type=getal)
     soorten = indeling.bootsoorten()
     return render_template(
         "vrij.html", plaatsen=indeling.vrije_plaatsen(soort_id), bootsoorten=soorten,
@@ -63,8 +63,8 @@ def qr(sleutel):
 @bp.get("/kaartjes/print")
 @inloggen_vereist
 def kaartjes_print():
-    kaartjes = indeling.kaartjes(request.args.getlist("plaats", type=int),
-                                 request.args.getlist("rek", type=int), "alle" in request.args)
+    kaartjes = indeling.kaartjes(request.args.getlist("plaats", type=getal),
+                                 request.args.getlist("rek", type=getal), "alle" in request.args)
     if not kaartjes:
         flash("Kies een of meer plaatsen, een rek of alle plaatsen.", "fout")
         return redirect(url_for("web.kaartjes_kiezen"))

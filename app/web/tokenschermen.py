@@ -4,7 +4,7 @@ beheert alle tokens. Maken, rechten wijzigen en intrekken vragen een recente inl
 from flask import current_app, flash, redirect, render_template, request, url_for
 
 from app.domein import tokens
-from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
+from app.web import bp, getal, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
 @bp.get("/tokens")
@@ -29,7 +29,7 @@ def token_nieuw():
     invoer = {"soort": f.get("soort", ""), "naam": f.get("naam", "").strip(),
               "dagen": f.get("dagen", ""), "rechten": f.getlist("recht"),
               "whitelist": f.get("whitelist", "")}
-    dagen = f.get("dagen", type=int)
+    dagen = f.get("dagen", type=getal)
     if dagen is None:
         flash("Geldigheid: geef een aantal dagen.", "fout")
         return _formulier(invoer)

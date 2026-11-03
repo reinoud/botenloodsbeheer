@@ -7,6 +7,7 @@ from sqlalchemy import select
 
 from app.domein import CLI, boten, indeling, log, toewijzing
 from app.models import Plaats, Rek, db
+from app.web import getal
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, png
 from tests.unit.test_web import inloggen
 
@@ -258,6 +259,42 @@ def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):
         "afbeelding_nul"])
 def test_te_groot_id_of_nul_teken_geeft_geen_500(ingelogd, pad, status):
     assert ingelogd.get(pad).status_code == status
+
+
+@pytest.mark.parametrize("waarde,goed", [
+    ("2147483647", True), ("-2147483648", True), ("2147483648", False), ("-2147483649", False),
+], ids=["max_binnen", "min_binnen", "max_buiten", "min_buiten"])
+def test_getal_binnen_integer_van_postgresql(waarde, goed):
+    """#74: buiten de grens een ValueError, zodat Werkzeug de standaardwaarde geeft."""
+    if goed:
+        assert getal(waarde) == int(waarde)
+    else:
+        with pytest.raises(ValueError):
+            getal(waarde)
+
+
+# Te groot getal in querystring of formulier (#74): een gewone melding, geen DataError (500).
+# 2147483647 komt wel bij de database en geeft daar "bestaat niet".
+@pytest.mark.parametrize("eigenaar,melding", [
+    ("2147483647", "Dit lid bestaat niet."), ("2147483648", "Kies een eigenaar."),
+], ids=["eigenaar_binnen", "eigenaar_buiten"])
+def test_te_groot_getal_in_formulier_geeft_melding(ingelogd, eigenaar, melding):
+    p = bezette_plaats()
+    r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Fuut", "bootsoort": "1",
+                                                   "eigenaar": eigenaar}, follow_redirects=True)
+    assert melding in r.text
+
+
+def test_te_groot_getal_bij_toewijzen_bootsoort_en_overzicht(ingelogd):
+    p = bezette_plaats()
+    groot = "2147483648"
+    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": groot, "eigenaar": "club"},
+                      follow_redirects=True)
+    assert "Kies een bootsoort." in r.text
+    assert ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": groot}).status_code == 302
+    assert ingelogd.post(f"/rekken/{p.rek_id}/plaatsen",
+                         data={"code": "A02", "bootsoort": groot}).status_code == 302
+    assert ingelogd.get(f"/vrij?bootsoort={groot}").status_code == 200
 
 
 def test_nul_teken_in_formulier_geeft_400(ingelogd):

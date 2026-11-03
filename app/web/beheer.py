@@ -17,7 +17,7 @@ from app.domein import (
     vandaag,
     wachtlijst,
 )
-from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
+from app.web import bp, getal, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
 def _of_404(functie, *args):
@@ -62,7 +62,7 @@ def rek_verwijderen(rek_id):
 @inloggen_vereist
 def plaats_aanmaken(rek_id):
     uitvoeren(indeling.plaats_aanmaken, rek_id, request.form.get("code"),
-              request.form.getlist("bootsoort", type=int), "clubplaats" in request.form,
+              request.form.getlist("bootsoort", type=getal), "clubplaats" in request.form,
               gelukt="De plaats is aangemaakt.")
     return redirect(url_for("web.indeling_overzicht"))
 
@@ -89,7 +89,7 @@ def plaats_detail(plaats_id):
 @bp.post("/plaatsen/<int:plaats_id>/toewijzen")
 @inloggen_vereist
 def plaats_toewijzen(plaats_id):
-    uitvoeren(toewijzing.toewijzen, plaats_id, request.form.get("boot_id", type=int),
+    uitvoeren(toewijzing.toewijzen, plaats_id, request.form.get("boot_id", type=getal),
               gelukt="De boot heeft de plaats gekregen.")
     return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
 
@@ -105,7 +105,7 @@ def plaats_vrijgeven(plaats_id):
 @inloggen_vereist
 def plaats_wijzigen(plaats_id):
     uitvoeren(indeling.plaats_wijzigen, plaats_id, request.form.get("code"),
-              request.form.getlist("bootsoort", type=int), "clubplaats" in request.form,
+              request.form.getlist("bootsoort", type=getal), "clubplaats" in request.form,
               gelukt="De plaats is opgeslagen.")
     return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
 
@@ -137,12 +137,12 @@ def boten_overzicht():
 @inloggen_vereist
 def boot_aanmaken():
     eigenaar = request.form.get("eigenaar", "")
-    lid_id = None if eigenaar == "club" else request.form.get("eigenaar", type=int)
+    lid_id = None if eigenaar == "club" else request.form.get("eigenaar", type=getal)
     if eigenaar != "club" and lid_id is None:
         flash("Kies een eigenaar.", "fout")
         return redirect(url_for("web.boten_overzicht"))
     b = uitvoeren(boten.boot_aanmaken, request.form.get("naam"),
-                  request.form.get("bootsoort", type=int), lid_id, _foto(),
+                  request.form.get("bootsoort", type=getal), lid_id, _foto(),
                   gelukt="De boot is vastgelegd.")
     if b is None:
         return redirect(url_for("web.boten_overzicht"))
@@ -163,13 +163,13 @@ def boot_detail(boot_id):
 def boot_wijzigen(boot_id):
     _of_404(boten.boot, boot_id)
     eigenaar = request.form.get("eigenaar", "")
-    lid_id = None if eigenaar == "club" else request.form.get("eigenaar", type=int)
+    lid_id = None if eigenaar == "club" else request.form.get("eigenaar", type=getal)
     if eigenaar != "club" and lid_id is None:
         flash("Kies een eigenaar.", "fout")
     else:
         was_wachtend = boten.boot(boot_id).wachtlijst is not None
         if uitvoeren(boten.boot_wijzigen, boot_id, request.form.get("naam"),
-                     request.form.get("bootsoort", type=int), lid_id,
+                     request.form.get("bootsoort", type=getal), lid_id,
                      gelukt="De boot is opgeslagen.") and was_wachtend \
                 and boten.boot(boot_id).wachtlijst is None:
             flash("De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")

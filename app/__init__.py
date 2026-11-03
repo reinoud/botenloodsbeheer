@@ -13,13 +13,15 @@ from app import config
 from app.models import db
 
 csrf = CSRFProtect()
+# Bovengrens van integer in PostgreSQL; een groter getal geeft daar een fout en dus een 500.
+INT_MAX = 2**31 - 1
 
 
 class _Id(IntegerConverter):
     """<int:...> met de bovengrens van integer in PostgreSQL: een groter id geeft 404, geen 500 (#67)."""
 
     def __init__(self, url_map, **kwargs):
-        kwargs.setdefault("max", 2**31 - 1)
+        kwargs.setdefault("max", INT_MAX)
         super().__init__(url_map, **kwargs)
 
 

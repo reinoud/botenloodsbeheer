@@ -19,7 +19,7 @@ from flask import (
 from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 
 from app.domein import Actor, Regelfout, beheerders
-from app.web import bp, inloggen_vereist, recent_ingelogd, start_sessie
+from app.web import bp, getal, inloggen_vereist, recent_ingelogd, start_sessie
 
 MISLUKT = (
     "Inloggen is mislukt. Na vijf fouten is inloggen met wachtwoord 15 minuten geblokkeerd."
@@ -232,7 +232,7 @@ def profiel_wachtwoord():
 @recent_ingelogd
 def profiel_intrekken():
     keuze = request.form.get("methode", "")
-    passkey_id = None if keuze == "wachtwoord" else request.form.get("methode", type=int)
+    passkey_id = None if keuze == "wachtwoord" else request.form.get("methode", type=getal)
     if keuze != "wachtwoord" and passkey_id is None:
         flash("Kies een inlogmethode.", "fout")
         return redirect(url_for("web.profiel"))

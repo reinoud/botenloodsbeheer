@@ -22,8 +22,9 @@ RUN pip uninstall --yes --no-cache-dir pip && useradd --system --uid 10001 app
 USER 10001
 EXPOSE 8000
 # Toegangslog in het formaat zonder_code naar stdout (ADR-013); Traefik logt deze routes niet.
+# Geen control socket: de standaardplek in de home is read-only en niemand gebruikt hem (#73).
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--access-logfile", "-", \
-     "--logger-class", "app.toegangslog.Toegangslog", "app:create_app()"]
+     "--no-control-socket", "--logger-class", "app.toegangslog.Toegangslog", "app:create_app()"]
 
 # Alleen voor ontwikkeling en tests: voegt pytest en ruff toe.
 FROM app AS dev

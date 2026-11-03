@@ -87,7 +87,8 @@ def _tekst(record, veld):
     waarde = record.get(veld)
     if waarde is None:
         return None
-    if not isinstance(waarde, str):
+    # PostgreSQL weigert een NUL-teken in tekst: het record telt als ongeldig, geen 500 (#74).
+    if not isinstance(waarde, str) or "\x00" in waarde:
         raise Ongeldig(veld)
     return waarde.strip()[: TEKST[veld]] or None
 
