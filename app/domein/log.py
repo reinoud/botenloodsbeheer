@@ -18,7 +18,8 @@ BOOTMUTATIES = frozenset(
 TECHNISCH = frozenset(
     {"token.gemaakt", "token.rechten_gewijzigd", "token.ingetrokken", "api.geweigerd", "instelling.gewijzigd",
      "leden.import_aangevraagd", "rek.aangemaakt", "rek.gewijzigd", "rek.verwijderd",
-     "plaats.aangemaakt", "plaats.gewijzigd", "plaats.verwijderd", "beheerder.uitgenodigd",
+     "plaats.aangemaakt", "plaats.gewijzigd", "plaats.verwijderd", "bootsoort.toegevoegd",
+     "bootsoort.hernoemd", "bootsoort.verwijderd", "beheerder.uitgenodigd",
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
      "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
      "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld",

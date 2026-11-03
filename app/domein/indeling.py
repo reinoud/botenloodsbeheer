@@ -1,5 +1,5 @@
-"""Indeling van de loods: rekken en plaatsen (BLB-001 tot en met BLB-004, ADR-003), en de
-openbare leesfunctie (BLB-020)."""
+"""Indeling van de loods: rekken en plaatsen (BLB-001 tot en met BLB-004, ADR-003), bootsoorten
+(BLB-028) en de openbare leesfunctie (BLB-020)."""
 
 import io
 import re
@@ -13,7 +13,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, leden, log, vandaag
-from app.models import Boot, Bootsoort, Lid, Plaats, Rek, db
+from app.models import Boot, Bootsoort, Lid, Plaats, Rek, db, plaats_bootsoort
 
 # Zonder verwarrende tekens: geen 0, o, O, 1, l en I (ADR-003).
 ALFABET = "23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
@@ -30,6 +30,92 @@ def _naam(naam):
 
 def bootsoorten():
     return db.session.scalars(select(Bootsoort).order_by(Bootsoort.id)).all()
+
+
+def _soortnaam(naam, bootsoort_id=None):
+    """Getrimd, 1 tot 50 tekens, uniek zonder verschil in hoofdletters (BLB-028)."""
+    naam = (naam or "").strip()
+    if not 1 <= len(naam) <= 50:
+        raise Regelfout("Geef de bootsoort een naam van 1 tot 50 tekens.")
+    q = select(Bootsoort.naam).where(func.lower(Bootsoort.naam) == naam.lower())
+    if bootsoort_id is not None:
+        q = q.where(Bootsoort.id != bootsoort_id)
+    bestaand = db.session.scalar(q)
+    if bestaand is not None:
+        raise Regelfout(f"De bootsoort {bestaand} bestaat al.")
+    return naam
+
+
+def _flush_soortnaam(naam):
+    try:
+        db.session.flush()
+    except IntegrityError as fout:
+        db.session.rollback()
+        # shortcut: de index vergelijkt met hoofdletters; twee gelijktijdige namen die alleen
+        # daarin verschillen komen er allebei door. Een index op lower(naam) vraagt een migratie.
+        if fout.orig.diag.constraint_name == "bootsoort_naam_key":
+            raise Regelfout(f"De bootsoort {naam} bestaat al.") from None
+        raise
+
+
+def bootsoort_toevoegen(naam, actor):
+    naam = _soortnaam(naam)
+    s = Bootsoort(naam=naam)
+    db.session.add(s)
+    _flush_soortnaam(naam)
+    log.schrijf(actor, "bootsoort.toegevoegd", [f"bootsoort:{s.id}"], {"naam": naam})
+    db.session.commit()
+    return s
+
+
+def _soort_vast(bootsoort_id):
+    s = db.session.get(Bootsoort, bootsoort_id, with_for_update=True, populate_existing=True)
+    if s is None:
+        db.session.rollback()
+        raise Regelfout("Deze bootsoort bestaat niet.")
+    return s
+
+
+def bootsoort_hernoemen(bootsoort_id, naam, actor):
+    """Boten, plaatsen en wachtlijst verwijzen naar het id en tonen dus vanzelf de nieuwe naam.
+    De rij is vergrendeld, zodat het log bij twee gelijktijdige wijzigingen de juiste oude naam
+    krijgt."""
+    s = _soort_vast(bootsoort_id)
+    try:
+        naam = _soortnaam(naam, s.id)
+    except Regelfout:
+        db.session.rollback()
+        raise
+    if naam != s.naam:
+        log.schrijf(actor, "bootsoort.hernoemd", [f"bootsoort:{s.id}"], {"naam": [s.naam, naam]})
+        s.naam = naam
+        _flush_soortnaam(naam)
+    db.session.commit()
+    return s
+
+
+def _aantal(n, enkel, meer):
+    return f"{n} {enkel if n == 1 else meer}"
+
+
+def bootsoort_verwijderen(bootsoort_id, actor):
+    """Weigert als een boot of plaats de soort gebruikt. De rij is vergrendeld: wie een boot of
+    plaats van deze soort maakt, neemt eerst een KEY SHARE-slot op de soort (boten, _soorten) en
+    wacht dus, of ziet daarna dat de soort weg is."""
+    s = _soort_vast(bootsoort_id)
+    boten_ = db.session.scalar(select(func.count()).where(Boot.bootsoort_id == s.id))
+    plaatsen = db.session.scalar(
+        select(func.count()).select_from(plaats_bootsoort)
+        .where(plaats_bootsoort.c.bootsoort_id == s.id))
+    if boten_ or plaatsen:
+        db.session.rollback()
+        delen = [_aantal(n, *w) for n, w in ((boten_, ("boot", "boten")),
+                                              (plaatsen, ("plaats", "plaatsen"))) if n]
+        raise Regelfout(f"De bootsoort {s.naam} is in gebruik bij {' en '.join(delen)}. "
+                        "Wijzig of verwijder die eerst.")
+    log.schrijf(actor, "bootsoort.verwijderd", [f"bootsoort:{s.id}"], {"naam": s.naam})
+    db.session.delete(s)
+    db.session.commit()
 
 
 def rekken():
@@ -210,8 +296,10 @@ def _code(code):
 
 
 def _soorten(bootsoort_ids):
+    # KEY SHARE: wacht op een lopende bootsoort_verwijderen in plaats van een fout van de FK.
     soorten = db.session.scalars(
-        select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids)).order_by(Bootsoort.id)).all()
+        select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids)).order_by(Bootsoort.id)
+        .with_for_update(key_share=True)).all()
     if not soorten:
         raise Regelfout("Kies minstens één bootsoort die op de plaats past.")
     return soorten

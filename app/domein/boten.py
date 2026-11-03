@@ -38,12 +38,21 @@ def boot(boot_id):
     return b
 
 
+def _soort(bootsoort_id):
+    """KEY SHARE: wacht op een lopende bootsoort_verwijderen en geeft daarna None, in plaats van
+    een fout van de FK bij het opslaan (BLB-028)."""
+    if not bootsoort_id:
+        return None
+    return db.session.get(Bootsoort, bootsoort_id, with_for_update={"key_share": True},
+                          populate_existing=True)
+
+
 def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
     """lid_id None maakt een clubboot: de vereniging is eigenaar."""
     naam = (naam or "").strip()
     if not 1 <= len(naam) <= 100:
         raise Regelfout("Geef de boot een naam van 1 tot 100 tekens.")
-    soort = db.session.get(Bootsoort, bootsoort_id) if bootsoort_id else None
+    soort = _soort(bootsoort_id)
     if soort is None:
         raise Regelfout("Kies een bootsoort.")
     eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None
@@ -73,7 +82,7 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
     try:
         if not 1 <= len(naam) <= 100:
             raise Regelfout("Geef de boot een naam van 1 tot 100 tekens.")
-        soort = db.session.get(Bootsoort, bootsoort_id) if bootsoort_id else None
+        soort = _soort(bootsoort_id)
         if soort is None:
             raise Regelfout("Kies een bootsoort.")
         eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None

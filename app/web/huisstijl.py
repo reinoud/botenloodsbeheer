@@ -1,11 +1,12 @@
-"""Naam, kleuren en logo van de vereniging (BLB-027, ADR-008, ADR-009)."""
+"""Instellingen: naam, kleuren en logo van de vereniging (BLB-027, ADR-008, ADR-009) en de
+bootsoorten (BLB-028)."""
 
 import hashlib
 
 from flask import current_app, flash, redirect, render_template, request, url_for
 
 from app.config import UPLOAD_MAX
-from app.domein import Regelfout, afbeeldingen, instellingen
+from app.domein import Regelfout, afbeeldingen, indeling, instellingen
 from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
@@ -62,7 +63,8 @@ def huisstijl_css():
 @bp.get("/instellingen")
 @inloggen_vereist
 def instellingen_scherm():
-    return render_template("instellingen.html", stijl=instellingen.huidig())
+    return render_template("instellingen.html", stijl=instellingen.huidig(),
+                           bootsoorten=indeling.bootsoorten())
 
 
 @bp.post("/instellingen")
@@ -77,3 +79,29 @@ def instellingen_opslaan():
         flash(tekst, "fout")
     return redirect(url_for("web.instellingen_scherm"))
 
+
+
+@bp.post("/bootsoorten")
+@inloggen_vereist
+@recent_ingelogd
+def bootsoort_toevoegen():
+    uitvoeren(indeling.bootsoort_toevoegen, request.form.get("naam"),
+              gelukt="De bootsoort is toegevoegd.")
+    return redirect(url_for("web.instellingen_scherm"))
+
+
+@bp.post("/bootsoorten/<int:bootsoort_id>/naam")
+@inloggen_vereist
+@recent_ingelogd
+def bootsoort_hernoemen(bootsoort_id):
+    uitvoeren(indeling.bootsoort_hernoemen, bootsoort_id, request.form.get("naam"),
+              gelukt="De naam van de bootsoort is opgeslagen.")
+    return redirect(url_for("web.instellingen_scherm"))
+
+
+@bp.post("/bootsoorten/<int:bootsoort_id>/verwijderen")
+@inloggen_vereist
+@recent_ingelogd
+def bootsoort_verwijderen(bootsoort_id):
+    uitvoeren(indeling.bootsoort_verwijderen, bootsoort_id, gelukt="De bootsoort is verwijderd.")
+    return redirect(url_for("web.instellingen_scherm"))

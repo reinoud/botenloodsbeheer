@@ -14,9 +14,11 @@ from cryptography.fernet import Fernet
 from sqlalchemy import create_engine, text
 
 TEST_DB = "botenloods_test"
-# bootsoort niet: de startlijst komt uit de migratie.
 TABELLEN = ("beheerder, passkey, uitnodiging, logregel, instelling, taakrun, rek, plaats, "
-            "plaats_bootsoort, lid, boot, wachtlijst, afbeelding, token")
+            "plaats_bootsoort, lid, boot, wachtlijst, afbeelding, token, bootsoort")
+# Na elke test weer de startlijst uit de migratie, ook als een test soorten wijzigde (BLB-028).
+STARTLIJST = "INSERT INTO bootsoort (naam) VALUES " + ", ".join(
+    f"('{naam}')" for naam in ("Kajak", "Canadese kano", "Surfski", "C11", "Supboard"))
 
 
 def db_url(gebruiker, wachtwoord, database=TEST_DB):
@@ -83,6 +85,7 @@ def app(database, request):
         db.engine.dispose()
     with database.begin() as c:
         c.execute(text(f"TRUNCATE {TABELLEN} RESTART IDENTITY CASCADE"))
+        c.execute(text(STARTLIJST))
 
 
 @pytest.fixture

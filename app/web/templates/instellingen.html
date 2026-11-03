@@ -2,7 +2,7 @@
 {% block titel %}Instellingen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Instellingen</h1>
-<p>Naam, kleuren en logo staan op elke pagina, ook op de openbare pagina van een plaats. Opslaan van naam en kleuren vraagt een inlog van hooguit 10 minuten oud.</p>
+<p>Naam, kleuren en logo staan op elke pagina, ook op de openbare pagina van een plaats. Opslaan van naam en kleuren en elke wijziging in de bootsoorten vraagt een inlog van hooguit 10 minuten oud.</p>
 
 <section class="kaart">
   <h2>Naam en kleuren</h2>
@@ -26,6 +26,41 @@
   <p>Er is geen logo; de kopbalk toont alleen de naam.</p>
   {% endif %}
   <p>Het logo staat in de installatie, niet in de applicatie. Wie de installatie beheert, zet het in de map <code>huisstijl</code> en herstart de applicatie.</p>
+</section>
+
+<section class="kaart" aria-labelledby="bootsoorten">
+  <h2 id="bootsoorten">Bootsoorten</h2>
+  <p>Een bootsoort is te kiezen bij boten en plaatsen en heeft een eigen wachtlijst. Een nieuwe naam staat direct overal; boten, plaatsen en wachtlijst blijven gelijk. Een bootsoort die een boot of plaats gebruikt, kun je niet verwijderen.</p>
+  <table>
+    <thead><tr><th>Bootsoort</th><th>Naam wijzigen</th><th>Verwijderen</th></tr></thead>
+    <tbody>
+    {% for s in bootsoorten %}
+      <tr>
+        <td data-label="Bootsoort">{{ s.naam }}</td>
+        <td data-label="Naam wijzigen">
+          <form method="post" action="{{ url_for('web.bootsoort_hernoemen', bootsoort_id=s.id) }}">
+            {% include "_csrf.html" %}
+            <label for="soort-{{ s.id }}">Nieuwe naam voor {{ s.naam }}</label>
+            <input id="soort-{{ s.id }}" name="naam" value="{{ s.naam }}" maxlength="50" required>
+            <button type="submit" class="knop">Naam opslaan</button>
+          </form>
+        </td>
+        <td data-label="Verwijderen">
+          <form method="post" action="{{ url_for('web.bootsoort_verwijderen', bootsoort_id=s.id) }}">
+            {% include "_csrf.html" %}
+            <button type="submit" class="knop knop-gevaar">{{ s.naam }} verwijderen</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <form method="post" action="{{ url_for('web.bootsoort_toevoegen') }}">
+    {% include "_csrf.html" %}
+    <label for="soort-nieuw">Nieuwe bootsoort</label>
+    <input id="soort-nieuw" name="naam" maxlength="50" required>
+    <button type="submit" class="knop">Bootsoort toevoegen</button>
+  </form>
 </section>
 
 {% endblock %}

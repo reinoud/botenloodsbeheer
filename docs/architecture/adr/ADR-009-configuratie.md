@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5); herzien 2026-10-31 (logo en integratiecontainer)
 **Datum:** 2026-10-30
-**Versie:** v1.3.0
+**Versie:** v1.3.1
 **Stories:** BLB-007, BLB-009, BLB-027, BLB-028, BLB-029
 
 ## Context
@@ -35,7 +35,7 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` | Omgeving (compose-labels en netwerknamen) | Geen, `botenloods`, geen | `DOMEIN` gelijk aan de host uit `BASIS_URL`; `INSTALLATIE` uniek per host (ADR-013) |
 | Naam van de vereniging | Applicatie | "Botenloods" | BLB-027 |
 | Primaire en secundaire kleur | Applicatie | Neutraal grijs en blauw | BLB-027, design tokens (ADR-002) |
-| Bootsoorten | Applicatie (tabel `bootsoort`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
+| Bootsoorten | Applicatie (tabel `bootsoort`, blok Bootsoorten op `/instellingen`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
 
 Vaste waarden in code, niet instelbaar: de bewaartermijn van 5 jaar, de maximale tokenduur van 3 jaar, de waarschuwing 31 dagen voor verlopen, de rechtenlijst van tokens, de uploadgrens. Dit zijn besluiten van de stakeholder of beveiligingsgrenzen, geen voorkeuren per vereniging. Wijzigen gaat via een release.
 
@@ -62,6 +62,7 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.1 | 2026-11-03 | Bootsoorten beheerd op `/instellingen` | Bouw slice 11, issue #56 |
 | v1.3.0 | 2026-11-02 | `APP_VERSIE`; `OPSCHOON_TIJDSTIP` alleen bij `worker`; `API_INGESCHAKELD` ook bij `web` | Bouw slice 9, issue #48 |
 | v1.2.0 | 2026-10-31 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` toegevoegd; `API_URL` instelbaar | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | `API_INGESCHAKELD` standaard `true`; `KOPPELNET`, `DB_API_WACHTWOORD`, `LOGO_BESTAND` toegevoegd; ledenbron en `SYNC_TIJDSTIP` naar de integratiecontainer; logo en terugschrijven niet meer in de applicatie | Besluiten stakeholder 2026-10-31, ADR-008, ADR-012 |

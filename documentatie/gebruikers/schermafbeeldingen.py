@@ -219,7 +219,7 @@ def schermen(browser):
     page.goto("/log/techniek")
     o.maak("log-techniek", hoogte=700)
     page.goto("/instellingen")
-    o.maak("instellingen", hoogte=800)
+    o.maak("instellingen")  # hele pagina, met het blok Bootsoorten
     page.goto("/status")
     o.maak("status", hoogte=900)
 

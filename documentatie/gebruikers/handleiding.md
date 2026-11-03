@@ -65,7 +65,7 @@ De pagina `/indeling` toont elk rek met zijn plaatsen. Per plaats staan de code,
 
 ![Het uitgeklapte formulier om een plaats aan een rek toe te voegen.](afbeeldingen/plaats-toevoegen.png)
 
-De bootsoorten (zoals kajak, surfski, canadese kano, C11 en supboard) staan vast in de applicatie. Je kunt ze niet zelf toevoegen.
+Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, kleuren, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
 
 ## Boten
 
@@ -197,7 +197,7 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 | Log | Menu | Inhoud |
 |---|---|---|
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet (`wachtlijst.toegevoegd`, met de aanmelddatum) of eraf gehaald (`wachtlijst.verwijderd`) |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen) en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
 
 Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
@@ -271,11 +271,19 @@ Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vin
 
 Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud. Elke handeling staat in het technische log, zonder de waarde van het token.
 
-## Naam, kleuren en logo
+## Naam, kleuren, logo en bootsoorten
 
 Op `/instellingen` pas je de naam van de vereniging en twee kleuren aan. Ze staan op elke pagina, ook de openbare. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het hier alleen.
 
-![De instellingen met naam, primaire en secundaire kleur en het huidige logo.](afbeeldingen/instellingen.png)
+Onder **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Ook elke wijziging hier vraagt een inlog van hooguit 10 minuten oud.
+
+- **Toevoegen:** vul onder **Nieuwe bootsoort** een naam in van 1 tot 50 tekens en kies **Bootsoort toevoegen**. De soort staat daarna in de keuzelijsten voor boten, plaatsen en vrije plaatsen. Zodra een boot van die soort op de wachtlijst staat, heeft de soort een eigen lijst op `/wachtlijst`.
+- **Hernoemen:** pas de naam aan en kies **Naam opslaan**. Boten, plaatsen, wachtlijst, export en API tonen direct de nieuwe naam. Toewijzingen en aanmelddata blijven gelijk.
+- **Verwijderen:** kies **... verwijderen**. Gebruikt een boot of plaats de soort nog, dan weigert de applicatie en noemt ze de aantallen. Geef die boten een andere soort of verwijder ze, en haal de soort weg bij die plaatsen.
+
+Twee soorten met dezelfde naam kunnen niet, ook niet als ze alleen in hoofdletters verschillen. Toevoegen, hernoemen (met de oude en de nieuwe naam) en verwijderen staan in het technische log.
+
+![De instellingen met naam, kleuren, het huidige logo en de bootsoorten.](afbeeldingen/instellingen.png)
 
 ## Alle adressen
 
@@ -306,7 +314,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/leden/{nummer}` | Een lid |
 | `/log` | Mutatielog: boten en plaatsen |
 | `/log/techniek` | Technisch log |
-| `/instellingen` | Naam, kleuren en logo |
+| `/instellingen` | Naam, kleuren, logo en bootsoorten |
 | `/status` | Technische status |
 | `/status.json` | Technische status als JSON |
 | `/p/{sleutel}` | Openbare pagina van een plaats |
