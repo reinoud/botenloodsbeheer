@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.18
+**Versie:** v0.3.19
 **Datum:** 2026-11-02
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
@@ -493,6 +493,9 @@ Als beheerder wil ik een persoonlijk token maken zodat ik de API kan gebruiken z
 - Gegeven een ingelogde beheerder, wanneer die een token maakt met een naam, een geldigheidsduur en rechten, dan toont de applicatie de tokenwaarde één keer en daarna nooit meer.
 - Gegeven een geldigheidsduur langer dan 3 jaar, wanneer de beheerder opslaat, dan weigert de applicatie.
 - Gegeven een beheerder wiens account wordt geblokkeerd of verwijderd, wanneer er een aanroep met diens persoonlijke token binnenkomt, dan weigert de applicatie.
+- Gegeven het maken van een persoonlijk token, wanneer de beheerder het recht `leden:importeren` kiest, dan weigert de applicatie (ADR-005).
+- Gegeven een persoonlijk token met een lege whitelist, wanneer een aanroep binnenkomt via een opengezette API, dan beantwoordt de API die alleen vanaf een adres in `API_EXTERN_BRONNEN` (ADR-005, ADR-013).
+- Gegeven een beheerder met een persoonlijk token, wanneer een collega het account herstelt, dan blijft het token werken tot het verloopt of wordt ingetrokken (besluit stakeholder 2026-11-03, ADR-005).
 
 #### BLB-031 Robottoken maken
 
@@ -505,6 +508,7 @@ Als beheerder wil ik een robottoken maken dat niet aan een persoon hangt zodat k
 - Gegeven een geldigheidsduur boven 3 jaar, wanneer het token wordt gemaakt, dan weigert de CLI. (slice 5)
 - Gegeven een ingelogde beheerder, wanneer die in de webinterface een robottoken maakt met naam, geldigheidsduur, rechten en IP-whitelist, dan toont de applicatie de tokenwaarde één keer. (slice 10)
 - Gegeven een robottoken, wanneer de beheerder die het in de webinterface maakte wordt verwijderd, dan blijft het token werken tot het verloopt of wordt ingetrokken. (slice 10)
+- Gegeven een robottoken waarvan de maker is verwijderd, wanneer een beheerder het tokenoverzicht opent, dan staat de naam van de maker nog bij het token (ADR-005). (slice 10)
 
 #### BLB-032 Rechten per token
 
@@ -535,6 +539,7 @@ Als beheerder wil ik dat de API dezelfde bedrijfsregels afdwingt, beperkt wordt 
 
 - Gegeven een aanroep zonder token of met een ongeldig token, wanneer die binnenkomt, dan weigert de applicatie. (slice 5)
 - Gegeven een token zonder het recht op persoonsgegevens, wanneer het leden opvraagt, dan levert de applicatie geen adres, telefoonnummer of e-mailadres, net als de webinterface die gegevens alleen aan beheerders toont. (slice 10)
+- Gegeven een token met `plaatsen:lezen`, `boten:lezen`, `leden:lezen` of `wachtlijst:lezen`, wanneer het de bijbehorende aanroep doet, dan levert de API de hele lijst met de velden uit ADR-012; adres, telefoon, e-mail, lid sinds en opzegdatum alleen met het recht op persoonsgegevens. (slice 10)
 - Gegeven een import via `PUT /api/v1/leden` met minder dan de helft van het huidige aantal actieve leden, wanneer die binnenkomt, dan weigert de API met 409 en verandert er niets: de import volgt dezelfde regels als elke import (architectuur §10.1). De API kent geen andere schrijfaanroepen. (slice 6)
 - Gegeven meer dan 60 aanroepen van één token binnen een minuut, wanneer de grens wordt overschreden, dan antwoordt de API met 429 en meldt wanneer het token weer mag. (slice 5)
 - Gegeven een geweigerde aanroep, wanneer die is afgehandeld, dan staan token (als dat bekend is), tijdstip en reden in het log, zonder tokenwaarde. Een geslaagde aanroep komt niet in het log (besluit 2026-10-31, vraag 20). (slice 5)
@@ -548,6 +553,7 @@ Als beheerder wil ik alle tokens zien en intrekken zodat een lek of een vertrek 
 
 - Gegeven bestaande tokens, wanneer de beheerder het overzicht opent, dan staan per token naam, soort (persoonlijk of robot), eigenaar, rechten, vervaldatum en laatste gebruik, maar nooit de waarde.
 - Gegeven drie beheerders met gelijke rechten, wanneer één beheerder een token van een ander intrekt, dan lukt dat en staat het in het log.
+- Gegeven een inlog van meer dan 10 minuten geleden, wanneer de beheerder een token maakt, de rechten wijzigt of een token intrekt, dan vraagt de applicatie eerst opnieuw in te loggen; het overzicht openen kan zonder (ADR-001, ADR-005).
 
 #### BLB-040 Beheerdocumentatie voor de integratiecontainer
 
@@ -571,6 +577,8 @@ Als beheerder van een installatie wil ik de API bewust van buiten bereikbaar kun
 - Gegeven een opengezette API, wanneer een aanroep van buiten binnenkomt vanaf een adres buiten de whitelist van het token, dan weigert de API die, net als op het interne netwerk.
 - Gegeven een opengezette API, wanneer een client zelf een adres in een header meestuurt, dan telt voor de whitelist alleen het adres dat de proxy van de installatie vaststelt.
 - Gegeven een opengezette API, wanneer één token te veel aanroepen doet, dan geldt dezelfde grens als in BLB-034.
+- Gegeven een opengezette API, wanneer een aanroep binnenkomt vanaf een adres buiten `API_EXTERN_BRONNEN`, dan weigert de proxy die, ook met een geldig token (ADR-013).
+- Gegeven `compose.api-extern.yml` zonder `API_EXTERN_BRONNEN`, wanneer de beheerder de installatie start, dan start compose niet (ADR-013).
 
 ### EP-11 Bewaking van de installatie
 

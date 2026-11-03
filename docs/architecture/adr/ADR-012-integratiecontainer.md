@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.5.0
+**Versie:** v1.6.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -22,7 +22,7 @@ Een aparte, vervangbare container doet alle imports en exports: leden ophalen en
 
 Traefik heeft een niet gepubliceerd entrypoint `intern` op poort 8081, met een router die alleen `/api/v1/` vanaf `KOPPELNET` doorstuurt naar `api` (ADR-013). Het entrypoint op 443 kent geen route naar `api`. Zo gelden de rate limits en het vastgestelde clientadres uit ADR-005, en bereikt `integratie` `api` en `db` niet rechtstreeks.
 
-Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat bestand komt pas met een story die erom vraagt (architectuur §10.2, vraag 5).
+Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe (BLB-042, ADR-013).
 
 **Aanroepen.** Het contract staat in `app/api/openapi.yaml` en kent vijf aanroepen voor de integratiecontainer; meer gebruikt hij niet. Alle vijf zijn gebouwd; `GET /api/v1/bootaantallen` kwam met BLB-009 in slice 9 (backlog vraag 21). De rol `botenloods_api` leest daarvoor ook `plaats` en `bootsoort` (migratie 0008). De meegeleverde container roept hem niet aan, zolang terugschrijven uit staat.
 
@@ -33,6 +33,17 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 | `PUT /api/v1/leden` | `leden:importeren` | `{"leden": [record, ...]}`, altijd de volledige lijst; record: `lidnummer`, `naam`, `adres`, `telefoon`, `email`, `lid_sinds`, `opzegdatum` (datums `JJJJ-MM-DD`) | 200 `{"ontvangen", "nieuw", "bijgewerkt", "uit_bron", "ongeldig", "overgeslagen"}`; 409 bij de veiligheidsgrens of een lopende import; 413 boven 2 MB; 422 als `leden` geen lijst is of meer dan 5000 records heeft |
 | `POST /api/v1/leden/import-mislukt` | `leden:importeren` | `{"reden": ...}`, één van `bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd` | 201; andere reden 422 |
 | `GET /api/v1/bootaantallen` | `bootaantallen:lezen` | geen | 200 `[{"lidnummer", "aantallen": {bootsoort: aantal}}]`, voor elk lid elke bootsoort, ook 0 |
+
+**Leesaanroepen (slice 10).** Vier aanroepen voor persoonlijke tokens en andere koppelingen; de integratiecontainer gebruikt ze niet. Elke aanroep geeft de hele lijst, zonder filters of paginering: bij 160 plaatsen, 180 boten en 210 leden blijft een antwoord ruim onder 100 kB. De domeinlaag kiest de velden. `persoonsgegevens` voegt velden toe en verandert geen rijen. Een veld zonder waarde is `null`; een veld zonder recht ontbreekt.
+
+| Aanroep | Recht | Velden per element | Extra met `persoonsgegevens` |
+|---------|-------|--------------------|------------------------------|
+| `GET /api/v1/plaatsen` | `plaatsen:lezen` | `code`, `rek`, `clubplaats`, `bootsoorten`, `boot` (`{"id", "naam"}`) | geen |
+| `GET /api/v1/boten` | `boten:lezen` | `id`, `naam`, `bootsoort`, `plaats` (code), `eigenaar` (`{"lidnummer", "naam"}`, `null` bij een clubboot) | `adres`, `telefoon`, `email` in `eigenaar` |
+| `GET /api/v1/leden` | `leden:lezen` | `lidnummer`, `naam`, `oud_lid` | `adres`, `telefoon`, `email`, `lid_sinds`, `opzegdatum` |
+| `GET /api/v1/wachtlijst` | `wachtlijst:lezen` | `bootsoort`, `boot` (`{"id", "naam"}`), `eigenaar` (als bij boten), `aangemeld_op` | als bij boten |
+
+Lidmaatschapsdata zijn persoonsgegevens (overlay §3) en staan daarom achter het recht. `oud_lid` komt uit `is_oud_lid`. Foto en publieke sleutel staan er niet in. Volgorde: plaatsen zoals in het overzicht, boten op naam, leden op lidnummer, wachtlijst per bootsoort op `aangemeld_op`. De paden hebben geen parameter of querystring, dus de toegangslog verandert niet. `botenloods_api` krijgt leesrecht op `rek` en `plaats_bootsoort` (migratie 0009, ADR-005).
 
 **Regels aan de kant van de API.** `PUT /api/v1/leden` roept `domein/leden.importeer` aan met de ontvangen lijst. Alle regels uit ADR-004 gelden daardoor ongewijzigd: validatie per record zonder de inhoud te loggen, de veiligheidsgrens van de helft, geen nieuw lid met een opzegdatum van meer dan 5 jaar geleden, `uit_bron_op` voor een lid dat in de lijst ontbreekt, en boten van oud-leden van de wachtlijst. Wijzigingen in leden komen niet in het log; mutaties aan boten wel (ADR-004 v2.1.0). Een advisory lock voorkomt twee imports tegelijk. Een geslaagde import, een import die de veiligheidsgrens tegenhoudt (409) en een gemelde fout zijn een run in `taakrun` met taak `ledenimport`; een open verzoek van een beheerder krijgt die uitkomst. Een 413, een 422 en een 409 omdat er al een import loopt, laten `taakrun` ongemoeid: er is dan niets geïmporteerd. De reden bij een fout komt uit een vaste lijst, zodat geen tekst van buiten op de statuspagina komt. De blueprint `/api/v1` is vrijgesteld van CSRF (`csrf.exempt`): de API gebruikt alleen het token in de header en geen cookie, dus een andere site kan geen aanroep doen namens een ingelogde beheerder. De applicatie geeft boven 2 MB de 413 als JSON (`MAX_CONTENT_LENGTH`); Traefik weigert boven 3 MB als buitengrens (ADR-013).
 
@@ -61,6 +72,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe; dat besta
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.6.0 | 2026-11-03 | Vier leesaanroepen; `compose.api-extern.yml` komt met BLB-042 | Ontwerp slice 10, issue #51 |
 | v1.5.0 | 2026-11-02 | Vijfde aanroep gebouwd | Bouw slice 9, issue #48 |
 | v1.4.0 | 2026-10-31 | Traefik in plaats van Nginx: netwerken, entrypoint `intern`, grens van 2 MB in de applicatie | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.3.1 | 2026-10-31 | Een verzoek van een beheerder wacht na een fout niet het uur af, behalve na een fout van de API zelf | Besluit stakeholder 2026-10-31, issue #28 |

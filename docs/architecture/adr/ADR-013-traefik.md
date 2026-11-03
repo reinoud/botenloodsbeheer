@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.1.1
+**Versie:** v1.2.0
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -42,6 +42,21 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 | Logformaat `zonder_code`, geen codes en zoektermen (#5, #14) | Applicatie: Gunicorn schrijft de toegangslog met een eigen loggerklasse, in hetzelfde formaat, pad zonder querystring, `/uitnodiging/...` gemaskeerd, de eigen healthcheck niet. Traefik: `observability.accesslogs=false` op elke router | Per verzoek precies één regel in de log van `web` of `api`; na een zoekopdracht en een uitnodiging staan zoekterm en code nergens, ook niet in de log van Traefik |
 | Health zonder rate limit (ADR-010) | `/health/*` via de algemene router van `web`, zonder `ratelimit`; Traefik stuurt alleen naar gezonde containers | 100 keer `/health/live` zonder 429; een gestopte of startende `web` geeft 404 (besluit stakeholder 2026-10-31) |
 
+**API van buiten (BLB-042).** `compose.api-extern.yml` voegt alleen labels toe aan `api`, dat al op `voorkant` staat. Zonder het bestand blijft de proef "`https://DOMEIN/api/v1/ik` geeft 404" gelden.
+
+| Onderdeel | Waarde |
+|-----------|--------|
+| Router `${INSTALLATIE}-api-extern` | `Host(DOMEIN) && PathPrefix(/api/v1/)` op `websecure`, `tls=true` met `TRAEFIK_CERTRESOLVER`, `priority` 2000, `observability.accesslogs=false` |
+| Middlewares, in deze volgorde | `nosniff`, `externtoegang`, `tokenrem`, `iprem`, `3mb` |
+| `externtoegang` | `ipallowlist.sourcerange=${API_EXTERN_BRONNEN:?}`, zonder `ipStrategy`, dus op het verbindingsadres |
+| `API_EXTERN_BRONNEN` | Nieuw, verplicht met dit bestand, CIDR-reeksen met komma's; alleen compose leest hem |
+
+De whitelist werkt in twee lagen. Traefik laat alleen adressen uit `API_EXTERN_BRONNEN` door en geeft anders 403, zonder regel in het log van de applicatie. Daarna toetst de applicatie de whitelist van het token op het adres dat Traefik vaststelt; de eisen aan de gedeelde Traefik gelden ook voor `websecure`, dus een meegestuurde kop telt niet. De eerste laag begrenst een persoonlijk token met een lege whitelist, en laat de installatie bewust kiezen hoe ver de API naar buiten gaat; `0.0.0.0/0,::/0` is zo'n keuze.
+
+De rate limit gebruikt dezelfde middlewares als `intern`, dus dezelfde grenzen. Traefik houdt per router een eigen teller (Probable): een token op beide entrypoints krijgt per entrypoint 60 per minuut. Verkeer van buiten loopt altijd via Traefik; de route over `achterkant` blijft, dus #20 blijft open.
+
+Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf een adres in `API_EXTERN_BRONNEN` en in de whitelist van het token; 403 vanaf een adres buiten `API_EXTERN_BRONNEN`; 401 vanaf een adres binnen de bronnen maar buiten de tokenwhitelist, ook met `X-Forwarded-For` op een adres in die whitelist; 429 na 11 aanroepen in een seconde; compose start niet zonder `API_EXTERN_BRONNEN`. Forge schrijft `documentatie/beheer/api-van-buiten.md`.
+
 **Versie.** Getest en vereist is `traefik:v3.7.17`. Een andere versie vraagt dat de proeven opnieuw slagen.
 
 **Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, `http.aliasHeadersStrategy=delete` op die drie, aangesloten op beide netwerken, en een certresolver die certificaten bij Let's Encrypt aanvraagt (besluit stakeholder 2026-11-01). Staat er een load balancer vóór Traefik, dan gaat `PROXY_HOPS` naar 2 en krijgt alleen die het vertrouwen.
@@ -76,6 +91,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.0 | 2026-11-03 | API van buiten: router, `API_EXTERN_BRONNEN`, rate limit, proeven | Ontwerp slice 10, issue #51 |
 | v1.1.1 | 2026-11-01 | Lokaal: `aliasHeadersStrategy` alleen bij de gedeelde Traefik | Review Sentinel, issue #36 |
 | v1.1.0 | 2026-11-01 | Bouw beschreven (issue #36): lokale Traefik met instellingen in `compose.dev.yml` en netwerk `lokaal`, `INSTALLATIE` alleen in compose, `integratie` wacht op een gezonde `api`, 429 zonder `Content-Type`, eis `aliasHeadersStrategy=delete` | Afwijkingen bij de bouw van #29 |
 | v1.0.2 | 2026-11-01 | Certresolver via Let's Encrypt | Besluit stakeholder 2026-11-01 |
