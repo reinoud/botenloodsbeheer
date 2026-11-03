@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.3.22
-**Datum:** 2026-11-02
+**Versie:** v0.3.23
+**Datum:** 2026-11-03
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -360,6 +360,7 @@ Als beheerder wil ik veilig inloggen zodat alleen beheerders persoonsgegevens en
 - Gegeven een beheerder met een account, wanneer die met juiste gegevens inlogt, dan heeft die toegang tot alle beheerfuncties.
 - Gegeven onjuiste inloggegevens, wanneer iemand probeert in te loggen, dan weigert de applicatie zonder te melden welk deel onjuist is.
 - Gegeven herhaald mislukte pogingen, wanneer iemand blijft proberen, dan beperkt de applicatie verdere pogingen.
+- Gegeven een pad met procentcodering (zoals `/%2Finloggen`), wanneer iemand daarmee inlogt of een uitnodiging opent, dan weigert de applicatie met 400 en verwerkt de poging niet, nooit met een doorverwijzing (ADR-013, issue #65).
 - Gegeven een nieuwe installatie, wanneer de eerste beheerder wordt aangemaakt, dan gebeurt dat zonder vast standaardwachtwoord.
 - Besluit stakeholder 2026-10-30 (ADR-001): een beheerder logt in met een passkey of met een wachtwoord plus TOTP; beide zijn beschikbaar.
 

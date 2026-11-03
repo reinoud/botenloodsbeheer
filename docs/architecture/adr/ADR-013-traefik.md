@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.2.0
+**Versie:** v1.3.0
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -63,6 +63,17 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 
 `aliasHeadersStrategy=delete` haalt een kop weg waarvan de naam een andere kop nabootst, zoals `X_Forwarded_For`. Zonder instelling laat Traefik zo'n kop ongewijzigd door en waarschuwt hij bij het starten. Gunicorn gebruikt zo'n kop niet (proef met 401 in `werk/traefik-proeven.md`), dus de botenloods is ook zonder de eis niet kwetsbaar. De eis sluit het gat voor de zekerheid: een andere versie van Gunicorn of een andere dienst achter dezelfde entrypoints kan zo'n kop wel lezen. `delete` beschermt de upstream even goed als `reject` en weigert geen verzoeken van clients van andere diensten die zulke koppen sturen.
 
+**Gecodeerd pad (issue #65, PRB-01).** Traefik kiest de router op het pad zoals het binnenkomt, en `%2F` blijft gecodeerd. `POST /%2Finloggen` valt daardoor onder de router `web` zonder rem. Werkzeug decodeert het pad, voegt de dubbele schuine streep samen en verwerkt de inlog. Elke route naar `api` draagt de rate limits, ook met `compose.api-extern.yml`; een API-pad met codering valt onder `web`.
+
+| Laag | Plek | Gedrag |
+|------|------|--------|
+| Applicatie, verplicht | `create_app`: `before_request` op de app, dus voor `web` en `api` | `abort(400)` als het pad in `RAW_URI` (zonder querystring) een `%` bevat |
+| Traefik, aanbevolen | Entrypoints `web`, `websecure` en `intern` in het voorbeeld en in `compose.dev.yml` | `http.encodedcharacters.allowencodedslash`, `allowencodedbackslash`, `allowencodednullcharacter` en `allowencodedpercent` op `false`: 400 van Traefik |
+
+De applicatielaag beschermt elke installatie vanzelf, ook achter een bestaande Traefik zonder de opties. Geen route van de botenloods heeft procentcodering in het pad nodig: padparameters zijn getallen of tokens. Een nieuwe route met vrije tekst in het pad vraagt een nieuw besluit. De opties op het entrypoint zijn geen eis aan de gedeelde Traefik, omdat ze ook andere diensten op die entrypoints raken.
+
+Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, `/%2finloggen/code`, `/%2Fuitnodiging/abc`, `%5C`, `%00`, `%252F`, `/.%2F` en `GET /api%2Fv1/ik` geven 400 met elk van beide lagen; zonder lagen verwerkt Flask de inlog. Traefik decodeert `%2E` en gecodeerde letters zelf, dus `/%69nloggen` krijgt 429.
+
 **Nieuwe omgevingsvariabelen.** `DOMEIN` (verplicht, gelijk aan de host uit `BASIS_URL`), `INSTALLATIE` (standaard `botenloods`, voor netwerk- en routernamen, uniek per host) en `TRAEFIK_CERTRESOLVER` (verplicht voor `web` in productie). `app/config.py` controleert `DOMEIN` en `TRAEFIK_CERTRESOLVER`. `INSTALLATIE` staat alleen in compose: de applicatie gebruikt de waarde niet, en bij een verkeerde waarde start compose niet, omdat het netwerk niet bestaat. `API_URL` wordt instelbaar in de config van de integratiecontainer, standaard `http://traefik:8081/api/v1`.
 
 **Lokaal.** `compose.dev.yml` krijgt een eigen `traefik` van dezelfde tag. De statische instellingen staan als `command` in `compose.dev.yml`, niet in een bestand: de Docker-provider krijgt de constraint `traefik.docker.network=${INSTALLATIE}_voorkant`, die interpolatie nodig heeft, en Traefik combineert een statisch bestand niet met argumenten. Zonder constraint ziet de lokale Traefik ook de containers van een tweede stack op dezelfde host, zoals die voor de screenshots. Het entrypoint `web` staat op 127.0.0.1:8080 zonder TLS, `intern` op 8081 zonder poort naar de host, en de toegangslog staat aan zoals bij een gedeelde Traefik. `aliasHeadersStrategy` staat lokaal niet: de eis geldt voor de gedeelde Traefik, en de lokale Traefik draait alleen op 127.0.0.1. Compose maakt `voorkant` en `koppeling` zelf aan, beide intern. Een extra netwerk `lokaal` met uitgang geeft `traefik` en `db` hun poort op 127.0.0.1, omdat een intern netwerk geen poorten publiceert. `docker/nginx/` vervalt.
@@ -76,6 +87,9 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 | `web` en `api` op het gedeelde netwerk van Traefik | Andere diensten bereiken `api:8000` buiten Traefik om, met een vervalst clientadres |
 | Rate limit per token in Flask | Teller per Gunicorn-worker of een extra Redis (ADR-005) |
 | `errors`-middleware voor een JSON-429 | Extra route; onzeker of `Retry-After` blijft |
+| Router `inloggen` ook op de gecodeerde vorm laten matchen | De regex moet de normalisatie van Werkzeug volgen |
+| `url_map.merge_slashes=False` | Werkt niet na het aanmaken van de `Map` (proef); alleen met een eigen `Map`-klasse |
+| Opties op het entrypoint als eis | Raakt andere diensten op de gedeelde Traefik |
 | Toegangslog van Traefik zonder `RequestPath` | Globale instelling van de gedeelde Traefik; raakt andere diensten en ligt buiten deze installatie |
 
 ## Gevolgen
@@ -91,6 +105,7 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-03 | Gecodeerd pad: 400 in de applicatie, opties voor gecodeerde tekens aanbevolen op de entrypoints, proef | Securityronde na slice 11, PRB-01, issue #65 |
 | v1.2.0 | 2026-11-03 | API van buiten: router, `API_EXTERN_BRONNEN`, rate limit, proeven | Ontwerp slice 10, issue #51 |
 | v1.1.1 | 2026-11-01 | Lokaal: `aliasHeadersStrategy` alleen bij de gedeelde Traefik | Review Sentinel, issue #36 |
 | v1.1.0 | 2026-11-01 | Bouw beschreven (issue #36): lokale Traefik met instellingen in `compose.dev.yml` en netwerk `lokaal`, `INSTALLATIE` alleen in compose, `integratie` wacht op een gezonde `api`, 429 zonder `Content-Type`, eis `aliasHeadersStrategy=delete` | Afwijkingen bij de bouw van #29 |
