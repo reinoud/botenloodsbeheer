@@ -271,7 +271,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
-| v0.4.23 | 2026-11-04 | Regel over de `|safe`-mutant bij een escapingtest, uit de terugblik van sentinel (issues #88 en #89) | Lessen |
+| v0.4.23 | 2026-11-04 | Regel over de `\|safe`-mutant bij een escapingtest, uit de terugblik van sentinel (issues #88 en #89) | Lessen |
 | v0.4.21 | 2026-11-04 | Regel over andere schermen met hetzelfde gegeven, uit de terugblik van sentinel (volgorde verdiepingen) | Lessen |
 | v0.4.20 | 2026-11-04 | Twee regels uit de terugblik van prism en twee uit die van sentinel (issue #87): afwerklijst bij een nieuwe webroute, volgorde van `Plaats.bootsoorten`, lint buiten `app/` en `tests/`, eigen tests van een reviewer | Lessen |
 | v0.4.19 | 2026-11-04 | Regel over een vervangen pakket in status en issues uit de terugblik van sentinel (#86) | Lessen |
