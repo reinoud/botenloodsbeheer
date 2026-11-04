@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.14
+**Versie overlay:** v0.4.15
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -139,10 +139,12 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vergrendelt een domeinfunctie boot en plaats, dan eerst de boot en daarna de plaats, net als `toewijzen` en `boot_wijzigen`; een andere volgorde kan een deadlock geven. Een wijziging in een vergrendelvolgorde krijgt een racetest die faalt met de oude volgorde (bijvoorbeeld met `FOR UPDATE NOWAIT` op de tweede rij).
 - Een domeinfunctie die rijen verwijdert op basis van een eerder gelezen lijst van id's, herhaalt de voorwaarde in de `DELETE` of neemt het slot van de taak die die voorwaarde kan wijzigen (zoals de import).
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
+- Trek je een recht in dat alleen via een cascade nodig lijkt, noem dan de test die als de rol de cascade laat lopen, en controleer dat het model geen ORM-relatie zonder `passive_deletes` naar die tabel heeft.
 - `FOR UPDATE` en `FOR KEY SHARE` vragen UPDATE-recht; tel dat mee bij het bepalen van de rechten van een rol.
 - Geeft een migratie een rol een recht op een nieuwe tabel, noem dan per recht de code die het gebruikt. Een recht dat alleen via een cascade nodig lijkt, is niet nodig: de cascade draait als eigenaar van de tabel.
 - Een nieuw `with_for_update(key_share=True)` krijgt een racetest zoals `tests/unit/test_bootsoorten.py:198`, of een notitie in het issue waarom die ontbreekt.
 - Controleer de migratiehead met `ScriptDirectory` in de testcontainer; `run migrate` vraagt om akkoord.
+- Bij een rechtenwijziging in een migratie noem je in de brief zowel het testbestand van de migratie als dat van de domeinfunctie; de reviewer draait de mutanten tegen beide samen.
 - Bij een rechtenwijziging: draai per recht dat de rol houdt een mutant die alleen dat recht intrekt, en noem per mutant de test die valt; een recht zonder vallende test is niet gedekt. Meld de reviewer of de gedeelde database al op de nieuwe migratie staat, zodat hij de live ACL toetst.
 - Bij een rechtenwijziging: zoek in alle tests met de marker `worker` (of `api`) naar setup via de domeinlaag in tabellen die de rol straks niet meer mag schrijven (zoals `foto=` of `png()`), en noem ze vooraf in de opdracht.
 
@@ -257,6 +259,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.15 | 2026-11-04 | Regel over het intrekken van een recht naast een cascade, uit de terugblik van aegis; regel over mutanten bij een rechtenwijziging, uit de terugblik van sentinel (issue #85) | Lessen |
 | v0.4.14 | 2026-11-04 | Twee regels in de briefingchecklist (Review) uit de terugblik van sentinel (issue #84) | Lessen |
 | v0.4.13 | 2026-11-04 | Zes regels in de briefingchecklist (Algemeen, Bouw, Migratie en database) uit de terugblikken van bedrock, aegis en sentinel (issue #83) | Lessen |
 | v0.4.12 | 2026-11-04 | Regel voor het woordbudget van een ADR, uit de terugblik van foundation (issue #83) | Lessen |

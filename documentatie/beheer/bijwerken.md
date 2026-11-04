@@ -15,6 +15,8 @@ De indeling met rek, verdieping en vak (migratie 0011) verwijdert bij de upgrade
 
 Migratie 0012 voegt de tabel `verdieping_bootsoort` toe (de bootsoort die een beheerder bij Nieuw rek per verdieping kiest). Bestaande rekken en plaatsen veranderen niet. De downgrade verwijdert alleen de tabel; plaatsen houden hun bootsoorten.
 
+Migratie 0013 trekt een ongebruikt recht van de webapplicatie op die tabel in. Er verandert niets aan gegevens of schermen.
+
 Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
 
 ## Tokens
