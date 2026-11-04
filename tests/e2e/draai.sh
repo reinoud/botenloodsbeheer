@@ -37,7 +37,8 @@ chmod 600 secrets/api_token
 "${c[@]}" stop integratie >/dev/null
 "${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import CLI, leden
 with create_app().app_context():
-    leden.import_aangevraagd() or leden.import_aanvragen(CLI)'
+    leden.import_aangevraagd() or leden.import_aanvragen(CLI)' \
+  || { "${c[@]}" start integratie >/dev/null; echo "Importverzoek mislukt." >&2; exit 1; }
 start=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 "${c[@]}" start integratie >/dev/null
 geimporteerd() { "${c[@]}" logs --since "$start" integratie | grep "Import geslaagd" >/dev/null; }
