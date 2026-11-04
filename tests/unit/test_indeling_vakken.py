@@ -3,11 +3,12 @@ uitzetten met en zonder boot, gaten, reknaam en omschrijving, volgorde, logregel
 indeling_instellen."""
 
 import pytest
-from sqlalchemy import select, text
+from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import DataError, IntegrityError
 
 from app.domein import CLI, Regelfout, indeling, toewijzing, uitlezen
 from app.models import Logregel, Plaats, Rek, VerdiepingBootsoort, db
+from tests.unit.conftest import WEB
 from tests.unit.hulp import lid, race
 from tests.unit.test_indeling_en_toewijzing import acties, boot
 
@@ -485,3 +486,58 @@ def test_twee_keer_gelijktijdig_hetzelfde_vak_aanzetten(app):
     nieuw = indeling.rek(r.id).plaatsen
     assert [p.code for p in nieuw] == ["A/1/1", "A/1/2", "A/2/2"]
     assert nieuw[-1].publieke_sleutel == "zzzzzzzzzz"
+
+
+# Sloten op de bootsoort van de verdieping (#84)
+
+VERWIJDER_SOORT = ["SELECT id FROM bootsoort WHERE id = :s FOR UPDATE",
+                   "DELETE FROM bootsoort WHERE id = :s"]
+
+
+def zonder_onverwachte_fout(actie, onverwacht):
+    """race() vangt alleen Regelfouten; een andere fout zou de thread stil laten sterven."""
+    def omhulsel():
+        try:
+            actie()
+        except Regelfout:
+            raise
+        except Exception as fout:  # noqa: BLE001
+            onverwacht.append(repr(fout))
+    return omhulsel
+
+
+def test_rek_aanmaken_wacht_op_een_lopende_verwijdering_van_de_soort(app):
+    """Zonder KEY SHARE in _verdiepingsoorten geeft de FK een IntegrityError in plaats van een melding."""
+    s = indeling.bootsoort_toevoegen("Waterfiets", CLI)
+    onverwacht = []
+    fouten = race(app, VERWIJDER_SOORT, {"s": s.id}, zonder_onverwachte_fout(
+        lambda: indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: s.id}), onverwacht))
+    assert fouten == ["Kies een bestaande bootsoort."] and onverwacht == []
+    assert aantal(Rek) == 0
+
+
+def test_indeling_instellen_wacht_op_een_lopende_verwijdering_van_de_soort(app):
+    """Verdieping 1 onthoudt de soort, maar geen plaats gebruikt haar meer. Na de verwijdering krijgt
+    het nieuwe vak geen soort; zonder KEY SHARE geeft de FK een IntegrityError."""
+    s = indeling.bootsoort_toevoegen("Waterfiets", CLI)
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI, {1: s.id})
+    indeling.indeling_instellen(r.id, {(2, 1)}, CLI)
+    onverwacht = []
+    fouten = race(app, VERWIJDER_SOORT, {"s": s.id}, zonder_onverwachte_fout(
+        lambda: indeling.indeling_instellen(r.id, {(1, 1), (2, 1)}, CLI), onverwacht))
+    assert fouten == [] and onverwacht == []
+    assert soorten_van(r) == {"Y/1/1": [], "Y/2/1": []}
+
+
+def test_rek_aanmaken_geeft_het_slot_op_de_soort_vrij_na_een_weigering(app):
+    """De naam bestaat al; die controle komt na het slot op de soort. Zonder rollback houdt de
+    sessie het slot vast en wacht bootsoort_verwijderen elders tot de sessie eindigt."""
+    rek("Y")
+    s = indeling.bootsoort_toevoegen("Waterfiets", CLI)
+    with pytest.raises(Regelfout, match="Er is al een rek met de naam Y"):
+        indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: s.id})
+    engine = create_engine(WEB)
+    with engine.connect() as ander:
+        ander.execute(text("SELECT id FROM bootsoort WHERE id = :s FOR UPDATE NOWAIT"), {"s": s.id})
+        ander.rollback()
+    engine.dispose()
