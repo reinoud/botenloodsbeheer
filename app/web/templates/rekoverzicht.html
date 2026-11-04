@@ -20,7 +20,7 @@
       {% for vak in vakken %}
       {% set v = vak_van.get((verdieping, vak)) %}
       {% if v %}
-      <a class="rek-vak{% if v.club %} rek-vak-club{% endif %}" href="{{ url_for('web.plaats_detail', plaats_id=v.plaats_id) }}">
+      <a class="rek-vak{% if v.club %} rek-vak-club{% endif %}" title="{{ v.titel }}" href="{{ url_for('web.plaats_detail', plaats_id=v.plaats_id) }}">
         {% if v.bestand %}<img src="{{ url_for('static', filename='boten/' ~ v.bestand) }}" alt="{{ v.alt }}">
         {% else %}<span aria-hidden="true">{{ v.tekst }}</span><span class="verborgen">{{ v.alt }}</span>{% endif %}
       </a>
