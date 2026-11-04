@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.20
+**Versie overlay:** v0.4.21
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -96,6 +96,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Werken twee agents tegelijk met unittests, dan draait elk op een eigen testdatabase (bind mount van een `conftest.py` met een andere `TEST_DB`); de gedeelde `botenloods_test` geeft anders een deadlock. Een racetest met `race()` controleert ook dat de actie geen andere uitzondering dan `Regelfout` gooit.
 - Een nieuwe webroute krijgt als vaste afwerklijst: het menu-item, een rij in de routetabel van de handleiding (`test_handleiding_noemt_elke_webroute`) en een uitnodigingssoort in `tests/e2e/draai.sh`.
 - `Plaats.bootsoorten` staat op id gesorteerd; "eerste soort" is de laagste id, niet de volgorde van aanvinken. `plaats()` in `tests/unit/hulp.py` weigert een lege soortenlijst; een plaats zonder soort maak je via `rek_aanmaken`.
+- Verandert een wijziging de volgorde of weergave op één scherm, noem dan de andere schermen die hetzelfde gegeven tonen en of die bewust ongewijzigd blijven.
 - Noem bij een nieuwe plaats of een nieuwe plaatsinvoer de beginwaarden (bootsoorten, clubplaats), zodat de E2E-helpers de juiste stappen krijgen.
 - Noem bij elke wijziging van de signatuur van een domeinfunctie alle aanroepers (web, `app/seed.py`, `tests/unit/hulp.py`).
 - Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
@@ -268,6 +269,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.21 | 2026-11-04 | Regel over andere schermen met hetzelfde gegeven, uit de terugblik van sentinel (volgorde verdiepingen) | Lessen |
 | v0.4.20 | 2026-11-04 | Twee regels uit de terugblik van prism en twee uit die van sentinel (issue #87): afwerklijst bij een nieuwe webroute, volgorde van `Plaats.bootsoorten`, lint buiten `app/` en `tests/`, eigen tests van een reviewer | Lessen |
 | v0.4.19 | 2026-11-04 | Regel over een vervangen pakket in status en issues uit de terugblik van sentinel (#86) | Lessen |
 | v0.4.18 | 2026-11-04 | Regel over een versiecheck na een lockupdate, uit de terugblik van sentinel; pad van de uv-binary in de brief, uit de terugblik van aegis (issue #63) | Lessen |
