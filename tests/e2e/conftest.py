@@ -11,6 +11,16 @@ STEMPEL = os.environ["E2E_STEMPEL"]
 WACHTWOORD = "e2e wachtwoord voor de loods"
 
 
+def reknaam(letter):
+    """Een reknaam van hooguit 10 tekens (ADR-003), uniek per run en per letter: de letter van de
+    test plus de stempel in 36-tallig (6 tekens). Eerdere runs laten hun rekken staan."""
+    cijfers, n = "", int(STEMPEL)
+    while n:
+        n, rest = divmod(n, 36)
+        cijfers = "0123456789abcdefghijklmnopqrstuvwxyz"[rest] + cijfers
+    return f"{letter}{cijfers}"
+
+
 def link(soort):
     return os.environ[f"E2E_LINK_{soort.upper()}"]
 

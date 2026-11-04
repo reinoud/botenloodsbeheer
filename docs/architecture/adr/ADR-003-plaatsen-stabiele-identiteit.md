@@ -1,8 +1,8 @@
 # ADR-003 Datamodel van plaatsen met stabiele identiteit
 
 **Status:** Besloten door Foundation (indeling: issue #80)
-**Datum:** 2026-11-03
-**Versie:** v2.1.0
+**Datum:** 2026-11-04
+**Versie:** v2.1.1
 **Stories:** BLB-001 tot en met BLB-003, BLB-010, BLB-011, BLB-020, BLB-021, BLB-044
 
 ## Context
@@ -36,7 +36,7 @@ De plaatsen zelf zijn de indeling. Er komt geen kolom of tabel voor verdiepingen
 
 `code` is afgeleid en wordt niet opgeslagen. Het is een `column_property` op `Plaats`, een subquery met `rek.naam || '/' || verdieping || '/' || vak`. Zo houden API, export en logregels het veld `code`. De aanduiding is uniek zonder hoofdletters, omdat de reknaam dat is, een reknaam geen `/` bevat en verdieping en vak uniek zijn per rek. Volgorde in elke lijst: `rek.volgorde`, `rek.id`, `verdieping`, `vak`.
 
-De domeinfunctie `indeling_instellen(rek, vakken)` krijgt de verzameling paren `(verdieping, vak)` die aan staan, zoals het raster op het scherm ze toont. Ze maakt de plaatsen die ontbreken en verwijdert de plaatsen die niet in de verzameling staan. De functie vergrendelt eerst het rek en daarna de plaatsen die verdwijnen (`FOR UPDATE`). Heeft één daarvan een boot, dan weigert ze met de melding van BLB-001. `toewijzen` vergrendelt boot en plaats en nooit het rek, dus er ontstaat geen deadlock. Een nieuwe plaats krijgt een publieke sleutel, geen bootsoorten en is geen clubplaats.
+De domeinfunctie `indeling_instellen(rek, vakken)` krijgt de verzameling paren `(verdieping, vak)` die aan staan, zoals het raster op het scherm ze toont. Ze maakt de plaatsen die ontbreken en verwijdert de plaatsen die niet in de verzameling staan. De functie vergrendelt eerst het rek en daarna alle plaatsen van dat rek (`FOR UPDATE`). Heeft één daarvan een boot, dan weigert ze met de melding van BLB-001. `toewijzen` vergrendelt boot en plaats en nooit het rek, dus er ontstaat geen deadlock. Een nieuwe plaats krijgt een publieke sleutel, geen bootsoorten en is geen clubplaats.
 
 De toewijzing is het veld `plaats.boot_id`, nullable, met een unieke constraint. Leeg betekent vrij. Een aparte toewijzingstabel met historie is niet nodig: de historie staat in het mutatielog (ADR-006).
 
@@ -52,7 +52,7 @@ De omschrijving van het rek, zoals "Grote botenloods stelling links", staat op d
 
 ### Migratie
 
-Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.py`) en blijft de enige head. Upgrade: verwijder alle plaatsen en rekken (besluit 2 van #80; `plaats_bootsoort` gaat mee via `ON DELETE CASCADE`, boten verliezen alleen hun plaats), verkort `rek.naam`, voeg `rek.omschrijving`, index en checks toe, voeg `verdieping` en `vak` toe en verwijder `code`, `volgorde` en `uq_plaats_code`. Downgrade: voeg `code` (`String(20)`) en `volgorde` weer toe, vul `code` met de aanduiding en `volgorde` met `(verdieping - 1) * 12 + vak`, zet `uq_plaats_code` terug en verwijder de nieuwe kolommen (ook `omschrijving`), checks en index. De downgrade verliest geen plaatsen. Rechten veranderen niet.
+Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.py`) en blijft de enige head. Upgrade: verwijder alle plaatsen en rekken (besluit 2 van #80; `plaats_bootsoort` gaat mee via `ON DELETE CASCADE`, boten verliezen alleen hun plaats), verkort `rek.naam`, voeg `rek.omschrijving`, index en checks toe, voeg `verdieping` en `vak` toe en verwijder `code`, `volgorde` en `uq_plaats_code`. Downgrade: voeg `code` (`String(20)`) en `volgorde` weer toe, vul `code` met de aanduiding en `volgorde` met `(verdieping - 1) * 12 + vak`, zet `uq_plaats_code` terug en verwijder de nieuwe kolommen (ook `omschrijving`), checks en index. De downgrade verliest geen plaatsen. Rechten: de rol `botenloods_taken` krijgt INSERT op `bootsoort` en USAGE op `bootsoort_id_seq`, omdat `flask seed` als die rol Wildwaterkano toevoegt; de downgrade trekt beide in.
 
 ## Alternatieven
 
@@ -78,6 +78,7 @@ Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.1.1 | 2026-11-04 | `indeling_instellen` vergrendelt alle plaatsen van het rek; migratie 0011 geeft `botenloods_taken` INSERT op `bootsoort` en USAGE op de reeks | Afwijkingen gemeld bij de bouw van slice 12, issue #80 |
 | v2.1.0 | 2026-11-03 | Vak 1 tot en met 12, elk vak los aan of uit; `rek.omschrijving`; `indeling_instellen` met paren; seed uit de twee CSV-bestanden | Nieuwe besluiten stakeholder, issue #80 |
 | v2.0.0 | 2026-11-03 | Indeling in rek, verdieping en vak; `code` afgeleid in plaats van vrij en te wijzigen; BLB-004 vervalt; migratie 0011 | Besluiten stakeholder en standaardkeuzes regie, issue #80 |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

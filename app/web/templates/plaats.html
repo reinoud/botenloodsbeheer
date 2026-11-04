@@ -3,7 +3,7 @@
 {% block titel %}Plaats {{ plaats.code }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Plaats {{ plaats.code }}</h1>
-<p>{{ plaats.rek.naam }}{% if plaats.is_clubplaats %}, clubplaats{% endif %}. Geschikt voor: {{ plaats.bootsoorten|map(attribute='naam')|join(', ') }}.</p>
+<p>Rek {{ plaats.rek.naam }}{% if plaats.rek.omschrijving %} ({{ plaats.rek.omschrijving }}){% endif %}{% if plaats.is_clubplaats %}, clubplaats{% endif %}. Geschikt voor: {{ plaats.bootsoorten|map(attribute='naam')|join(', ') }}.</p>
 
 {% set boot = plaats.boot %}
 {% if boot %}
@@ -69,8 +69,6 @@
   <h2>Plaats wijzigen</h2>
   <form method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
-    <label for="code">Plaatscode</label>
-    <input id="code" name="code" value="{{ plaats.code }}" maxlength="20" required>
     <fieldset>
       <legend>Geschikt voor</legend>
       {% for s in bootsoorten %}

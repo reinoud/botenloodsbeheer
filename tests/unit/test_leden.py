@@ -10,10 +10,10 @@ import pytest
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import ProgrammingError
 
-from app.domein import CLI, Regelfout, boten, indeling, leden, toewijzing, vandaag, wachtlijst
+from app.domein import CLI, Regelfout, boten, leden, toewijzing, vandaag, wachtlijst
 from app.models import Lid, Logregel, Plaats, Taakrun, Token, Wachtlijst, db
 from tests.unit.conftest import API, TAKEN
-from tests.unit.hulp import als_web
+from tests.unit.hulp import als_web, plaats
 from tests.unit.test_tokens import KOPPEL, SPEC, bearer, maak_als_web
 
 pytestmark = pytest.mark.api  # alleen de dienst api schrijft leden (ADR-012)
@@ -170,9 +170,7 @@ def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
     anna = alle()["1"].id
 
     def loods():
-        rek = indeling.rek_aanmaken("Rek A", CLI)
-        p1 = indeling.plaats_aanmaken(rek.id, "A01", [1], False, CLI)
-        p2 = indeling.plaats_aanmaken(rek.id, "A02", [1], False, CLI)
+        p1, p2 = plaats("A/1/1", [1]), plaats("A/1/2", [1])
         b1 = boten.boot_aanmaken("Zeemeeuw", 1, anna, None, CLI)
         b2 = boten.boot_aanmaken("Fuut", 1, anna, None, CLI)
         toewijzing.toewijzen(p1.id, b1.id, CLI)

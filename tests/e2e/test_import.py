@@ -104,7 +104,8 @@ def test_boten_van_leden_die_gaan_opzeggen(page):
         expect(rijen.first).to_be_visible()
         assert set(rijen.locator("td[data-label='Opzegdatum']").all_inner_texts()) == {"31-12-2099"}
         eerste = rijen.first.locator("td").all_inner_texts()
-        assert len(eerste) == 5 and re.fullmatch(r"Rek \w+", eerste[2])
+        assert len(eerste) == 5 and re.fullmatch(r"\w+", eerste[2]) \
+            and re.fullmatch(r"\w+/[1-5]/\d{1,2}", eerste[3])
     finally:
         assert roep("PUT", "/leden", {"leden": FIXTURE})[0] == 200
     page.reload()

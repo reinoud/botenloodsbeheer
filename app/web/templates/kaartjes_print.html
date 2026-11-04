@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# Alleen plaatscode, naam van de eigenaar (of vrij, of de vereniging) en de QR-code (BLB-021). #}
+{# Alleen plaatscode, omschrijving van het rek, naam van de eigenaar (of vrij, of de vereniging) en de QR-code (BLB-021). #}
 {% block titel %}Kaartjes · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <div class="niet-printen">
@@ -14,6 +14,7 @@
     <div>
       {% if logo %}<img class="kaartje-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="{{ vereniging }}">{% else %}<p>{{ vereniging }}</p>{% endif %}
       <p class="kaartje-code">{{ k.code }}</p>
+      {% if k.omschrijving %}<p class="kaartje-omschrijving">{{ k.omschrijving }}</p>{% endif %}
       <p class="kaartje-eigenaar">{{ vereniging if k.club else k.eigenaar or 'vrij' }}</p>
     </div>
     <div role="img" aria-label="QR-code naar de openbare pagina van {{ k.code }}">{{ qr(k.sleutel)|safe }}</div>

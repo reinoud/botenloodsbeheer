@@ -35,11 +35,10 @@ def opzeggen(lid_id, **velden):
 
 def loods():
     """Rek A met vier plaatsen: vrij (kajak, surfski), bezet, clubplaats en vrij (C11)."""
-    vrij = plaats("A01", ("Kajak", "Surfski"))
-    rek = vrij.rek
-    bezet = plaats("A02", ("Kajak",), rek=rek)
-    club = plaats("A03", ("Surfski",), club=True, rek=rek)
-    c11 = plaats("A04", ("C11",), rek=rek)
+    vrij = plaats("A/1/1", ("Kajak", "Surfski"))
+    bezet = plaats("A/1/2", ("Kajak",))
+    club = plaats("A/1/3", ("Surfski",), club=True)
+    c11 = plaats("A/1/4", ("C11",))
     anna = lid()
     toewijzing.toewijzen(bezet.id, boot(anna.id).id, CLI)
     return vrij, bezet, club, c11, anna
@@ -52,21 +51,21 @@ def test_vrije_plaatsen_zonder_bezet_en_clubplaats(app):
     vrij, _bezet, _club, c11, _anna = loods()
     from app.domein import indeling
     assert [p.code for p in indeling.vrije_plaatsen()] == [vrij.code, c11.code]
-    assert [p.code for p in indeling.vrije_plaatsen(soort("Surfski"))] == ["A01"]
+    assert [p.code for p in indeling.vrije_plaatsen(soort("Surfski"))] == ["A/1/1"]
     assert indeling.vrije_plaatsen(soort("Supboard")) == []
 
 
 def test_vrije_plaatsen_scherm_met_filter_en_vrijgeven(ingelogd):  # noqa: F811
     _vrij, bezet, _club, _c11, _anna = loods()
     tekst = ingelogd.get("/vrij").text
-    assert "A01" in tekst and "Kajak, Surfski" in tekst and "Rek A" in tekst
-    assert ">A02<" not in tekst and ">A03<" not in tekst
+    assert "A/1/1" in tekst and "Kajak, Surfski" in tekst
+    assert ">A/1/2<" not in tekst and ">A/1/3<" not in tekst
     tekst = ingelogd.get(f"/vrij?bootsoort={soort('Surfski')}").text
-    assert ">A01<" in tekst and ">A04<" not in tekst
+    assert ">A/1/1<" in tekst and ">A/1/4<" not in tekst
     tekst = ingelogd.get(f"/vrij?bootsoort={soort('Supboard')}").text
     assert "Er zijn geen vrije plaatsen voor supboard." in tekst
     ingelogd.post(f"/plaatsen/{bezet.id}/vrijgeven")
-    assert ">A02<" in ingelogd.get("/vrij").text
+    assert ">A/1/2<" in ingelogd.get("/vrij").text
 
 
 # Indeling op het scherm (BLB-016)
@@ -76,7 +75,7 @@ def test_indeling_toont_status_boot_en_eigenaar(ingelogd):  # noqa: F811
     _vrij, bezet, club, _c11, _anna = loods()
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
     tekst = ingelogd.get("/indeling").text
-    assert f'href="/plaatsen/{bezet.id}">A02</a>' in tekst
+    assert f'href="/plaatsen/{bezet.id}">A/1/2</a>' in tekst
     assert "Zeemeeuw" in tekst and "Anna de Vries" in tekst
     assert "status-clubplaats" in tekst and "Clubski" in tekst and "Botenloods" in tekst
     assert tekst.count('class="status-vrij"') == 2
@@ -90,7 +89,7 @@ def test_lid_met_boten_en_plaats(ingelogd):  # noqa: F811
     _vrij, bezet, _club, _c11, anna = loods()
     boot(anna.id, "Surfski", "Albatros")
     tekst = ingelogd.get(f"/leden/{anna.id}").text
-    assert "Zeemeeuw" in tekst and f'href="/plaatsen/{bezet.id}">A02</a>' in tekst
+    assert "Zeemeeuw" in tekst and f'href="/plaatsen/{bezet.id}">A/1/2</a>' in tekst
     assert "Albatros" in tekst and "Geen plaats" in tekst and "Surfski" in tekst
     assert "Proefweg" not in tekst and "06-0000" not in tekst and "@example.org" not in tekst
     assert ingelogd.get("/leden/999").status_code == 404
@@ -116,8 +115,8 @@ def test_leden_zoeken_op_naam_of_lidnummer(ingelogd):  # noqa: F811
 
 def test_plaatsen_van_oud_leden_oudste_eerst(ingelogd):  # noqa: F811
     from app.domein import indeling
-    p1 = plaats("B01")
-    p2, p3, p4 = (plaats(c, rek=p1.rek) for c in ("B02", "B03", "B04"))
+    p1 = plaats("B/1/1")
+    p2, p3, p4 = (plaats(c) for c in ("B/1/2", "B/1/3", "B/1/4"))
     namen = ("Recent Opgezegd", "Lang Geleden", "Uit De Bron", "Zegt Later Op")
     eigenaren = [lid(str(n), naam) for n, naam in enumerate(namen)]
     for p, eigenaar in zip((p1, p2, p3, p4), eigenaren):
@@ -134,7 +133,7 @@ def test_plaatsen_van_oud_leden_oudste_eerst(ingelogd):  # noqa: F811
         (GISTEREN, "Recent Opgezegd")]
     tekst = ingelogd.get("/opgezegd").text
     assert tekst.index("Lang Geleden") < tekst.index("Uit De Bron") < tekst.index("Recent")
-    assert f'href="/plaatsen/{p2.id}">B02</a>' in tekst and "Zegt Later Op" not in tekst
+    assert f'href="/plaatsen/{p2.id}">B/1/2</a>' in tekst and "Zegt Later Op" not in tekst
 
 
 def test_geen_plaatsen_van_oud_leden(ingelogd):  # noqa: F811
@@ -147,8 +146,8 @@ def test_geen_plaatsen_van_oud_leden(ingelogd):  # noqa: F811
 
 def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F811
     """BLB-041 criteria 2 tot en met 4."""
-    p1 = plaats("C01")
-    p2, p3 = (plaats(c, rek=p1.rek) for c in ("C02", "C03"))
+    p1 = plaats("C/1/1")
+    p2, p3 = (plaats(c) for c in ("C/1/2", "C/1/3"))
     namen = ("Zegt Laat Op", "Zegt Vroeg Op", "Al Opgezegd", "Zonder Plaats", "Blijft Lid")
     laat, vroeg, al, zonder, _blijft = (lid(str(n), naam) for n, naam in enumerate(namen))
     for p, eigenaar in ((p1, laat), (p2, vroeg), (p3, al)):
@@ -161,8 +160,8 @@ def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F8
     opzeggen(zonder.id, opzegdatum=vandaag + timedelta(days=5))
     tekst = ingelogd.get("/opzeggend").text
     assert tekst.index("Zegt Vroeg Op") < tekst.index("Zegt Laat Op")
-    assert "Boot Zegt Vroeg Op" in tekst and "Rek A" in tekst
-    assert f'href="/plaatsen/{p2.id}">C02</a>' in tekst
+    assert "Boot Zegt Vroeg Op" in tekst
+    assert f'href="/plaatsen/{p2.id}">C/1/2</a>' in tekst
     assert (vandaag + timedelta(days=1)).strftime("%d-%m-%Y") in tekst
     for weg in ("Al Opgezegd", "Zonder Plaats", "Blijft Lid"):
         assert weg not in tekst
@@ -181,20 +180,20 @@ def test_geen_boten_van_leden_die_gaan_opzeggen(ingelogd):  # noqa: F811
 
 
 def test_export_kolommen_en_geen_contactgegevens(ingelogd):  # noqa: F811
-    vrij, _bezet, club, _c11, _anna = loods()
+    _vrij, _bezet, club, _c11, _anna = loods()
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
-    plaats("A05", ("Kajak", "Canadese kano"), club=True, rek=vrij.rek)  # clubplaats zonder boot
+    plaats("A/1/5", ("Kajak", "Canadese kano"), club=True)  # clubplaats zonder boot
     r = ingelogd.get("/indeling.xlsx")
     assert r.status_code == 200 and "attachment" in r.headers["Content-Disposition"]
     blad = load_workbook(io.BytesIO(r.data)).active
     rijen = [tuple(c.value for c in rij) for rij in blad.iter_rows()]
     assert rijen == [
         ("Rek", "Code", "Status", "Bootsoort", "Bootnaam", "Eigenaar", "Lidnummer"),
-        ("Rek A", "A01", "vrij", "(geschikt voor Kajak, Surfski)", None, None, None),
-        ("Rek A", "A02", "bezet", "Kajak", "Zeemeeuw", "Anna de Vries", "1001"),
-        ("Rek A", "A03", "clubplaats", "Surfski", "Clubski", "Botenloods", None),
-        ("Rek A", "A04", "vrij", "(geschikt voor C11)", None, None, None),
-        ("Rek A", "A05", "clubplaats", "(geschikt voor Kajak, Canadese kano)", None, None, None)]
+        ("A", "A/1/1", "vrij", "(geschikt voor Kajak, Surfski)", None, None, None),
+        ("A", "A/1/2", "bezet", "Kajak", "Zeemeeuw", "Anna de Vries", "1001"),
+        ("A", "A/1/3", "clubplaats", "Surfski", "Clubski", "Botenloods", None),
+        ("A", "A/1/4", "vrij", "(geschikt voor C11)", None, None, None),
+        ("A", "A/1/5", "clubplaats", "(geschikt voor Kajak, Canadese kano)", None, None, None)]
     inhoud = str(rijen)
     for verboden in ("Proefweg", "06-0000", "@example.org"):
         assert verboden not in inhoud

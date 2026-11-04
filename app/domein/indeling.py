@@ -1,8 +1,8 @@
-"""Indeling van de loods: rekken en plaatsen (BLB-001 tot en met BLB-004, ADR-003), bootsoorten
-(BLB-028) en de openbare leesfunctie (BLB-020)."""
+"""Indeling van de loods: rekken, verdiepingen en vakken (BLB-001, BLB-002, BLB-003, BLB-044,
+ADR-003), bootsoorten (BLB-028) en de openbare leesfunctie (BLB-020). Een plaats is een vak met de
+aanduiding <rek>/<verdieping>/<vak>, zoals A/1/1."""
 
 import io
-import re
 import secrets
 
 from openpyxl import Workbook
@@ -18,14 +18,55 @@ from app.models import Boot, Bootsoort, Lid, Plaats, Rek, db, plaats_bootsoort
 # Zonder verwarrende tekens: geen 0, o, O, 1, l en I (ADR-003).
 ALFABET = "23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
 SLEUTELLENGTE = 10
-CODE = re.compile(r"[A-Za-z0-9][A-Za-z0-9 ._-]{0,19}")
+VERDIEPINGEN = range(1, 6)
+VAKKEN = range(1, 13)
+NAAM_MAX = 10
+OMSCHRIJVING_MAX = 60
 
 
 def _naam(naam):
     naam = (naam or "").strip()
-    if not 1 <= len(naam) <= 50:
-        raise Regelfout("Geef het rek een naam van 1 tot 50 tekens.")
+    if not 1 <= len(naam) <= NAAM_MAX or "/" in naam:
+        raise Regelfout(f"Geef het rek een naam van 1 tot {NAAM_MAX} tekens, zonder /.")
     return naam
+
+
+def _omschrijving(tekst):
+    tekst = (tekst or "").strip()
+    if len(tekst) > OMSCHRIJVING_MAX:
+        raise Regelfout(f"De omschrijving heeft hooguit {OMSCHRIJVING_MAX} tekens.")
+    return tekst
+
+
+def _vakken(vakken):
+    """De paren (verdieping, vak) die aan staan, zoals het raster ze toont."""
+    paren = set(vakken)
+    if not paren:
+        raise Regelfout("Zet minstens één vak aan.")
+    if any(v not in VERDIEPINGEN or k not in VAKKEN for v, k in paren):
+        raise Regelfout(f"Een rek heeft verdieping {VERDIEPINGEN[0]} tot en met "
+                        f"{VERDIEPINGEN[-1]} en vak {VAKKEN[0]} tot en met {VAKKEN[-1]}.")
+    return paren
+
+
+def _flush_rek(naam):
+    try:
+        db.session.flush()
+    except IntegrityError as fout:
+        db.session.rollback()
+        # De index op lower(naam) vangt ook twee gelijktijdige aanvragen af.
+        if fout.orig.diag.constraint_name == "uq_rek_naam":
+            raise Regelfout(f"Er is al een rek met de naam {naam}.") from None
+        raise
+
+
+def _naam_vrij(naam, rek_id=None):
+    q = select(Rek.naam).where(func.lower(Rek.naam) == naam.lower())
+    if rek_id is not None:
+        q = q.where(Rek.id != rek_id)
+    bestaand = db.session.scalar(q)
+    if bestaand is not None:
+        raise Regelfout(f"Er is al een rek met de naam {bestaand}.")
 
 
 def bootsoorten():
@@ -138,7 +179,7 @@ def vrije_plaatsen(bootsoort_id=None):
     de loods. Met bootsoort_id alleen de plaatsen die voor die soort geschikt zijn."""
     q = (select(Plaats).join(Plaats.rek)
          .where(Plaats.boot_id.is_(None), Plaats.is_clubplaats.is_(False))
-         .order_by(Rek.volgorde, Rek.id, Plaats.volgorde, Plaats.id)
+         .order_by(Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)
          .options(selectinload(Plaats.rek), selectinload(Plaats.bootsoorten)))
     if bootsoort_id:
         q = q.where(Plaats.bootsoorten.any(Bootsoort.id == bootsoort_id))
@@ -156,16 +197,17 @@ def plaatsen_van_oud_leden():
     ).all()
     rijen = [(min(d for d in (p.boot.lid.opzegdatum, p.boot.lid.uit_bron_op) if d and d <= dag), p)
              for p in plaatsen if leden.is_oud_lid(p.boot.lid, dag)]
-    return sorted(rijen, key=lambda r: (r[0], r[1].code.lower()))
+    return sorted(rijen, key=lambda r: (r[0], r[1].rek.volgorde, r[1].rek_id, r[1].verdieping,
+                                        r[1].vak))
 
 
 def plaatsen_van_opzeggende_leden():
     """Plaatsen met de boot van een lid met een opzegdatum in de toekomst (BLB-041), de vroegste
     opzegdatum eerst. Na die datum staat de plaats bij de plaatsen van oud-leden (BLB-018)."""
     return db.session.scalars(
-        select(Plaats).join(Plaats.boot).join(Boot.lid)
+        select(Plaats).join(Plaats.boot).join(Boot.lid).join(Plaats.rek)
         .where(Lid.opzegdatum > vandaag(), Lid.uit_bron_op.is_(None))
-        .order_by(Lid.opzegdatum, func.lower(Plaats.code))
+        .order_by(Lid.opzegdatum, Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)
         .options(selectinload(Plaats.rek), selectinload(Plaats.boot).selectinload(Boot.lid))
     ).all()
 
@@ -212,7 +254,8 @@ def kaartjes(plaats_ids=(), rek_ids=(), alle=False):
     """Alleen wat op een kaartje mag (BLB-021, overlay §8), in de volgorde van de loods. Een
     clubplaats krijgt de naam van de vereniging (een clubboot ligt altijd op een clubplaats);
     eigenaar is None bij een vrije plaats."""
-    return [{"code": p.code, "sleutel": p.publieke_sleutel, "club": p.is_clubplaats,
+    return [{"code": p.code, "omschrijving": r.omschrijving, "sleutel": p.publieke_sleutel,
+             "club": p.is_clubplaats,
              "eigenaar": p.boot.lid.naam if p.boot and p.boot.lid else None}
             for r in rekken() for p in r.plaatsen
             if alle or r.id in rek_ids or p.id in plaats_ids]
@@ -232,23 +275,73 @@ def plaats(plaats_id):
     return p
 
 
-def rek_aanmaken(naam, actor):
-    naam = _naam(naam)
+def rek_aanmaken(naam, omschrijving, vakken, actor):
+    """Maakt het rek met een plaats per vak dat aan staat (BLB-001)."""
+    naam, omschrijving, vakken = _naam(naam), _omschrijving(omschrijving), _vakken(vakken)
+    _naam_vrij(naam)
     volgorde = db.session.scalar(select(func.coalesce(func.max(Rek.volgorde), 0))) + 1
-    r = Rek(naam=naam, volgorde=volgorde)
+    r = Rek(naam=naam, omschrijving=omschrijving, volgorde=volgorde)
     db.session.add(r)
-    db.session.flush()
-    log.schrijf(actor, "rek.aangemaakt", [f"rek:{r.id}"], {"naam": naam})
+    _flush_rek(naam)
+    log.schrijf(actor, "rek.aangemaakt", [f"rek:{r.id}"],
+                {"naam": naam, "omschrijving": omschrijving, "vakken": len(vakken)})
+    _plaatsen_erbij(r, vakken, actor)
     db.session.commit()
     return r
 
 
-def rek_wijzigen(rek_id, naam, actor):
+def _plaatsen_erbij(r, vakken, actor):
+    nieuw = [Plaats(rek=r, verdieping=v, vak=k, publieke_sleutel=_publieke_sleutel())
+             for v, k in sorted(vakken)]
+    db.session.add_all(nieuw)
+    db.session.flush()
+    for p in nieuw:
+        # "plaatscode", want het log verbergt de waarde van een veld "code" (ADR-006).
+        log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
+                    {"plaatscode": f"{r.naam}/{p.verdieping}/{p.vak}"})
+
+
+def rek_wijzigen(rek_id, naam, omschrijving, actor):
+    """Naam en omschrijving. Een nieuwe naam verandert de aanduiding van alle plaatsen in het
+    rek; publieke sleutels en toewijzingen blijven (ADR-003)."""
     r = rek(rek_id)
-    naam = _naam(naam)
-    if naam != r.naam:
-        log.schrijf(actor, "rek.gewijzigd", [f"rek:{r.id}"], {"naam": [r.naam, naam]})
-        r.naam = naam
+    naam, omschrijving = _naam(naam), _omschrijving(omschrijving)
+    _naam_vrij(naam, r.id)
+    wijzigingen = {k: [oud, nieuw] for k, oud, nieuw in (("naam", r.naam, naam),
+                   ("omschrijving", r.omschrijving, omschrijving)) if oud != nieuw}
+    if wijzigingen:
+        log.schrijf(actor, "rek.gewijzigd", [f"rek:{r.id}"], wijzigingen)
+        r.naam, r.omschrijving = naam, omschrijving
+        _flush_rek(naam)
+    db.session.commit()
+    return r
+
+
+def indeling_instellen(rek_id, vakken, actor):
+    """Zet precies de vakken in vakken (paren van verdieping en vak) aan (BLB-044): ontbrekende
+    plaatsen komen erbij, plaatsen die niet in vakken staan verdwijnen, en de rest blijft met
+    boot, sleutel en instellingen. Weigert als een vak dat uit gaat een boot heeft. Het rek wordt
+    eerst vergrendeld en daarna de plaatsen; toewijzen vergrendelt nooit het rek (geen deadlock)."""
+    vakken = _vakken(vakken)
+    try:
+        r = db.session.get(Rek, rek_id, with_for_update=True, populate_existing=True)
+        if r is None:
+            raise Regelfout("Dit rek bestaat niet.")
+        bestaand = {(p.verdieping, p.vak): p for p in db.session.scalars(
+            select(Plaats).where(Plaats.rek_id == r.id).order_by(Plaats.verdieping, Plaats.vak)
+            .with_for_update(of=Plaats).execution_options(populate_existing=True))}
+        weg = [p for paar, p in bestaand.items() if paar not in vakken]
+        bezet = next((p for p in weg if p.boot_id), None)
+        if bezet:
+            raise Regelfout(f"Op plaats {bezet.code} ligt een boot. Geef de plaats eerst vrij.")
+    except Regelfout:
+        db.session.rollback()
+        raise
+    for p in weg:
+        log.schrijf(actor, "plaats.verwijderd", [f"plaats:{p.id}", f"rek:{r.id}"],
+                    {"plaatscode": p.code})
+        db.session.delete(p)
+    _plaatsen_erbij(r, vakken - bestaand.keys(), actor)
     db.session.commit()
     return r
 
@@ -272,29 +365,6 @@ def rek_verwijderen(rek_id, actor):
     db.session.commit()
 
 
-def plaats_aanmaken(rek_id, code, bootsoort_ids, is_clubplaats, actor):
-    r = rek(rek_id)
-    code, soorten = _code(code), _soorten(bootsoort_ids)
-    volgorde = len(r.plaatsen) + 1
-    p = Plaats(rek=r, code=code, publieke_sleutel=_publieke_sleutel(),
-               is_clubplaats=bool(is_clubplaats), volgorde=volgorde, bootsoorten=soorten)
-    db.session.add(p)
-    _flush_code(code)
-    # "plaatscode", want het log verbergt de waarde van een veld "code" (ADR-006).
-    log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
-                {"plaatscode": code, "bootsoorten": [s.naam for s in soorten],
-                 "clubplaats": p.is_clubplaats})
-    db.session.commit()
-    return p
-
-
-def _code(code):
-    code = (code or "").strip()
-    if not CODE.fullmatch(code):
-        raise Regelfout("Een plaatscode heeft 1 tot 20 tekens: letters, cijfers, spatie, . _ of -.")
-    return code
-
-
 def _soorten(bootsoort_ids):
     # KEY SHARE: wacht op een lopende bootsoort_verwijderen in plaats van een fout van de FK.
     soorten = db.session.scalars(
@@ -305,26 +375,15 @@ def _soorten(bootsoort_ids):
     return soorten
 
 
-def _flush_code(code):
-    try:
-        db.session.flush()
-    except IntegrityError as fout:
-        db.session.rollback()
-        # De database vergelijkt zonder hoofdletters, ook bij twee gelijktijdige aanvragen.
-        if fout.orig.diag.constraint_name == "uq_plaats_code":
-            raise Regelfout(f"De code {code} hoort al bij een andere plaats.") from None
-        raise
-
-
-def plaats_wijzigen(plaats_id, code, bootsoort_ids, is_clubplaats, actor):
-    """Code, geschikte bootsoorten en clubplaats (BLB-002, 003, 004). De plaats wordt eerst
-    vergrendeld, zodat geen boot verschijnt tussen controle en wijziging.
-    De publieke sleutel blijft, dus de QR-link toont daarna de nieuwe code (ADR-003)."""
+def plaats_wijzigen(plaats_id, bootsoort_ids, is_clubplaats, actor):
+    """Geschikte bootsoorten en clubplaats (BLB-002, 003). De aanduiding wijzigt alleen met de
+    naam van het rek. De plaats wordt eerst vergrendeld, zodat geen boot verschijnt tussen
+    controle en wijziging."""
     try:
         p = db.session.get(Plaats, plaats_id, with_for_update=True)
         if p is None:
             raise Regelfout("Deze plaats bestaat niet.")
-        code, soorten = _code(code), _soorten(bootsoort_ids)
+        soorten = _soorten(bootsoort_ids)
         is_clubplaats = bool(is_clubplaats)
         b = p.boot
         if b is not None and b.bootsoort not in soorten:
@@ -337,9 +396,6 @@ def plaats_wijzigen(plaats_id, code, bootsoort_ids, is_clubplaats, actor):
         db.session.rollback()
         raise
     wijzigingen = {}
-    if code != p.code:
-        wijzigingen["plaatscode"] = [p.code, code]
-        p.code = code
     if soorten != p.bootsoorten:
         wijzigingen["bootsoorten"] = [[s.naam for s in p.bootsoorten], [s.naam for s in soorten]]
         p.bootsoorten = soorten
@@ -347,7 +403,6 @@ def plaats_wijzigen(plaats_id, code, bootsoort_ids, is_clubplaats, actor):
         wijzigingen["clubplaats"] = [p.is_clubplaats, is_clubplaats]
         p.is_clubplaats = is_clubplaats
     if wijzigingen:
-        _flush_code(code)
         log.schrijf(actor, "plaats.gewijzigd", [f"plaats:{p.id}", f"rek:{p.rek_id}"], wijzigingen)
     db.session.commit()
     return p
@@ -384,6 +439,7 @@ def openbaar(publieke_sleutel):
     boot = p.boot
     return {
         "code": p.code,
+        "omschrijving": p.rek.omschrijving,
         "vrij": boot is None,
         "clubboot": boot is not None and boot.lid_id is None,
         "boot": boot.naam if boot else None,

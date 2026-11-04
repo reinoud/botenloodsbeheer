@@ -7,7 +7,7 @@ from datetime import date
 import jsonschema
 import pytest
 
-from app.domein import CLI, indeling, toewijzing, wachtlijst
+from app.domein import CLI, toewijzing, wachtlijst
 from app.models import db
 from tests.unit.hulp import lid
 from tests.unit.test_indeling_en_toewijzing import boot, plaats
@@ -30,17 +30,15 @@ def schema(naam):
 
 
 def loods():
-    """Rek A met A01 (Zeemeeuw van Anna) en clubplaats C01 (Clubkajak); rek B met een lege B01.
+    """Rek A met A/1/1 (Zeemeeuw van Anna) en clubplaats A/2/1 (Clubkajak); rek B met een lege B/1/1.
     Op de wachtlijst: Reiger van Bert (kajak, eerder) en Pijl van Anna (kajak, later), Bever van
     Anna (kano) en Mus van oud-lid Carla, die niet meetelt."""
     anna = lid("1002", "Anna", lid_sinds=date(2020, 4, 1))
     bert = lid("1001", "Bert")
     carla = lid("1003", "Carla")
-    a01 = plaats("A01", ("Kajak", "Surfski"))
-    toewijzing.toewijzen(a01.id, boot(anna.id).id, CLI)
-    toewijzing.toewijzen(plaats("C01", club=True, rek=a01.rek).id,
-                         boot(None, naam="Clubkajak").id, CLI)
-    plaats("B01", rek=indeling.rek_aanmaken("Rek B", CLI))
+    toewijzing.toewijzen(plaats("A/1/1", ("Kajak", "Surfski")).id, boot(anna.id).id, CLI)
+    toewijzing.toewijzen(plaats("A/2/1", club=True).id, boot(None, naam="Clubkajak").id, CLI)
+    plaats("B/1/1")
     wachtlijst.erop_zetten(boot(anna.id, naam="Pijl").id, "2026-02-01", CLI)
     wachtlijst.erop_zetten(boot(bert.id, naam="Reiger").id, "2026-01-01", CLI)
     wachtlijst.erop_zetten(boot(anna.id, "Canadese kano", "Bever").id, "2025-06-01", CLI)
@@ -73,11 +71,11 @@ def test_elke_leesroute_vraagt_haar_recht(app, api, pad):
 def test_plaatsen_in_de_volgorde_van_het_overzicht(app, api):
     loods()
     assert lees(api, "/plaatsen", "plaatsen:lezen").json == [
-        {"code": "A01", "rek": "Rek A", "clubplaats": False, "bootsoorten": ["Kajak", "Surfski"],
+        {"code": "A/1/1", "rek": "A", "clubplaats": False, "bootsoorten": ["Kajak", "Surfski"],
          "boot": {"id": 1, "naam": "Zeemeeuw"}},
-        {"code": "C01", "rek": "Rek A", "clubplaats": True, "bootsoorten": ["Kajak"],
+        {"code": "A/2/1", "rek": "A", "clubplaats": True, "bootsoorten": ["Kajak"],
          "boot": {"id": 2, "naam": "Clubkajak"}},
-        {"code": "B01", "rek": "Rek B", "clubplaats": False, "bootsoorten": ["Kajak"],
+        {"code": "B/1/1", "rek": "B", "clubplaats": False, "bootsoorten": ["Kajak"],
          "boot": None}]
 
 
@@ -87,7 +85,7 @@ def test_boten_zonder_persoonsgegevens_alleen_naam_en_lidnummer(app, api):
     rijen = {b["naam"]: b for b in lees(api, "/boten", "boten:lezen").json}
     assert [b["naam"] for b in lees(api, "/boten", "boten:lezen").json] == sorted(rijen)
     assert rijen["Zeemeeuw"] == {"id": 1, "naam": "Zeemeeuw", "bootsoort": "Kajak",
-                                 "plaats": "A01", "eigenaar": {"lidnummer": "1002", "naam": "Anna"}}
+                                 "plaats": "A/1/1", "eigenaar": {"lidnummer": "1002", "naam": "Anna"}}
     assert rijen["Clubkajak"]["eigenaar"] is None and rijen["Pijl"]["plaats"] is None
 
 

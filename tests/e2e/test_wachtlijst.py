@@ -3,16 +3,16 @@
 Volgt de route uit issue #43. Elke test maakt een eigen rek, plaats en boot met de stempel van
 de run; de leden en de wachtlijst van seed komen uit draai.sh."""
 
-from conftest import STEMPEL, wachtwoord_instellen
+from conftest import STEMPEL, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, rek_met_plaats, toewijzen
 
 
 def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
     wachtwoord_instellen(page, "wachtlijst")
-    rek, code = f"E2E wachtrek {STEMPEL}", f"L{STEMPEL}"
+    rek = reknaam("l")
     wachter, bezetter = f"Wachter {STEMPEL}", f"Bezetter {STEMPEL}"
-    rek_met_plaats(page, rek, code, ["Surfski"])
+    code = rek_met_plaats(page, rek, ["Surfski"])
     boot_vastleggen(page, bezetter, "Surfski", eigenaar_index=3)
     toewijzen(page, code, bezetter)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()

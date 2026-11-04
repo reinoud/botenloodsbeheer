@@ -1,4 +1,4 @@
-"""Hulpfuncties voor tests: beheerders, leden en afbeeldingen aanmaken."""
+"""Hulpfuncties voor tests: beheerders, leden, plaatsen en afbeeldingen aanmaken."""
 
 import io
 import os
@@ -8,11 +8,11 @@ from unittest import mock
 
 import pyotp
 from PIL import Image
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session
 
-from app.domein import CLI, Regelfout, beheerders
-from app.models import Lid, db
+from app.domein import CLI, Regelfout, beheerders, indeling
+from app.models import Lid, Rek, db
 from tests.unit.conftest import API, WEB
 
 WACHTWOORD = "correct paard batterij"
@@ -78,6 +78,21 @@ def lid(lidnummer="1001", naam="Anna de Vries", **velden):
         lid_id = nieuw.id
     engine.dispose()
     return db.session.get(Lid, lid_id)
+
+
+def plaats(code="A/1/1", soort_ids=(1,), club=False):
+    """De plaats met aanduiding code (<rek>/<verdieping>/<vak>), in het rek met die naam; het rek
+    komt erbij als het er nog niet is (ADR-003). soort_ids zijn de geschikte bootsoorten."""
+    naam, verdieping, vak = code.rsplit("/", 2)
+    vak_aan = (int(verdieping), int(vak))
+    r = db.session.scalar(select(Rek).where(func.lower(Rek.naam) == naam.lower()))
+    if r is None:
+        r = indeling.rek_aanmaken(naam, "", {vak_aan}, CLI)
+    else:
+        indeling.indeling_instellen(r.id, {(p.verdieping, p.vak) for p in r.plaatsen} | {vak_aan},
+                                    CLI)
+    p = next(p for p in r.plaatsen if (p.verdieping, p.vak) == vak_aan)
+    return indeling.plaats_wijzigen(p.id, list(soort_ids), club, CLI)
 
 
 def race(app, sql, params, actie):

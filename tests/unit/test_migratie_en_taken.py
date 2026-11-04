@@ -49,6 +49,41 @@ def test_migratie_0010_beperkt_rechten_taken_en_downgrade_zet_ze_terug(database)
     assert rechten_taken(cfg) == oud
 
 
+def test_migratie_0011_geeft_taken_insert_op_bootsoort_en_downgrade_trekt_het_in(database):
+    """Issue #80: flask seed voegt de bootsoort Wildwaterkano toe, als botenloods_taken."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0010")
+    oud = rechten_taken(cfg)
+    nieuw_recht = {("bootsoort", "INSERT"), ("bootsoort_id_seq", "USAGE")}
+    assert not nieuw_recht & oud
+    command.upgrade(cfg, "head")
+    assert rechten_taken(cfg) == oud | nieuw_recht
+    command.downgrade(cfg, "0010")
+    assert rechten_taken(cfg) == oud
+
+
+def test_migratie_0011_verwijdert_plaatsen_en_downgrade_behoudt_ze_met_aanduiding(database):
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0010")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    with engine.begin() as c:
+        c.execute(text("INSERT INTO rek (naam, volgorde) VALUES ('Rek oud', 1)"))
+        c.execute(text("INSERT INTO plaats (rek_id, code, publieke_sleutel, volgorde) "
+                       "SELECT id, 'A01', 'sleutel001', 1 FROM rek"))
+    command.upgrade(cfg, "head")
+    with engine.begin() as c:
+        assert c.scalar(text("SELECT count(*) FROM plaats")) == 0
+        assert c.scalar(text("SELECT count(*) FROM rek")) == 0
+        c.execute(text("INSERT INTO rek (naam, omschrijving, volgorde) VALUES ('B', 'Links', 1)"))
+        c.execute(text("INSERT INTO plaats (rek_id, verdieping, vak, publieke_sleutel) "
+                       "SELECT id, 2, 5, 'sleutel002' FROM rek"))
+    command.downgrade(cfg, "0010")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT code, volgorde FROM plaats")).all() == [("B/2/5", 17)]
+    command.upgrade(cfg, "head")
+    engine.dispose()
+
+
 def test_migratie_verwijdert_geupload_logo(database):
     """BLB-027 criterium 5: een logo uit slice 3 verdwijnt; alleen het logo uit de installatie
     geldt nog. Foto's blijven staan."""
@@ -105,7 +140,8 @@ def test_seed_maakt_de_synthetische_loods(app):
     def tel(model, *waar):
         return db.session.scalar(select(func.count()).select_from(model).where(*waar))
 
-    assert tel(Rek) == 10 and tel(Plaats) == 160 and tel(Plaats, Plaats.is_clubplaats) == 8
+    assert tel(Rek) == 11 and tel(Plaats) == 224 and tel(Plaats, Plaats.is_clubplaats) == 27
+    _controleer_bootsoort_per_vak()
     assert tel(Lid) == 208 and tel(Boot) == 180 and tel(Boot, Boot.lid_id.is_(None)) == 6
     assert tel(Plaats, Plaats.boot_id.isnot(None)) == 150
     oud_met_plaats = [p for p in db.session.scalars(select(Plaats).where(Plaats.boot_id.isnot(None)))
@@ -120,7 +156,32 @@ def test_seed_maakt_de_synthetische_loods(app):
     assert sum(len(rij) for _s, rij in rijen) == tel(Wachtlijst) == 10 and len(rijen) >= 3
     assert tel(Logregel, Logregel.actie == "wachtlijst.toegevoegd") == 10
     seed.seed(echo=lambda _: None)  # tweede keer: niets
-    assert tel(Rek) == 10
+    assert tel(Rek) == 11 and tel(Plaats) == 224
+
+
+def _controleer_bootsoort_per_vak():
+    """De bootsoorten en clubplaatsen van de stakeholder (#80, opmerking 2026-11-03 18:29),
+    onafhankelijk van de CSV opgeschreven."""
+    canadees_op_1 = set("ABCDEFGKL")
+    for p in db.session.scalars(select(Plaats)):
+        verwacht = ("Wildwaterkano" if p.rek.naam == "H"
+                    else "C11" if (p.rek.naam, p.verdieping) == ("J", 1)
+                    else "Surfski" if p.rek.naam == "J"
+                    else "Canadese kano" if p.rek.naam in canadees_op_1 and p.verdieping == 1
+                    else "Kajak")
+        assert [s.naam for s in p.bootsoorten] == [verwacht], p.code
+        assert p.is_clubplaats == (p.rek.naam == "A"), p.code
+    assert {p.code for p in db.session.scalars(select(Plaats).where(Plaats.rek.has(naam="A"),
+                                                                    Plaats.verdieping == 1))
+            } == {"A/1/1", "A/1/3", "A/1/4", "A/1/6"}  # gaten blijven
+    assert db.session.scalar(select(Rek.omschrijving).where(Rek.naam == "H")) != ""
+
+
+@pytest.mark.worker
+def test_worker_mag_een_bootsoort_toevoegen(app):
+    """Issue #80: INSERT op bootsoort en gebruik van bootsoort_id_seq (flask seed, Wildwaterkano)."""
+    db.session.execute(text("INSERT INTO bootsoort (naam) VALUES ('X')"))
+    db.session.rollback()
 
 
 def test_seed_weigert_in_productie(app):
@@ -133,8 +194,7 @@ def test_seed_weigert_in_productie(app):
     "INSERT INTO beheerder (naam, gebruikersnaam, actief, sessieversie) VALUES ('X', 'x', true, 1)",
     "UPDATE beheerder SET actief = false", "DELETE FROM beheerder",
     "SELECT 1 FROM passkey", "SELECT 1 FROM uitnodiging", "SELECT 1 FROM token", "UPDATE instelling SET waarde = 'x'",
-    "DELETE FROM rek", "DELETE FROM plaats", "INSERT INTO bootsoort (naam) VALUES ('X')",
-    "DELETE FROM taakrun"])
+    "DELETE FROM rek", "DELETE FROM plaats", "DELETE FROM bootsoort", "DELETE FROM taakrun"])
 @pytest.mark.worker
 def test_worker_heeft_geen_rechten_buiten_taken_en_seed(app, sql):
     """#60: de worker kan geen beheerder aanmaken of de indeling en instellingen wijzigen."""

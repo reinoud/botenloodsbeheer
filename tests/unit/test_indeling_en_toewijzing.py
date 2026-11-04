@@ -1,4 +1,4 @@
-"""Rekken en plaatsen (BLB-001), boten (BLB-005), toewijzen (BLB-010) en de openbare
+"""Rekken en plaatsen (BLB-001, nieuwe indeling: test_indeling_vakken.py), boten (BLB-005), toewijzen (BLB-010) en de openbare
 leesfunctie (BLB-020). Elke mutatie geeft een logregel (ADR-006)."""
 
 import io
@@ -9,21 +9,20 @@ from datetime import date, timedelta
 import pytest
 from PIL import Image
 from sqlalchemy import create_engine, func, select, text
-from sqlalchemy.exc import IntegrityError
 
 from app.domein import CLI, Regelfout, afbeeldingen, boten, indeling, log, toewijzing
 from app.models import Afbeelding, Boot, Logregel, Plaats, Rek, db
 from tests.unit.conftest import WEB
 from tests.unit.hulp import lid, png
+from tests.unit.hulp import plaats as plaats_aanmaken
 
 
 def soort(naam):
     return next(s.id for s in indeling.bootsoorten() if s.naam == naam)
 
 
-def plaats(code="A01", soorten=("Kajak",), club=False, rek=None):
-    rek = rek or indeling.rek_aanmaken("Rek A", CLI)
-    return indeling.plaats_aanmaken(rek.id, code, [soort(s) for s in soorten], club, CLI)
+def plaats(code="A/1/1", soorten=("Kajak",), club=False):
+    return plaats_aanmaken(code, [soort(s) for s in soorten], club)
 
 
 def boot(lid_id=None, bootsoort="Kajak", naam="Zeemeeuw", foto=None):
@@ -44,47 +43,22 @@ def test_startlijst_bootsoorten(app):
 
 def test_rek_en_plaats_aanmaken_met_publieke_sleutel(app):
     p = plaats(soorten=("Kajak", "Surfski"), club=True)
-    assert [r.naam for r in indeling.rekken()] == ["Rek A"]
+    assert [r.naam for r in indeling.rekken()] == ["A"]
     assert p.is_clubplaats and [s.naam for s in p.bootsoorten] == ["Kajak", "Surfski"]
     assert re.fullmatch(r"[2-9a-km-np-zA-HJ-NP-Z]{10}", p.publieke_sleutel)
     assert p.code not in p.publieke_sleutel and str(p.id) not in p.publieke_sleutel
-    assert acties() == ["rek.aangemaakt", "plaats.aangemaakt"]
+    assert acties() == ["rek.aangemaakt", "plaats.aangemaakt", "plaats.gewijzigd"]
 
 
 def test_publieke_sleutels_zijn_verschillend(app):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    sleutels = {plaats(f"A{n:02d}", rek=rek).publieke_sleutel for n in range(30)}
+    sleutels = {plaats(f"A/{v}/{k}").publieke_sleutel for v in range(1, 6) for k in range(1, 7)}
     assert len(sleutels) == 30
-
-
-@pytest.mark.parametrize("code", ["A01", "a01", " A01 "])
-def test_dubbele_code_geweigerd(app, code):
-    p = plaats()
-    with pytest.raises(Regelfout, match="hoort al bij een andere plaats"):
-        indeling.plaats_aanmaken(p.rek_id, code, [soort("Kajak")], False, CLI)
-    assert [q.code for q in indeling.rek(p.rek_id).plaatsen] == ["A01"]
-
-
-def test_database_weigert_dubbele_code_met_andere_hoofdletters(app, database):
-    """Twee gelijktijdige aanvragen komen allebei langs een controle in Python; de database niet."""
-    p = plaats()
-    with pytest.raises(IntegrityError, match="uq_plaats_code"), database.begin() as c:
-        c.execute(text("INSERT INTO plaats (rek_id, code, publieke_sleutel) "
-                       "VALUES (:rek, 'a01', 'xxxxxxxxxx')"), {"rek": p.rek_id})
-
-
-@pytest.mark.parametrize("code, soorten", [("", ["Kajak"]), ("x" * 21, ["Kajak"]),
-                                           ("<script>", ["Kajak"]), ("A02", [])])
-def test_ongeldige_plaats_geweigerd(app, code, soorten):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    with pytest.raises(Regelfout):
-        indeling.plaats_aanmaken(rek.id, code, [soort(s) for s in soorten], False, CLI)
 
 
 def test_rek_wijzigen_en_leeg_rek_verwijderen(app):
     p = plaats()
-    indeling.rek_wijzigen(p.rek_id, "Rek Noord", CLI)
-    assert indeling.rek(p.rek_id).naam == "Rek Noord"
+    indeling.rek_wijzigen(p.rek_id, "Noord", "", CLI)
+    assert indeling.rek(p.rek_id).naam == "Noord"
     indeling.rek_verwijderen(p.rek_id, CLI)
     assert db.session.scalar(select(func.count()).select_from(Plaats)) == 0
     assert db.session.scalar(select(func.count()).select_from(Rek)) == 0
@@ -194,15 +168,14 @@ def test_boot_met_plaats_niet_te_verwijderen(app):
 
 def test_toewijzen_en_twee_boten_van_een_lid(app):
     anna = lid()
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p1, p2 = plaats("A01", rek=rek), plaats("A02", rek=rek)
+    p1, p2 = plaats("A/1/1"), plaats("A/1/2")
     b1, b2 = boot(anna.id), boot(anna.id, naam="Fuut")
     toewijzing.toewijzen(p1.id, b1.id, CLI)
     toewijzing.toewijzen(p2.id, b2.id, CLI)
     assert (p1.boot, p2.boot) == (b1, b2)
     regel = log.regels([f"plaats:{p1.id}"])[0]
     assert regel.actie == "plaats.toegewezen"
-    assert regel.gegevens == {"plaats": "A01", "boot": "Zeemeeuw"}
+    assert regel.gegevens == {"plaats": "A/1/1", "boot": "Zeemeeuw"}
 
 
 def test_clubboot_op_clubplaats(app):
@@ -221,8 +194,7 @@ def test_clubboot_op_clubplaats(app):
     ("uit_bron", "is oud-lid"),
 ])
 def test_toewijzen_geweigerd(app, geval, melding):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p = plaats("A01", club=geval == "ledenboot_op_clubplaats", rek=rek)
+    p = plaats("A/1/1", club=geval == "ledenboot_op_clubplaats")
     gisteren = date.today() - timedelta(days=1)
     eigenaar = None if geval == "clubboot_op_ledenplaats" else lid(
         opzegdatum=gisteren if geval == "oud_lid" else None,
@@ -236,7 +208,7 @@ def test_toewijzen_geweigerd(app, geval, melding):
     if geval == "bezet":
         toewijzing.toewijzen(p.id, boot(lid("1002").id, naam="Fuut").id, CLI)
     if geval == "al_plaats":
-        toewijzing.toewijzen(plaats("A02", rek=rek).id, b.id, CLI)
+        toewijzing.toewijzen(plaats("A/1/2").id, b.id, CLI)
     voor = len(acties())
     with pytest.raises(Regelfout, match=melding):
         toewijzing.toewijzen(p.id, b.id, CLI)
@@ -269,7 +241,7 @@ def test_gelijktijdig_toewijzen_aan_dezelfde_plaats(app):
         eerste.commit()
     draad.join(timeout=5)
     engine.dispose()
-    assert fouten == ["Plaats A01 is al bezet."]
+    assert fouten == ["Plaats A/1/1 is al bezet."]
     db.session.expire_all()
     assert db.session.get(Plaats, p.id).boot_id == b1.id
 
@@ -286,12 +258,12 @@ def test_lid_met_opzegdatum_in_de_toekomst_krijgt_een_plaats(app):
 def test_openbaar_geeft_alleen_openbare_velden(app):
     p = plaats()
     assert indeling.openbaar(p.publieke_sleutel) == {
-        "code": "A01", "vrij": True, "clubboot": False, "boot": None, "foto": None,
+        "code": "A/1/1", "omschrijving": "", "vrij": True, "clubboot": False, "boot": None, "foto": None,
         "eigenaar": None}
     b = boot(lid().id, foto=png())
     toewijzing.toewijzen(p.id, b.id, CLI)
     assert indeling.openbaar(p.publieke_sleutel) == {
-        "code": "A01", "vrij": False, "clubboot": False, "boot": "Zeemeeuw",
+        "code": "A/1/1", "omschrijving": "", "vrij": False, "clubboot": False, "boot": "Zeemeeuw",
         "foto": b.afbeelding.sleutel, "eigenaar": "Anna de Vries"}
     assert indeling.openbaar("bestaatniet") is None
 

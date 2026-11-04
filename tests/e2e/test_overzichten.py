@@ -8,16 +8,15 @@ import io
 import re
 import zipfile
 
-from conftest import STEMPEL, uitloggen, wachtwoord_instellen
+from conftest import STEMPEL, reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import rek_met_plaats
 
 
 def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     wachtwoord_instellen(page, "vrij")
-    rek, ski, club = f"E2E vrij {STEMPEL}", f"V{STEMPEL}", f"W{STEMPEL}"
-    rek_met_plaats(page, rek, ski, ["Surfski"])
-    rek_met_plaats(page, f"{rek} club", club, ["Surfski"], club=True)
+    ski = rek_met_plaats(page, reknaam("v"), ["Surfski"])
+    club = rek_met_plaats(page, reknaam("w"), ["Surfski"], club=True)
 
     page.goto("/vrij")
     page.get_by_label("Geschikt voor").select_option(label="Surfski")
@@ -71,8 +70,7 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
 
 def test_huisstijl_instellen_en_terugzetten(page, browser, base_url):
     wachtwoord_instellen(page, "huisstijl")
-    rek, code = f"E2E huisstijl {STEMPEL}", f"H{STEMPEL}"
-    rek_met_plaats(page, rek, code, ["Kajak"])
+    code = rek_met_plaats(page, reknaam("h"), ["Kajak"])
     page.get_by_role("link", name=code, exact=True).click()
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 

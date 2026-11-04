@@ -1,4 +1,4 @@
-"""Plaats wijzigen: bootsoorten, clubplaats en code (BLB-002, 003, 004), en vrijgeven
+"""Plaats wijzigen: bootsoorten en clubplaats (BLB-002, 003; BLB-004 vervallen, issue #80), en vrijgeven
 (BLB-011). Elke mutatie geeft een logregel, een weigering geen (ADR-006)."""
 
 import pytest
@@ -10,9 +10,9 @@ from tests.unit.hulp import lid, race
 from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats, soort
 
 
-def wijzig(p, code=None, soorten=None, club=None):
+def wijzig(p, soorten=None, club=None):
     return indeling.plaats_wijzigen(
-        p.id, code or p.code, [soort(s) for s in soorten] if soorten else
+        p.id, [soort(s) for s in soorten] if soorten else
         [s.id for s in p.bootsoorten], p.is_clubplaats if club is None else club, CLI)
 
 
@@ -41,7 +41,7 @@ def test_bootsoorten_wijzigen_en_loggen(app):
 def test_soort_van_de_boot_weghalen_geweigerd_met_naam_van_de_boot(app):
     p, _b = bezet()
     voor = len(acties())
-    with pytest.raises(Regelfout, match="Op plaats A01 ligt Zeemeeuw, een kajak"):
+    with pytest.raises(Regelfout, match="Op plaats A/1/1 ligt Zeemeeuw, een kajak"):
         wijzig(p, soorten=("Surfski",))
     assert len(acties()) == voor
     assert [s.naam for s in db.session.get(Plaats, p.id).bootsoorten] == ["Kajak", "Surfski"]
@@ -51,7 +51,7 @@ def test_soort_van_de_boot_weghalen_geweigerd_met_naam_van_de_boot(app):
 def test_zonder_bootsoort_geweigerd(app):
     p = plaats()
     with pytest.raises(Regelfout, match="minstens één bootsoort"):
-        indeling.plaats_wijzigen(p.id, "A01", [], False, CLI)
+        indeling.plaats_wijzigen(p.id, [], False, CLI)
 
 
 # BLB-003
@@ -74,31 +74,17 @@ def test_clubplaats_wijzigen_op_bezette_plaats_geweigerd(app, club):
     assert db.session.get(Plaats, p.id).is_clubplaats is club
 
 
-# BLB-004
+# BLB-004 vervallen: de aanduiding wijzigt alleen met de naam van het rek
 
 
-def test_code_wijzigen_houdt_toewijzing_en_publieke_sleutel(app):
+def test_rek_hernoemen_houdt_toewijzing_en_publieke_sleutel(app):
     p, b = bezet()
     sleutel = p.publieke_sleutel
-    wijzig(p, code="B07")
+    indeling.rek_wijzigen(p.rek_id, "B", "", CLI)
     p = db.session.get(Plaats, p.id)
-    assert p.code == "B07" and p.boot_id == b.id and p.publieke_sleutel == sleutel
-    assert indeling.openbaar(sleutel)["code"] == "B07"
-    assert laatste().gegevens == {"plaatscode": ["A01", "B07"]}
-
-
-def test_code_van_een_andere_plaats_geweigerd(app):
-    p = plaats()
-    plaats("A02", rek=p.rek)
-    with pytest.raises(Regelfout, match="De code a02 hoort al bij een andere plaats"):
-        wijzig(p, code="a02")
-    assert db.session.get(Plaats, p.id).code == "A01"
-
-
-def test_ongeldige_code_geweigerd(app):
-    p = plaats()
-    with pytest.raises(Regelfout, match="1 tot 20 tekens"):
-        wijzig(p, code="!" * 3)
+    assert p.code == "B/1/1" and p.boot_id == b.id and p.publieke_sleutel == sleutel
+    assert indeling.openbaar(sleutel)["code"] == "B/1/1"
+    assert laatste().gegevens == {"naam": ["A", "B"]}
 
 
 def test_niets_gewijzigd_geeft_geen_logregel(app):
@@ -117,7 +103,7 @@ def test_vrijgeven_boot_blijft_zonder_plaats(app):
     assert db.session.get(Plaats, p.id).boot_id is None
     assert db.session.get(Boot, b.id).plaats is None
     r = laatste()
-    assert r.actie == "plaats.vrijgegeven" and r.gegevens == {"plaats": "A01", "boot": "Zeemeeuw"}
+    assert r.actie == "plaats.vrijgegeven" and r.gegevens == {"plaats": "A/1/1", "boot": "Zeemeeuw"}
     assert {f"plaats:{p.id}", f"boot:{b.id}", f"lid:{b.lid_id}"} <= set(r.verwijzingen)
     # Daarna is de plaats weer toe te wijzen; de applicatie doet dat niet zelf.
     assert log.regels([f"plaats:{p.id}"])[0].actie == "plaats.vrijgegeven"
@@ -145,9 +131,9 @@ def test_gelijktijdig_toewijzen_en_plaats_wijzigen(app, geval):
     fouten = race(app, [VERGRENDEL, "UPDATE plaats SET boot_id = :b WHERE id = :p"],
                   {"p": p.id, "b": b.id},
                   lambda: indeling.plaats_wijzigen(
-                      p.id, "A01", [soort("Kajak" if geval == "clubplaats" else "Surfski")],
+                      p.id, [soort("Kajak" if geval == "clubplaats" else "Surfski")],
                       geval == "clubplaats", CLI))
-    assert len(fouten) == 1 and "Op plaats A01 ligt Zeemeeuw" in fouten[0]
+    assert len(fouten) == 1 and "Op plaats A/1/1 ligt Zeemeeuw" in fouten[0]
     p = db.session.get(Plaats, p.id)
     assert not p.is_clubplaats and len(p.bootsoorten) == 2
 

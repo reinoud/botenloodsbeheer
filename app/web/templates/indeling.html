@@ -1,4 +1,23 @@
 {% extends "base.html" %}
+{# Het raster: een vakje per verdieping en vak, waarde "<verdieping>-<vak>" (BLB-044). Het label van
+   een vakje is de tekst voor schermlezers; de koppen erboven en ernaast zijn alleen om te zien. #}
+{% macro raster(plaatsen=()) %}
+<fieldset>
+  <legend>Vakken die aan staan</legend>
+  <div class="schuif">
+    <div class="raster">
+      <span aria-hidden="true"></span>
+      {% for vak in vakken %}<span class="raster-kop" aria-hidden="true">{{ vak }}</span>{% endfor %}
+      {% for verdieping in verdiepingen %}
+      <span class="raster-kop raster-rij" aria-hidden="true">Verdieping {{ verdieping }}</span>
+      {% for vak in vakken %}
+      <label class="vakje"><input type="checkbox" name="vak" value="{{ verdieping }}-{{ vak }}"{% if plaatsen|selectattr('verdieping', 'equalto', verdieping)|selectattr('vak', 'equalto', vak)|first is defined %} checked{% endif %}><span class="verborgen">Verdieping {{ verdieping }}, vak {{ vak }}</span></label>
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</fieldset>
+{% endmacro %}
 {% block titel %}Indeling · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Indeling</h1>
@@ -8,8 +27,11 @@
   <h2>Nieuw rek</h2>
   <form method="post" action="{{ url_for('web.rek_aanmaken') }}">
     {% include "_csrf.html" %}
-    <label for="rek-naam">Naam van het rek</label>
-    <input id="rek-naam" name="naam" maxlength="50" required>
+    <label for="rek-naam">Naam van het rek (hooguit {{ naam_max }} tekens, zonder /)</label>
+    <input id="rek-naam" name="naam" maxlength="{{ naam_max }}" required>
+    <label for="rek-omschrijving">Omschrijving (hooguit {{ omschrijving_max }} tekens, niet verplicht)</label>
+    <input id="rek-omschrijving" class="breed" name="omschrijving" maxlength="{{ omschrijving_max }}">
+    {{ raster() }}
     <button type="submit" class="knop">Rek aanmaken</button>
   </form>
 </section>
@@ -17,6 +39,7 @@
 {% for rek in rekken %}
 <section class="kaart" aria-labelledby="rek-{{ rek.id }}">
   <h2 id="rek-{{ rek.id }}">{{ rek.naam }}</h2>
+  {% if rek.omschrijving %}<p>{{ rek.omschrijving }}</p>{% endif %}
   {% if rek.plaatsen %}
   <table>
     <thead><tr><th>Plaats</th><th>Status</th><th>Boot</th><th>Eigenaar</th><th>Geschikt voor</th></tr></thead>
@@ -32,33 +55,22 @@
     {% endfor %}
     </tbody>
   </table>
-  {% else %}
-  <p>Dit rek heeft nog geen plaatsen.</p>
   {% endif %}
 
-  <details>
-    <summary>Plaats toevoegen aan {{ rek.naam }}</summary>
-    <form method="post" action="{{ url_for('web.plaats_aanmaken', rek_id=rek.id) }}">
-      {% include "_csrf.html" %}
-      <label for="code-{{ rek.id }}">Plaatscode</label>
-      <input id="code-{{ rek.id }}" name="code" maxlength="20" required>
-      <fieldset>
-        <legend>Geschikt voor</legend>
-        {% for s in bootsoorten %}
-        <label class="keuze"><input type="checkbox" name="bootsoort" value="{{ s.id }}"> {{ s.naam }}</label>
-        {% endfor %}
-      </fieldset>
-      <label class="keuze"><input type="checkbox" name="clubplaats" value="1"> Clubplaats (alleen voor clubboten)</label>
-      <button type="submit" class="knop">Plaats aanmaken</button>
-    </form>
-  </details>
   <details>
     <summary>Rek wijzigen of verwijderen</summary>
     <form method="post" action="{{ url_for('web.rek_wijzigen', rek_id=rek.id) }}">
       {% include "_csrf.html" %}
-      <label for="naam-{{ rek.id }}">Nieuwe naam</label>
-      <input id="naam-{{ rek.id }}" name="naam" value="{{ rek.naam }}" maxlength="50" required>
-      <button type="submit" class="knop">Naam opslaan</button>
+      <label for="naam-{{ rek.id }}">Naam</label>
+      <input id="naam-{{ rek.id }}" name="naam" value="{{ rek.naam }}" maxlength="{{ naam_max }}" required>
+      <label for="omschrijving-{{ rek.id }}">Omschrijving</label>
+      <input id="omschrijving-{{ rek.id }}" class="breed" name="omschrijving" value="{{ rek.omschrijving }}" maxlength="{{ omschrijving_max }}">
+      <button type="submit" class="knop">Rek opslaan</button>
+    </form>
+    <form method="post" action="{{ url_for('web.indeling_instellen', rek_id=rek.id) }}">
+      {% include "_csrf.html" %}
+      {{ raster(rek.plaatsen) }}
+      <button type="submit" class="knop">Indeling opslaan</button>
     </form>
     <form method="post" action="{{ url_for('web.rek_verwijderen', rek_id=rek.id) }}">
       {% include "_csrf.html" %}

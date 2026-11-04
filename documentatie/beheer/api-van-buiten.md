@@ -48,7 +48,7 @@ Elke aanroep geeft de hele lijst, zonder filters of paginering. Het recht `perso
 
 | Aanroep | Recht | Velden |
 |---------|-------|--------|
-| `GET /api/v1/plaatsen` | `plaatsen:lezen` | `code`, `rek`, `clubplaats`, `bootsoorten`, `boot` (`id`, `naam`) |
+| `GET /api/v1/plaatsen` | `plaatsen:lezen` | `code` (de aanduiding, zoals `A/1/1`), `rek`, `clubplaats`, `bootsoorten`, `boot` (`id`, `naam`) |
 | `GET /api/v1/boten` | `boten:lezen` | `id`, `naam`, `bootsoort`, `plaats`, `eigenaar` (`lidnummer`, `naam`; `null` bij een clubboot) |
 | `GET /api/v1/leden` | `leden:lezen` | `lidnummer`, `naam`, `oud_lid` |
 | `GET /api/v1/wachtlijst` | `wachtlijst:lezen` | `bootsoort`, `boot`, `eigenaar`, `aangemeld_op`; zonder boten van oud-leden |
@@ -59,7 +59,7 @@ Een voorbeeld met een nep-token:
 curl -s -H "Authorization: Bearer blb_VOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEE" \
   https://DOMEIN/api/v1/boten
 # [{"bootsoort": "Kajak", "eigenaar": {"lidnummer": "1001", "naam": "Anna Voorbeeld"},
-#   "id": 7, "naam": "Zeemeeuw", "plaats": "A01"}]
+#   "id": 7, "naam": "Zeemeeuw", "plaats": "A/1/1"}]
 ```
 
 ## Weer dichtzetten

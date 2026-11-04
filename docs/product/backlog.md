@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.5.0
+**Versie:** v0.5.1
 **Datum:** 2026-11-03
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03
@@ -82,7 +82,7 @@ Als beheerder wil ik rekken aanmaken, hernoemen en verwijderen, met per rek verd
 - Gegeven een nieuw rek, wanneer de beheerder 1 tot en met 5 verdiepingen opgeeft en per verdieping in een raster van vak 1 tot en met 12 elk vak los aan of uit zet, dan slaat de applicatie het rek op. Vak 1 en vak 12 kunnen aan. Gaten in de nummering mogen: een verdieping met alleen vak 1, 3, 4 en 6 is geldig.
 - Gegeven een nieuw rek, wanneer de beheerder 0 of 6 verdiepingen opgeeft, een verdieping zonder vak dat aan staat, of vak 0 of vak 13, dan weigert de applicatie met een duidelijke melding.
 - Gegeven een reknaam die al bestaat (ook met andere hoofdletters), die langer is dan 10 tekens of die een `/` bevat, wanneer de beheerder die invoert, dan weigert de applicatie met een duidelijke melding.
-- Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een kaartje print, of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. De aanduiding houdt de korte naam, zoals `A/1/1`. Lengte en verplichting: vraag 24.
+- Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een kaartje print, of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. De aanduiding houdt de korte naam, zoals `A/1/1`. De omschrijving is niet verplicht en ten hoogste 60 tekens; 61 tekens weigert de applicatie (vraag 24).
 - Gegeven een plaats, wanneer de beheerder die bewerkt, dan is de aanduiding niet los te wijzigen. Ze verandert alleen met de naam van het rek; toewijzing, publieke sleutel en instellingen blijven staan.
 - Gegeven een kaartje dat vóór een nieuwe reknaam is geprint, wanneer een bezoeker de QR-code scant, dan opent de pagina van dezelfde plaats, met de nieuwe aanduiding.
 - Gegeven een rek met een toegewezen boot, wanneer de beheerder het wil verwijderen, dan weigert de applicatie en wijst op het vrijgeven van de plaats.
@@ -122,7 +122,7 @@ Als beheerder wil ik verdiepingen van een rek toevoegen en weghalen en per verdi
 - Gegeven een rek met minder dan 5 verdiepingen, wanneer de beheerder een verdieping toevoegt en in het raster vakken aanzet, dan staan de nieuwe plaatsen in de indeling. Een zesde verdieping weigert de applicatie.
 - Gegeven een verdieping, wanneer de beheerder in het raster een vak aanzet, dan komt die plaats erbij en blijven de andere plaatsen met boot, publieke sleutel en instellingen staan. Vak 1 en vak 12 kunnen aan; vak 0 en vak 13 weigert de applicatie.
 - Gegeven een vak zonder boot, wanneer de beheerder het uitzet, dan verdwijnt die plaats en ontstaat er een gat in de nummering. De andere vakken houden hun nummer.
-- Gegeven een verdieping zonder boten, wanneer de beheerder haar weghaalt, dan verdwijnen haar plaatsen. Wat er met de nummers van de andere verdiepingen gebeurt: vraag 24.
+- Gegeven een verdieping zonder boten, wanneer de beheerder haar weghaalt, dan verdwijnen haar plaatsen. De andere verdiepingen houden hun nummer; er ontstaat een gat (vraag 24).
 - Gegeven een vak met een boot, wanneer de beheerder het uitzet of de verdieping weghaalt, dan weigert de applicatie met dezelfde melding als bij het verwijderen van een rek met een boot (BLB-001), en verandert er niets.
 
 Route voor een mens (issue #80):

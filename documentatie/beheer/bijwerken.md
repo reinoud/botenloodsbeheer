@@ -11,6 +11,8 @@ docker compose up -d db
 docker compose exec db sh /docker-entrypoint-initdb.d/rollen.sh
 ```
 
+De indeling met rek, verdieping en vak (migratie 0011) verwijdert bij de upgrade alle bestaande rekken en plaatsen; boten blijven bestaan, zonder plaats. Dat is bedoeld voor een installatie zonder echte gegevens. Bouw de indeling daarna op in de webinterface, of met `docker compose exec worker flask seed` in een testomgeving (die leest `app/seed_rekken.csv` en `app/seed_indeling.csv`). De migratie heeft een werkende downgrade; de omschrijving van een rek vervalt daarbij.
+
 Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
 
 ## Tokens

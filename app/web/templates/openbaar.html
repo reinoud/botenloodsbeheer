@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{# Openbaar: alleen plaatscode, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025). #}
+{# Openbaar: alleen plaatscode, omschrijving van het rek, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025). #}
 {% block csrf %}{% endblock %}
 {% block titel %}{{ 'Plaats ' ~ plaats.code if plaats else 'Niet gevonden' }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
@@ -8,6 +8,7 @@
 <p>Controleer de link of scan de QR-code opnieuw.</p>
 {% else %}
 <h1>Plaats {{ plaats.code }}</h1>
+{% if plaats.omschrijving %}<p>{{ plaats.omschrijving }}</p>{% endif %}
 {% if plaats.vrij %}
 <p>Deze plaats is vrij.</p>
 {% else %}

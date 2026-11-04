@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.domein import CLI, boten, indeling, log, toewijzing
 from app.models import Plaats, Rek, db
 from app.web import getal
-from tests.unit.hulp import beheerder_met_wachtwoord, lid, png
+from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats, png
 from tests.unit.test_web import inloggen
 
 BEHEER = ["/indeling", "/boten", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
@@ -23,8 +23,7 @@ def ingelogd(client):
 
 
 def bezette_plaats(club=False, foto=None):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p = indeling.plaats_aanmaken(rek.id, "A01", [1], club, CLI)
+    p = plaats("A/1/1", club=club)
     eigenaar = None if club else lid().id
     b = boten.boot_aanmaken("Zeemeeuw", 1, eigenaar, foto, CLI)
     toewijzing.toewijzen(p.id, b.id, CLI)
@@ -37,28 +36,94 @@ def test_beheer_vraagt_inloggen(client, pad):
     assert r.status_code == 302 and r.location.endswith("/inloggen")
 
 
-@pytest.mark.parametrize("pad", ["/rekken", "/rekken/1/plaatsen", "/plaatsen/1/toewijzen",
+@pytest.mark.parametrize("pad", ["/rekken", "/rekken/1/naam", "/rekken/1/indeling",
+                                 "/plaatsen/1/toewijzen",
                                  "/boten", "/leden/ophalen", "/rekken/1/verwijderen",
                                  "/plaatsen/1", "/plaatsen/1/vrijgeven", "/boten/1"])
 def test_bezoeker_kan_niets_wijzigen(client, pad):
-    r = client.post(pad, data={"naam": "Rek X", "code": "X1", "bootsoort": 1})
+    r = client.post(pad, data={"naam": "X", "vak": "1-1", "bootsoort": 1})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(Rek)) is None
 
 
-def test_indeling_aanmaken_en_dubbele_code(ingelogd):
-    ingelogd.post("/rekken", data={"naam": "Rek A"})
-    rek = db.session.scalar(select(Rek))
-    ingelogd.post(f"/rekken/{rek.id}/plaatsen", data={"code": "A01", "bootsoort": ["1", "3"]})
-    r = ingelogd.post(f"/rekken/{rek.id}/plaatsen", data={"code": "A01", "bootsoort": "1"},
+def test_rek_aanmaken_met_gaten_en_dubbele_naam(ingelogd):
+    r = ingelogd.post("/rekken", data={"naam": "X", "omschrijving": "Testrek bij de deur",
+                                       "vak": ["1-1", "1-3", "1-12", "2-1", "2-4"]},
                       follow_redirects=True)
-    assert "De code A01 hoort al bij een andere plaats." in r.text
-    p = db.session.scalar(select(Plaats))
-    assert [s.naam for s in p.bootsoorten] == ["Kajak", "Surfski"]
+    assert "Het rek is aangemaakt." in r.text and "Testrek bij de deur" in r.text
+    rek = db.session.scalar(select(Rek))
+    assert [p.code for p in rek.plaatsen] == ["X/1/1", "X/1/3", "X/1/12", "X/2/1", "X/2/4"]
+    for code in ("X/1/1", "X/1/12", "X/2/4"):
+        assert f">{code}</a>" in r.text
+    assert ">X/1/2</a>" not in r.text
+    r = ingelogd.post("/rekken", data={"naam": "x", "vak": "1-1"}, follow_redirects=True)
+    assert "Er is al een rek met de naam X." in r.text
     # BLB-043: onder /indeling geen log; de indeling staat in het technische log.
     assert 'class="log"' not in r.text
     techniek = ingelogd.get("/log/techniek").text
     assert "rek.aangemaakt" in techniek and "plaats.aangemaakt" in techniek
+
+
+@pytest.mark.parametrize("data,melding", [
+    ({"naam": "X"}, "Zet minstens één vak aan."),
+    ({"naam": "X", "vak": "0-0"}, "Een rek heeft verdieping 1 tot en met 5 en vak 1 tot en met 12."),
+    ({"naam": "X", "vak": "6-1"}, "verdieping 1 tot en met 5"),
+    ({"naam": "X", "vak": "1-13"}, "vak 1 tot en met 12"),
+    ({"naam": "X", "vak": ["1-1", "abc"]}, "verdieping 1 tot en met 5"),
+    ({"naam": "X", "vak": "1-2-3"}, "verdieping 1 tot en met 5"),
+    ({"naam": "X", "vak": "-1-2"}, "verdieping 1 tot en met 5"),
+    ({"naam": "X", "vak": "1-"}, "verdieping 1 tot en met 5"),
+    ({"naam": "X", "vak": "2147483648-1"}, "verdieping 1 tot en met 5"),
+    ({"naam": "A/B", "vak": "1-1"}, "zonder /"),
+    ({"naam": "Elfletters1", "vak": "1-1"}, "van 1 tot 10 tekens"),
+    ({"naam": "X", "omschrijving": "x" * 61, "vak": "1-1"}, "hooguit 60 tekens"),
+], ids=["leeg", "nul", "verdieping_6", "vak_13", "tekst", "drie_delen", "min", "halve_waarde",
+        "te_groot", "schuine_streep", "te_lang", "omschrijving_te_lang"])
+def test_rek_aanmaken_geweigerd_met_melding(ingelogd, data, melding):
+    """Een misvormde of ongeldige waarde geeft de melding van het domein en geen rek, nooit een 500."""
+    r = ingelogd.post("/rekken", data=data, follow_redirects=True)
+    assert r.status_code == 200 and melding in r.text and "Het rek is aangemaakt." not in r.text
+    assert db.session.scalar(select(Rek)) is None
+
+
+def test_indeling_raster_met_labels_en_aangevinkte_vakken(ingelogd):
+    plaats("X/2/3")
+    tekst = ingelogd.get("/indeling").text
+    # Elk vakje heeft een label voor schermlezers; 5 x 12 voor het nieuwe rek en 5 x 12 voor rek X.
+    assert tekst.count("Verdieping 2, vak 3</span>") == 2 and tekst.count('name="vak"') == 120
+    assert 'name="vak" value="2-3" checked>' in tekst and tekst.count(" checked>") == 1
+
+
+def test_rek_wijzigen_en_indeling_instellen(ingelogd):
+    p = plaats("X/1/1")
+    rek_id = p.rek_id
+    r = ingelogd.post(f"/rekken/{rek_id}/naam", data={"naam": "Y", "omschrijving": "Links van de deur"},
+                      follow_redirects=True)
+    assert "Het rek is opgeslagen." in r.text and "Links van de deur" in r.text and ">Y/1/1</a>" in r.text
+    r = ingelogd.post(f"/rekken/{rek_id}/naam", data={"naam": "Y/Z"}, follow_redirects=True)
+    assert "zonder /" in r.text
+    r = ingelogd.post(f"/rekken/{rek_id}/indeling", data={"vak": ["1-1", "2-3"]},
+                      follow_redirects=True)
+    assert "De indeling is opgeslagen." in r.text and ">Y/2/3</a>" in r.text
+    assert [(q.verdieping, q.vak) for q in db.session.get(Rek, rek_id).plaatsen] == [(1, 1), (2, 3)]
+    assert db.session.get(Plaats, p.id).publieke_sleutel == p.publieke_sleutel  # blijft staan
+    assert ingelogd.post("/rekken/999999/indeling", data={"vak": "1-1"}).status_code == 302
+
+
+def test_vak_met_boot_niet_uitzetten(ingelogd):
+    p = bezette_plaats()
+    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": "1-2"}, follow_redirects=True)
+    assert "Op plaats A/1/1 ligt een boot. Geef de plaats eerst vrij." in r.text
+    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1"]
+    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": ["1-1", "1-2"]},
+                      follow_redirects=True)
+    assert "De indeling is opgeslagen." in r.text
+    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1", "A/1/2"]
+
+
+def test_plaats_aanmaken_route_bestaat_niet_meer(ingelogd):
+    p = plaats("A/1/1")
+    assert ingelogd.post(f"/rekken/{p.rek_id}/plaatsen", data={"code": "A02"}).status_code == 404
 
 
 def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
@@ -87,15 +152,14 @@ def test_plaatsdetail_clubboot_zonder_persoonsgegevens(ingelogd):
 
 
 def test_plaatsdetail_vrij_met_geschikte_soorten(ingelogd):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p = indeling.plaats_aanmaken(rek.id, "A01", [1, 4], False, CLI)
+    p = plaats("A/1/1", soort_ids=[1, 4])
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
     assert "Deze plaats is vrij" in tekst and "Kajak, C11" in tekst
+    assert "Plaats A/1/1" in tekst and 'name="code"' not in tekst
 
 
 def test_toewijzen_geweigerd_toont_reden(ingelogd):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    p = indeling.plaats_aanmaken(rek.id, "A01", [1], False, CLI)
+    p = plaats("A/1/1")
     b = boten.boot_aanmaken("Clubkajak", 1, None, None, CLI)
     r = ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": b.id}, follow_redirects=True)
     assert "is een clubboot en hoort op een clubplaats" in r.text
@@ -115,10 +179,29 @@ def test_openbare_pagina_alleen_openbare_gegevens(client):
     p = bezette_plaats(foto=png())
     r = client.get(f"/p/{p.publieke_sleutel}")
     assert r.status_code == 200
-    assert "A01" in r.text and "Zeemeeuw" in r.text and "Anna de Vries" in r.text
+    assert "A/1/1" in r.text and "Zeemeeuw" in r.text and "Anna de Vries" in r.text
     assert "/afbeelding/" in r.text
     for verboden in ("Proefweg", "06-0000", "@example.org", "1001", "Log", "plaats.toegewezen"):
         assert verboden not in r.text
+
+
+def test_omschrijving_op_openbare_pagina_plaatsdetail_en_kaartje(ingelogd, client):
+    """BLB-020, BLB-021: de omschrijving van het rek staat op de openbare pagina en het kaartje,
+    en wordt als tekst getoond (geen opmaak)."""
+    p = bezette_plaats()
+    ingelogd.post(f"/rekken/{p.rek_id}/naam", data={"naam": "A", "omschrijving": "Stelling <b>links</b>"})
+    openbaar = client.get(f"/p/{p.publieke_sleutel}").text
+    assert "<p>Stelling &lt;b&gt;links&lt;/b&gt;</p>" in openbaar
+    assert "Stelling &lt;b&gt;links&lt;/b&gt;" in ingelogd.get(f"/plaatsen/{p.id}").text
+    kaartje = ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
+    assert '<p class="kaartje-omschrijving">Stelling &lt;b&gt;links&lt;/b&gt;</p>' in kaartje
+    assert "Proefweg" not in kaartje and "Zeemeeuw" not in kaartje  # verder alleen wat mag
+
+
+def test_zonder_omschrijving_geen_lege_regel(ingelogd, client):
+    p = bezette_plaats()
+    assert "kaartje-omschrijving" not in ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
+    assert "<p></p>" not in client.get(f"/p/{p.publieke_sleutel}").text
 
 
 def test_openbare_pagina_zet_geen_sessiecookie(client):
@@ -159,14 +242,16 @@ def test_upload_boven_grens_geweigerd(ingelogd, app):
 def test_plaats_wijzigen_en_vrijgeven(ingelogd):
     p = bezette_plaats()
     sleutel = p.publieke_sleutel
-    r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "A01", "bootsoort": "3"},
-                      follow_redirects=True)
-    assert "Op plaats A01 ligt Zeemeeuw, een kajak" in r.text
+    r = ingelogd.post(f"/plaatsen/{p.id}", data={"bootsoort": "3"}, follow_redirects=True)
+    assert "Op plaats A/1/1 ligt Zeemeeuw, een kajak" in r.text
     r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "B09", "bootsoort": ["1", "3"]},
                       follow_redirects=True)
     assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" not in r.text
+    assert "Plaats A/1/1" in r.text  # een meegestuurde code wordt genegeerd
     assert "plaats.gewijzigd" in ingelogd.get("/log/techniek").text
-    assert "Plaats B09" in ingelogd.get(f"/p/{sleutel}").text
+    # De aanduiding wijzigt alleen met de naam van het rek; de QR-link blijft werken.
+    ingelogd.post(f"/rekken/{p.rek_id}/naam", data={"naam": "B", "omschrijving": ""})
+    assert "Plaats B/1/1" in ingelogd.get(f"/p/{sleutel}").text
     r = ingelogd.post(f"/plaatsen/{p.id}/vrijgeven", follow_redirects=True)
     assert "De plaats is vrijgegeven." in r.text and "Deze plaats is vrij" in r.text
     assert "plaats.vrijgegeven" in r.text
@@ -297,10 +382,10 @@ def test_te_groot_getal_bij_toewijzen_bootsoort_en_overzicht(ingelogd):
     r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Fuut", "bootsoort": groot,
                                                    "eigenaar": "club"}, follow_redirects=True)
     assert "Kies een bootsoort." in r.text
-    assert ingelogd.post(f"/plaatsen/{p.id}", data={"code": "A01", "bootsoort": groot}).status_code == 302
+    assert ingelogd.post(f"/plaatsen/{p.id}", data={"bootsoort": groot}).status_code == 302
     assert ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": groot}).status_code == 302
-    assert ingelogd.post(f"/rekken/{p.rek_id}/plaatsen",
-                         data={"code": "A02", "bootsoort": groot}).status_code == 302
+    assert ingelogd.post(f"/rekken/{p.rek_id}/indeling",
+                         data={"vak": f"{groot}-{groot}"}).status_code == 302
     assert ingelogd.get(f"/vrij?bootsoort={groot}").status_code == 200
 
 

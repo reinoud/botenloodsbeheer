@@ -80,7 +80,7 @@ def test_bootsoort_die_de_plaats_niet_past_geweigerd(app):
     p = plaats(soorten=("Kajak", "Surfski"))
     b = boot(lid().id)
     toewijzing.toewijzen(p.id, b.id, CLI)
-    with pytest.raises(Regelfout, match="Plaats A01 is niet geschikt voor een c11"):
+    with pytest.raises(Regelfout, match="Plaats A/1/1 is niet geschikt voor een c11"):
         wijzig(b, bootsoort="C11")
     assert db.session.get(Boot, b.id).bootsoort.naam == "Kajak" and not regels()
 
@@ -187,7 +187,7 @@ def test_gelijktijdig_toewijzen_en_boot_wijzigen(app):
     b = boot(lid().id)
     fouten = race(app, [BOOTSLOT, "UPDATE plaats SET boot_id = :b WHERE id = :p"],
                   {"p": p.id, "b": b.id}, lambda: wijzig(b, bootsoort="C11"))
-    assert len(fouten) == 1 and "Plaats A01 is niet geschikt voor een c11" in fouten[0]
+    assert len(fouten) == 1 and "Plaats A/1/1 is niet geschikt voor een c11" in fouten[0]
     assert db.session.get(Boot, b.id).bootsoort.naam == "Kajak" and not regels()
 
 

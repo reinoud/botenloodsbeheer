@@ -54,16 +54,19 @@ Op `/profiel` voeg je een passkey of (als je er nog geen hebt) een wachtwoord me
 
 ## Rekken en plaatsen
 
-De pagina `/indeling` toont elk rek met zijn plaatsen. Per plaats staan de code, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging.
+De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een gat in de nummering mag, bijvoorbeeld een verdieping met alleen vak 1, 3, 4 en 6.
 
-![De pagina Indeling met het formulier voor een nieuw rek en de plaatsen van Rek A.](afbeeldingen/indeling.png)
+De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen.
 
-- **Rek aanmaken:** vul bovenaan een naam in (1 tot 50 tekens) en kies **Rek aanmaken**.
-- **Plaats toevoegen:** open onder een rek **Plaats toevoegen aan ...**, vul een code in (1 tot 20 tekens, uniek in de hele loods), vink minstens één bootsoort aan en eventueel **Clubplaats**.
-- **Rek hernoemen of verwijderen:** open **Rek wijzigen of verwijderen**. Een rek verwijderen lukt alleen als er geen boten meer op liggen.
-- **Plaats wijzigen of verwijderen:** open de plaats via de code. Onder **Plaats wijzigen** pas je code, bootsoorten en clubstatus aan. Verwijderen kan alleen bij een vrije plaats. Een wijziging die niet past bij de boot die er ligt, weigert de applicatie.
+![De pagina Indeling met het formulier voor een nieuw rek, met het raster van verdiepingen en vakken, en het eerste rek.](afbeeldingen/indeling.png)
 
-![Het uitgeklapte formulier om een plaats aan een rek toe te voegen.](afbeeldingen/plaats-toevoegen.png)
+- **Rek aanmaken:** vul bovenaan een naam in (1 tot 10 tekens, zonder `/`, uniek zonder verschil in hoofdletters) en eventueel een omschrijving (hooguit 60 tekens). Vink in het raster de vakken aan die bestaan. Elk vakje heet "Verdieping 2, vak 3" voor schermlezers. Kies **Rek aanmaken**.
+- **Naam en omschrijving wijzigen:** open **Rek wijzigen of verwijderen**, pas ze aan en kies **Rek opslaan**. Een nieuwe naam verandert de aanduiding van alle plaatsen in het rek. De QR-codes en de toewijzingen blijven gelijk.
+- **Vakken aan- of uitzetten:** open **Rek wijzigen of verwijderen**, verander het raster en kies **Indeling opslaan**. Een nieuw vak is een nieuwe plaats. Een vak dat uit gaat, verdwijnt met zijn plaats. Ligt er een boot op, dan weigert de applicatie en verandert er niets; geef de plaats eerst vrij. De andere vakken houden hun nummer, boot en QR-code.
+- **Rek verwijderen:** kies **Rek ... verwijderen**. Dat lukt alleen als er geen boten meer op liggen.
+- **Plaats wijzigen of verwijderen:** open de plaats via de aanduiding. Onder **Plaats wijzigen** pas je bootsoorten en clubstatus aan. De aanduiding zelf wijzigt alleen met de naam van het rek. Een nieuwe plaats heeft nog geen bootsoort: vink er minstens één aan voordat je een boot toewijst. Verwijderen kan alleen bij een vrije plaats. Een wijziging die niet past bij de boot die er ligt, weigert de applicatie.
+
+![Het uitgeklapte blok om de naam, omschrijving en vakken van een rek te wijzigen.](afbeeldingen/rek-wijzigen.png)
 
 Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, kleuren, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
 
@@ -134,7 +137,7 @@ De menubalk bevat drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit 
 | Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. |
 | Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. |
 
-![De vrije plaatsen voor kajaks, met rek, plaatscode en geschikte bootsoorten.](afbeeldingen/vrij.png)
+![De vrije plaatsen voor kajaks, met rek, aanduiding en geschikte bootsoorten.](afbeeldingen/vrij.png)
 
 ![De plaatsen van opgezegde leden met boot, oud-lid en opzegdatum.](afbeeldingen/opgezegd.png)
 
@@ -150,17 +153,17 @@ Bovenaan `/indeling` staat **Indeling exporteren naar Excel**. Je krijgt het bes
 
 Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
 
-Elk kaartje toont het logo (zonder logo de naam van de vereniging), de plaatscode, de naam van de eigenaar en een QR-code. Bij een vrije plaats staat er "vrij", bij een clubplaats de naam van de vereniging. Adres, telefoon, e-mail en lidnummer staan er niet op.
+Elk kaartje toont het logo (zonder logo de naam van de vereniging), de aanduiding van de plaats, de omschrijving van het rek, de naam van de eigenaar en een QR-code. Bij een vrije plaats staat er "vrij", bij een clubplaats de naam van de vereniging. Adres, telefoon, e-mail en lidnummer staan er niet op.
 
 Print de pagina met **Afdrukken** in de browser, of bewaar haar als pdf. Zet de schaal op 100 procent en de marges op standaard. Knip langs de stippellijnen.
 
-![De printpagina met kaartjes: logo, plaatscode, eigenaar en QR-code, met stippellijnen om te knippen.](afbeeldingen/kaartjes.png)
+![De printpagina met kaartjes: logo, aanduiding, omschrijving, eigenaar en QR-code, met stippellijnen om te knippen.](afbeeldingen/kaartjes.png)
 
-De QR-code opent de openbare pagina van de plaats. Krijgt een plaats een andere code, dan blijft het oude kaartje naar dezelfde plaats wijzen; alleen de tekst op het kaartje is verouderd. Print dan een nieuw kaartje.
+De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naam, dan blijft het oude kaartje naar dezelfde plaats wijzen; alleen de aanduiding op het kaartje is verouderd. Print dan een nieuw kaartje.
 
 ## De openbare pagina
 
-Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de plaatscode en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam, kleuren en het logo van de vereniging.
+Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de aanduiding van de plaats, de omschrijving van het rek en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam, kleuren en het logo van de vereniging.
 
 ![De openbare pagina van een plaats met boot, eigenaar en foto.](afbeeldingen/openbaar.png)
 
@@ -197,7 +200,7 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 | Log | Menu | Inhoud |
 |---|---|---|
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet (`wachtlijst.toegevoegd`, met de aanmelddatum) of eraf gehaald (`wachtlijst.verwijderd`) |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
 
 Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
@@ -299,7 +302,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/beheerders` | Beheerders uitnodigen en beheren |
 | `/tokens` | Tokens voor de API |
 | `/tokens/nieuw` | Een token maken |
-| `/indeling` | Rekken en plaatsen |
+| `/indeling` | Rekken, omschrijvingen en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
 | `/kaartjes` | Plaatsen kiezen voor kaartjes |
 | `/kaartjes/print` | Kaartjes met QR-code om te printen |

@@ -30,24 +30,47 @@ def _of_404(functie, *args):
 # Indeling
 
 
+def _vakken():
+    """De paren (verdieping, vak) uit het raster, waarde "2-3". Een misvormde waarde wordt (0, 0):
+    het domein weigert dat met zijn eigen melding."""
+    paren = set()
+    for waarde in request.form.getlist("vak"):
+        try:
+            verdieping, vak = (getal(d) for d in waarde.split("-"))
+        except ValueError:
+            verdieping = vak = 0
+        paren.add((verdieping, vak))
+    return paren
+
+
 @bp.get("/indeling")
 @inloggen_vereist
 def indeling_overzicht():
     return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
-                           bootsoorten=indeling.bootsoorten())
+                           verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN,
+                           naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX)
 
 
 @bp.post("/rekken")
 @inloggen_vereist
 def rek_aanmaken():
-    uitvoeren(indeling.rek_aanmaken, request.form.get("naam"), gelukt="Het rek is aangemaakt.")
+    uitvoeren(indeling.rek_aanmaken, request.form.get("naam"), request.form.get("omschrijving"),
+              _vakken(), gelukt="Het rek is aangemaakt.")
     return redirect(url_for("web.indeling_overzicht"))
 
 
 @bp.post("/rekken/<int:rek_id>/naam")
 @inloggen_vereist
 def rek_wijzigen(rek_id):
-    uitvoeren(indeling.rek_wijzigen, rek_id, request.form.get("naam"))
+    uitvoeren(indeling.rek_wijzigen, rek_id, request.form.get("naam"),
+              request.form.get("omschrijving"), gelukt="Het rek is opgeslagen.")
+    return redirect(url_for("web.indeling_overzicht"))
+
+
+@bp.post("/rekken/<int:rek_id>/indeling")
+@inloggen_vereist
+def indeling_instellen(rek_id):
+    uitvoeren(indeling.indeling_instellen, rek_id, _vakken(), gelukt="De indeling is opgeslagen.")
     return redirect(url_for("web.indeling_overzicht"))
 
 
@@ -55,15 +78,6 @@ def rek_wijzigen(rek_id):
 @inloggen_vereist
 def rek_verwijderen(rek_id):
     uitvoeren(indeling.rek_verwijderen, rek_id, gelukt="Het rek is verwijderd.")
-    return redirect(url_for("web.indeling_overzicht"))
-
-
-@bp.post("/rekken/<int:rek_id>/plaatsen")
-@inloggen_vereist
-def plaats_aanmaken(rek_id):
-    uitvoeren(indeling.plaats_aanmaken, rek_id, request.form.get("code"),
-              request.form.getlist("bootsoort", type=getal), "clubplaats" in request.form,
-              gelukt="De plaats is aangemaakt.")
     return redirect(url_for("web.indeling_overzicht"))
 
 
@@ -104,7 +118,7 @@ def plaats_vrijgeven(plaats_id):
 @bp.post("/plaatsen/<int:plaats_id>")
 @inloggen_vereist
 def plaats_wijzigen(plaats_id):
-    uitvoeren(indeling.plaats_wijzigen, plaats_id, request.form.get("code"),
+    uitvoeren(indeling.plaats_wijzigen, plaats_id,
               request.form.getlist("bootsoort", type=getal), "clubplaats" in request.form,
               gelukt="De plaats is opgeslagen.")
     return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))

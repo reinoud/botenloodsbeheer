@@ -7,15 +7,16 @@ Eigen rek en plaatsen met de stempel van de run; het lid komt uit de import (dra
 import math
 import re
 
-from conftest import STEMPEL, uitloggen, wachtwoord_instellen
+from conftest import reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_loods import boot_vastleggen, plaats_erbij, rek_met_plaats, toewijzen
+from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, rek_hernoemen, toewijzen
 
 MM = 96 / 25.4  # CSS-pixels per millimeter
 
 
 def kaartje(page, code):
-    return page.locator("section.kaartje", has=page.locator(".kaartje-code", has_text=code))
+    return page.locator("section.kaartje", has=page.locator(
+        ".kaartje-code", has_text=re.compile(f"^{re.escape(code)}$")))
 
 
 def kiezen(page, *labels):
@@ -43,15 +44,15 @@ def past_op_a4(page):
 def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_url):
     wachtwoord_instellen(page, "kaartjes")
     vereniging = page.locator(".kop-naam").inner_text()
-    rek, bezet, vrij, club, nieuw, bootnaam = (
-        f"E2E kaartjes {STEMPEL}", f"K{STEMPEL}", f"M{STEMPEL}", f"N{STEMPEL}", f"S{STEMPEL}",
-        f"Kaartboot {STEMPEL}")
-    rek_met_plaats(page, rek, bezet, ["Kajak"])
-    plaats_erbij(page, rek, vrij, ["Kajak"])
-    plaats_erbij(page, rek, club, ["Kajak"], club=True)
+    rek, nieuw, bootnaam = reknaam("k"), reknaam("m"), f"Kaartboot {reknaam('k')}"
+    omschrijving = "Proefstelling links bij de deur, tot 60 tekens lang gehouden"
+    bezet, vrij, club = f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"
+    rek_aanmaken(page, rek, vakken=((1, 1), (1, 2), (1, 3)), omschrijving=omschrijving)
+    plaats_instellen(page, bezet, ["Kajak"])
+    plaats_instellen(page, vrij, ["Kajak"])
+    plaats_instellen(page, club, ["Kajak"], club=True)
     boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
     toewijzen(page, bezet, bootnaam)
-    detail = page.url
     prive = {veld: page.locator(f"[data-veld={veld}]").inner_text()
              for veld in ("naam", "lidnummer", "adres", "telefoon", "email")}
     openbare_link = page.locator("#openbare-link").get_attribute("href")
@@ -67,6 +68,7 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     een = kaartje(page, bezet)
     expect(een.locator("img.kaartje-logo")).to_be_visible()
     expect(een.locator(".kaartje-eigenaar")).to_have_text(prive["naam"])
+    expect(een.locator(".kaartje-omschrijving")).to_have_text(omschrijving)  # BLB-021
     expect(een.get_by_role("img", name=f"QR-code naar de openbare pagina van {bezet}")).to_be_visible()
     html = page.content()
     for veld in ("lidnummer", "adres", "telefoon", "email"):
@@ -100,11 +102,9 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     pdf = page.pdf(prefer_css_page_size=True)
     assert len(re.findall(rb"/Type\s*/Page\b", pdf)) == math.ceil(aantal / 8)
 
-    # Hernoemen: zelfde QR-code, nieuwe code op het kaartje (contract Plaatsnamen).
-    page.goto(detail)
-    page.get_by_label("Plaatscode").fill(nieuw)
-    page.get_by_role("button", name="Plaats opslaan").click()
-    expect(page.get_by_role("heading", level=1)).to_have_text(f"Plaats {nieuw}")
+    # De naam van het rek wijzigen: zelfde QR-code, nieuwe aanduiding op het kaartje.
+    rek_hernoemen(page, rek, nieuw)
+    nieuw = f"{nieuw}/1/1"
     kiezen(page, nieuw)
     expect(kaartje(page, nieuw).locator("svg.qr-kaartje path")).to_have_attribute("d", qr)
 

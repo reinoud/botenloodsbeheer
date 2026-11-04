@@ -11,6 +11,7 @@ from sqlalchemy import select, text
 from app.domein import CLI, Regelfout, boten, indeling, toewijzing, uitlezen, wachtlijst
 from app.models import Bootsoort, Logregel, db
 from tests.unit.hulp import lid, race
+from tests.unit.hulp import plaats as hulp_plaats
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
 
@@ -22,9 +23,8 @@ def regels(actie):
     return db.session.scalars(select(Logregel).where(Logregel.actie == actie)).all()
 
 
-def plaats(soort_id, code="A01"):
-    rek = indeling.rek_aanmaken("Rek A", CLI)
-    return indeling.plaats_aanmaken(rek.id, code, [soort_id], False, CLI)
+def plaats(soort_id, code="A/1/1"):
+    return hulp_plaats(code, [soort_id])
 
 
 # Criterium 1: toevoegen
@@ -192,9 +192,9 @@ def test_nieuwe_boot_of_plaats_wacht_op_een_lopende_verwijdering(app, wat):
     """De eerste sessie verwijdert de soort en commit later. Een nieuwe boot of plaats van die
     soort wacht en krijgt dan een melding; zonder KEY SHARE geeft de FK een IntegrityError."""
     s = indeling.bootsoort_toevoegen("Waterfiets", CLI)
-    rek = indeling.rek_aanmaken("Rek A", CLI)
+    p = plaats(soort("Kajak").id)
     actie = {"boot": lambda: boten.boot_aanmaken("Pedaalpiet", s.id, None, None, CLI),
-             "plaats": lambda: indeling.plaats_aanmaken(rek.id, "A01", [s.id], False, CLI)}[wat]
+             "plaats": lambda: indeling.plaats_wijzigen(p.id, [s.id], False, CLI)}[wat]
     fouten = race(app, ["SELECT id FROM bootsoort WHERE id = :s FOR UPDATE",
                         "DELETE FROM bootsoort WHERE id = :s"], {"s": s.id}, actie)
     assert fouten == [{"boot": "Kies een bootsoort.",

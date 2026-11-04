@@ -2,7 +2,7 @@
 een boot, hernoemen, verwijderen geweigerd, en na opruimen verwijderen. De soort heeft de stempel
 van de run en wordt ook bij een fout opgeruimd, zodat de lijst van de gedeelde stack gelijk blijft."""
 
-from conftest import STEMPEL, wachtwoord_instellen
+from conftest import STEMPEL, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, rek_met_plaats
 
@@ -15,7 +15,7 @@ def rij(page, naam):
 def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
     wachtwoord_instellen(page, "bootsoorten")
     nieuw, ander = f"Waterfiets {STEMPEL}", f"Pedalo {STEMPEL}"
-    rek, code, bootnaam = f"E2E soort {STEMPEL}", f"S{STEMPEL}", f"Trapper {STEMPEL}"
+    rek, bootnaam = reknaam("s"), f"Trapper {STEMPEL}"
     boot = None
     page.goto("/instellingen")
     page.get_by_label("Nieuwe bootsoort").fill(nieuw)
@@ -23,7 +23,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
     expect(page.get_by_text("De bootsoort is toegevoegd.")).to_be_visible()
     try:
         # Criterium 1: te kiezen bij plaatsen en boten.
-        rek_met_plaats(page, rek, code, [nieuw])
+        code = rek_met_plaats(page, rek, [nieuw])
         boot_vastleggen(page, bootnaam, nieuw)
         boot = page.url
 

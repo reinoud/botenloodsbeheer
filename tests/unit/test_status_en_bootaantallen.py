@@ -26,13 +26,13 @@ def loods():
     """Anna: kajak op een plaats, surfski op een plaats, kajak op de wachtlijst, kano zonder
     plaats. Bert: geen boten. Een clubboot op een clubplaats."""
     anna, bert = lid("1001", "Anna"), lid("1002", "Bert")
-    rek = plaats("A01").rek
-    toewijzing.toewijzen(plaats("A02", rek=rek).id, boot(anna.id).id, CLI)
-    toewijzing.toewijzen(plaats("A03", ("Surfski",), rek=rek).id,
+    plaats("A/1/1")
+    toewijzing.toewijzen(plaats("A/1/2").id, boot(anna.id).id, CLI)
+    toewijzing.toewijzen(plaats("A/1/3", ("Surfski",)).id,
                          boot(anna.id, "Surfski", "Pijl").id, CLI)
     wachtlijst.erop_zetten(boot(anna.id, naam="Reiger").id, None, CLI)
     boot(anna.id, "Canadese kano", "Bever")
-    toewijzing.toewijzen(plaats("C01", club=True, rek=rek).id, boot(None, naam="Clubkajak").id,
+    toewijzing.toewijzen(plaats("A/2/1", club=True).id, boot(None, naam="Clubkajak").id,
                          CLI)
     return anna, bert
 

@@ -13,14 +13,18 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     LargeBinary,
+    SmallInteger,
     String,
     Table,
     Text,
+    UniqueConstraint,
     func,
+    literal_column,
+    select,
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, CIDR, JSONB
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
 
 
 class Base(DeclarativeBase):
@@ -139,11 +143,17 @@ class Rek(db.Model):
     __tablename__ = "rek"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    naam: Mapped[str] = mapped_column(String(50))
+    naam: Mapped[str] = mapped_column(String(10))  # uniek zonder hoofdletters: zie __table_args__
+    omschrijving: Mapped[str] = mapped_column(String(60), default="", server_default="")
     volgorde: Mapped[int] = mapped_column(default=0, server_default=text("0"))
 
     plaatsen: Mapped[list["Plaats"]] = relationship(
-        back_populates="rek", order_by="Plaats.volgorde, Plaats.id"
+        back_populates="rek", order_by="Plaats.verdieping, Plaats.vak"
+    )
+
+    __table_args__ = (
+        Index("uq_rek_naam", func.lower(naam), unique=True),
+        CheckConstraint("naam <> '' AND naam NOT LIKE '%/%'", name="naam_geldig"),
     )
 
 
@@ -165,16 +175,17 @@ plaats_bootsoort = Table(
 
 
 class Plaats(db.Model):
-    """Drie identiteiten (ADR-003): id intern, publieke_sleutel in de QR-link, code voor mensen."""
+    """Drie identiteiten (ADR-003): id intern, publieke_sleutel in de QR-link, code voor mensen.
+    code is afgeleid (<rek>/<verdieping>/<vak>, onderaan dit bestand) en staat niet in de tabel."""
 
     __tablename__ = "plaats"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     rek_id: Mapped[int] = mapped_column(ForeignKey("rek.id"), index=True)
-    code: Mapped[str] = mapped_column(String(20))  # uniek zonder hoofdletters: zie __table_args__
+    verdieping: Mapped[int] = mapped_column(SmallInteger)
+    vak: Mapped[int] = mapped_column(SmallInteger)
     publieke_sleutel: Mapped[str] = mapped_column(String(10), unique=True)
     is_clubplaats: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
-    volgorde: Mapped[int] = mapped_column(default=0, server_default=text("0"))
     boot_id: Mapped[int | None] = mapped_column(ForeignKey("boot.id"), unique=True)
 
     rek: Mapped[Rek] = relationship(back_populates="plaatsen")
@@ -183,7 +194,19 @@ class Plaats(db.Model):
     )
     boot: Mapped["Boot | None"] = relationship(back_populates="plaats")
 
-    __table_args__ = (Index("uq_plaats_code", func.lower(code), unique=True),)
+    __table_args__ = (
+        CheckConstraint("verdieping BETWEEN 1 AND 5", name="verdieping_geldig"),
+        CheckConstraint("vak BETWEEN 1 AND 12", name="vak_geldig"),
+        UniqueConstraint("rek_id", "verdieping", "vak", name="uq_plaats_rek_verdieping_vak"),
+    )
+
+
+# Een subquery: een gegenereerde kolom kan in PostgreSQL geen andere tabel lezen (ADR-003).
+Plaats.code = column_property(
+    select(func.concat(Rek.naam, literal_column("'/'"), Plaats.verdieping, literal_column("'/'"),
+                       Plaats.vak))
+    .where(Rek.id == Plaats.rek_id).correlate_except(Rek).scalar_subquery()
+)
 
 
 class Lid(db.Model):

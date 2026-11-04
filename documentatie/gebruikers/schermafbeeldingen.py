@@ -154,10 +154,10 @@ def schermen(browser):
 
     # Indeling.
     page.goto("/indeling")
-    o.maak("indeling", hoogte=900)
-    sectie = page.locator("section.kaart", has=page.get_by_role("heading", name="Rek J"))
-    sectie.get_by_text("Plaats toevoegen aan Rek J").click()
-    o.maak("plaats-toevoegen", element=sectie.locator("details").first)
+    o.maak("indeling", hoogte=1100)
+    sectie = page.locator("section.kaart", has=page.get_by_role("heading", name="J", exact=True))
+    sectie.get_by_text("Rek wijzigen of verwijderen").click()
+    o.maak("rek-wijzigen", element=sectie.locator("details").first)
 
     # Plaatsen: een bezette en een vrije.
     page.goto("/opzeggend")

@@ -55,11 +55,19 @@ th, td { text-align: left; padding: var(--ruimte-2); border-bottom: 1px solid va
 }
 
 select { width: 100%; max-width: 24rem; padding: var(--ruimte-2); border: 1px solid var(--kleur-rand); border-radius: var(--radius); font: inherit; background: var(--kleur-vlak); }
-fieldset { border: 1px solid var(--kleur-rand); border-radius: var(--radius); margin-top: var(--ruimte-3); }
+fieldset { min-width: 0; border: 1px solid var(--kleur-rand); border-radius: var(--radius); margin-top: var(--ruimte-3); }
 .keuze { display: flex; gap: var(--ruimte-2); align-items: center; font-weight: 400; }
+.breed { max-width: 40rem; }
 .keuze input { width: auto; }
 details { margin-top: var(--ruimte-3); }
 .schuif { overflow-x: auto; }
+.verborgen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* Raster van de indeling (BLB-044): een rij per verdieping, een kolom per vak. */
+.raster { display: grid; grid-template-columns: max-content repeat(12, 2.25rem); align-items: center; gap: var(--ruimte-1); width: max-content; }
+.raster-kop { text-align: center; font-size: 0.875rem; }
+.raster-rij { text-align: left; padding-right: var(--ruimte-2); }
+.raster .vakje { position: relative; display: flex; justify-content: center; margin: 0; padding: var(--ruimte-1) 0; }
+.raster input { width: 1.25rem; height: 1.25rem; padding: 0; margin: 0; }
 summary { cursor: pointer; font-weight: 600; }
 .knop-gevaar { background: var(--kleur-fout); }
 dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--ruimte-1) var(--ruimte-3); }
@@ -78,6 +86,7 @@ dd { margin: 0; }
 .kaartje p { margin: 0 0 2mm; }
 .kaartje-logo { display: block; max-width: 100%; max-height: 15mm; margin-bottom: 3mm; }
 .kaartje-code { font-size: 20pt; font-weight: 700; }
+.kaartje-omschrijving { font-size: 9pt; }
 .kaartje-eigenaar { font-size: 12pt; }
 .qr-kaartje { display: block; width: 40mm; height: 40mm; }
 @media print {
