@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.10
+**Versie overlay:** v0.4.11
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -59,6 +59,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Wijkt de bouw bewust af van een acceptatiecriterium, pas dan vóór de review het criterium in het issue aan en noem de bron die voorgaat.
 - Geef elk agent een eigen submap in de scratchpad (`<scratchpad>/<agent>-<taak>/`); de scratchpad wordt gedeeld tussen agents van dezelfde sessie.
 - Tekstwijzigingen in bestanden met python3, niet met sed (de sed-variant verschilt per omgeving).
+- Heeft het document geen wijzigingslog, maak dan een paragraaf Wijzigingslog aan met alleen de nieuwe versie.
 - Noem in een opdracht welke functies uit de lijst nog niet bestaan (zoals de kaartjes met QR-code, slice 8), zodat het agent ze niet zoekt.
 - Noem per ADR-zin die de opdracht als gebouwd aanneemt (zoals een kolom of een check) of die al in `app/models.py` en de migraties staat; zo niet, dan is het een ontwerppunt van de opdracht.
 - Kijk bij een bouwopdracht aan het begin en halverwege met `git log --oneline` of er commits op de leidende bronnen zijn bijgekomen, en draai vóór elke oplevering `git diff` op die bronnen. Een besluit dat tijdens het werk binnenkomt, gaat voor de opdracht: verwerk het direct en meld het in je antwoord.
@@ -247,6 +248,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.11 | 2026-11-04 | Regel voor een ontbrekend wijzigingslog, uit de terugblik van apex (issue #82) | Lessen |
 | v0.4.10 | 2026-11-04 | Zeven regels in de briefingchecklist en de omweg voor #45 als commando, uit de terugblikken van slice 12 (forge, bedrock, prism, sentinel, aegis) | Lessen |
 | v0.4.9 | 2026-11-03 | Besluiten per ronde benoemen; ongecommitte bestanden met een oud besluit noemen | Terugblikken apex en foundation (#80, tweede ronde) |
 | v0.4.8 | 2026-11-03 | Woordbudget tellen met een word-diff | Terugblikken apex en foundation (#80) |

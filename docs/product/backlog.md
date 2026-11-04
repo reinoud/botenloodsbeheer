@@ -1,10 +1,10 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.5.1
-**Datum:** 2026-11-03
+**Versie:** v0.6.1
+**Datum:** 2026-11-04
 **Opgesteld door:** Apex, Senior Product Owner
-**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03
+**Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
 
 ## 1. Uitgangspunten
@@ -80,7 +80,8 @@ Als beheerder wil ik rekken aanmaken, hernoemen en verwijderen, met per rek verd
 
 - Gegeven een ingelogde beheerder, wanneer die een rek aanmaakt met een naam, een omschrijving en per verdieping de vakken die aan staan, dan staat elk vak dat aan staat als plaats in de indeling, met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1`.
 - Gegeven een nieuw rek, wanneer de beheerder 1 tot en met 5 verdiepingen opgeeft en per verdieping in een raster van vak 1 tot en met 12 elk vak los aan of uit zet, dan slaat de applicatie het rek op. Vak 1 en vak 12 kunnen aan. Gaten in de nummering mogen: een verdieping met alleen vak 1, 3, 4 en 6 is geldig.
-- Gegeven een nieuw rek, wanneer de beheerder 0 of 6 verdiepingen opgeeft, een verdieping zonder vak dat aan staat, of vak 0 of vak 13, dan weigert de applicatie met een duidelijke melding.
+- Gegeven een nieuw rek, wanneer de beheerder geen enkel vak aanzet, of verdieping 0 of 6, of vak 0 of vak 13 opgeeft, dan weigert de applicatie met een duidelijke melding. Een verdieping zonder vak dat aan staat, bestaat niet en wordt niet geweigerd (issue #82).
+- Gegeven een nieuw rek, wanneer de beheerder per verdieping een bootsoort kiest en het rek opslaat, dan heeft elke plaats van die verdieping die bootsoort als geschikte soort (BLB-002, issue #82). De keuze is niet verplicht en per verdieping is er één bootsoort; zonder keuze krijgen de plaatsen geen bootsoort (vraag 26).
 - Gegeven een reknaam die al bestaat (ook met andere hoofdletters), die langer is dan 10 tekens of die een `/` bevat, wanneer de beheerder die invoert, dan weigert de applicatie met een duidelijke melding.
 - Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een kaartje print, of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. De aanduiding houdt de korte naam, zoals `A/1/1`. De omschrijving is niet verplicht en ten hoogste 60 tekens; 61 tekens weigert de applicatie (vraag 24).
 - Gegeven een plaats, wanneer de beheerder die bewerkt, dan is de aanduiding niet los te wijzigen. Ze verandert alleen met de naam van het rek; toewijzing, publieke sleutel en instellingen blijven staan.
@@ -121,9 +122,11 @@ Als beheerder wil ik verdiepingen van een rek toevoegen en weghalen en per verdi
 
 - Gegeven een rek met minder dan 5 verdiepingen, wanneer de beheerder een verdieping toevoegt en in het raster vakken aanzet, dan staan de nieuwe plaatsen in de indeling. Een zesde verdieping weigert de applicatie.
 - Gegeven een verdieping, wanneer de beheerder in het raster een vak aanzet, dan komt die plaats erbij en blijven de andere plaatsen met boot, publieke sleutel en instellingen staan. Vak 1 en vak 12 kunnen aan; vak 0 en vak 13 weigert de applicatie.
+- Gegeven een verdieping met een bootsoort (BLB-001), wanneer de beheerder in het raster een vak aanzet, dan krijgt die nieuwe plaats die bootsoort. Bestaande plaatsen veranderen niet (vraag 26).
 - Gegeven een vak zonder boot, wanneer de beheerder het uitzet, dan verdwijnt die plaats en ontstaat er een gat in de nummering. De andere vakken houden hun nummer.
 - Gegeven een verdieping zonder boten, wanneer de beheerder haar weghaalt, dan verdwijnen haar plaatsen. De andere verdiepingen houden hun nummer; er ontstaat een gat (vraag 24).
-- Gegeven een vak met een boot, wanneer de beheerder het uitzet of de verdieping weghaalt, dan weigert de applicatie met dezelfde melding als bij het verwijderen van een rek met een boot (BLB-001), en verandert er niets.
+- Gegeven een vak met een boot, wanneer de beheerder het uitzet of de verdieping weghaalt, dan weigert de applicatie met een melding die de plaats met de boot noemt en vraagt die eerst vrij te geven, en verandert er niets (issue #82).
+- Gegeven het detail van een plaats, wanneer de beheerder het opent, dan staat er geen knop om de plaats te verwijderen. Een plaats verdwijnt alleen door haar vak in het raster uit te zetten (issue #82).
 
 Route voor een mens (issue #80):
 
@@ -719,6 +722,11 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 - BLB-041 (boten van leden die gaan opzeggen) is Should en hoort bij slice 6, omdat de import daar wordt gebouwd. De import werkt ook zonder dit overzicht.
 - BLB-042 (API van buiten bereikbaar maken) is Should en hoort bij slice 10, net als BLB-030: een persoonlijk token is alleen nuttig als de API van buiten bereikbaar is.
 
+### Besluiten van apex (2026-11-04)
+
+- BLB-044: de melding bij een vak met een boot hoeft niet gelijk te zijn aan die bij een rek. Ze noemt de plaats en vraagt die vrij te geven.
+- BLB-001 criterium 3 volgt het raster: geweigerd wordt een rek zonder enig vak dat aan staat.
+
 ### Open vragen
 
 | Nr | Vraag | Voor | Blokkerend | Advies van apex |
@@ -731,6 +739,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | 23 | In welke slice komen BLB-001 (nieuw) en BLB-044? | Regie | Nee | Besloten door de regie 2026-11-03: slice 12, voor issue #80 |
 | 24 | (a) Mag een gat in de verdiepingen ontstaan als de beheerder een verdieping weghaalt, net als bij vakken? (b) Is de omschrijving van een rek verplicht, en wat is de grens? Het besluit noemt "tot 52 tekens" als voorbeeld. | Stakeholder | Nee, BLB-001 en BLB-044 zijn te bouwen; de test op deze twee grenzen wacht | Besloten door de regie 2026-11-03: (a) ja, een verdieping bestaat zolang er een vak aan staat en houdt haar nummer; (b) niet verplicht, ten hoogste 60 tekens (ADR-003 v2.1.0) |
 | 25 | Issue #80 noemt een nieuwe bootsoort, wildwaterkano. Hoort die in de startlijst (§8, BLB-002)? | Regie | Nee | Besloten door de regie 2026-11-03: nee. De stakeholder besloot "alleen als seed"; de seed voegt wildwaterkano toe, een echte installatie via BLB-028 |
+| 26 | Bootsoort per verdieping bij "Nieuw rek" (issue #82): (a) is die verplicht of mag ze leeg blijven? (b) krijgt een vak dat later in het raster aan gaat (BLB-044) ook die bootsoort? (c) één bootsoort per verdieping of meer, zoals per plaats (BLB-002)? | Stakeholder | Nee | Besloten door de stakeholder 2026-11-04: (a) optioneel; (b) ja, het rek onthoudt de bootsoort per verdieping; (c) één. Advies van apex bij (b) was nee |
 
 ## 8. Aannames
 
@@ -741,3 +750,10 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 - Besluit stakeholder 2026-10-30: de API gaat aan en uit in de installatie, via een omgevingsvariabele (ADR-009), niet in de applicatie. Sinds 2026-10-31 staat hij standaard aan.
 - Een IP-whitelist bevat adressen en adresreeksen, zowel IPv4 als IPv6.
 - Een wachttijd telt vanaf de dag van aanmelding op de wachtlijst.
+
+## 9. Wijzigingslog
+
+| Versie | Datum | Wijziging |
+|--------|-------|-----------|
+| v0.6.1 | 2026-11-04 | Vraag 26 besloten: bootsoort per verdieping optioneel, één, en ook voor een vak dat later aan gaat (BLB-001, BLB-044) |
+| v0.6.0 | 2026-11-04 | Issue #82: BLB-001 krijgt een bootsoort per verdieping en een nieuw criterium 3; BLB-044 krijgt een andere melding en geen knop om een plaats te verwijderen; vraag 26 |
