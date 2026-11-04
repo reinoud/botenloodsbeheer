@@ -24,8 +24,9 @@ API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0
   || { echo "API_EXTERN_BRONNEN komt niet in de whitelist van Traefik." >&2; exit 1; }
 
 # De leden komen via de integratiecontainer met de stub (ADR-012), zoals in de
-# beheerdocumentatie. Een nieuw token in secrets/api_token; na de herstart importeert de
-# container meteen, omdat hij nog geen geslaagde import van vandaag kent.
+# beheerdocumentatie. Een nieuw token in secrets/api_token. De container staat stil terwijl
+# er een importverzoek klaarkomt; anders pakt hij het op vóór het log hieronder begint, en
+# zonder verzoek importeert hij tussen 00:00 en SYNC_TIJDSTIP niet (#45).
 # Maakt een robottoken en geeft alleen de waarde; de uitleg op stderr komt alleen bij een fout.
 robot() {
   "${c[@]}" exec -T web flask token robot "$@" 2>"$fout" | tail -n 1 \
@@ -33,8 +34,12 @@ robot() {
 robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:lezen \
   > secrets/api_token
 chmod 600 secrets/api_token
+"${c[@]}" stop integratie >/dev/null
+"${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import CLI, leden
+with create_app().app_context():
+    leden.import_aangevraagd() or leden.import_aanvragen(CLI)'
 start=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-"${c[@]}" restart integratie >/dev/null
+"${c[@]}" start integratie >/dev/null
 geimporteerd() { "${c[@]}" logs --since "$start" integratie | grep "Import geslaagd" >/dev/null; }
 for _ in $(seq 30); do geimporteerd && break; sleep 2; done
 geimporteerd || { echo "De integratiecontainer importeerde niet; zie zijn log." >&2; exit 1; }
