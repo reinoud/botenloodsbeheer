@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.18
+**Versie overlay:** v0.4.19
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -66,6 +66,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Kijk bij een bouwopdracht aan het begin en halverwege met `git log --oneline` of er commits op de leidende bronnen zijn bijgekomen, en draai vóór elke oplevering `git diff` op die bronnen. Een besluit dat tijdens het werk binnenkomt, gaat voor de opdracht: verwerk het direct en meld het in je antwoord.
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
+- Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
 
 #### Bouw
 
@@ -263,6 +264,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.19 | 2026-11-04 | Regel over een vervangen pakket in status en issues uit de terugblik van sentinel (#86) | Lessen |
 | v0.4.18 | 2026-11-04 | Regel over een versiecheck na een lockupdate, uit de terugblik van sentinel; pad van de uv-binary in de brief, uit de terugblik van aegis (issue #63) | Lessen |
 | v0.4.17 | 2026-11-04 | Regel over het controleren van de bronvorm in een test, uit de terugblikken van aegis en sentinel; regel over niet-gestagede bestanden in een reviewbrief, uit de herreview van sentinel (issue #70) | Lessen |
 | v0.4.16 | 2026-11-04 | Regel over sorteersleutels in een volgordetest, uit de terugblik van sentinel (issue #81) | Lessen |
