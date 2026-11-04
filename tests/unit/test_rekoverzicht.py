@@ -102,3 +102,10 @@ def test_pagina_toont_per_plaats_een_plaatje_met_alt(ingelogd):
     assert 'src="/static/boten/kajak-bezet.jpg" alt="Plaats A/1/1, Kajak, bezet"' in tekst
     assert f'href="/plaatsen/{vrij.id}"' in tekst
     assert "Plaats A/1/2, Supboard, vrij</span>" in tekst
+
+
+def test_pagina_zet_verdieping_1_onderaan(ingelogd):
+    plaats("A/1/1")
+    plaats("A/2/1")
+    tekst = ingelogd.get("/rekoverzicht").text
+    assert tekst.index("Verdieping 2") < tekst.index("Verdieping 1"), "verdieping 1 hoort onderaan"

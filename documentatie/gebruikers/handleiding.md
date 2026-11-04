@@ -70,7 +70,7 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ### Rekoverzicht
 
-De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping, een kolom per vak, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
+De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping (verdieping 1 onderaan), een kolom per vak, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
 
 ![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
 

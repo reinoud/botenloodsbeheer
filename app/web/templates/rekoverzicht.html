@@ -14,7 +14,8 @@
     <div class="raster raster-rek">
       <span aria-hidden="true"></span>
       {% for vak in vakken %}<span class="raster-kop" aria-hidden="true">{{ vak }}</span>{% endfor %}
-      {% for verdieping in rek.plaatsen|map(attribute='verdieping')|unique|sort %}
+      {# Verdieping 1 onderaan, zoals het rek in de loods staat. #}
+      {% for verdieping in rek.plaatsen|map(attribute='verdieping')|unique|sort(reverse=True) %}
       <span class="raster-kop raster-rij" aria-hidden="true">Verdieping {{ verdieping }}</span>
       {% for vak in vakken %}
       {% set v = vak_van.get((verdieping, vak)) %}
