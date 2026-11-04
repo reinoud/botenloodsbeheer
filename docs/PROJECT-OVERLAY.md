@@ -31,7 +31,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
-| Stand | Slice 1 tot en met 11 gebouwd. Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
+| Stand | Slice 1 tot en met 12 gebouwd; de indeling volgt rek, verdieping en vak (#80). Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
 
 ## 4. Werkwijze
 
