@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.25
+**Versie overlay:** v0.4.26
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -133,6 +133,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
+- Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`; anders stopt het script vóór de regel die je test.
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
 - Eerdere runs laten rijen achter. Een E2E-test op een gedeelde lijst controleert daarom de volgorde over de hele kolom, niet op de eerste rij. Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
 - Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
@@ -276,6 +277,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.26 | 2026-11-04 | Regel over een docker-stub voor `draai.sh`, uit de terugblik van sentinel (issue #92) | Lessen |
 | v0.4.25 | 2026-11-04 | Vijf regels uit de terugblikken van sentinel en aegis (issue #91): foutafhandeling op paden zonder view, elke router naar `api`, bereikbaarheid buiten Traefik, eigen token per verzoek en `skip_host` bij een proef via Traefik | Lessen |
 | v0.4.24 | 2026-11-04 | Omweg voor `draai.sh` in het nachtvenster vervalt: het script vraagt zelf een import aan (#45); regel over E2E-uitvoer en herhaalde runs uit de terugblik van sentinel | Bouw #45 |
 | v0.4.23 | 2026-11-04 | Regel over de `\|safe`-mutant bij een escapingtest, uit de terugblik van sentinel (issues #88 en #89) | Lessen |
