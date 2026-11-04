@@ -168,6 +168,22 @@ def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F8
     assert "Al Opgezegd" in ingelogd.get("/opgezegd").text
 
 
+@pytest.mark.parametrize("dagen", [-1, 30], ids=["opgezegd", "opzeggend"])
+def test_zelfde_datum_op_rek_verdieping_vak(app, dagen):
+    """Issue #81: rek A vóór B ondanks de hogere verdieping, en verdieping vóór vak."""
+    from app.domein import indeling
+    codes = ("A/2/1", "B/2/1", "B/1/2")  # rek A eerst aangemaakt, dus eerst in de volgorde
+    for n, code in enumerate(codes):
+        eigenaar = lid(str(n), f"Lid {n}")
+        toewijzing.toewijzen(plaats(code).id, boot(eigenaar.id).id, CLI)
+        opzeggen(eigenaar.id, opzegdatum=domein_vandaag() + timedelta(days=dagen))
+    rijen = (indeling.plaatsen_van_oud_leden() if dagen < 0
+             else indeling.plaatsen_van_opzeggende_leden())
+    plaatsen = [r[1] if dagen < 0 else r for r in rijen]
+    assert [f"{p.rek.naam}/{p.verdieping}/{p.vak}" for p in plaatsen] == [
+        "A/2/1", "B/1/2", "B/2/1"]
+
+
 def test_geen_boten_van_leden_die_gaan_opzeggen(ingelogd):  # noqa: F811
     """BLB-041 criterium 5."""
     loods()
