@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.26
+**Versie overlay:** v0.5.0
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-04
+**Bijgewerkt:** 2026-11-05
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -38,6 +38,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Volgorde: apex (backlog en user stories), foundation (architectuur en ADR's), forge (delivery in slices).
 - Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`, met dezelfde regels als de Forgejo-afspraak in `~/.claude/CLAUDE.md`: type en label, sluiten met commit, test en bewijs.
 - Review vóór elke codecommit volgens `~/.claude/CLAUDE.md`. Voor inloggen, tokens, autorisatie en de koppeling met e-boekhouden reviewt aegis mee.
+- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
 - Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
 - Teksten volgen de skill `schrijfstijl`.
 - Normenbibliotheek: `/Users/reinoud/Projects/AI/01. Standaarden/`. Raadplegen mag, kopiëren niet.
@@ -277,6 +278,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.0 | 2026-11-05 | Werkwijze met een branch per feature en een pull request naar `main`, dat de sessie na review zelf mergt | Besluit stakeholder |
 | v0.4.26 | 2026-11-04 | Regel over een docker-stub voor `draai.sh`, uit de terugblik van sentinel (issue #92) | Lessen |
 | v0.4.25 | 2026-11-04 | Vijf regels uit de terugblikken van sentinel en aegis (issue #91): foutafhandeling op paden zonder view, elke router naar `api`, bereikbaarheid buiten Traefik, eigen token per verzoek en `skip_host` bij een proef via Traefik | Lessen |
 | v0.4.24 | 2026-11-04 | Omweg voor `draai.sh` in het nachtvenster vervalt: het script vraagt zelf een import aan (#45); regel over E2E-uitvoer en herhaalde runs uit de terugblik van sentinel | Bouw #45 |
