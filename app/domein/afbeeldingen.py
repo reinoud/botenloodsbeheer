@@ -10,7 +10,9 @@ from sqlalchemy import select
 from app.domein import Regelfout
 from app.models import Afbeelding, db
 
-TOEGESTAAN = {"JPEG", "PNG", "WEBP"}  # op inhoud, niet op bestandsnaam; geen SVG
+OPENEN = ["JPEG", "PNG", "WEBP"]  # op inhoud, niet op bestandsnaam; geen SVG
+# Een JPEG met meer beelden (telefoons) opent Pillow als MPO; alleen het eerste beeld blijft.
+TOEGESTAAN = {*OPENEN, "MPO"}
 MAX_PIXELS = 40_000_000  # grens tegen decompressiebommen, ruim boven een telefoonfoto
 LANGE_ZIJDE = {"foto": 1600, "logo": 800}
 Image.MAX_IMAGE_PIXELS = MAX_PIXELS
@@ -22,7 +24,7 @@ Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 def verwerk(inhoud, soort="foto"):
     """Geeft een nieuwe, nog niet opgeslagen Afbeelding, of een Regelfout."""
     try:
-        with Image.open(io.BytesIO(inhoud), formats=sorted(TOEGESTAAN)) as img:
+        with Image.open(io.BytesIO(inhoud), formats=OPENEN) as img:
             if img.format not in TOEGESTAAN or img.width * img.height > MAX_PIXELS:
                 raise Regelfout(f"Kies een {soort} in JPEG, PNG of WebP.")
             img = ImageOps.exif_transpose(img)

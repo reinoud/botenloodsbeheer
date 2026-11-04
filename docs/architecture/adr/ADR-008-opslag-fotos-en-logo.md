@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** BLB-005, BLB-012, BLB-020, BLB-021, BLB-026, BLB-027
 
 ## Context
@@ -17,7 +17,7 @@ Foto's staan in PostgreSQL, in de tabel `afbeelding` als `bytea`.
 
 **Logo.** Het logo is een bestand in de installatie. Compose koppelt de map `./huisstijl` alleen-lezen aan `web` op `/huisstijl`; `LOGO_BESTAND` (standaard `/huisstijl/logo.png`) wijst het bestand aan. `web` verwerkt het bij het starten met dezelfde regels als een upload (JPEG, PNG of WebP, hooguit 800 pixels, als PNG zonder metadata) en houdt het resultaat in het geheugen. Ontbreekt het bestand of is het ongeldig, dan meldt `web` dat in de containerlog en toont alleen de naam. Een nieuw logo vraagt een herstart van `web`. De route `/logo/<hash>` levert het, met een hash van de inhoud in de URL en een lange cache-header. Er is geen uploadscherm en geen logregel.
 
-**Uploaden.** Traefik weigert verzoeken boven 10 MB (ADR-013). De applicatie opent het bestand met Pillow en accepteert alleen JPEG, PNG en WebP, op basis van de inhoud en niet van de bestandsnaam. Pillow verkleint foto's tot hooguit 1600 pixels aan de lange zijde, draait volgens de EXIF-oriëntatie en slaat opnieuw op als JPEG zonder metadata. `Image.MAX_IMAGE_PIXELS` begrenst decompressiebommen. Pas na een geslaagde verwerking vervangt de nieuwe afbeelding de oude, in één transactie met de logregel.
+**Uploaden.** Traefik weigert verzoeken boven 10 MB (ADR-013). De applicatie opent het bestand met Pillow en accepteert alleen JPEG, PNG en WebP, op basis van de inhoud en niet van de bestandsnaam. Een JPEG met meer beelden (MPO, zoals sommige telefoons die maken) telt als JPEG; alleen het eerste beeld wordt verwerkt. Pillow verkleint foto's tot hooguit 1600 pixels aan de lange zijde, draait volgens de EXIF-oriëntatie en slaat opnieuw op als JPEG zonder metadata. `Image.MAX_IMAGE_PIXELS` begrenst decompressiebommen. Pas na een geslaagde verwerking vervangt de nieuwe afbeelding de oude, in één transactie met de logregel.
 
 **SVG.** Wordt geweigerd. Een SVG kan script bevatten en is lastig veilig te maken.
 
@@ -43,6 +43,7 @@ Foto's staan in PostgreSQL, in de tabel `afbeelding` als `bytea`.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-11-04 | MPO telt als JPEG, alleen het eerste beeld | Issue #70 |
 | v1.2.0 | 2026-10-31 | Grens van 10 MB in Traefik; geen korte cache in de proxy (Traefik heeft er geen, en hij was niet gebouwd) | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | Logo uit de installatie (`LOGO_BESTAND`), geen upload en geen logregel | Besluit stakeholder 2026-10-31 (issue #17) |
 | v1.0.0 | 2026-10-30 | Eerste versie | |

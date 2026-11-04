@@ -100,13 +100,20 @@ def test_boot_van_lid_en_clubboot(app):
     assert b1.id != b2.id
 
 
-def test_foto_wordt_verkleind_en_zonder_exif_opgeslagen(app):
+# MPO: een JPEG met een tweede beeld, zoals sommige telefoons die maken (#70).
+@pytest.mark.parametrize("formaat, extra", [
+    ("JPEG", {}), ("MPO", {"save_all": True, "append_images": [Image.new("RGB", (60, 40))]})],
+    ids=["jpeg", "mpo"])
+def test_foto_wordt_verkleind_en_zonder_exif_opgeslagen(app, formaat, extra):
     exif = Image.Exif()
     exif[0x010F] = "Telefoonmerk"  # Make
-    b = boot(lid().id, foto=png(3200, 2000, exif=exif.tobytes(), formaat="JPEG",
-                                comment=b"Vakantie bij oma", icc=b"bron-kleurprofiel"))
+    bron = png(3200, 2000, exif=exif.tobytes(), formaat=formaat, comment=b"Vakantie bij oma",
+               icc=b"bron-kleurprofiel", **extra)
+    assert Image.open(io.BytesIO(bron)).format == formaat
+    b = boot(lid().id, foto=bron)
     foto = Image.open(io.BytesIO(b.afbeelding.inhoud))
     assert foto.format == "JPEG" and max(foto.size) == 1600
+    assert getattr(foto, "n_frames", 1) == 1 and "mp" not in foto.info
     assert not foto.getexif() and b"Telefoonmerk" not in b.afbeelding.inhoud
     assert "comment" not in foto.info and b"Vakantie bij oma" not in b.afbeelding.inhoud
     assert "icc_profile" not in foto.info and b"bron-kleurprofiel" not in b.afbeelding.inhoud
