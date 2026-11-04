@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{# Per rek een raster van verdiepingen (rijen) en vakken (kolommen) met een plaatje per plaats. De
+   kleur is niet de enige drager: de alt-tekst noemt plaatscode, bootsoort en status (issue #87). #}
+{% block titel %}Rekoverzicht · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Rekoverzicht</h1>
+<p>Een donkere romp is bezet, een lichte romp is vrij voor die bootsoort. Een gestippelde rand is een clubplaats zonder boot.</p>
+{% for rek in rekken %}
+{% set vak_van = vakken_van(rek) %}
+<section class="kaart" aria-labelledby="rek-{{ rek.id }}">
+  <h2 id="rek-{{ rek.id }}">{{ rek.naam }}</h2>
+  {% if rek.omschrijving %}<p>{{ rek.omschrijving }}</p>{% endif %}
+  <div class="schuif">
+    <div class="raster raster-rek">
+      <span aria-hidden="true"></span>
+      {% for vak in vakken %}<span class="raster-kop" aria-hidden="true">{{ vak }}</span>{% endfor %}
+      {% for verdieping in rek.plaatsen|map(attribute='verdieping')|unique|sort %}
+      <span class="raster-kop raster-rij" aria-hidden="true">Verdieping {{ verdieping }}</span>
+      {% for vak in vakken %}
+      {% set v = vak_van.get((verdieping, vak)) %}
+      {% if v %}
+      <a class="rek-vak{% if v.club %} rek-vak-club{% endif %}" href="{{ url_for('web.plaats_detail', plaats_id=v.plaats_id) }}">
+        {% if v.bestand %}<img src="{{ url_for('static', filename='boten/' ~ v.bestand) }}" alt="{{ v.alt }}">
+        {% else %}<span aria-hidden="true">{{ v.tekst }}</span><span class="verborgen">{{ v.alt }}</span>{% endif %}
+      </a>
+      {% else %}<span></span>{% endif %}
+      {% endfor %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% else %}
+<p>Er zijn nog geen rekken.</p>
+{% endfor %}
+{% endblock %}

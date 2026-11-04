@@ -68,6 +68,20 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ![Het uitgeklapte blok om de naam, omschrijving en vakken van een rek te wijzigen.](afbeeldingen/rek-wijzigen.png)
 
+### Rekoverzicht
+
+De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping, een kolom per vak, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
+
+![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
+
+- **Donkere romp:** de plaats is bezet, met het plaatje van de bootsoort van de boot die er ligt.
+- **Lichte romp:** de plaats is vrij, met het plaatje van de eerste bootsoort waarvoor de plaats geschikt is. Is de plaats voor meer soorten geschikt, dan noemt de alternatieve tekst ze allemaal.
+- **Gestippelde rand:** een clubplaats zonder boot. Die is niet vrij voor leden. Een clubplaats met een clubboot toont een donkere romp.
+- **Alleen een naam:** een bootsoort zonder plaatje, bijvoorbeeld een soort die je zelf toevoegt, toont de naam als tekst. De C11 gebruikt het plaatje van de Canadese kano.
+- **Leeg vak:** een plaats zonder bootsoort heeft geen plaatje.
+
+De kleur is niet de enige aanwijzing: elk vak heeft een tekst voor schermlezers, bijvoorbeeld "Plaats A/2/3, Surfski, vrij".
+
 Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, kleuren, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
 
 ## Boten
@@ -304,6 +318,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken, omschrijvingen en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
+| `/rekoverzicht` | Plaatje per plaats, per rek |
 | `/kaartjes` | Plaatsen kiezen voor kaartjes |
 | `/kaartjes/print` | Kaartjes met QR-code om te printen |
 | `/plaatsen/{nummer}` | Een plaats, toewijzen en vrijgeven |

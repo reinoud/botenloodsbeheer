@@ -67,6 +67,13 @@ def indeling_overzicht():
                            naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX)
 
 
+@bp.get("/rekoverzicht")
+@inloggen_vereist
+def rekoverzicht():
+    return render_template("rekoverzicht.html", rekken=indeling.rekken(),
+                           vakken_van=indeling.rekoverzicht, vakken=indeling.VAKKEN)
+
+
 @bp.post("/rekken")
 @inloggen_vereist
 def rek_aanmaken():

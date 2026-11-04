@@ -183,6 +183,35 @@ def status(p):
     return "clubplaats" if p.is_clubplaats else "bezet" if p.boot_id else "vrij"
 
 
+# Bootsoort in de database naar de bestandsnaam in app/web/static/boten (issue #87, docker/
+# maak_plaatjes.py). C11 gebruikt het plaatje van de Canadese kano; een soort die hier niet staat
+# (bijvoorbeeld via BLB-028 toegevoegd) toont de naam als tekst.
+PLAATJES = {"Kajak": "kajak", "Canadese kano": "canadese-kano", "C11": "canadese-kano",
+            "Surfski": "surfski", "Wildwaterkano": "wildwaterboot"}
+
+
+def plaatje(p):
+    """Wat een vak van het rekoverzicht toont: bezet met het plaatje van de boot, anders vrij met
+    het plaatje van de eerste bootsoort van de plaats. Een lege clubplaats is niet vrij voor
+    leden: zelfde plaatje, met `club` voor de gestippelde rand. `alt` noemt alle soorten."""
+    soorten = [p.boot.bootsoort.naam] if p.boot else [s.naam for s in p.bootsoorten]
+    basis = PLAATJES.get(soorten[0]) if soorten else None
+    woord = "bezet" if p.boot else "leeg" if p.is_clubplaats else "vrij"
+    return {
+        "plaats_id": p.id,
+        "bestand": f"{basis}-{'bezet' if p.boot else 'vrij'}.jpg" if basis else None,
+        "tekst": soorten[0] if soorten and not basis else "",
+        "club": p.is_clubplaats and not p.boot,
+        "alt": ", ".join([f"Plaats {p.code}", ", ".join(soorten) or "geen bootsoort"]
+                         + (["clubplaats"] if p.is_clubplaats else []) + [woord]),
+    }
+
+
+def rekoverzicht(rek):
+    """De vakken van een rek als {(verdieping, vak): plaatje(p)}."""
+    return {(p.verdieping, p.vak): plaatje(p) for p in rek.plaatsen}
+
+
 def vrije_plaatsen(bootsoort_id=None):
     """Vrije plaatsen voor leden (BLB-015): zonder boot en geen clubplaats, in de volgorde van
     de loods. Met bootsoort_id alleen de plaatsen die voor die soort geschikt zijn."""

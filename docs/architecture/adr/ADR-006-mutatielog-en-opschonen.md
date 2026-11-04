@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.4.0
+**Versie:** v1.4.1
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -41,7 +41,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Vrije plaatsen | Toewijzen en vrijgeven (`plaats.`) |
 | Wachtlijst | Handelingen op de wachtlijst (`wachtlijst.`) |
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
-| `/indeling`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
+| `/indeling`, `/rekoverzicht`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
 
 Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen`, `oud-lid` of `andere eigenaar`). Beide verwijzen naar de boot en het lid. Krijgt een boot op de lijst een andere eigenaar, dan gaat hij van de lijst in dezelfde transactie als `boot.gewijzigd` (besluit stakeholder 2026-11-01). Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
 
@@ -76,6 +76,7 @@ De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een start
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.1 | 2026-11-04 | Rekoverzicht toont geen log | Besluiten stakeholder 2026-11-04, issue #87 |
 | v1.4.0 | 2026-11-03 | Acties van de bootsoorten in het technische log | Bouw slice 11, issue #56 |
 | v1.3.1 | 2026-11-03 | De opschoning neemt het importslot: de import kan een oud-lid weer actief maken | Issue #49 |
 | v1.3.0 | 2026-11-02 | Opschoning gebouwd; het log toont `lid:<id>` zonder naam, ook na opschonen; kopieën nagelopen | Bouw slice 9, issue #48 |
