@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.15
+**Versie overlay:** v0.4.16
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -90,6 +90,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen.
+- Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
 - Vervang je een aanroep op meer plekken door een gedeelde functie, draai dan per aanroep een mutant die de oude aanroep terugzet, en noem per aanroep de test die valt of waarom de mutant gelijkwaardig is.
 - Werken twee agents tegelijk met unittests, dan draait elk op een eigen testdatabase (bind mount van een `conftest.py` met een andere `TEST_DB`); de gedeelde `botenloods_test` geeft anders een deadlock. Een racetest met `race()` controleert ook dat de actie geen andere uitzondering dan `Regelfout` gooit.
 - Noem bij een nieuwe plaats of een nieuwe plaatsinvoer de beginwaarden (bootsoorten, clubplaats), zodat de E2E-helpers de juiste stappen krijgen.
@@ -259,6 +260,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.16 | 2026-11-04 | Regel over sorteersleutels in een volgordetest, uit de terugblik van sentinel (issue #81) | Lessen |
 | v0.4.15 | 2026-11-04 | Regel over het intrekken van een recht naast een cascade, uit de terugblik van aegis; regel over mutanten bij een rechtenwijziging, uit de terugblik van sentinel (issue #85) | Lessen |
 | v0.4.14 | 2026-11-04 | Twee regels in de briefingchecklist (Review) uit de terugblik van sentinel (issue #84) | Lessen |
 | v0.4.13 | 2026-11-04 | Zes regels in de briefingchecklist (Algemeen, Bouw, Migratie en database) uit de terugblikken van bedrock, aegis en sentinel (issue #83) | Lessen |
