@@ -4,6 +4,7 @@ Draaien vanuit de root van de repository: `uv run python docker/maak_plaatjes.py
 """
 import math
 from pathlib import Path
+
 from PIL import Image, ImageDraw
 
 SIZE = 128          # eindmaat in pixels (vierkant)
@@ -12,14 +13,14 @@ OUT = Path(__file__).resolve().parent.parent / "app" / "web" / "static" / "boten
 
 # breedte, diepte romp, vorm bodem (<2 = V, 2 = rond, >2 = vlak), hoogte dek (0 = open boot)
 TYPES = {
-    "kajak":         dict(w=0.56, d=0.22, n=1.8, deck=0.10),
-    "canadese-kano": dict(w=0.84, d=0.30, n=2.6, deck=0.0),
-    "surfski":       dict(w=0.32, d=0.20, n=1.6, deck=0.06),
-    "wildwaterboot": dict(w=0.58, d=0.15, n=5.0, deck=0.14),
+    "kajak":         {"w": 0.56, "d": 0.22, "n": 1.8, "deck": 0.10},
+    "canadese-kano": {"w": 0.84, "d": 0.30, "n": 2.6, "deck": 0.0},
+    "surfski":       {"w": 0.32, "d": 0.20, "n": 1.6, "deck": 0.06},
+    "wildwaterboot": {"w": 0.58, "d": 0.15, "n": 5.0, "deck": 0.14},
 }
 COLORS = {
-    "bezet": dict(hull="#1f4e79", line="#0d2740", rim="#0d2740"),
-    "vrij":  dict(hull="#d6e6f5", line="#8fb3d6", rim="#8fb3d6"),
+    "bezet": {"hull": "#1f4e79", "line": "#0d2740", "rim": "#0d2740"},
+    "vrij":  {"hull": "#d6e6f5", "line": "#8fb3d6", "rim": "#8fb3d6"},
 }
 
 

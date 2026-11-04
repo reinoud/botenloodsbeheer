@@ -111,8 +111,28 @@ def test_pagina_toont_per_plaats_een_plaatje_met_alt(ingelogd):
     assert "Plaats A/1/2, Supboard, vrij</span>" in tekst
 
 
+def test_pagina_toont_de_naam_van_een_soort_zonder_plaatje_geescaped(ingelogd):
+    # Issue #88: de zichtbare tekst ({{ v.tekst }}) en de alt-tekst, met < en " in de naam.
+    s = indeling.bootsoort_toevoegen('Sup <"xl">', CLI)
+    plaats("A/1/1", [s.id])
+    tekst = ingelogd.get("/rekoverzicht").text
+    assert '<span aria-hidden="true">Sup &lt;&#34;xl&#34;&gt;</span>' in tekst
+    assert "Plaats A/1/1, Sup &lt;&#34;xl&#34;&gt;, vrij</span>" in tekst
+    assert 'Sup <"xl">' not in tekst
+
+
 def test_pagina_zet_verdieping_1_onderaan(ingelogd):
     plaats("A/1/1")
     plaats("A/2/1")
     tekst = ingelogd.get("/rekoverzicht").text
     assert tekst.index("Verdieping 2") < tekst.index("Verdieping 1"), "verdieping 1 hoort onderaan"
+
+
+def test_pagina_toont_ook_verdiepingen_zonder_plaatsen(ingelogd):
+    # Issue #89: plaatsen op verdieping 1 en 3; verdieping 2 en de lege bovenste blijven staan.
+    plaats("A/1/1")
+    plaats("A/3/1")
+    tekst = ingelogd.get("/rekoverzicht").text
+    rijen = [f"Verdieping {v}</span>" for v in (5, 4, 3, 2, 1)]
+    assert all(r in tekst for r in rijen), "elke verdieping heeft een rij"
+    assert sorted(rijen, key=tekst.index) == rijen, "verdieping 1 onderaan"
