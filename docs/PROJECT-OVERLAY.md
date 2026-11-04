@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.16
+**Versie overlay:** v0.4.17
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -102,6 +102,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
 - Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
 - Noem bij elke bronsoort die een reviewer laat toetsen het verwachte gedrag (opslaan of afwijzen).
 - Noem bij elke review welke regels in de overlay na de bouw zijn toegevoegd; een ontbrekende test op zo'n regel is een restpunt (ernst laag) en blokkeert de review niet.
@@ -166,6 +167,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Gaat een proxy of netwerk gedeeld worden met andere diensten, zeg dan of `web` en `api` op het gedeelde netwerk mogen; standaard niet.
 - Bij een optie of vlag van een externe component komen de namen en de volledige lijst uit de gebruikte versie (binary of `--help`), en de ADR zegt welke opties bewust ontbreken.
 - ADR-008 "zonder metadata" betekent zonder EXIF, tekstblokken en ICC-profiel; de test en de reviewer gebruiken een bronbestand met alle drie. Een issue over metadata noemt in de acceptatiecriteria alle drie de soorten (EXIF, tekstblokken, ICC); vul het aan vóór de bouw.
+- Een test met een bijzondere bronvorm (zoals een MPO of een tweede beeld) controleert eerst zelf dat de bron die vorm heeft, bijvoorbeeld `Image.open(bron).format == "MPO"`; anders test hij stil een ander geval als de bibliotheek verandert.
 - Scan images met `trivy --ignore-unfixed`; meldingen zonder oplossing komen alleen als aantal in het rapport.
 - Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog). Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
@@ -260,6 +262,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.17 | 2026-11-04 | Regel over het controleren van de bronvorm in een test, uit de terugblikken van aegis en sentinel; regel over niet-gestagede bestanden in een reviewbrief, uit de herreview van sentinel (issue #70) | Lessen |
 | v0.4.16 | 2026-11-04 | Regel over sorteersleutels in een volgordetest, uit de terugblik van sentinel (issue #81) | Lessen |
 | v0.4.15 | 2026-11-04 | Regel over het intrekken van een recht naast een cascade, uit de terugblik van aegis; regel over mutanten bij een rechtenwijziging, uit de terugblik van sentinel (issue #85) | Lessen |
 | v0.4.14 | 2026-11-04 | Twee regels in de briefingchecklist (Review) uit de terugblik van sentinel (issue #84) | Lessen |
