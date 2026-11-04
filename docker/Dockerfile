@@ -6,6 +6,9 @@ ENV PYTHONUNBUFFERED=1 \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:$PATH \
     FLASK_APP=app
+# libpq uit Debian krijgt beveiligingsupdates; psycopg-binary leverde oude pcre en libcrypto mee (#86).
+RUN apt-get update && apt-get install --yes --no-install-recommends libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5,source=/uv,target=/bin/uv \

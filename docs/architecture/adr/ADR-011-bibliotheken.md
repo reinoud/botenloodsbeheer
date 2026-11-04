@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (aangepast voor besluit 1, inlogmethode)
 **Datum:** 2026-10-30
-**Versie:** v1.3.0
+**Versie:** v1.3.1
 **Stories:** alle; vooral BLB-017, BLB-021, BLB-022, BLB-034
 
 ## Context
@@ -48,7 +48,7 @@ De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die 
 
 ## Gevolgen
 
-- Het image heeft geen systeembibliotheken nodig buiten wat Pillow en psycopg als wheel meenemen; `python:3.14-slim` volstaat.
+- Het image op `python:3.14-slim` krijgt één systeembibliotheek: `libpq5` uit Debian voor psycopg. psycopg-binary leverde eigen, verouderde C-bibliotheken mee (pcre, pcre2, libcrypto 1.1) die geen beveiligingsupdates kregen (#86). Pillow neemt zijn bibliotheken als wheel mee.
 - Kaartjes zien er per browser iets anders uit. Forge test de printpagina in Chromium en Firefox.
 - Aegis scant de afhankelijkheden na elke mijlpaal (overlay §7). Forge houdt het lockbestand bij.
 - Een nieuwe afhankelijkheid buiten deze lijst vraagt een korte notitie van forge aan foundation met reden en alternatief.
@@ -57,6 +57,7 @@ De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.1 | 2026-11-04 | psycopg met `libpq5` uit Debian in plaats van psycopg-binary | Besluit stakeholder 2026-11-04, issue #86 |
 | v1.3.0 | 2026-11-02 | Formaat van de kaartjes: acht per A4, QR-code van 40 mm | Slice 8, issue #46; ADR liet het formaat open |
 | v1.2.1 | 2026-10-31 | Traefik in plaats van Nginx in de stack | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.2.0 | 2026-10-31 | Geen `/api/v1/openapi.json` en HTML-pagina; het contract staat in de repository | Afwijking uit slice 5, door de regie overgenomen |

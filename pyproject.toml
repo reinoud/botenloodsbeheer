@@ -8,7 +8,8 @@ dependencies = [
     "flask-sqlalchemy>=3.1",
     "flask-wtf>=1.2",
     "sqlalchemy>=2.0",
-    "psycopg[binary]>=3.2",
+    # libpq5 uit Debian in het image, niet de meegeleverde bibliotheken van psycopg-binary (#86).
+    "psycopg>=3.2",
     "alembic>=1.16",
     "gunicorn>=23.0",
     "webauthn>=2.7",
