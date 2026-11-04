@@ -132,7 +132,7 @@ Lokaal start de ontwikkelaar de stack met:
 5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
 6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
-`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, start de integratiecontainer opnieuw en wacht op de import.
+`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
