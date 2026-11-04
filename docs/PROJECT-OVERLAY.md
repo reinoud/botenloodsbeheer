@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.12
+**Versie overlay:** v0.4.13
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -56,6 +56,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elk besluit in de bron of het in deze ronde verwerkt moet worden; een besluit dat niet genoemd is, komt als open vraag terug.
 - Noem welke ongecommitte bestanden (model, migratie) nog een oud besluit bevatten, zodat het agent ze als ontwerppunt meeneemt.
 - Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
+- Noem een criterium met zijn tekst of met de versie van de backlog erbij, niet alleen met een nummer.
 - Wijkt de bouw bewust af van een acceptatiecriterium, pas dan vóór de review het criterium in het issue aan en noem de bron die voorgaat.
 - Geef elk agent een eigen submap in de scratchpad (`<scratchpad>/<agent>-<taak>/`); de scratchpad wordt gedeeld tussen agents van dezelfde sessie.
 - Tekstwijzigingen in bestanden met python3, niet met sed (de sed-variant verschilt per omgeving).
@@ -92,6 +93,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vervang je een aanroep op meer plekken door een gedeelde functie, draai dan per aanroep een mutant die de oude aanroep terugzet, en noem per aanroep de test die valt of waarom de mutant gelijkwaardig is.
 - Werken twee agents tegelijk met unittests, dan draait elk op een eigen testdatabase (bind mount van een `conftest.py` met een andere `TEST_DB`); de gedeelde `botenloods_test` geeft anders een deadlock. Een racetest met `race()` controleert ook dat de actie geen andere uitzondering dan `Regelfout` gooit.
 - Noem bij een nieuwe plaats of een nieuwe plaatsinvoer de beginwaarden (bootsoorten, clubplaats), zodat de E2E-helpers de juiste stappen krijgen.
+- Noem bij elke wijziging van de signatuur van een domeinfunctie alle aanroepers (web, `app/seed.py`, `tests/unit/hulp.py`).
+- Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
 - Sluit een agentopdracht af met het eindrapport als laatste bericht; een terugblik in een bestand vervangt het rapport niet.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand.
@@ -135,6 +138,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een domeinfunctie die rijen verwijdert op basis van een eerder gelezen lijst van id's, herhaalt de voorwaarde in de `DELETE` of neemt het slot van de taak die die voorwaarde kan wijzigen (zoals de import).
 - Laat bij elke bewaartermijn nalopen wat er met kopieën gebeurt: logs, back-ups, een externe bron die opnieuw synchroniseert, en verwijzingen in andere tabellen.
 - `FOR UPDATE` en `FOR KEY SHARE` vragen UPDATE-recht; tel dat mee bij het bepalen van de rechten van een rol.
+- Geeft een migratie een rol een recht op een nieuwe tabel, noem dan per recht de code die het gebruikt. Een recht dat alleen via een cascade nodig lijkt, is niet nodig: de cascade draait als eigenaar van de tabel.
+- Een nieuw `with_for_update(key_share=True)` krijgt een racetest zoals `tests/unit/test_bootsoorten.py:198`, of een notitie in het issue waarom die ontbreekt.
+- Controleer de migratiehead met `ScriptDirectory` in de testcontainer; `run migrate` vraagt om akkoord.
 - Bij een rechtenwijziging: draai per recht dat de rol houdt een mutant die alleen dat recht intrekt, en noem per mutant de test die valt; een recht zonder vallende test is niet gedekt. Meld de reviewer of de gedeelde database al op de nieuwe migratie staat, zodat hij de live ACL toetst.
 - Bij een rechtenwijziging: zoek in alle tests met de marker `worker` (of `api`) naar setup via de domeinlaag in tabellen die de rol straks niet meer mag schrijven (zoals `foto=` of `png()`), en noem ze vooraf in de opdracht.
 
@@ -249,6 +255,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.13 | 2026-11-04 | Zes regels in de briefingchecklist (Algemeen, Bouw, Migratie en database) uit de terugblikken van bedrock, aegis en sentinel (issue #83) | Lessen |
 | v0.4.12 | 2026-11-04 | Regel voor het woordbudget van een ADR, uit de terugblik van foundation (issue #83) | Lessen |
 | v0.4.11 | 2026-11-04 | Regel voor een ontbrekend wijzigingslog, uit de terugblik van apex (issue #82) | Lessen |
 | v0.4.10 | 2026-11-04 | Zeven regels in de briefingchecklist en de omweg voor #45 als commando, uit de terugblikken van slice 12 (forge, bedrock, prism, sentinel, aegis) | Lessen |
