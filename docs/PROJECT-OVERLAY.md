@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.17
+**Versie overlay:** v0.4.18
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -113,6 +113,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
+- Na een update van het lockbestand controleert de reviewer met een versiecheck in de testcontainer dat de suite tegen de nieuwe versies draait, voordat hij het aantal geslaagde tests meldt.
 - Filter de uitvoer van een mutantrun op `^E |FAILED|passed|failed`; de laatste regel kan een logregel van de app zijn.
 
 #### E2E
@@ -175,7 +176,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
-- `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit `ghcr.io/astral-sh/uv:0.9.5` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien.
+- `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit `ghcr.io/astral-sh/uv:0.9.5` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
@@ -262,6 +263,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.18 | 2026-11-04 | Regel over een versiecheck na een lockupdate, uit de terugblik van sentinel; pad van de uv-binary in de brief, uit de terugblik van aegis (issue #63) | Lessen |
 | v0.4.17 | 2026-11-04 | Regel over het controleren van de bronvorm in een test, uit de terugblikken van aegis en sentinel; regel over niet-gestagede bestanden in een reviewbrief, uit de herreview van sentinel (issue #70) | Lessen |
 | v0.4.16 | 2026-11-04 | Regel over sorteersleutels in een volgordetest, uit de terugblik van sentinel (issue #81) | Lessen |
 | v0.4.15 | 2026-11-04 | Regel over het intrekken van een recht naast een cascade, uit de terugblik van aegis; regel over mutanten bij een rechtenwijziging, uit de terugblik van sentinel (issue #85) | Lessen |
