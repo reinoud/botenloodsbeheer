@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.22
+**Versie overlay:** v0.4.23
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -116,6 +116,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
+- Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
@@ -270,6 +271,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.23 | 2026-11-04 | Regel over de `|safe`-mutant bij een escapingtest, uit de terugblik van sentinel (issues #88 en #89) | Lessen |
 | v0.4.21 | 2026-11-04 | Regel over andere schermen met hetzelfde gegeven, uit de terugblik van sentinel (volgorde verdiepingen) | Lessen |
 | v0.4.20 | 2026-11-04 | Twee regels uit de terugblik van prism en twee uit die van sentinel (issue #87): afwerklijst bij een nieuwe webroute, volgorde van `Plaats.bootsoorten`, lint buiten `app/` en `tests/`, eigen tests van een reviewer | Lessen |
 | v0.4.19 | 2026-11-04 | Regel over een vervangen pakket in status en issues uit de terugblik van sentinel (#86) | Lessen |
