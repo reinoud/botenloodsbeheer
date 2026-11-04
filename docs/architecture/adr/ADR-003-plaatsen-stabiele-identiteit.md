@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (indeling: issue #80, #83)
 **Datum:** 2026-11-04
-**Versie:** v2.2.0
+**Versie:** v2.2.1
 **Stories:** BLB-001 tot en met BLB-003, BLB-010, BLB-011, BLB-020, BLB-021, BLB-044
 
 ## Context
@@ -65,6 +65,8 @@ Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.
 
 Migratie `0012` volgt op `0011` en is de enige head. Upgrade: maak `verdieping_bootsoort`, met SELECT, INSERT en DELETE voor `botenloods_web`; bestaande rekken krijgen geen rijen. Downgrade: verwijder de tabel; plaatsen houden hun bootsoorten.
 
+Migratie `0013` volgt op `0012` en is de enige head. Upgrade: trek DELETE op `verdieping_bootsoort` in voor `botenloods_web`. Geen code verwijdert rijen uit die tabel; de cascades vanuit `rek` en `bootsoort` draaien als eigenaar van de tabel (issue #85). Downgrade: geef het recht terug.
+
 ## Alternatieven
 
 | Optie | Waarom niet |
@@ -92,6 +94,7 @@ Migratie `0012` volgt op `0011` en is de enige head. Upgrade: maak `verdieping_b
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.2.1 | 2026-11-04 | `botenloods_web` houdt SELECT en INSERT op `verdieping_bootsoort`; DELETE vervalt in migratie 0013 | Restpunt uit de reviews van #83, issue #85 |
 | v2.2.0 | 2026-11-04 | Tabel `verdieping_bootsoort`; nieuwe plaats krijgt de bootsoort van haar verdieping; `plaats_verwijderen` vervalt; migratie 0012 | Besluiten stakeholder, vraag 26 en issue #83 |
 | v2.1.1 | 2026-11-04 | `indeling_instellen` vergrendelt alle plaatsen van het rek; migratie 0011 geeft `botenloods_taken` INSERT op `bootsoort` en USAGE op de reeks | Afwijkingen gemeld bij de bouw van slice 12, issue #80 |
 | v2.1.0 | 2026-11-03 | Vak 1 tot en met 12, elk vak los aan of uit; `rek.omschrijving`; `indeling_instellen` met paren; seed uit de twee CSV-bestanden | Nieuwe besluiten stakeholder, issue #80 |

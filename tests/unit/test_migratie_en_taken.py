@@ -23,16 +23,16 @@ def test_migratie_omkeerbaar_en_gelijk_aan_modellen(database):
     command.upgrade(cfg, "head")
 
 
-def rechten_taken(cfg):
-    """De tabel- en reeksrechten van botenloods_taken in de database van cfg."""
+def rechten_taken(cfg, rol="botenloods_taken"):
+    """De tabel- en reeksrechten van rol in de database van cfg."""
     engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
     with engine.connect() as c:
         rijen = c.execute(text(
             "SELECT table_name, privilege_type FROM information_schema.role_table_grants "
-            "WHERE grantee = 'botenloods_taken' "
+            "WHERE grantee = :rol "
             "UNION ALL SELECT sequencename, 'USAGE' FROM pg_sequences WHERE has_sequence_privilege("
-            "'botenloods_taken', quote_ident(schemaname) || '.' || quote_ident(sequencename), "
-            "'USAGE')")).all()
+            ":rol, quote_ident(schemaname) || '.' || quote_ident(sequencename), "
+            "'USAGE')"), {"rol": rol}).all()
     engine.dispose()
     return set(rijen)
 
@@ -47,6 +47,18 @@ def test_migratie_0010_beperkt_rechten_taken_en_downgrade_zet_ze_terug(database)
     assert nieuw < oud and ("beheerder", "INSERT") in oud - nieuw
     command.downgrade(cfg, "0009")
     assert rechten_taken(cfg) == oud
+
+
+def test_migratie_0013_trekt_delete_op_verdieping_bootsoort_in_voor_web(database):
+    """Issue #85: de cascades draaien als eigenaar, dus web heeft DELETE niet nodig."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0012")
+    oud = rechten_taken(cfg, "botenloods_web")
+    assert ("verdieping_bootsoort", "DELETE") in oud
+    command.upgrade(cfg, "head")
+    assert rechten_taken(cfg, "botenloods_web") == oud - {("verdieping_bootsoort", "DELETE")}
+    command.downgrade(cfg, "0012")
+    assert rechten_taken(cfg, "botenloods_web") == oud
 
 
 def test_migratie_0011_geeft_taken_insert_op_bootsoort_en_downgrade_trekt_het_in(database):
