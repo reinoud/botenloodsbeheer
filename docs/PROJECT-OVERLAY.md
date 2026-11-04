@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.19
+**Versie overlay:** v0.4.20
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -94,6 +94,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
 - Vervang je een aanroep op meer plekken door een gedeelde functie, draai dan per aanroep een mutant die de oude aanroep terugzet, en noem per aanroep de test die valt of waarom de mutant gelijkwaardig is.
 - Werken twee agents tegelijk met unittests, dan draait elk op een eigen testdatabase (bind mount van een `conftest.py` met een andere `TEST_DB`); de gedeelde `botenloods_test` geeft anders een deadlock. Een racetest met `race()` controleert ook dat de actie geen andere uitzondering dan `Regelfout` gooit.
+- Een nieuwe webroute krijgt als vaste afwerklijst: het menu-item, een rij in de routetabel van de handleiding (`test_handleiding_noemt_elke_webroute`) en een uitnodigingssoort in `tests/e2e/draai.sh`.
+- `Plaats.bootsoorten` staat op id gesorteerd; "eerste soort" is de laagste id, niet de volgorde van aanvinken. `plaats()` in `tests/unit/hulp.py` weigert een lege soortenlijst; een plaats zonder soort maak je via `rek_aanmaken`.
 - Noem bij een nieuwe plaats of een nieuwe plaatsinvoer de beginwaarden (bootsoorten, clubplaats), zodat de E2E-helpers de juiste stappen krijgen.
 - Noem bij elke wijziging van de signatuur van een domeinfunctie alle aanroepers (web, `app/seed.py`, `tests/unit/hulp.py`).
 - Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
@@ -108,6 +110,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elke bronsoort die een reviewer laat toetsen het verwachte gedrag (opslaan of afwijzen).
 - Noem bij elke review welke regels in de overlay na de bouw zijn toegevoegd; een ontbrekende test op zo'n regel is een restpunt (ernst laag) en blokkeert de review niet.
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
+- Een nieuw Python-bestand buiten `app/` en `tests/` (zoals `docker/`) lint de reviewer met `-v $PWD/<map>:/app/<map>:ro` en `ruff check --no-cache <map>`; de testcontainer mount die map niet.
+- Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
@@ -264,6 +268,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.20 | 2026-11-04 | Twee regels uit de terugblik van prism en twee uit die van sentinel (issue #87): afwerklijst bij een nieuwe webroute, volgorde van `Plaats.bootsoorten`, lint buiten `app/` en `tests/`, eigen tests van een reviewer | Lessen |
 | v0.4.19 | 2026-11-04 | Regel over een vervangen pakket in status en issues uit de terugblik van sentinel (#86) | Lessen |
 | v0.4.18 | 2026-11-04 | Regel over een versiecheck na een lockupdate, uit de terugblik van sentinel; pad van de uv-binary in de brief, uit de terugblik van aegis (issue #63) | Lessen |
 | v0.4.17 | 2026-11-04 | Regel over het controleren van de bronvorm in een test, uit de terugblikken van aegis en sentinel; regel over niet-gestagede bestanden in een reviewbrief, uit de herreview van sentinel (issue #70) | Lessen |
