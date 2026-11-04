@@ -1,8 +1,8 @@
 # ADR-003 Datamodel van plaatsen met stabiele identiteit
 
-**Status:** Besloten door Foundation (indeling: issue #80)
+**Status:** Besloten door Foundation (indeling: issue #80, #83)
 **Datum:** 2026-11-04
-**Versie:** v2.1.1
+**Versie:** v2.2.0
 **Stories:** BLB-001 tot en met BLB-003, BLB-010, BLB-011, BLB-020, BLB-021, BLB-044
 
 ## Context
@@ -33,16 +33,25 @@ De plaatsen zelf zijn de indeling. Er komt geen kolom of tabel voor verdiepingen
 | `rek` | Nieuw: `omschrijving` (`String(60)`, verplicht, standaard leeg) | |
 | `plaats` | Nieuw: `verdieping` en `vak` (smallint, verplicht) | Check `verdieping BETWEEN 1 AND 5`, check `vak BETWEEN 1 AND 12`, uniek `(rek_id, verdieping, vak)` |
 | `plaats` | Vervalt: `code`, `volgorde` en index `uq_plaats_code` | |
+| `verdieping_bootsoort` | Nieuw: `rek_id`, `verdieping` (smallint), `bootsoort_id` (issue #83) | Primaire sleutel `(rek_id, verdieping)`; check `verdieping BETWEEN 1 AND 5`; `rek_id` en `bootsoort_id` met `ON DELETE CASCADE` |
 
 `code` is afgeleid en wordt niet opgeslagen. Het is een `column_property` op `Plaats`, een subquery met `rek.naam || '/' || verdieping || '/' || vak`. Zo houden API, export en logregels het veld `code`. De aanduiding is uniek zonder hoofdletters, omdat de reknaam dat is, een reknaam geen `/` bevat en verdieping en vak uniek zijn per rek. Volgorde in elke lijst: `rek.volgorde`, `rek.id`, `verdieping`, `vak`.
 
-De domeinfunctie `indeling_instellen(rek, vakken)` krijgt de verzameling paren `(verdieping, vak)` die aan staan, zoals het raster op het scherm ze toont. Ze maakt de plaatsen die ontbreken en verwijdert de plaatsen die niet in de verzameling staan. De functie vergrendelt eerst het rek en daarna alle plaatsen van dat rek (`FOR UPDATE`). Heeft één daarvan een boot, dan weigert ze met de melding van BLB-001. `toewijzen` vergrendelt boot en plaats en nooit het rek, dus er ontstaat geen deadlock. Een nieuwe plaats krijgt een publieke sleutel, geen bootsoorten en is geen clubplaats.
+De domeinfunctie `indeling_instellen(rek, vakken)` krijgt de verzameling paren `(verdieping, vak)` die aan staan, zoals het raster op het scherm ze toont. Ze maakt de plaatsen die ontbreken en verwijdert de plaatsen die niet in de verzameling staan. De functie vergrendelt eerst het rek en daarna alle plaatsen van dat rek (`FOR UPDATE`). Heeft één daarvan een boot, dan weigert ze met de melding van BLB-001. `toewijzen` vergrendelt boot en plaats en nooit het rek, dus er ontstaat geen deadlock. Een nieuwe plaats krijgt een publieke sleutel en is geen clubplaats. Ze krijgt de bootsoort van haar verdieping, als die er is; bestaande plaatsen blijven (vraag 26).
 
 De toewijzing is het veld `plaats.boot_id`, nullable, met een unieke constraint. Leeg betekent vrij. Een aparte toewijzingstabel met historie is niet nodig: de historie staat in het mutatielog (ADR-006).
 
 Clubplaats is een boolean op de plaats. Een clubboot is een boot zonder lid. De domeinfunctie `toewijzen` controleert in één transactie, met `SELECT ... FOR UPDATE` op de plaats: plaats vrij, bootsoort past, clubplaats hoort bij clubboot en omgekeerd, eigenaar is geen oud-lid, boot heeft nog geen plaats. Na toewijzen verdwijnt de boot van de wachtlijst.
 
-Verwijderen van een rek, een plaats of een geschikte bootsoort met een toegewezen boot weigert de domeinlaag (BLB-001, BLB-002). Een rek verwijderen verwijdert alleen lege plaatsen. Een losse plaats uitzetten gaat via `indeling_instellen`.
+Verwijderen van een rek of een geschikte bootsoort met een toegewezen boot weigert de domeinlaag (BLB-001, BLB-002). Een rek verwijderen verwijdert alleen lege plaatsen. Een plaats verdwijnt alleen via `indeling_instellen`, als haar vak in het raster uit gaat. `plaats_verwijderen` en de route `POST /plaatsen/<id>/verwijderen` vervallen (BLB-044, issue #83).
+
+### Bootsoort per verdieping
+
+`verdieping_bootsoort` onthoudt per verdieping hooguit één bootsoort. Welke verdiepingen bestaan, volgt uit de plaatsen. Zonder keuze is er geen rij. De rij blijft als de verdieping leeg raakt.
+
+`rek_aanmaken` krijgt per verdieping een optionele bootsoort-id en leest die met `FOR KEY SHARE`, zoals `_soorten`. Een onbekende of ongeldige id weigert het hele rek. Een keuze bij een verdieping zonder vak valt weg. In het technische log (ADR-006) krijgen `rek.aangemaakt` en `plaats.aangemaakt` de naam van de bootsoort.
+
+Wordt de bootsoort verwijderd, dan verdwijnt de rij via de cascade; `bootsoort.verwijderd` dekt het log. Weigeren maakt de soort onverwijderbaar, want geen scherm wist de keuze.
 
 De omschrijving van het rek, zoals "Grote botenloods stelling links", staat op de indeling, het kaartje en de openbare pagina. Ze hoort niet in de aanduiding. De grens is 60 tekens; de langste in de aangeleverde indeling is 52. Rek A is helemaal clubplaats: dat is `is_clubplaats` op elke plaats van A, zonder veld op het rek.
 
@@ -54,6 +63,8 @@ De omschrijving van het rek, zoals "Grote botenloods stelling links", staat op d
 
 Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.py`) en blijft de enige head. Upgrade: verwijder alle plaatsen en rekken (besluit 2 van #80; `plaats_bootsoort` gaat mee via `ON DELETE CASCADE`, boten verliezen alleen hun plaats), verkort `rek.naam`, voeg `rek.omschrijving`, index en checks toe, voeg `verdieping` en `vak` toe en verwijder `code`, `volgorde` en `uq_plaats_code`. Downgrade: voeg `code` (`String(20)`) en `volgorde` weer toe, vul `code` met de aanduiding en `volgorde` met `(verdieping - 1) * 12 + vak`, zet `uq_plaats_code` terug en verwijder de nieuwe kolommen (ook `omschrijving`), checks en index. De downgrade verliest geen plaatsen. Rechten: de rol `botenloods_taken` krijgt INSERT op `bootsoort` en USAGE op `bootsoort_id_seq`, omdat `flask seed` als die rol Wildwaterkano toevoegt; de downgrade trekt beide in.
 
+Migratie `0012` volgt op `0011` en is de enige head. Upgrade: maak `verdieping_bootsoort`, met SELECT, INSERT en DELETE voor `botenloods_web`; bestaande rekken krijgen geen rijen. Downgrade: verwijder de tabel; plaatsen houden hun bootsoorten.
+
 ## Alternatieven
 
 | Optie | Waarom niet |
@@ -63,6 +74,9 @@ Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.
 | UUID in de URL | Werkt, maar geeft een dichtere, grotere QR-code; 10 tekens volstaan |
 | Aparte tabel `toewijzing` met begin- en einddatum | Historie dubbel bijhouden naast het log; meer joins in elk overzicht |
 | Tabel `verdieping` (rek, nummer, aantal_vakken) of een kolom `rek.vakken integer[]` naast de plaatsen | Legt de indeling twee keer vast; telling en plaatsen kunnen uit elkaar lopen |
+| Kolom `rek.bootsoorten` (JSON of array) | Geen verwijzende sleutel: een verwijderde bootsoort laat een dode id achter |
+| Vijf kolommen `bootsoort_v1` tot en met `bootsoort_v5` op `rek` | Vijf keer dezelfde regel; de grens 5 op twee plekken |
+| Afleiden uit de plaatsen van de verdieping | Onduidelijk bij gemengde soorten; vraag 26b vraagt dat het rek onthoudt |
 | `code` opslaan en bijwerken bij een hernoeming van het rek | Een gegenereerde kolom kan in PostgreSQL geen andere tabel lezen; bijwerken in de domeinlaag is een tweede plek voor dezelfde waarheid |
 
 ## Gevolgen
@@ -78,6 +92,7 @@ Migratie `0011` volgt op de huidige head `0010` (`0010_rechten_botenloods_taken.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.2.0 | 2026-11-04 | Tabel `verdieping_bootsoort`; nieuwe plaats krijgt de bootsoort van haar verdieping; `plaats_verwijderen` vervalt; migratie 0012 | Besluiten stakeholder, vraag 26 en issue #83 |
 | v2.1.1 | 2026-11-04 | `indeling_instellen` vergrendelt alle plaatsen van het rek; migratie 0011 geeft `botenloods_taken` INSERT op `bootsoort` en USAGE op de reeks | Afwijkingen gemeld bij de bouw van slice 12, issue #80 |
 | v2.1.0 | 2026-11-03 | Vak 1 tot en met 12, elk vak los aan of uit; `rek.omschrijving`; `indeling_instellen` met paren; seed uit de twee CSV-bestanden | Nieuwe besluiten stakeholder, issue #80 |
 | v2.0.0 | 2026-11-03 | Indeling in rek, verdieping en vak; `code` afgeleid in plaats van vrij en te wijzigen; BLB-004 vervalt; migratie 0011 | Besluiten stakeholder en standaardkeuzes regie, issue #80 |

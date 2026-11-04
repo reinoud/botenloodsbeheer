@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.0
-**Datum:** 2026-11-03
+**Versie:** v0.7.0
+**Datum:** 2026-11-04
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -53,7 +53,7 @@ Bewust weggelaten: een repository-laag boven SQLAlchemy, een servicecontainer of
 
 ## 4. Datamodel op hoofdlijnen
 
-Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
+Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 
 | Entiteit | Belangrijkste velden | Relaties en regels |
 |----------|----------------------|--------------------|
@@ -61,6 +61,7 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 | `plaats` | verdieping (1 tot en met 5), vak (1 tot en met 12), `publieke_sleutel` (uniek, vast), is_clubplaats, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek, uniek per rek, verdieping en vak. `code` is afgeleid: `<rek>/<verdieping>/<vak>`. Ten hoogste één boot (ADR-003). |
 | `bootsoort` | naam | Startlijst van vijf soorten. Een tabel, geen vaste lijst in code, zodat BLB-028 later geen migratie vraagt. |
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
+| `verdieping_bootsoort` | rek, verdieping, bootsoort | Hooguit één bootsoort per verdieping van een rek. Een nieuwe plaats op die verdieping krijgt die bootsoort; bestaande plaatsen veranderen niet (ADR-003). |
 | `lid` | lidnummer (uniek), naam, adres, telefoon, e-mail, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
 | `boot` | naam, bootsoort, `lid_id` (leeg voor een clubboot), `afbeelding_id` | Een clubboot heeft geen lid. Een clubboot mag alleen op een clubplaats, een boot van een lid nooit. |
 | `wachtlijst` | boot (uniek), aangemeld_op | De bootsoort volgt uit de boot, dus er is per bootsoort vanzelf een eigen lijst. |
@@ -73,7 +74,7 @@ Het datamodel heeft dertien tabellen. Namen volgen de begrippen van de backlog.
 
 Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor naam en kleuren die de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
 
-De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna de plaatsen die verdwijnen. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
+De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna alle plaatsen van dat rek. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
 
 Verplaatsen van een boot is vrijgeven gevolgd door toewijzen, binnen één domeinfunctie en één transactie (aanname uit de backlog §8).
 
@@ -284,6 +285,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.7.0 | 2026-11-04 | Tabel `verdieping_bootsoort` en vergrendeling van alle plaatsen van een rek (§4), issue #83; ADR-003 v2.2.0 |
 | v0.6.0 | 2026-11-03 | Nieuwe besluiten issue #80: vak 1 tot en met 12 met gaten, omschrijving van het rek, seed uit de echte indeling (§1, §3, §4, §6.3); ADR-003 v2.1.0 |
 | v0.5.0 | 2026-11-03 | Indeling in rek, verdieping en vak (issue #80): §1, §3, §4; ADR-003 v2.0.0 |
 | v0.4.1 | 2026-11-01 | §5: geen `docker/traefik/`, de lokale Traefik staat in `compose.dev.yml`; voorbeeld van een gedeelde Traefik; ADR-013 v1.1.0 (issue #36) |

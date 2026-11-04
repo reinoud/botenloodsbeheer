@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.11
+**Versie overlay:** v0.4.12
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -178,6 +178,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een criterium noemt alleen schermen die het gegeven echt tonen; controleer dat vóór de bouw (kaartjes en `/p/` tonen geen bootsoort).
 - Verandert een story welke regels een scherm toont, noem dan ook de ADR's die het tonen beschrijven (zoals ADR-002 en ADR-006), zodat het agent ze in dezelfde ronde bijwerkt of er vooraf een issue voor is. Verandert een wijziging wanneer een API-route een foutcode geeft, noem dan ook de documentatie en de OpenAPI-beschrijving van die route, zodat bouwer en reviewer ze in dezelfde ronde bijwerken.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
+- Een woordbudget voor een ADR telt alleen ADR-tekst. Noem per besluitpunt of een korte zin volstaat; bij meer dan vier besluitpunten krijgt het budget 75 woorden per punt.
 - Heeft een document nog geen versie of wijzigingslog, begin dan op v1.0.0 en voeg onderaan een wijzigingslog toe. De backlog heeft geen wijzigingslog; de versie gaat omhoog zonder logregel.
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat. Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
 - `documentatie/gebruikers/schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw; zet afbeeldingen van schermen die niet veranderd zijn terug met `git checkout`. Een nieuw menu-item verandert alle schermafbeeldingen met de kopbalk; die blijven dan staan en worden niet teruggezet.
@@ -248,6 +249,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.12 | 2026-11-04 | Regel voor het woordbudget van een ADR, uit de terugblik van foundation (issue #83) | Lessen |
 | v0.4.11 | 2026-11-04 | Regel voor een ontbrekend wijzigingslog, uit de terugblik van apex (issue #82) | Lessen |
 | v0.4.10 | 2026-11-04 | Zeven regels in de briefingchecklist en de omweg voor #45 als commando, uit de terugblikken van slice 12 (forge, bedrock, prism, sentinel, aegis) | Lessen |
 | v0.4.9 | 2026-11-03 | Besluiten per ronde benoemen; ongecommitte bestanden met een oud besluit noemen | Terugblikken apex en foundation (#80, tweede ronde) |
