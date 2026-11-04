@@ -58,10 +58,6 @@
   {% else %}
   <p>Er zijn geen boten zonder plaats.</p>
   {% endif %}
-  <form method="post" action="{{ url_for('web.plaats_verwijderen', plaats_id=plaats.id) }}">
-    {% include "_csrf.html" %}
-    <button type="submit" class="knop knop-gevaar">Plaats {{ plaats.code }} verwijderen</button>
-  </form>
 </section>
 {% endif %}
 

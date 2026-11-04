@@ -7,7 +7,7 @@ from sqlalchemy import select, text
 from sqlalchemy.exc import DataError, IntegrityError
 
 from app.domein import CLI, Regelfout, indeling, toewijzing, uitlezen
-from app.models import Logregel, Plaats, Rek, db
+from app.models import Logregel, Plaats, Rek, VerdiepingBootsoort, db
 from tests.unit.hulp import lid, race
 from tests.unit.test_indeling_en_toewijzing import acties, boot
 
@@ -270,6 +270,115 @@ def test_kaartjes_en_openbare_pagina_tonen_de_omschrijving_van_het_rek(app):
     assert indeling.openbaar(p.publieke_sleutel)["omschrijving"] == "Grote botenloods stelling links"
     # Er komen geen velden bij in de API (issue #80): de plaatsen houden dezelfde vijf sleutels.
     assert set(uitlezen.plaatsen()[0]) == {"code", "rek", "clubplaats", "bootsoorten", "boot"}
+
+
+# Bootsoort per verdieping (issue #83, BLB-001 criterium 3, ADR-003 v2.2.0)
+
+
+def soorten_van(r):
+    return {p.code: [s.naam for s in p.bootsoorten] for p in indeling.rek(r.id).plaatsen}
+
+
+def soort_id(naam):
+    return next(s.id for s in indeling.bootsoorten() if s.naam == naam)
+
+
+def test_rek_aanmaken_geeft_elke_plaats_de_bootsoort_van_haar_verdieping(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (3, 1)}, CLI,
+                              {1: soort_id("Kajak"), 2: soort_id("Surfski")})
+    assert soorten_van(r) == {"Y/1/1": ["Kajak"], "Y/1/2": ["Kajak"], "Y/1/3": ["Kajak"],
+                              "Y/2/1": ["Surfski"], "Y/2/2": ["Surfski"], "Y/3/1": []}
+    assert not any(p.is_clubplaats for p in r.plaatsen)
+
+
+@pytest.mark.parametrize("keuze", [None, {}, {1: None}], ids=["none", "leeg", "none_waarde"])
+def test_zonder_keuze_geen_bootsoort_en_geen_rij(app, keuze):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, keuze)
+    assert soorten_van(r) == {"Y/1/1": []}
+    assert aantal(VerdiepingBootsoort) == 0
+
+
+@pytest.mark.parametrize("keuze", [{1: 999}, {1: 0}, {1: -1}, {1: "abc"}, {1: True}, {1: 1.5},
+                                   {1: 1, 2: 999}],
+                         ids=["onbekend", "nul", "negatief", "tekst", "bool", "float", "een_goed_een_fout"])
+def test_onbekende_of_ongeldige_bootsoort_weigert_het_hele_rek(app, keuze):
+    with pytest.raises(Regelfout, match="Kies een bestaande bootsoort"):
+        indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI, keuze)
+    assert aantal(Rek) == 0 and aantal(Plaats) == 0 and aantal(VerdiepingBootsoort) == 0
+    assert acties() == []
+
+
+def test_keuze_bij_verdieping_zonder_vak_valt_stil_weg(app):
+    """Foundation-aanname 3: ook een onbekend id bij een verdieping zonder vak telt niet."""
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: soort_id("Kajak"), 4: 999, 9: 999})
+    assert soorten_van(r) == {"Y/1/1": ["Kajak"]}
+    assert [(k.verdieping, k.bootsoort_id) for k in db.session.scalars(
+        select(VerdiepingBootsoort))] == [(1, soort_id("Kajak"))]
+
+
+def test_indeling_instellen_geeft_een_nieuw_vak_de_bootsoort_van_de_verdieping(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (1, 3), (2, 1)}, CLI,
+                              {1: soort_id("Kajak"), 2: soort_id("Surfski")})
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 4), (2, 1), (2, 2), (3, 1)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": ["Kajak"], "Y/1/4": ["Kajak"], "Y/2/1": ["Surfski"],
+                              "Y/2/2": ["Surfski"], "Y/3/1": []}
+
+
+def test_bestaande_plaatsen_veranderen_niet_en_clubplaats_blijft_uit(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: soort_id("Kajak")})
+    p = indeling.rek(r.id).plaatsen[0]
+    indeling.plaats_wijzigen(p.id, [soort_id("C11")], True, CLI)
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": ["C11"], "Y/1/2": ["Kajak"]}
+    assert [q.is_clubplaats for q in indeling.rek(r.id).plaatsen] == [True, False]
+
+
+def test_keuze_blijft_bewaard_als_de_verdieping_leeg_raakt(app):
+    """Foundation-aanname 2: een leeg geraakte verdieping houdt haar bootsoort."""
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI, {2: soort_id("Surfski")})
+    indeling.indeling_instellen(r.id, {(1, 1)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": []}
+    indeling.indeling_instellen(r.id, {(1, 1), (2, 5)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": [], "Y/2/5": ["Surfski"]}
+
+
+def test_verdieping_zonder_keuze_geeft_ook_later_geen_bootsoort(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: soort_id("Kajak")})
+    indeling.indeling_instellen(r.id, {(1, 1), (2, 1)}, CLI)
+    assert soorten_van(r)["Y/2/1"] == []
+
+
+def test_bootsoort_verwijderen_ruimt_de_keuze_op(app):
+    """De cascade op bootsoort: de keuze verdwijnt mee, zodat geen scherm haar hoeft te wissen."""
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI,
+                              {1: soort_id("Kajak"), 2: soort_id("Supboard")})
+    indeling.indeling_instellen(r.id, {(1, 1)}, CLI)  # Supboard heeft dan geen plaats meer
+    indeling.bootsoort_verwijderen(soort_id("Supboard"), CLI)
+    assert [k.verdieping for k in db.session.scalars(select(VerdiepingBootsoort))] == [1]
+
+
+def test_rek_verwijderen_ruimt_de_keuze_op(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: soort_id("Kajak")})
+    indeling.rek_verwijderen(r.id, CLI)
+    assert aantal(VerdiepingBootsoort) == 0
+
+
+def test_database_bewaakt_verdieping_en_een_soort_per_verdieping(app, database):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1)}, CLI, {1: soort_id("Kajak")})
+    for sql in (f"INSERT INTO verdieping_bootsoort VALUES ({r.id}, 1, {soort_id('C11')})",
+                f"INSERT INTO verdieping_bootsoort VALUES ({r.id}, 6, {soort_id('C11')})"):
+        with pytest.raises(IntegrityError):
+            db.session.execute(text(sql))
+        db.session.rollback()
+
+
+def test_logregels_noemen_de_bootsoort_per_verdieping(app):
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI, {1: soort_id("Kajak")})
+    assert regels("rek.aangemaakt")[0].gegevens["bootsoorten"] == {"1": "Kajak"}
+    assert [x.gegevens for x in regels("plaats.aangemaakt")] == [
+        {"plaatscode": "Y/1/1", "bootsoorten": ["Kajak"]}, {"plaatscode": "Y/2/1"}]
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2)}, CLI)
+    assert regels("plaats.aangemaakt")[-1].gegevens == {"plaatscode": "Y/1/2", "bootsoorten": ["Kajak"]}
 
 
 # Logregels

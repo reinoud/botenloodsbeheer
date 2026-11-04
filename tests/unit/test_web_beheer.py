@@ -64,6 +64,38 @@ def test_rek_aanmaken_met_gaten_en_dubbele_naam(ingelogd):
     assert "rek.aangemaakt" in techniek and "plaats.aangemaakt" in techniek
 
 
+def test_nieuw_rek_met_bootsoort_per_verdieping(ingelogd):
+    """BLB-001 criterium 3: het formulier toont per verdieping een keuze; lege keuze is geen soort."""
+    tekst = ingelogd.get("/indeling").text
+    for v in range(1, 6):
+        assert f'name="bootsoort-{v}"' in tekst
+    assert tekst.count('<option value="">Geen bootsoort</option>') == 5
+    r = ingelogd.post("/rekken", data={"naam": "Y", "vak": ["1-1", "1-2", "2-1", "3-1"],
+                                       "bootsoort-1": "1", "bootsoort-2": "3", "bootsoort-3": ""},
+                      follow_redirects=True)
+    assert "Het rek is aangemaakt." in r.text
+    soorten = {p.code: [s.naam for s in p.bootsoorten] for p in db.session.scalar(select(Rek)).plaatsen}
+    assert soorten == {"Y/1/1": ["Kajak"], "Y/1/2": ["Kajak"], "Y/2/1": ["Surfski"], "Y/3/1": []}
+
+
+@pytest.mark.parametrize("waarde", ["999", "abc", "0", "-1", "2147483648", "1.5"],
+                         ids=["onbekend", "tekst", "nul", "negatief", "te_groot", "komma"])
+def test_nieuw_rek_met_ongeldige_bootsoort_geweigerd(ingelogd, waarde):
+    r = ingelogd.post("/rekken", data={"naam": "Y", "vak": "1-1", "bootsoort-1": waarde},
+                      follow_redirects=True)
+    assert r.status_code == 200 and "Kies een bestaande bootsoort." in r.text
+    assert db.session.scalar(select(Rek)) is None
+
+
+def test_plaats_verwijderen_bestaat_niet_meer(ingelogd):
+    """BLB-044 criterium 5: geen knop op het plaatsdetail en geen route (404)."""
+    p = plaats("A/1/1")
+    tekst = ingelogd.get(f"/plaatsen/{p.id}").text
+    assert "verwijderen" not in tekst and "/verwijderen" not in tekst
+    assert ingelogd.post(f"/plaatsen/{p.id}/verwijderen").status_code == 404
+    assert db.session.get(Plaats, p.id) is not None
+
+
 @pytest.mark.parametrize("data,melding", [
     ({"naam": "X"}, "Zet minstens één vak aan."),
     ({"naam": "X", "vak": "0-0"}, "Een rek heeft verdieping 1 tot en met 5 en vak 1 tot en met 12."),

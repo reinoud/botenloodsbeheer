@@ -13,7 +13,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, leden, log, vandaag
-from app.models import Boot, Bootsoort, Lid, Plaats, Rek, db, plaats_bootsoort
+from app.models import (
+    Boot,
+    Bootsoort,
+    Lid,
+    Plaats,
+    Rek,
+    VerdiepingBootsoort,
+    db,
+    plaats_bootsoort,
+)
 
 # Zonder verwarrende tekens: geen 0, o, O, 1, l en I (ADR-003).
 ALFABET = "23456789abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
@@ -275,30 +284,60 @@ def plaats(plaats_id):
     return p
 
 
-def rek_aanmaken(naam, omschrijving, vakken, actor):
-    """Maakt het rek met een plaats per vak dat aan staat (BLB-001)."""
+def _verdiepingsoorten(per_verdieping, vakken):
+    """{verdieping: Bootsoort} voor de verdiepingen met een vak. Een keuze bij een verdieping
+    zonder vak valt stil weg (BLB-001). Een onbekende of ongeldige id weigert alles. KEY SHARE,
+    zoals _soorten: bootsoort_verwijderen wacht op ons in plaats van een FK-fout te geven."""
+    keuze = {v: i for v, i in (per_verdieping or {}).items()
+             if v in {v for v, _ in vakken} and i is not None}
+    if not all(isinstance(i, int) and not isinstance(i, bool) for i in keuze.values()):
+        raise Regelfout("Kies een bestaande bootsoort.")
+    soorten = {s.id: s for s in db.session.scalars(
+        select(Bootsoort).where(Bootsoort.id.in_(set(keuze.values())))
+        .with_for_update(key_share=True))}
+    if not set(keuze.values()) <= soorten.keys():
+        raise Regelfout("Kies een bestaande bootsoort.")
+    return {v: soorten[i] for v, i in keuze.items()}
+
+
+def rek_aanmaken(naam, omschrijving, vakken, actor, bootsoort_per_verdieping=None):
+    """Maakt het rek met een plaats per vak dat aan staat (BLB-001). bootsoort_per_verdieping is
+    {verdieping: bootsoort-id}: elke plaats op die verdieping krijgt die soort, en het rek
+    onthoudt haar voor vakken die later aan gaan (ADR-003 v2.2.0)."""
     naam, omschrijving, vakken = _naam(naam), _omschrijving(omschrijving), _vakken(vakken)
-    _naam_vrij(naam)
+    try:
+        soorten = _verdiepingsoorten(bootsoort_per_verdieping, vakken)
+        _naam_vrij(naam)
+    except Regelfout:
+        db.session.rollback()
+        raise
     volgorde = db.session.scalar(select(func.coalesce(func.max(Rek.volgorde), 0))) + 1
     r = Rek(naam=naam, omschrijving=omschrijving, volgorde=volgorde)
     db.session.add(r)
     _flush_rek(naam)
     log.schrijf(actor, "rek.aangemaakt", [f"rek:{r.id}"],
-                {"naam": naam, "omschrijving": omschrijving, "vakken": len(vakken)})
-    _plaatsen_erbij(r, vakken, actor)
+                {"naam": naam, "omschrijving": omschrijving, "vakken": len(vakken),
+                 **({"bootsoorten": {str(v): s.naam for v, s in sorted(soorten.items())}}
+                    if soorten else {})})
+    db.session.add_all(VerdiepingBootsoort(rek_id=r.id, verdieping=v, bootsoort_id=s.id)
+                       for v, s in soorten.items())
+    _plaatsen_erbij(r, vakken, actor, soorten)
     db.session.commit()
     return r
 
 
-def _plaatsen_erbij(r, vakken, actor):
-    nieuw = [Plaats(rek=r, verdieping=v, vak=k, publieke_sleutel=_publieke_sleutel())
+def _plaatsen_erbij(r, vakken, actor, soorten):
+    """Nieuwe plaatsen, geen clubplaats; soorten is {verdieping: Bootsoort}."""
+    nieuw = [Plaats(rek=r, verdieping=v, vak=k, publieke_sleutel=_publieke_sleutel(),
+                    bootsoorten=[soorten[v]] if v in soorten else [])
              for v, k in sorted(vakken)]
     db.session.add_all(nieuw)
     db.session.flush()
     for p in nieuw:
         # "plaatscode", want het log verbergt de waarde van een veld "code" (ADR-006).
         log.schrijf(actor, "plaats.aangemaakt", [f"plaats:{p.id}", f"rek:{r.id}"],
-                    {"plaatscode": f"{r.naam}/{p.verdieping}/{p.vak}"})
+                    {"plaatscode": f"{r.naam}/{p.verdieping}/{p.vak}",
+                     **({"bootsoorten": [s.naam for s in p.bootsoorten]} if p.bootsoorten else {})})
 
 
 def rek_wijzigen(rek_id, naam, omschrijving, actor):
@@ -334,6 +373,12 @@ def indeling_instellen(rek_id, vakken, actor):
         bezet = next((p for p in weg if p.boot_id), None)
         if bezet:
             raise Regelfout(f"Op plaats {bezet.code} ligt een boot. Geef de plaats eerst vrij.")
+        # KEY SHARE op de soort, zoals _soorten: bootsoort_verwijderen wacht dan op ons.
+        soorten = {v: s for v, s in db.session.execute(
+            select(VerdiepingBootsoort.verdieping, Bootsoort)
+            .join(Bootsoort, Bootsoort.id == VerdiepingBootsoort.bootsoort_id)
+            .where(VerdiepingBootsoort.rek_id == r.id)
+            .with_for_update(key_share=True, of=Bootsoort))}
     except Regelfout:
         db.session.rollback()
         raise
@@ -341,7 +386,7 @@ def indeling_instellen(rek_id, vakken, actor):
         log.schrijf(actor, "plaats.verwijderd", [f"plaats:{p.id}", f"rek:{r.id}"],
                     {"plaatscode": p.code})
         db.session.delete(p)
-    _plaatsen_erbij(r, vakken - bestaand.keys(), actor)
+    _plaatsen_erbij(r, vakken - bestaand.keys(), actor, soorten)
     db.session.commit()
     return r
 
@@ -412,19 +457,6 @@ def _publieke_sleutel():
     """Willekeurig en vast (ADR-003). Bij ongeveer 3 x 10^17 mogelijkheden is een botsing bij 160
     plaatsen verwaarloosbaar; de unieke constraint vangt die toch af."""
     return "".join(secrets.choice(ALFABET) for _ in range(SLEUTELLENGTE))
-
-
-def plaats_verwijderen(plaats_id, actor):
-    p = db.session.get(Plaats, plaats_id, with_for_update=True)
-    if p is None:
-        raise Regelfout("Deze plaats bestaat niet.")
-    if p.boot_id:
-        db.session.rollback()
-        raise Regelfout("Op deze plaats ligt een boot. Geef de plaats eerst vrij.")
-    log.schrijf(actor, "plaats.verwijderd", [f"plaats:{p.id}", f"rek:{p.rek_id}"],
-                {"plaatscode": p.code})
-    db.session.delete(p)
-    db.session.commit()
 
 
 def openbaar(publieke_sleutel):

@@ -15,7 +15,7 @@ from sqlalchemy import create_engine, text
 
 TEST_DB = "botenloods_test"
 TABELLEN = ("beheerder, passkey, uitnodiging, logregel, instelling, taakrun, rek, plaats, "
-            "plaats_bootsoort, lid, boot, wachtlijst, afbeelding, token, bootsoort")
+            "plaats_bootsoort, verdieping_bootsoort, lid, boot, wachtlijst, afbeelding, token, bootsoort")
 # Na elke test weer de startlijst uit de migratie, ook als een test soorten wijzigde (BLB-028).
 STARTLIJST = "INSERT INTO bootsoort (naam) VALUES " + ", ".join(
     f"('{naam}')" for naam in ("Kajak", "Canadese kano", "Surfski", "C11", "Supboard"))

@@ -32,6 +32,17 @@
     <label for="rek-omschrijving">Omschrijving (hooguit {{ omschrijving_max }} tekens, niet verplicht)</label>
     <input id="rek-omschrijving" class="breed" name="omschrijving" maxlength="{{ omschrijving_max }}">
     {{ raster() }}
+    <fieldset>
+      <legend>Bootsoort per verdieping (niet verplicht)</legend>
+      <p>Elke plaats op die verdieping krijgt deze bootsoort, ook een vak dat later aan gaat. Zonder keuze krijgt een nieuwe plaats geen bootsoort.</p>
+      {% for verdieping in verdiepingen %}
+      <label for="bootsoort-{{ verdieping }}">Verdieping {{ verdieping }}</label>
+      <select id="bootsoort-{{ verdieping }}" name="bootsoort-{{ verdieping }}">
+        <option value="">Geen bootsoort</option>
+        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
+      </select>
+      {% endfor %}
+    </fieldset>
     <button type="submit" class="knop">Rek aanmaken</button>
   </form>
 </section>

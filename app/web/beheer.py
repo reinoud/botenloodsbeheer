@@ -2,6 +2,7 @@
 Schermen over boten en plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
 
 import json
+from functools import partial
 
 from flask import abort, current_app, flash, redirect, render_template, request, url_for
 
@@ -43,10 +44,25 @@ def _vakken():
     return paren
 
 
+def _bootsoorten_per_verdieping():
+    """{verdieping: id} uit de keuzes bootsoort-<verdieping>. Leeg is geen keuze; tekst die geen
+    geldig getal is wordt 0, een id die niet bestaat: het domein weigert dat met zijn melding."""
+    keuze = {}
+    for verdieping in indeling.VERDIEPINGEN:
+        waarde = request.form.get(f"bootsoort-{verdieping}", "")
+        if waarde:
+            try:
+                keuze[verdieping] = getal(waarde)
+            except ValueError:
+                keuze[verdieping] = 0
+    return keuze
+
+
 @bp.get("/indeling")
 @inloggen_vereist
 def indeling_overzicht():
     return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
+                           bootsoorten=indeling.bootsoorten(),
                            verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN,
                            naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX)
 
@@ -54,8 +70,9 @@ def indeling_overzicht():
 @bp.post("/rekken")
 @inloggen_vereist
 def rek_aanmaken():
-    uitvoeren(indeling.rek_aanmaken, request.form.get("naam"), request.form.get("omschrijving"),
-              _vakken(), gelukt="Het rek is aangemaakt.")
+    uitvoeren(partial(indeling.rek_aanmaken, bootsoort_per_verdieping=_bootsoorten_per_verdieping()),
+              request.form.get("naam"), request.form.get("omschrijving"), _vakken(),
+              gelukt="Het rek is aangemaakt.")
     return redirect(url_for("web.indeling_overzicht"))
 
 
@@ -122,14 +139,6 @@ def plaats_wijzigen(plaats_id):
               request.form.getlist("bootsoort", type=getal), "clubplaats" in request.form,
               gelukt="De plaats is opgeslagen.")
     return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
-
-
-@bp.post("/plaatsen/<int:plaats_id>/verwijderen")
-@inloggen_vereist
-def plaats_verwijderen(plaats_id):
-    if uitvoeren(indeling.plaats_verwijderen, plaats_id, gelukt="De plaats is verwijderd.") is None:
-        return redirect(url_for("web.plaats_detail", plaats_id=plaats_id))
-    return redirect(url_for("web.indeling_overzicht"))
 
 
 # Boten (BLB-005)

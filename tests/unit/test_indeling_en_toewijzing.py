@@ -65,21 +65,17 @@ def test_rek_wijzigen_en_leeg_rek_verwijderen(app):
     assert acties()[-2:] == ["rek.gewijzigd", "rek.verwijderd"]
 
 
-def test_bezette_plaats_of_rek_niet_te_verwijderen(app):
+def test_rek_met_bezette_plaats_niet_te_verwijderen(app):
     p = plaats()
     toewijzing.toewijzen(p.id, boot(lid().id).id, CLI)
-    with pytest.raises(Regelfout, match="Geef de plaats eerst vrij"):
-        indeling.plaats_verwijderen(p.id, CLI)
     with pytest.raises(Regelfout, match="Geef eerst die plaatsen vrij"):
         indeling.rek_verwijderen(p.rek_id, CLI)
     assert db.session.get(Plaats, p.id).boot_id is not None
 
 
-def test_lege_plaats_verwijderen(app):
-    p = plaats()
-    indeling.plaats_verwijderen(p.id, CLI)
-    assert db.session.get(Plaats, p.id) is None
-    assert acties()[-1] == "plaats.verwijderd"
+def test_plaats_verwijderen_bestaat_niet_meer(app):
+    """BLB-044: een plaats verdwijnt alleen via het raster (issue #83)."""
+    assert not hasattr(indeling, "plaats_verwijderen")
 
 
 # Boten

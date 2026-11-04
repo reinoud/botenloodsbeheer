@@ -1,12 +1,13 @@
-"""Indeling met rek, verdieping en vak (BLB-001, BLB-044, issue #80), de route voor een mens:
-rek met gaten aanmaken, boot toewijzen aan <rek>/2/3, uitzetten geweigerd, kaartje printen en de
+"""Indeling met rek, verdieping en vak (BLB-001, BLB-044, issues #80 en #83), de route voor een
+mens: rek met gaten en een bootsoort per verdieping aanmaken, boot toewijzen aan <rek>/2/3 zonder
+de plaats eerst in te stellen, uitzetten geweigerd, een vak later aanzetten, kaartje printen en de
 openbare pagina openen via de QR-link. Eigen rek met een naam die per run uniek is."""
 
 import re
 
 from conftest import reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, sectie_van, toewijzen
+from test_loods import boot_vastleggen, rek_aanmaken, sectie_van, toewijzen
 
 VAKKEN = ((1, 1), (1, 3), (1, 4), (1, 12), (2, 1), (2, 2), (2, 3), (2, 4))
 
@@ -16,7 +17,7 @@ def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page,
     rek, omschrijving = reknaam("x"), "Testrek bij de deur"
     code = f"{rek}/2/3"
     bootnaam = f"Rasterboot {rek}"
-    rek_aanmaken(page, rek, VAKKEN, omschrijving)
+    rek_aanmaken(page, rek, VAKKEN, omschrijving, soorten={1: "Surfski", 2: "Kajak"})
 
     # Alleen de vakken die aan stonden zijn plaatsen, ook met een gat (vak 2) en vak 12.
     sectie = sectie_van(page, rek)
@@ -24,7 +25,15 @@ def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page,
     expect(sectie.locator("tbody a")).to_have_text([f"{rek}/{v}/{k}" for v, k in VAKKEN])
     expect(sectie.get_by_role("link", name=f"{rek}/1/2", exact=True)).to_have_count(0)
 
-    plaats_instellen(page, code, ["Kajak"])
+    # Elke plaats heeft de bootsoort van haar verdieping en er is geen knop om de plaats te
+    # verwijderen. De boot hoeft dus niet eerst te worden ingesteld.
+    page.get_by_role("link", name=f"{rek}/1/1", exact=True).click()
+    expect(page.get_by_label("Surfski", exact=True)).to_be_checked()
+    expect(page.get_by_label("Kajak", exact=True)).not_to_be_checked()
+    expect(page.get_by_role("button", name=re.compile("verwijderen"))).to_have_count(0)
+    page.go_back()
+    page.get_by_role("link", name=code, exact=True).click()
+    expect(page.get_by_label("Kajak", exact=True)).to_be_checked()
     boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
     toewijzen(page, code, bootnaam)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
@@ -49,6 +58,15 @@ def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page,
     expect(page.get_by_text("De indeling is opgeslagen.")).to_be_visible()
     expect(sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/4", exact=True)).to_have_count(0)
     expect(sectie_van(page, rek).get_by_role("link", name=code, exact=True)).to_have_count(1)
+
+    # Een vak dat later aan gaat, krijgt de bootsoort van zijn verdieping.
+    sectie = sectie_van(page, rek)
+    sectie.get_by_text("Rek wijzigen of verwijderen").click()
+    sectie.get_by_label("Verdieping 2, vak 5", exact=True).check()
+    sectie.get_by_role("button", name="Indeling opslaan").click()
+    expect(page.get_by_text("De indeling is opgeslagen.")).to_be_visible()
+    sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/5", exact=True).click()
+    expect(page.get_by_label("Kajak", exact=True)).to_be_checked()
 
     # Het kaartje van de plaats: aanduiding, omschrijving en eigenaar, geen andere gegevens.
     page.goto("/kaartjes")

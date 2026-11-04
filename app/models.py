@@ -166,6 +166,19 @@ class Bootsoort(db.Model):
     naam: Mapped[str] = mapped_column(String(50), unique=True)
 
 
+class VerdiepingBootsoort(db.Model):
+    """De bootsoort die nieuwe plaatsen op een verdieping krijgen (ADR-003 v2.2.0, issue #83).
+    Zonder keuze geen rij; de rij blijft als de verdieping leeg raakt."""
+
+    __tablename__ = "verdieping_bootsoort"
+
+    rek_id: Mapped[int] = mapped_column(ForeignKey("rek.id", ondelete="CASCADE"), primary_key=True)
+    verdieping: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
+    bootsoort_id: Mapped[int] = mapped_column(ForeignKey("bootsoort.id", ondelete="CASCADE"))
+
+    __table_args__ = (CheckConstraint("verdieping BETWEEN 1 AND 5", name="verdieping_geldig"),)
+
+
 plaats_bootsoort = Table(
     "plaats_bootsoort",
     db.metadata,
