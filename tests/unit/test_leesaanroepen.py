@@ -149,3 +149,10 @@ def test_onbekend_pad_en_verkeerde_methode_geven_json(api, client):
     assert r.status_code == 405 and r.json == {"fout": "Deze methode kan niet op dit pad."}
     assert "GET" in r.headers["Allow"] and "DELETE" not in r.headers["Allow"]
     assert client.get("/bestaatniet").content_type.startswith("text/html")
+
+
+@pytest.mark.parametrize("methode, pad", [("put", "/api/v1/bestaatniet"), ("post", "/api/v1/ik")])
+def test_te_groot_op_pad_zonder_view_geeft_json(api, methode, pad):
+    """#91: ook zonder view de 413 van de API, niet de HTML van werkzeug."""
+    r = getattr(api, methode)(pad, data=b"x" * (2 * 1024 * 1024 + 1), content_type="application/json")
+    assert r.status_code == 413 and r.json == {"fout": "Het verzoek is groter dan 2 MB."}

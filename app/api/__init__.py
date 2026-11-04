@@ -51,8 +51,13 @@ def ik(token):
             "verloopt_op": token.verloopt_op.astimezone(tz).date().isoformat()}
 
 
-@bp.errorhandler(RequestEntityTooLarge)
+# app_errorhandler: de 413 ontstaat al in before_request, ook op paden zonder view (#91).
+@bp.app_errorhandler(RequestEntityTooLarge)
 def te_groot(_fout):
+    # Lichaam weglezen: sluit Gunicorn met ongelezen data, dan stuurt de kernel een RST en geeft
+    # Traefik 502 in plaats van deze 413 (#91). Traefik begrenst het lichaam op 3 MB.
+    while request.environ["wsgi.input"].read(65536):
+        pass
     return {"fout": "Het verzoek is groter dan 2 MB."}, 413
 
 
