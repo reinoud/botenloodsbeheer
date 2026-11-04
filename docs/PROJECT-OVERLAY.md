@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.4.24
+**Versie overlay:** v0.4.25
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-04
@@ -123,6 +123,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
 - Na een update van het lockbestand controleert de reviewer met een versiecheck in de testcontainer dat de suite tegen de nieuwe versies draait, voordat hij het aantal geslaagde tests meldt.
 - Filter de uitvoer van een mutantrun op `^E |FAILED|passed|failed`; de laatste regel kan een logregel van de app zijn.
+- Toets een foutafhandeling van de API ook op een onbekend pad en een verkeerde methode onder `/api/v1/`; een `bp.errorhandler` dekt die niet, een `bp.app_errorhandler` wel.
 
 #### E2E
 
@@ -185,6 +186,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
 - `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit `ghcr.io/astral-sh/uv:0.9.5` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
+- Noem bij een review op de grens van de API elke router naar de dienst `api`, dus ook `api-extern` uit `compose.api-extern.yml`.
+- Noem bij een review van een grens op verzoeken of de dienst ook buiten Traefik bereikbaar is (gepubliceerde poort, gedeeld netwerk), en zo ja via welke route.
+- Een proef via de proxy met `http.client` die de Host-kop zelf zet, gebruikt `putrequest(..., skip_host=True)`; anders geeft Traefik 400.
+- Een proef met veel verzoeken via Traefik gebruikt per verzoek een eigen Authorization-kop en blijft onder 50 verzoeken per adres; anders meet je de rate limit.
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
@@ -271,6 +276,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.4.25 | 2026-11-04 | Vijf regels uit de terugblikken van sentinel en aegis (issue #91): foutafhandeling op paden zonder view, elke router naar `api`, bereikbaarheid buiten Traefik, eigen token per verzoek en `skip_host` bij een proef via Traefik | Lessen |
 | v0.4.24 | 2026-11-04 | Omweg voor `draai.sh` in het nachtvenster vervalt: het script vraagt zelf een import aan (#45); regel over E2E-uitvoer en herhaalde runs uit de terugblik van sentinel | Bouw #45 |
 | v0.4.23 | 2026-11-04 | Regel over de `\|safe`-mutant bij een escapingtest, uit de terugblik van sentinel (issues #88 en #89) | Lessen |
 | v0.4.21 | 2026-11-04 | Regel over andere schermen met hetzelfde gegeven, uit de terugblik van sentinel (volgorde verdiepingen) | Lessen |
