@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.10
+**Versie overlay:** v0.5.11
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -139,6 +139,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
 - Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
+- Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
 
 #### E2E
 
@@ -295,6 +296,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.11 | 2026-11-05 | Regel over de diensten die een instelling lezen, uit de terugblik van sentinel (issue #114) | Lessen |
 | v0.5.10 | 2026-11-05 | Regel over mutanten op een Jinja-macro met meer aanroepen, uit de terugblik van sentinel (issue #110) | Lessen |
 | v0.5.9 | 2026-11-05 | Regel over een oud image na een nieuwe imagenaam, uit de terugblik van sentinel (issue #34) | Lessen |
 | v0.5.8 | 2026-11-05 | Mutant met bestand:regel van de assert; bestaand risico op een ander pad als bevinding of advies, uit de terugblikken van sentinel en aegis (issue #31) | Lessen |
