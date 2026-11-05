@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.8
+**Versie overlay:** v0.5.9
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -78,6 +78,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een nieuwe map in de repository die een test leest, moet in de testcontainer gemount worden in `compose.dev.yml`.
 - Draai geen compose-commando terwijl een `git stash` actief is; vergelijk een baseline in een aparte worktree.
 - Een script met een eigen compose-project noemt welke images het bouwt en of het die na afloop laat staan.
+- Verandert een wijziging de naam van een image, noem dan in de brief of het oude image nog op de host staat en wie het opruimt.
 - Een afwijking van een ADR die alleen namen of de plaats van een instelling raakt (zoals een omgevingsvariabele per dienst), mag het bouwende agent doorvoeren en melden; foundation werkt de ADR daarna bij. Elke gemelde afwijking krijgt vóór de review een issue of een ADR-wijziging; een melding alleen in een terugblik of issuecommentaar telt niet. Verandert een afwijking wat een beheerder ziet of hoe lang die moet wachten, leg die dan vóór de bouw aan apex en de stakeholder voor; een melding achteraf in een issue is te laat.
 - Elke nieuwe omgevingsvariabele krijgt een test die de variabele zet en `create_app` aanroept (geldige en ongeldige waarde); een test die alleen `app.config` overschrijft, telt niet. Leest alleen compose de variabele (zoals `API_EXTERN_BRONNEN`), dan komt er in plaats daarvan een test op `docker compose config` met en zonder waarde. Die controle staat bovenin `tests/e2e/draai.sh` en draait op de host, want de testcontainer heeft geen docker. Leest meer dan één dienst de variabele, dan staat hij in de gedeelde omgeving van compose; controleer per dienst met `docker compose config`.
 - Noem bij een seed of fixture welke regel voorgaat als architectuur §6.3 botst met een ADR (standaard: de ADR).
@@ -293,6 +294,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.9 | 2026-11-05 | Regel over een oud image na een nieuwe imagenaam, uit de terugblik van sentinel (issue #34) | Lessen |
 | v0.5.8 | 2026-11-05 | Mutant met bestand:regel van de assert; bestaand risico op een ander pad als bevinding of advies, uit de terugblikken van sentinel en aegis (issue #31) | Lessen |
 | v0.5.7 | 2026-11-05 | Regel over de controle van Dependabot na de merge, uit de terugblik van sentinel (issue #25) | Lessen |
 | v0.5.6 | 2026-11-05 | Regels over een mutant op `upgrade()` en over schrijfproeven op een rijbeleid, uit de terugblikken van sentinel en aegis (issue #24) | Lessen |
