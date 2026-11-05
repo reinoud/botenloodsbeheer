@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.16
+**Versie overlay:** v0.5.17
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -122,6 +122,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Een nieuw Python-bestand buiten `app/` en `tests/` (zoals `docker/`) lint de reviewer met `-v $PWD/<map>:/app/<map>:ro` en `ruff check --no-cache <map>`; de testcontainer mount die map niet.
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
+- Draai de unitsuite op een proefimage met `docker compose -f docker-compose.yml -f compose.dev.yml -f <scratchpad>/compose.<proef>.yml --profile test run --rm test pytest -q`; het override-bestand zet alleen `services.test.image: <proefimage>` en `pull_policy: never`. Hertag `botenloods-dev` niet, anderen gebruiken het.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
 - Wordt een lus in een Jinja-macro gewijzigd, noem dan elke aanroep van de macro en de mutant die alleen één aanroep raakt.
@@ -213,7 +214,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
-- `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit `ghcr.io/astral-sh/uv:0.9.5` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
+- `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit het uv-image in de eerste `FROM`-regel van `docker/Dockerfile` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
 - Noem bij een review op de grens van de API elke router naar de dienst `api`, dus ook `api-extern` uit `compose.api-extern.yml`.
 - Noem bij een review van een grens op verzoeken of de dienst ook buiten Traefik bereikbaar is (gepubliceerde poort, gedeeld netwerk), en zo ja via welke route.
 - Een proef via de proxy met `http.client` die de Host-kop zelf zet, gebruikt `putrequest(..., skip_host=True)`; anders geeft Traefik 400.
@@ -305,6 +306,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.17 | 2026-11-05 | Regel over `uv lock` verwijst naar de uv-stage in `docker/Dockerfile` in plaats van een vaste versie; regel over de unitsuite op een proefimage, uit de terugblik van sentinel (issue #105) | Werkwijze, lessen |
 | v0.5.16 | 2026-11-05 | Regels over zoeken in issues op een versienummer en over voorbeeldtests in een brief, uit de terugblik van sentinel (issue #120) | Lessen |
 | v0.5.15 | 2026-11-05 | Issue per open Dependabot-PR; mutanten van de regie per controle; issue bijwerken als de bouw afwijkt, uit de terugblikken van sentinel en aegis (issue #118) | Besluit stakeholder 2026-11-05, lessen |
 | v0.5.14 | 2026-11-05 | Regels over een mutant per gewijzigde controle en over de aanroepers bij een controle op `actor.soort`, uit de terugblikken van sentinel en aegis (issue #55) | Lessen |
