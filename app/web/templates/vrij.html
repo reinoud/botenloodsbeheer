@@ -7,13 +7,13 @@
 
 <form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="kaart">
   <label for="bootsoort">Geschikt voor</label>
-  <select id="bootsoort" name="bootsoort">
+  <select id="bootsoort" name="bootsoort"{% if gekozen %} autofocus{% endif %}>
     <option value="">Alle bootsoorten</option>
     {% for s in bootsoorten %}
     <option value="{{ s.id }}"{% if gekozen and s.id == gekozen.id %} selected{% endif %}>{{ s.naam }}</option>
     {% endfor %}
   </select>
-  <button type="submit" class="knop">Filteren</button>
+  <noscript><button type="submit" class="knop">Filteren</button></noscript>
 </form>
 
 {% if plaatsen %}
@@ -35,3 +35,4 @@
 
 {{ logtabel(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='vrij.js') }}"></script>{% endblock %}
