@@ -127,6 +127,17 @@ def test_indeling_raster_met_labels_en_aangevinkte_vakken(ingelogd):
     assert 'name="vak" value="1-1" checked>' in tekst and tekst.count(" checked>") == 1
 
 
+def test_indeling_zet_verdieping_1_onderaan(ingelogd):
+    plaats("X/1/1")
+    tekst = ingelogd.get("/indeling").text
+    # Raster van nieuw rek en van rek X, daarna Bootsoort per verdieping: overal 5 boven 1.
+    blokken = {"raster nieuw rek": tekst.index('class="raster"'),
+               "raster rek X": tekst.rindex('class="raster"'),
+               "bootsoort per verdieping": tekst.index("Bootsoort per verdieping")}
+    for blok, begin in blokken.items():
+        assert tekst.index("Verdieping 5", begin) < tekst.index("Verdieping 1", begin), blok
+
+
 def test_rek_wijzigen_en_indeling_instellen(ingelogd):
     p = plaats("X/1/1")
     rek_id = p.rek_id
