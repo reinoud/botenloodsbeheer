@@ -35,7 +35,7 @@ De toegangslog van Traefik mag aan staan: elke router van de botenloods zet hem 
 
 Traefik leest de Docker-socket. Wie die socket leest, heeft de rechten van root op de host. Laat Traefik daarom via een socketproxy lezen die alleen leesrechten op containers geeft, zoals in het voorbeeld. Ook met alleen leesrechten zijn via `inspect` alle omgevingsvariabelen van de containers leesbaar, dus ook de geheimen in `.env`. Geef de socketproxy daarom alleen aan Traefik.
 
-Staat er een load balancer vóór Traefik, zet dan `PROXY_HOPS=2` en vertrouw in Traefik alleen het adres van die load balancer. Zet dan ook `ipStrategy.depth=1` op de middleware `inlogrem`, anders remt de rate limit op inloggen alle gebruikers samen.
+Staat er een load balancer vóór Traefik, laat die dan het clientadres doorgeven met het PROXY protocol. Vertrouw dat in Traefik alleen van de load balancer: `--entrypoints.websecure.proxyprotocol.trustedips=<adressen van de load balancer>`, en op `web` als die ook poort 80 doorstuurt (zie het voorbeeld). Zet de optie alleen als de load balancer op elke verbinding zelf een PROXY-kop zet (zoals `send-proxy`), en alleen met de exacte adressen van de load balancer (`/32` of `/128`), nooit met een subnet waarin ook andere machines staan. Anders kan een client zelf een PROXY-kop sturen en elk adres opgeven; dan omzeilt hij `externtoegang`, `iprem` en de rem op inloggen. Zet de optie niet op `intern` en zet nergens `proxyProtocol.insecure`. `PROXY_HOPS` blijft 1 en de middlewares krijgen geen `ipStrategy`. Een load balancer met alleen `X-Forwarded-For` wordt niet ondersteund ([API van buiten](api-van-buiten.md)).
 
 ## Stap 1: netwerken aanmaken
 
