@@ -18,7 +18,7 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     ski = rek_met_plaats(page, reknaam("v"), ["Surfski"])
     club = rek_met_plaats(page, reknaam("w"), ["Surfski"], club=True)
 
-    kajak = rek_met_plaats(page, reknaam("x"), ["Kajak"])
+    kajak = rek_met_plaats(page, reknaam("y"), ["Kajak"])
     meldingen = []
     page.on("console", lambda m: meldingen.append(m.text) if m.type == "error" else None)
     page.goto("/vrij")
