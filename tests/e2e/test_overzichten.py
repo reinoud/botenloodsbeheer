@@ -18,13 +18,23 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     ski = rek_met_plaats(page, reknaam("v"), ["Surfski"])
     club = rek_met_plaats(page, reknaam("w"), ["Surfski"], club=True)
 
+    kajak = rek_met_plaats(page, reknaam("x"), ["Kajak"])
+    meldingen = []
+    page.on("console", lambda m: meldingen.append(m.text) if m.type == "error" else None)
     page.goto("/vrij")
     page.get_by_label("Geschikt voor").select_option(label="Surfski")
-    page.get_by_role("button", name="Filteren").click()
+    page.wait_for_url(re.compile(r"/vrij\?bootsoort=\d+$"))
+    expect(page.get_by_label("Geschikt voor")).to_be_focused()
     expect(page.get_by_role("link", name=ski, exact=True)).to_be_visible()
     expect(page.get_by_role("link", name=club, exact=True)).to_have_count(0)
+    expect(page.get_by_role("link", name=kajak, exact=True)).to_have_count(0)
     for rij in page.locator("main > table tbody tr").all():
         expect(rij.locator("td").nth(2)).to_contain_text("Surfski")
+    page.get_by_label("Geschikt voor").select_option(label="Alle bootsoorten")
+    page.wait_for_url(re.compile(r"/vrij\?bootsoort=$"))
+    expect(page.get_by_role("link", name=kajak, exact=True)).to_be_visible()
+    expect(page.get_by_role("link", name=ski, exact=True)).to_be_visible()
+    assert not meldingen, meldingen
 
     page.set_viewport_size({"width": 360, "height": 740})
     page.goto("/indeling")

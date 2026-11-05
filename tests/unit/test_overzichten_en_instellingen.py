@@ -2,6 +2,7 @@
 (BLB-027). Verschoven uit slice 2: BLB-011 criterium 2 en BLB-003 criterium 1."""
 
 import io
+import re
 import time
 from datetime import date, timedelta
 
@@ -53,6 +54,19 @@ def test_vrije_plaatsen_zonder_bezet_en_clubplaats(app):
     assert [p.code for p in indeling.vrije_plaatsen()] == [vrij.code, c11.code]
     assert [p.code for p in indeling.vrije_plaatsen(soort("Surfski"))] == ["A/1/1"]
     assert indeling.vrije_plaatsen(soort("Supboard")) == []
+
+
+def test_vrije_plaatsen_filter_zonder_knop_met_script_en_focus(ingelogd):  # noqa: F811
+    loods()
+    zonder = ingelogd.get("/vrij").text
+    zichtbaar = re.sub(r"<noscript>.*?</noscript>", "", zonder, flags=re.DOTALL)
+    assert "<noscript><button" in zonder, "zonder script blijft de knop beschikbaar"
+    assert "Filteren" not in zichtbaar, "knop Filteren buiten noscript"
+    assert '<script src="/static/vrij.js"></script>' in zichtbaar, "script van de eigen site"
+    assert "<script>" not in zichtbaar and "onchange" not in zichtbaar, "geen inline script"
+    assert "autofocus" not in zonder, "autofocus zonder gekozen bootsoort"
+    met = ingelogd.get(f"/vrij?bootsoort={soort('Surfski')}").text
+    assert re.search(r'<select id="bootsoort"[^>]* autofocus', met), "autofocus met gekozen bootsoort"
 
 
 def test_vrije_plaatsen_scherm_met_filter_en_vrijgeven(ingelogd):  # noqa: F811

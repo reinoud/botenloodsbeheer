@@ -5,6 +5,7 @@ elke opname uit het scherm gehaald."""
 
 import json
 import os
+import re
 import struct
 import sys
 import time
@@ -196,7 +197,7 @@ def schermen(browser):
     # Overzichten.
     page.goto("/vrij")
     page.get_by_label("Geschikt voor").select_option(label="Kajak")
-    page.get_by_role("button", name="Filteren").click()
+    page.wait_for_url(re.compile(r"/vrij\?bootsoort=\d+$"))
     o.maak("vrij", hoogte=700)
     page.goto("/wachtlijst")
     o.maak("wachtlijst", hoogte=1000)
