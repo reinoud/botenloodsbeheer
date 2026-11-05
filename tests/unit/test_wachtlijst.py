@@ -393,3 +393,79 @@ def test_keuzelijst_alleen_met_boten_die_toewijzen_accepteert(ingelogd):  # noqa
     r = ingelogd.get(f"/plaatsen/{leeg.id}").text
     assert "Er zijn geen boten zonder plaats die op deze plaats passen." in r
     assert 'name="boot_id"' not in r
+
+
+# Toewijzen vanaf de bootpagina (#132)
+
+
+def test_bootpagina_toont_alleen_vrije_passende_plaatsen_in_volgorde_van_de_loods(ingelogd):  # noqa: F811
+    tweede, eerste = plaats("A/2/1"), plaats("A/1/1")  # aangemaakt in omgekeerde volgorde
+    plaats("A/1/2", soorten=("Surfski",))
+    club = plaats("A/1/3", club=True)
+    bezet = plaats("A/1/4")
+    toewijzing.toewijzen(bezet.id, boot(lid().id, naam="Bezetter").id, CLI)
+    b = boot(lid("1002").id, naam="Kievit")
+    r = ingelogd.get(f"/boten/{b.id}").text
+    keuzes = r.split('name="plaats_id"')[1].split("</select>")[0]
+    assert keuzes.index("A/1/1") < keuzes.index("A/2/1")
+    assert eerste.code in keuzes and tweede.code in keuzes
+    assert "A/1/2" not in keuzes and "A/1/3" not in keuzes and "A/1/4" not in keuzes
+    assert "Wijs toe aan plek" in r
+    # Besluit stakeholder 2026-11-05: een clubboot kiest uit de vrije clubplaatsen.
+    c = boot(None, naam="Clubkajak")
+    keuzes = ingelogd.get(f"/boten/{c.id}").text.split('name="plaats_id"')[1].split("</select>")[0]
+    assert club.code in keuzes and "A/1/1" not in keuzes and "A/2/1" not in keuzes
+
+
+def test_toewijzen_vanaf_bootpagina_haalt_boot_van_de_wachtlijst(ingelogd):  # noqa: F811
+    p = plaats()
+    b = boot(lid().id, naam="Kievit")
+    wachtlijst.erop_zetten(b.id, "2024-03-01", CLI)
+    r = ingelogd.post(f"/boten/{b.id}/toewijzen", data={"plaats_id": p.id}, follow_redirects=True)
+    assert "De boot heeft de plaats gekregen." in r.text
+    assert f">{p.code}</a>" in r.text and 'name="plaats_id"' not in r.text
+    db.session.expire_all()
+    assert db.session.get(Plaats, p.id).boot_id == b.id
+    assert op_lijst(b) is None
+    assert "plaats.toegewezen" in acties() and "wachtlijst.verwijderd" in acties()
+
+
+def test_toewijzen_vanaf_bootpagina_weigert_bezet_en_niet_passend(ingelogd):  # noqa: F811
+    bezet, surfski = plaats(), plaats("A/1/2", soorten=("Surfski",))
+    toewijzing.toewijzen(bezet.id, boot(lid().id, naam="Bezetter").id, CLI)
+    b = boot(lid("1002").id, naam="Kievit")
+    for p, melding in ((bezet, "is al bezet"), (surfski, "niet geschikt voor een kajak")):
+        aantal = len(acties())
+        r = ingelogd.post(f"/boten/{b.id}/toewijzen", data={"plaats_id": p.id},
+                          follow_redirects=True)
+        assert melding in r.text
+        assert len(acties()) == aantal
+    db.session.expire_all()
+    assert db.session.get(Boot, b.id).plaats is None
+
+
+def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid(ingelogd):  # noqa: F811
+    p = plaats()
+    met = boot(lid().id, naam="Bezetter")
+    toewijzing.toewijzen(p.id, met.id, CLI)
+    r = ingelogd.get(f"/boten/{met.id}").text
+    assert 'name="plaats_id"' not in r and "Plaats toewijzen" not in r
+    plaats("A/1/2", soorten=("Surfski",))
+    zonder = boot(lid("1002").id, naam="Kievit")
+    r = ingelogd.get(f"/boten/{zonder.id}").text
+    assert 'name="plaats_id"' not in r and "Er is geen vrije plaats voor kajak." in r
+    plaats("A/1/3")
+    oud = lid("1003", opzegdatum=vandaag())  # de boot bestond al voor de opzegging
+    db.session.add(Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=oud.id))
+    db.session.commit()
+    oudje = db.session.scalar(select(Boot).where(Boot.naam == "Oudje"))
+    r = ingelogd.get(f"/boten/{oudje.id}").text
+    assert 'name="plaats_id"' not in r and "De eigenaar is oud-lid. De boot krijgt geen plaats." in r
+
+
+def test_bezoeker_kan_niet_toewijzen_vanaf_bootpagina(client):
+    p, b = plaats(), boot(lid().id, naam="Kievit")
+    assert client.post(f"/boten/{b.id}/toewijzen", data={"plaats_id": p.id}).location.endswith(
+        "/inloggen")
+    db.session.expire_all()
+    assert db.session.get(Plaats, p.id).boot_id is None

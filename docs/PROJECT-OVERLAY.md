@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.23
+**Versie overlay:** v0.5.24
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -152,6 +152,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een review van een basisimage dat `.github/workflows/images.yml` alleen `linux/amd64` bouwt, zodat de reviewer weet welke architectuur de scan moet dekken.
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
 - Zeg in de brief: draai elke testrun of mutant als een los commando, geen lussen of ketens in één shellregel.
+- Noem bij een gewijzigde gedeelde functie de andere aanroepers, of vraag de reviewer die na te lopen.
+- Noem bij een mutant op een controle in de route of het template dezelfde controle ook doet; is dat zo, lever dan een gecombineerde mutant op route en template, met de assert die moet falen.
+- Noem bij `draai.sh -k` een deel van de testnaam, niet de uitnodigingssoort, en controleer de selectie met `--collect-only`.
 - Een mutant op `tests/proxy/klant.py` of `tests/proxy/compose.traefik.yml` draait in een kopie met `docker-compose.yml`, `compose.api-extern.yml`, `docker/db-init.sh`, een lege map `huisstijl`, een leeg bestand `secrets/api_token` en `tests/proxy/`, alles uit de index (`git show :pad`).
 - Een mutant op een controlefunctie in `tests/proxy/klant.py` draai je samen met een mutant op de labels die een antwoord van de applicatie oplevert; anders kan de mutant tegen een echte Traefik niet falen. Opruimen en controleren zijn aparte commando's.
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
@@ -319,6 +322,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.24 | 2026-11-05 | Drie regels uit de terugblikken van sentinel en aegis (#132): aanroepers van een gedeelde functie, gecombineerde mutant op route en template, `draai.sh -k` op de testnaam | Lessen |
 | v0.5.23 | 2026-11-05 | Regel over een mutant per kant van een tweezijdige controle, uit de terugblik van sentinel (#131) | Lessen |
 | v0.5.22 | 2026-11-05 | Uit #54: tweede ronde van `draai.sh` (PROXY protocol), keep-alive bij een proef op de rate limit, drie aanroepen voor een eigen teller, voorwaarde bij een vertrouwensinstelling | Werkwijze |
 | v0.5.21 | 2026-11-05 | Regel uit de terugblik van foundation bij #54: zoek vóór een besluit naar elke geraakte instelling | Werkwijze |

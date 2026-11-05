@@ -133,6 +133,8 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 - een clubboot op een gewone plaats, of een boot van een lid op een clubplaats;
 - de eigenaar is oud-lid.
 
+**Vanaf de boot:** een boot zonder plaats, op de wachtlijst of niet, kan ook vanaf zijn eigen pagina een plaats krijgen. Kies onder **Plaats toewijzen** een vrije plaats en kies **Wijs toe aan plek**. De lijst toont alleen vrije plaatsen voor de bootsoort, in de volgorde van de loods; voor een clubboot zijn dat de vrije clubplaatsen. Een boot op de wachtlijst gaat daarna van de wachtlijst af. Is er geen vrije plaats, of is de eigenaar oud-lid, dan zegt de pagina dat.
+
 ![De pagina van een vrije plaats met de keuze van een boot zonder plaats.](afbeeldingen/plaats-vrij.png)
 
 **Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. De plaats blijft vrij tot jij een boot kiest, ook als er een wachtlijst is. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
@@ -323,7 +325,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/kaartjes/print` | Kaartjes met QR-code om te printen |
 | `/plaatsen/{nummer}` | Een plaats, toewijzen en vrijgeven |
 | `/boten` | Boten |
-| `/boten/{nummer}` | Een boot |
+| `/boten/{nummer}` | Een boot, een plaats toewijzen |
 | `/vrij` | Vrije plaatsen |
 | `/wachtlijst` | Wachtlijst per bootsoort |
 | `/opgezegd` | Plaatsen van opgezegde leden |
