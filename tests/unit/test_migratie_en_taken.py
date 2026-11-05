@@ -142,6 +142,23 @@ def test_heartbeat(app):
     assert not taken.gezond()
 
 
+@pytest.mark.api
+def test_api_kan_de_hartslag_niet_wijzigen_of_aanmaken(app, database):
+    """Issue #24: het rijbeleid op taakrun laat de API alleen zijn eigen taken zien en wijzigen."""
+    with database.begin() as c:
+        c.execute(text("INSERT INTO taakrun (taak, status, beeindigd_op) "
+                       "VALUES ('heartbeat', 'geslaagd', now() - interval '1 hour')"))
+    wijziging = db.session.execute(text("UPDATE taakrun SET beeindigd_op = now()"))
+    assert wijziging.rowcount == 0, "de API wijzigde de hartslag"
+    assert db.session.execute(text("SELECT 1 FROM taakrun")).all() == []
+    db.session.rollback()
+    with pytest.raises(ProgrammingError, match="row-level security"):
+        db.session.execute(text("INSERT INTO taakrun (taak, status) VALUES ('heartbeat', 'geslaagd')"))
+    db.session.rollback()
+    db.session.execute(text("INSERT INTO taakrun (taak, status) VALUES ('ledenimport', 'mislukt')"))
+    db.session.rollback()
+
+
 @pytest.mark.worker  # seed draait in de worker (#9); de leden komen uit de import (ADR-012)
 def test_seed_maakt_de_synthetische_loods(app):
     with pytest.raises(seed.SeedFout, match="nog geen leden"):
