@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.5
+**Versie overlay:** v0.5.6
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -121,6 +121,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
+- Een mutant die een object uit `upgrade()` weghaalt, haalt de bijbehorende regel uit `downgrade()` ook weg; anders faalt de mutant op de downgrade in plaats van op de assert van het criterium.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
 - Een mutant op een staatsassert verandert de code onder test zo dat de redirect blijft en het effect toch plaatsvindt; noem in de brief het bestand van die code.
 - Noem per mutant de assert (regel) van het criterium waarop hij moet falen; een mutant die op een andere assert faalt, bewijst dat criterium niet.
@@ -155,6 +156,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Na een nieuwe migratie eerst `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d --wait`; de dienst migrate leest de migraties uit het image. Downgrade en upgrade controleer je via `docker compose -f docker-compose.yml -f compose.dev.yml run --rm migrate alembic ...`, databasecontroles in de db-container met `psql -U botenloods -d botenloods`. Controleer na een migratie de rechten in de database.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
+- Moet een reviewer het schrijfgedrag van een rijbeleid of recht bevestigen (zoals het wijzigen van de sleutelkolom of `RETURNING`), geef dan een eigen database via `nieuwe_database` vrij voor proeven met `ROLLBACK`, of zeg dat afleiden uit de documentatie volstaat.
 - Een leesquery op `information_schema` of de rechten in de gedeelde database mag; proeven die rate limits of vergrendelingen raken niet.
 - Wijzig je databaserechten, zoek dan eerst welke tests en seedcode als die rol schrijven, en noem in je antwoord welke tests je hebt aangepast. `flask seed` draait als de worker (`botenloods_taken`); een nieuwe tabel die seed vult, krijgt rechten voor die rol. Noem bij een domeinfunctie die een nieuwe databaserol raakt de test die als die rol draait (marker of fixture), zodat de reviewer de positieve controle niet zelf hoeft te zoeken.
 - Voeg je rijen toe aan een tabel met een startlijst uit een migratie (zoals `bootsoort`), zet die lijst dan in `tests/unit/conftest.py` terug na elke test.
@@ -289,6 +291,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.6 | 2026-11-05 | Regels over een mutant op `upgrade()` en over schrijfproeven op een rijbeleid, uit de terugblikken van sentinel en aegis (issue #24) | Lessen |
 | v0.5.5 | 2026-11-05 | Regels over tests per HTTP-methode of status en over de Python-versie in de brief, uit de terugblikken van aegis en sentinel (issue #23) | Lessen |
 | v0.5.4 | 2026-11-05 | Regels over het citeren van een overlayregel en over een mutant op een staatsassert, uit de terugblikken van aegis en sentinel (issue #12) | Lessen |
 | v0.5.3 | 2026-11-05 | Regels over de assert per mutant en over een E2E-mutant op een static-bestand, uit de terugblikken van prism en sentinel (issue #99) | Lessen |
