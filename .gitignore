@@ -6,3 +6,4 @@ __pycache__/
 huisstijl/
 tests/e2e/resultaten/
 secrets/
+.claude/settings.local.json
