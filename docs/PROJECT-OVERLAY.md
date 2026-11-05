@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.9
+**Versie overlay:** v0.5.10
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -121,6 +121,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
+- Wordt een lus in een Jinja-macro gewijzigd, noem dan elke aanroep van de macro en de mutant die alleen één aanroep raakt.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Een mutant die een object uit `upgrade()` weghaalt, haalt de bijbehorende regel uit `downgrade()` ook weg; anders faalt de mutant op de downgrade in plaats van op de assert van het criterium.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
@@ -294,6 +295,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.10 | 2026-11-05 | Regel over mutanten op een Jinja-macro met meer aanroepen, uit de terugblik van sentinel (issue #110) | Lessen |
 | v0.5.9 | 2026-11-05 | Regel over een oud image na een nieuwe imagenaam, uit de terugblik van sentinel (issue #34) | Lessen |
 | v0.5.8 | 2026-11-05 | Mutant met bestand:regel van de assert; bestaand risico op een ander pad als bevinding of advies, uit de terugblikken van sentinel en aegis (issue #31) | Lessen |
 | v0.5.7 | 2026-11-05 | Regel over de controle van Dependabot na de merge, uit de terugblik van sentinel (issue #25) | Lessen |
