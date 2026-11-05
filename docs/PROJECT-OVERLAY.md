@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.13
+**Versie overlay:** v0.5.14
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -130,6 +130,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
+- Wijzigt een diff meer dan één controle, dan draait de reviewer per controle een aparte mutant en noemt per mutant de test die valt.
 - Na een update van het lockbestand controleert de reviewer met een versiecheck in de testcontainer dat de suite tegen de nieuwe versies draait, voordat hij het aantal geslaagde tests meldt.
 - Filter de uitvoer van een mutantrun op `^E |FAILED|passed|failed`; de laatste regel kan een logregel van de app zijn.
 - Toets een foutafhandeling van de API ook op een onbekend pad en een verkeerde methode onder `/api/v1/`; een `bp.errorhandler` dekt die niet, een `bp.app_errorhandler` wel.
@@ -216,6 +217,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
+- Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
 
 #### Documentatie, backlog en ADR's
 
@@ -299,6 +301,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.14 | 2026-11-05 | Regels over een mutant per gewijzigde controle en over de aanroepers bij een controle op `actor.soort`, uit de terugblikken van sentinel en aegis (issue #55) | Lessen |
 | v0.5.13 | 2026-11-05 | Regels over de vormen van een HTTP-antwoord in een test en losse testcommando's, uit de terugblikken van aegis en sentinel (issue #109) | Lessen |
 | v0.5.12 | 2026-11-05 | Regel over letters van `reknaam()` per test, uit de terugblik van sentinel (issue #112) | Lessen |
 | v0.5.11 | 2026-11-05 | Regel over de diensten die een instelling lezen, uit de terugblik van sentinel (issue #114) | Lessen |
