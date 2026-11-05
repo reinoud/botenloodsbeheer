@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.11
+**Versie overlay:** v0.5.12
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -153,6 +153,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`; anders stopt het script vóór de regel die je test.
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
 - Eerdere runs laten rijen achter. Een E2E-test op een gedeelde lijst controleert daarom de volgorde over de hele kolom, niet op de eerste rij. Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
+- Een letter van `reknaam()` mag binnen één test vaker voorkomen (hetzelfde rek), maar niet in twee verschillende tests; controleer met `grep -rn 'reknaam(' tests/e2e`.
 - Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
 - Verplaats je de dekking van een criterium van E2E naar unittests, noem dan per gegeven uit het criterium (zoals tijdstip en aantallen) de assert die het dekt, en draai een mutant die dat gegeven weghaalt.
 
@@ -296,6 +297,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.12 | 2026-11-05 | Regel over letters van `reknaam()` per test, uit de terugblik van sentinel (issue #112) | Lessen |
 | v0.5.11 | 2026-11-05 | Regel over de diensten die een instelling lezen, uit de terugblik van sentinel (issue #114) | Lessen |
 | v0.5.10 | 2026-11-05 | Regel over mutanten op een Jinja-macro met meer aanroepen, uit de terugblik van sentinel (issue #110) | Lessen |
 | v0.5.9 | 2026-11-05 | Regel over een oud image na een nieuwe imagenaam, uit de terugblik van sentinel (issue #34) | Lessen |
