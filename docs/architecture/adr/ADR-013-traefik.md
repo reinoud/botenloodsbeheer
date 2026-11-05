@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.3.2
+**Versie:** v1.4.0
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -59,9 +59,17 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 
 **Versie.** Getest en vereist is `traefik:v3.7.17`. Een andere versie vraagt dat de proeven opnieuw slagen.
 
-**Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, `http.aliasHeadersStrategy=delete` op die drie, aangesloten op beide netwerken, en een certresolver die certificaten bij Let's Encrypt aanvraagt (besluit stakeholder 2026-11-01). Staat er een load balancer vóór Traefik, dan gaat `PROXY_HOPS` naar 2 en krijgt alleen die het vertrouwen.
+**Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, `http.aliasHeadersStrategy=delete` op die drie, aangesloten op beide netwerken, en een certresolver die certificaten bij Let's Encrypt aanvraagt (besluit stakeholder 2026-11-01).
 
 `aliasHeadersStrategy=delete` haalt een kop weg waarvan de naam een andere kop nabootst, zoals `X_Forwarded_For`. Zonder instelling laat Traefik zo'n kop ongewijzigd door en waarschuwt hij bij het starten. Gunicorn gebruikt zo'n kop niet (proef met 401 in `werk/traefik-proeven.md`), dus de botenloods is ook zonder de eis niet kwetsbaar. De eis sluit het gat voor de zekerheid: een andere versie van Gunicorn of een andere dienst achter dezelfde entrypoints kan zo'n kop wel lezen. `delete` beschermt de upstream even goed als `reject` en weigert geen verzoeken van clients van andere diensten die zulke koppen sturen.
+
+**Load balancer vóór Traefik (issue #54).** De load balancer geeft het clientadres door met het PROXY protocol. De gedeelde Traefik vertrouwt dat alleen van de load balancer: `--entrypoints.websecure.proxyprotocol.trustedips=<adressen van de load balancer>`, en op `web` als die ook poort 80 doorstuurt. Traefik gebruikt het clientadres dan als verbindingsadres. `externtoegang`, `tokenrem`, `iprem`, `inlogrem` en de whitelist van het token toetsen zo de client, zonder labelwijziging. `PROXY_HOPS` blijft 1. Geen nieuwe omgevingsvariabele: de instelling hoort bij de gedeelde Traefik.
+
+`api` en `api-extern` blijven dezelfde middlewares delen. De instelling staat alleen op de entrypoints waarop de load balancer aansluit, nooit op `intern`, dus de interne rate limit verandert er niet door. Een PROXY-kop van een ander adres dan de load balancer telt niet (waarschijnlijk; de proef beslist).
+
+Bewust ontbreken `forwardedHeaders.trustedIPs`, `forwardedHeaders.insecure` en `proxyProtocol.insecure` op elk entrypoint, en `ipStrategy` (`depth`, `excludedIPs`, `ipv6Subnet`) op elke middleware. Een load balancer met alleen `X-Forwarded-For` wordt niet ondersteund. `PROXY_HOPS=2` breekt de interne route: daar staat één adres in `X-Forwarded-For`, dus de applicatie toetst het token van de integratiecontainer op het adres van Traefik.
+
+Proef (losse Traefik met de optie op `websecure`, een client als load balancer): 200, 401 en 403 volgen het clientadres in de PROXY-kop; elke client heeft een eigen teller in `iprem`; een PROXY-kop van een ander adres geeft geen 200; op `intern` geeft één adres 429 na ongeveer 50 aanroepen en krijgt een tweede adres in dezelfde seconde 401. Zonder de optie slagen de bestaande proeven ongewijzigd.
 
 **Gecodeerd pad (issue #65, PRB-01).** Traefik kiest de router op het pad zoals het binnenkomt, en `%2F` blijft gecodeerd. `POST /%2Finloggen` valt daardoor onder de router `web` zonder rem. Werkzeug decodeert het pad, voegt de dubbele schuine streep samen en verwerkt de inlog. Elke route naar `api` draagt de rate limits, ook met `compose.api-extern.yml`; een API-pad met codering valt onder `web`.
 
@@ -90,6 +98,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 | Router `inloggen` ook op de gecodeerde vorm laten matchen | De regex moet de normalisatie van Werkzeug volgen |
 | `url_map.merge_slashes=False` | Werkt niet na het aanmaken van de `Map` (proef); alleen met een eigen `Map`-klasse |
 | Opties op het entrypoint als eis | Raakt andere diensten op de gedeelde Traefik |
+| Eigen `iprem` en `externtoegang` met `ipStrategy.depth` voor een load balancer | Vraagt `trustedIPs` op `websecure` en een `PROXY_HOPS` per route, terwijl `api` er één heeft |
 | Toegangslog van Traefik zonder `RequestPath` | Globale instelling van de gedeelde Traefik; raakt andere diensten en ligt buiten deze installatie |
 
 ## Gevolgen
@@ -105,6 +114,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.0 | 2026-11-05 | Load balancer via PROXY protocol op het entrypoint; middlewares blijven gedeeld, `PROXY_HOPS=2` vervalt | Issue #54 |
 | v1.3.2 | 2026-11-03 | Toegangslog: pad met procentcodering afgekapt bij het eerste `%` | Issue #72 |
 | v1.3.1 | 2026-11-03 | Waarom drie opties voor gecodeerde tekens ontbreken | Review aegis, issue #65 |
 | v1.3.0 | 2026-11-03 | Gecodeerd pad: 400 in de applicatie, opties voor gecodeerde tekens aanbevolen op de entrypoints, proef | Securityronde na slice 11, PRB-01, issue #65 |

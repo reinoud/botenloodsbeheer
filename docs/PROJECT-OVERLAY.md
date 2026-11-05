@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.20
+**Versie overlay:** v0.5.21
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -59,6 +59,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elk besluit in de bron of het in deze ronde verwerkt moet worden; een besluit dat niet genoemd is, komt als open vraag terug.
 - Noem welke ongecommitte bestanden (model, migratie) nog een oud besluit bevatten, zodat het agent ze als ontwerppunt meeneemt.
 - Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
+- Zoek vóór een besluit met `grep -rn` naar elke instelling die het besluit raakt (zoals `PROXY_HOPS` of `ipStrategy`) in `docs/`, `documentatie/` en `.env.example`, en noem elk gevonden bestand als te raken bestand of als verouderde regel.
 - Zoek in issues naar een versienummer of een andere term met een punt met `gh issue list --json number,title,body --jq`, niet met `--search`; de zoekfunctie van GitHub vindt zulke termen niet betrouwbaar.
 - Noem een criterium met zijn tekst of met de versie van de backlog erbij, niet alleen met een nummer.
 - Wijkt de bouw bewust af van een acceptatiecriterium, pas dan vóór de review het criterium in het issue aan en noem de bron die voorgaat.
@@ -312,6 +313,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.21 | 2026-11-05 | Regel uit de terugblik van foundation bij #54: zoek vóór een besluit naar elke geraakte instelling | Werkwijze |
 | v0.5.20 | 2026-11-05 | Twee regels uit de terugblikken van sentinel en aegis bij #127: mutant op `klant.py` samen met een labelmutant, en welke eigenschap een proef op de rate limit bewijst | Werkwijze |
 | v0.5.19 | 2026-11-05 | Regel over `tests/proxy/draai.sh` na een wijziging aan de proxy (issue #53); woordgrens per alinea, overlayregels per proef en mutanten op `tests/proxy`, uit de terugblikken van pipeline, aegis en sentinel | Werkwijze, lessen |
 | v0.5.18 | 2026-11-05 | Regel over het platform bij een review van een basisimage, uit de terugblik van sentinel (issue #124) | Lessen |

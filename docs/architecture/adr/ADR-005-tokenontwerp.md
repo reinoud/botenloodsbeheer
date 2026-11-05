@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.4.1
+**Versie:** v1.4.2
 **Stories:** BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -58,13 +58,14 @@ Naam, whitelist en vervaldatum zijn niet te wijzigen: daarvoor maakt de beheerde
 
 - De statuspagina toont tokens met `verloopt_op` binnen 31 dagen, met naam en datum, zonder waarde (BLB-037).
 - Een gelekte database geeft geen bruikbare tokens.
-- Achter een extra proxy van de hosting moet `ProxyFix` op twee hops; dat staat in `.env.example` als `PROXY_HOPS` met standaard 1. Een verkeerde waarde maakt de whitelist zinloos, dus aegis controleert dit bij elke installatiebeschrijving.
+- `ProxyFix` staat op één hop (`PROXY_HOPS` in `.env.example`, standaard 1). Een load balancer vóór Traefik geeft het clientadres door met het PROXY protocol, en `PROXY_HOPS` blijft dan 1 (ADR-013, issue #54). Een verkeerde waarde maakt de whitelist zinloos, dus aegis controleert dit bij elke installatiebeschrijving.
 - Aegis reviewt tokens en de IP-controle vóór de commit (overlay §4).
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.2 | 2026-11-05 | Load balancer via het PROXY protocol; geen twee hops meer | ADR-013 v1.4.0, issue #54 |
 | v1.4.1 | 2026-11-03 | `leden:importeren` alleen met de CLI | Besluit stakeholder 2026-11-03, issue #52 |
 | v1.4.0 | 2026-11-03 | Persoonlijke tokens, tokenschermen, log en migratie 0009 | Ontwerp slice 10, issue #51 |
 | v1.3.0 | 2026-10-31 | Rate limit en clientadres in Traefik; 429 als tekst | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
