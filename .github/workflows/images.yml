@@ -53,10 +53,11 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.naam }}
           cache-to: type=gha,mode=max,scope=${{ matrix.naam }}
+      # Het image staat in docker/Dockerfile.trivy, zodat Dependabot het bijhoudt (#105).
       - name: Trivy
         run: >
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock
-          aquasec/trivy:0.67.2@sha256:e2b22eac59c02003d8749f5b8d9bd073b62e30fefaef5b7c8371204e0a4b0c08
+          "$(awk '/^FROM/ {print $2}' docker/Dockerfile.trivy)"
           image --ignore-unfixed --severity CRITICAL,HIGH --exit-code 1
           ghcr.io/${{ github.repository_owner }}/${{ matrix.naam }}:${{ steps.meta.outputs.version }}
       # Precies het gescande image, met al zijn tags.
