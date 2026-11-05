@@ -28,7 +28,7 @@ updates:
       default-days: 14
     ignore:
       # Versie hoort bij playwright in tests/e2e/requirements.txt, dat Dependabot niet bijhoudt.
-      - dependency-name: mcr.microsoft.com/playwright/python
+      - dependency-name: playwright/python
         update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
   - package-ecosystem: docker-compose
     directory: /
