@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.6.0
+**Versie:** v1.7.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -11,7 +11,7 @@ Een aparte, vervangbare container doet alle imports en exports: leden ophalen en
 
 ## Besluit
 
-**Containers en netwerken.** Er komen twee diensten bij. `api` draait het applicatie-image met `DIENST=api` en alleen de blueprint `/api/v1`, die `web` niet meer registreert. Alleen de rol `botenloods_api` maakt leden aan en werkt ze bij; `web` houdt leesrecht op `lid`. `integratie` is een eigen image uit `integratie/`, zonder applicatiecode.
+**Containers en netwerken.** Er komen twee diensten bij. `api` draait het applicatie-image met `DIENST=api` en alleen de blueprint `/api/v1`, die `web` niet meer registreert. Alleen de rol `botenloods_api` maakt leden aan en werkt ze bij; `web` houdt leesrecht op `lid`. In `taakrun` ziet en wijzigt `botenloods_api` alleen de rijen met taak `ledenimport` of `bootaantallen`: een rijbeleid (migratie 0014) houdt hem weg bij de hartslag van de worker. `integratie` is een eigen image uit `integratie/`, zonder applicatiecode.
 
 | Netwerk | Leden | Eigenschap |
 |---------|-------|-----------|
@@ -72,6 +72,7 @@ Lidmaatschapsdata zijn persoonsgegevens (overlay §3) en staan daarom achter het
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.7.0 | 2026-11-05 | Rijbeleid op `taakrun` voor `botenloods_api` | Issue #24, veiligste eenvoudige variant |
 | v1.6.0 | 2026-11-03 | Vier leesaanroepen; `compose.api-extern.yml` komt met BLB-042 | Ontwerp slice 10, issue #51 |
 | v1.5.0 | 2026-11-02 | Vijfde aanroep gebouwd | Bouw slice 9, issue #48 |
 | v1.4.0 | 2026-10-31 | Traefik in plaats van Nginx: netwerken, entrypoint `intern`, grens van 2 MB in de applicatie | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
