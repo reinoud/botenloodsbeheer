@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.1
+**Versie overlay:** v0.5.2
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -119,7 +119,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
-- Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid.
+- Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
@@ -283,6 +283,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.2 | 2026-11-05 | Regel over een templatemutant als bind mount van alleen het template, uit de terugblik van sentinel (issue #95) | Lessen |
 | v0.5.1 | 2026-11-05 | Vijf regels uit de terugblikken van bedrock, sentinel en pipeline (issues #94 en #96): mutant bij een E2E-assertie, volle suite bij een nieuwe validatieregel, E2E-test van het geweigerde pad, proefmerge van een reeks pull requests, `workflow`-scope | Lessen |
 | v0.5.0 | 2026-11-05 | Werkwijze met een branch per feature en een pull request naar `main`, dat de sessie na review zelf mergt | Besluit stakeholder |
 | v0.4.26 | 2026-11-04 | Regel over een docker-stub voor `draai.sh`, uit de terugblik van sentinel (issue #92) | Lessen |
