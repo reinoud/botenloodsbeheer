@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.0
+**Versie overlay:** v0.5.1
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -92,6 +92,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen.
+- Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
+- Verandert een validatieregel in het domein, draai dan eerst de volledige unitsuite: die geeft de lijst van tests en E2E-helpers die met de oude regel gegevens maken.
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
 - Vervang je een aanroep op meer plekken door een gedeelde functie, draai dan per aanroep een mutant die de oude aanroep terugzet, en noem per aanroep de test die valt of waarom de mutant gelijkwaardig is.
 - Werken twee agents tegelijk met unittests, dan draait elk op een eigen testdatabase (bind mount van een `conftest.py` met een andere `TEST_DB`); de gedeelde `botenloods_test` geeft anders een deadlock. Een racetest met `race()` controleert ook dat de actie geen andere uitzondering dan `Regelfout` gooit.
@@ -125,6 +127,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Na een update van het lockbestand controleert de reviewer met een versiecheck in de testcontainer dat de suite tegen de nieuwe versies draait, voordat hij het aantal geslaagde tests meldt.
 - Filter de uitvoer van een mutantrun op `^E |FAILED|passed|failed`; de laatste regel kan een logregel van de app zijn.
 - Toets een foutafhandeling van de API ook op een onbekend pad en een verkeerde methode onder `/api/v1/`; een `bp.errorhandler` dekt die niet, een `bp.app_errorhandler` wel.
+- Noem in een reviewbrief naast het E2E-bestand van het scherm ook de E2E-test die het geweigerde pad bewijst, met de naam voor `draai.sh -k`.
+- Raken meer pull requests hetzelfde bestand, laat de reviewer ze dan in een eigen clone proefmergen in de voorgestelde volgorde en melden welke een rebase nodig heeft; `mergeable` van GitHub geldt per pull request, niet voor de reeks.
+- Een pull request dat een bestand in `.github/workflows/` wijzigt, mergt alleen met een `gh`-token met de scope `workflow`; zonder die scope weigert GitHub de merge.
 
 #### E2E
 
@@ -278,6 +283,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.1 | 2026-11-05 | Vijf regels uit de terugblikken van bedrock, sentinel en pipeline (issues #94 en #96): mutant bij een E2E-assertie, volle suite bij een nieuwe validatieregel, E2E-test van het geweigerde pad, proefmerge van een reeks pull requests, `workflow`-scope | Lessen |
 | v0.5.0 | 2026-11-05 | Werkwijze met een branch per feature en een pull request naar `main`, dat de sessie na review zelf mergt | Besluit stakeholder |
 | v0.4.26 | 2026-11-04 | Regel over een docker-stub voor `draai.sh`, uit de terugblik van sentinel (issue #92) | Lessen |
 | v0.4.25 | 2026-11-04 | Vijf regels uit de terugblikken van sentinel en aegis (issue #91): foutafhandeling op paden zonder view, elke router naar `api`, bereikbaarheid buiten Traefik, eigen token per verzoek en `skip_host` bij een proef via Traefik | Lessen |
