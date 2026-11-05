@@ -49,7 +49,7 @@ controle() {  # controle <naam> <commando...>; telt een fout en gaat door
 # Een aanroep vanuit een container met een vast adres; het token gaat via de omgeving.
 klant() {  # klant <netwerk> <adres> <doel> <schema> <token> <argumenten van klant.py...>
   TOKEN=$5 docker run --rm --network "$1" --ip "$2" -e DOEL="$3" -e SCHEMA="$4" -e DOMEIN \
-    -e TOKEN -e WACHT="${WACHT:-0}" -v "$PWD/tests/proxy:/proef:ro" --entrypoint python \
+    -e TOKEN -e WACHT="${WACHT:-0}" -e PAD -v "$PWD/tests/proxy:/proef:ro" --entrypoint python \
     botenloods-app -I /proef/klant.py "${@:6}"
 }
 buiten() { klant "$INSTALLATIE"_klant "$1" "$PROEF_TRAEFIK_KLANT:8443" https "${@:2}"; }
@@ -95,6 +95,9 @@ controle "401 buiten de tokenwhitelist, ook met vervalste koppen" \
   buiten "$bron" "$token_a" 401 - "X-Forwarded-For: $toegestaan" "X_Forwarded_For: $toegestaan" \
   "X-Real-Ip: $toegestaan" "Forwarded: for=$toegestaan"
 controle "403 buiten API_EXTERN_BRONNEN" buiten "$vreemd" "$token_a" 403
+# Een gecodeerd pad mag niet langs externtoegang (overlay §4, issue #127).
+PAD=/api/v1/%2Fik controle "gecodeerd pad buiten API_EXTERN_BRONNEN" \
+  buiten "$vreemd" "$token_a" 400,403
 controle "429 boven de grens per token" buiten "$toegestaan" "$token_tempo" tempo
 
 echo "== api opnieuw zonder $extern"
