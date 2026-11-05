@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.2
+**Versie overlay:** v0.5.3
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -121,6 +121,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
+- Noem per mutant de assert (regel) van het criterium waarop hij moet falen; een mutant die op een andere assert faalt, bewijst dat criterium niet.
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
@@ -138,6 +139,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
+- Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
 - Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`; anders stopt het script vóór de regel die je test.
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
@@ -283,6 +285,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.3 | 2026-11-05 | Regels over de assert per mutant en over een E2E-mutant op een static-bestand, uit de terugblikken van prism en sentinel (issue #99) | Lessen |
 | v0.5.2 | 2026-11-05 | Regel over een templatemutant als bind mount van alleen het template, uit de terugblik van sentinel (issue #95) | Lessen |
 | v0.5.1 | 2026-11-05 | Vijf regels uit de terugblikken van bedrock, sentinel en pipeline (issues #94 en #96): mutant bij een E2E-assertie, volle suite bij een nieuwe validatieregel, E2E-test van het geweigerde pad, proefmerge van een reeks pull requests, `workflow`-scope | Lessen |
 | v0.5.0 | 2026-11-05 | Werkwijze met een branch per feature en een pull request naar `main`, dat de sessie na review zelf mergt | Besluit stakeholder |
