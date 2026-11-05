@@ -24,7 +24,7 @@ def test_bezet_toont_de_soort_van_de_boot_niet_van_de_plaats(app):
     p = met_boot("A/1/1", ["Kajak", "Canadese kano"], "Canadese kano")
     assert indeling.plaatje(p) == {
         "plaats_id": p.id, "bestand": "canadese-kano-bezet.jpg", "tekst": "", "club": False,
-        "titel": "Canadese kano: Zeemeeuw (Anna de Vries)",
+        "titel": "A/1/1 - Canadese kano: Zeemeeuw (Anna de Vries)",
         "alt": "Plaats A/1/1, Canadese kano, bezet"}
 
 
@@ -34,7 +34,7 @@ def test_vrij_toont_de_eerste_soort_en_de_alt_noemt_alle_soorten(app):
     v = indeling.plaatje(plaats("A/1/1", [soort("Surfski"), soort("Kajak")]))
     assert v["bestand"] == "kajak-vrij.jpg" and not v["club"]
     assert v["alt"] == "Plaats A/1/1, Kajak, Surfski, vrij"
-    assert v["titel"] == "Kajak, Surfski: vrij"
+    assert v["titel"] == "A/1/1 - Kajak, Surfski: vrij"
 
 
 def test_lege_clubplaats_is_vrij_met_stippelrand(app):
@@ -42,21 +42,21 @@ def test_lege_clubplaats_is_vrij_met_stippelrand(app):
     v = indeling.plaatje(plaats("A/1/1", [soort("Kajak")], club=True))
     assert v["bestand"] == "kajak-vrij.jpg" and v["club"]
     assert v["alt"] == "Plaats A/1/1, Kajak, clubplaats, leeg"
-    assert v["titel"] == "Kajak: clubplaats, leeg"
+    assert v["titel"] == "A/1/1 - Kajak: clubplaats, leeg"
 
 
 def test_clubplaats_met_clubboot_is_bezet_zonder_stippelrand(app):
     v = indeling.plaatje(met_boot("A/1/1", ["Kajak"], "Kajak", club=True))
     assert v["bestand"] == "kajak-bezet.jpg" and not v["club"]
     assert v["alt"] == "Plaats A/1/1, Kajak, clubplaats, bezet"
-    assert v["titel"] == "Kajak: Zeemeeuw (clubboot)"
+    assert v["titel"] == "A/1/1 - Kajak: Zeemeeuw (clubboot)"
 
 
 def test_plaats_zonder_bootsoort_is_een_leeg_vak(app):
     v = indeling.plaatje(indeling.rek_aanmaken("A", "", {(1, 1)}, CLI).plaatsen[0])
     assert v["bestand"] is None and v["tekst"] == ""
     assert v["alt"] == "Plaats A/1/1, geen bootsoort, vrij"
-    assert v["titel"] == "geen bootsoort: vrij"
+    assert v["titel"] == "A/1/1 - geen bootsoort: vrij"
 
 
 @pytest.mark.parametrize("naam, bestand", [("C11", "canadese-kano-vrij.jpg"),
@@ -105,8 +105,8 @@ def test_pagina_toont_per_plaats_een_plaatje_met_alt(ingelogd):
     tekst = ingelogd.get("/rekoverzicht").text
     assert f'href="/plaatsen/{p.id}"' in tekst
     assert 'src="/static/boten/kajak-bezet.jpg" alt="Plaats A/1/1, Kajak, bezet"' in tekst
-    assert 'title="Kajak: Zeemeeuw (Anna de Vries)"' in tekst, "tekstballon bij een bezette plaats"
-    assert 'title="Supboard: vrij"' in tekst, "tekstballon bij een vrije plaats"
+    assert 'title="A/1/1 - Kajak: Zeemeeuw (Anna de Vries)"' in tekst, "tekstballon, bezet"
+    assert 'title="A/1/2 - Supboard: vrij"' in tekst, "tekstballon bij een vrije plaats"
     assert f'href="/plaatsen/{vrij.id}"' in tekst
     assert "Plaats A/1/2, Supboard, vrij</span>" in tekst
 
@@ -118,6 +118,7 @@ def test_pagina_toont_de_naam_van_een_soort_zonder_plaatje_geescaped(ingelogd):
     tekst = ingelogd.get("/rekoverzicht").text
     assert '<span aria-hidden="true">Sup &lt;&#34;xl&#34;&gt;</span>' in tekst
     assert "Plaats A/1/1, Sup &lt;&#34;xl&#34;&gt;, vrij</span>" in tekst
+    assert 'title="A/1/1 - Sup &lt;&#34;xl&#34;&gt;: vrij"' in tekst, "tekstballon (issue #95)"
     assert 'Sup <"xl">' not in tekst
 
 

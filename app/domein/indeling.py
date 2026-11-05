@@ -200,7 +200,7 @@ def plaatje(p):
     """Wat een vak van het rekoverzicht toont: bezet met het plaatje van de boot, anders vrij met
     het plaatje van de eerste bootsoort van de plaats. Een lege clubplaats is niet vrij voor
     leden: zelfde plaatje, met `club` voor de gestippelde rand. `alt` noemt alle soorten, `titel`
-    is de tekstballon: bij een boot de bootnaam en de eigenaar."""
+    is de tekstballon: de aanduiding, en bij een boot de bootnaam en de eigenaar."""
     soorten = [p.boot.bootsoort.naam] if p.boot else [s.naam for s in p.bootsoorten]
     basis = PLAATJES.get(soorten[0]) if soorten else None
     woord = "bezet" if p.boot else "leeg" if p.is_clubplaats else "vrij"
@@ -213,7 +213,7 @@ def plaatje(p):
         "bestand": f"{basis}-{'bezet' if p.boot else 'vrij'}.jpg" if basis else None,
         "tekst": soorten[0] if soorten and not basis else "",
         "club": p.is_clubplaats and not p.boot,
-        "titel": f"{', '.join(soorten) or 'geen bootsoort'}: {stand}",
+        "titel": f"{p.code} - {', '.join(soorten) or 'geen bootsoort'}: {stand}",
         "alt": ", ".join([f"Plaats {p.code}", ", ".join(soorten) or "geen bootsoort"]
                          + (["clubplaats"] if p.is_clubplaats else []) + [woord]),
     }
