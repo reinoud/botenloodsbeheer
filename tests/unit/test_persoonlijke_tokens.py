@@ -10,7 +10,7 @@ import pytest
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
 
-from app.domein import CLI, Actor, Regelfout, beheerders, tokens
+from app.domein import CLI, SYSTEEM, Actor, Regelfout, beheerders, tokens
 from app.models import Logregel, Token, db
 from tests.unit.conftest import API, EIGENAAR
 from tests.unit.hulp import beheerder_met_wachtwoord, race
@@ -96,15 +96,16 @@ def test_persoonlijk_token_zonder_leden_importeren(app, twee):
 
 
 def test_alleen_de_cli_geeft_leden_importeren(app, twee):
-    """#55: een actor die geen systeem is (token, taak) geeft of neemt het CLI-recht niet."""
-    for actor in (Actor("token", 1, "robot.x"), Actor("taak", None, "ronde")):
+    """#55, #118: een actor anders dan de CLI (token, taak, SYSTEEM) geeft of neemt het recht niet."""
+    for actor in (Actor("token", 1, "robot.x"), Actor("taak", None, "ronde"), SYSTEEM):
         with pytest.raises(Regelfout, match="alleen met de CLI"):
             tokens.maken("robot", "via-token", ["leden:importeren"], ["10.0.0.0/8"], None, actor)
     tokens.robot_maken("met", ["leden:importeren"], [], None, CLI)
     met = db.session.scalar(select(Token))
-    tokens.rechten_wijzigen(met.id, ["boten:lezen"], Actor("token", 1, "robot.x"))
-    db.session.expire_all()
-    assert db.session.get(Token, met.id).rechten == ["boten:lezen", "leden:importeren"]
+    for actor in (Actor("token", 1, "robot.x"), SYSTEEM):
+        tokens.rechten_wijzigen(met.id, ["boten:lezen"], actor)
+        db.session.expire_all()
+        assert db.session.get(Token, met.id).rechten == ["boten:lezen", "leden:importeren"]
 
 
 def test_web_geeft_leden_importeren_niet_en_neemt_het_niet_af(app, twee):
