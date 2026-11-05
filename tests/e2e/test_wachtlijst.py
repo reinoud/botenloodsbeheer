@@ -65,6 +65,24 @@ def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
     expect(page.locator("section.log")).not_to_contain_text("wachtlijst.")
 
 
+def test_wachtende_boot_krijgt_plaats_vanaf_de_bootpagina(page):
+    """#132: kies een vrije plaats op de bootpagina; de boot gaat van de wachtlijst."""
+    wachtwoord_instellen(page, "bootplaats")
+    wachter = f"Bootplaats {STEMPEL}"
+    code = rek_met_plaats(page, reknaam("b"), ["Surfski"])
+    boot_vastleggen(page, wachter, "Surfski", eigenaar_index=2)
+    page.get_by_role("button", name="Op de wachtlijst zetten").click()
+    expect(page.get_by_text("De boot staat op de wachtlijst.")).to_be_visible()
+    keuze = page.locator("#plaats option", has_text=code).get_attribute("value")
+    page.get_by_label("Vrije plaats voor surfski").select_option(value=keuze)
+    page.get_by_role("button", name="Wijs toe aan plek").click()
+    expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
+    expect(page.get_by_role("link", name=code, exact=True)).to_be_visible()
+    expect(page.locator("section.log")).to_contain_text("wachtlijst.verwijderd")
+    page.goto("/wachtlijst")
+    expect(page.get_by_role("link", name=wachter)).to_have_count(0)
+
+
 def test_wachtlijst_weigert_toekomst_en_clubboot_en_eraf_halen(page):
     wachtwoord_instellen(page, "wachtlijstfout")
     club, boot = f"Clubwachter {STEMPEL}", f"Toekomst {STEMPEL}"

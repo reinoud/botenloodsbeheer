@@ -183,9 +183,21 @@ def boot_aanmaken():
 @inloggen_vereist
 def boot_detail(boot_id):
     b = _of_404(boten.boot, boot_id)
+    oud_lid = b.lid is not None and leden.is_oud_lid(b.lid)
+    # #132: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert.
+    vrij = [] if b.plaats or oud_lid else indeling.vrije_plaatsen(b.bootsoort_id,
+                                                                  clubplaats=b.lid_id is None)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
                            bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
-                           oud_lid=b.lid is not None and leden.is_oud_lid(b.lid), vandaag=vandaag())
+                           oud_lid=oud_lid, vrij=vrij, vandaag=vandaag())
+
+
+@bp.post("/boten/<int:boot_id>/toewijzen")
+@inloggen_vereist
+def boot_toewijzen(boot_id):
+    uitvoeren(toewijzing.toewijzen, request.form.get("plaats_id", type=getal), boot_id,
+              gelukt="De boot heeft de plaats gekregen.")
+    return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 
 @bp.post("/boten/<int:boot_id>")
