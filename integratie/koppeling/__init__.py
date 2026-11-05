@@ -20,6 +20,8 @@ NIEUWE_POGING = timedelta(hours=1)
 # De grenzen van PUT /api/v1/leden; daarboven meldt de container de bron als onleesbaar.
 MAX_RECORDS = 5000
 MAX_BYTES = 2 * 1024 * 1024
+# De antwoorden van de API zijn kleine JSON-objecten; meer leest de container niet (#109).
+ANTWOORD_MAX = 64 * 1024
 IMPORT_LOOPT = b"Er loopt al een import."  # de tekst van de 409 bij een vastgehouden importslot
 
 log = logging.getLogger("koppeling")
@@ -76,10 +78,13 @@ class Koppeling:
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
         try:
             with _opener.open(verzoek, timeout=60) as antwoord:
-                return json.loads(antwoord.read() or b"{}")
+                tekst = antwoord.read(ANTWOORD_MAX + 1)
+                if len(tekst) > ANTWOORD_MAX:
+                    raise ApiFout("antwoord te groot")
+                return json.loads(tekst or b"{}")
         except urllib.error.HTTPError as fout:
             # Een lopende import houdt het slot vast en sluit het verzoek niet (#31).
-            slot = fout.code == 409 and IMPORT_LOOPT in fout.read()
+            slot = fout.code == 409 and IMPORT_LOOPT in fout.read(ANTWOORD_MAX)
             raise ApiFout(f"HTTP {fout.code}" + (" importslot" if slot else "")) from None
         except (OSError, ValueError) as fout:  # URLError en time-out zijn OSError
             raise ApiFout(type(fout).__name__) from None
