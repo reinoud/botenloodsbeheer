@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.4
+**Versie overlay:** v0.5.5
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -133,6 +133,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem in een reviewbrief naast het E2E-bestand van het scherm ook de E2E-test die het geweigerde pad bewijst, met de naam voor `draai.sh -k`.
 - Raken meer pull requests hetzelfde bestand, laat de reviewer ze dan in een eigen clone proefmergen in de voorgestelde volgorde en melden welke een rebase nodig heeft; `mergeable` van GitHub geldt per pull request, niet voor de reeks.
 - Een pull request dat een bestand in `.github/workflows/` wijzigt, mergt alleen met een `gh`-token met de scope `workflow`; zonder die scope weigert GitHub de merge.
+- Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
+- Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
 
 #### E2E
 
@@ -287,6 +289,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.5 | 2026-11-05 | Regels over tests per HTTP-methode of status en over de Python-versie in de brief, uit de terugblikken van aegis en sentinel (issue #23) | Lessen |
 | v0.5.4 | 2026-11-05 | Regels over het citeren van een overlayregel en over een mutant op een staatsassert, uit de terugblikken van aegis en sentinel (issue #12) | Lessen |
 | v0.5.3 | 2026-11-05 | Regels over de assert per mutant en over een E2E-mutant op een static-bestand, uit de terugblikken van prism en sentinel (issue #99) | Lessen |
 | v0.5.2 | 2026-11-05 | Regel over een templatemutant als bind mount van alleen het template, uit de terugblik van sentinel (issue #95) | Lessen |
