@@ -10,6 +10,7 @@ services:
   traefik:
     ports: !override []
   e2e:
+    image: botenloods-e2e  # het image van de lokale stack, geen tweede kopie
     volumes:
       - ./documentatie:/documentatie
       - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
