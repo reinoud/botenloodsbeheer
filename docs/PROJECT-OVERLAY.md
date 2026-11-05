@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.18
+**Versie overlay:** v0.5.19
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -52,8 +52,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Geef de omvang (10 rekken, 160 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
-- Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal.
+- Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal. Een woordgrens voor een alinea telt alleen de alinea; kop, versieregel en wijzigingslog tellen apart.
 - Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
+- Noem de overlayregels uit §4 die op een proef van toepassing zijn, en zeg per regel of de proef er in dit issue aan moet voldoen of dat het een restpunt mag worden.
 - Tel een woordbudget voor nieuwe of gewijzigde tekst met `git diff --word-diff=porcelain <bestand> | grep '^+[^+]' | wc -w`; `wc -w` op de plusregels telt ongewijzigde woorden in aangepaste regels mee.
 - Noem bij elk besluit in de bron of het in deze ronde verwerkt moet worden; een besluit dat niet genoemd is, komt als open vraag terug.
 - Noem welke ongecommitte bestanden (model, migratie) nog een oud besluit bevatten, zodat het agent ze als ontwerppunt meeneemt.
@@ -148,6 +149,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een review van een basisimage dat `.github/workflows/images.yml` alleen `linux/amd64` bouwt, zodat de reviewer weet welke architectuur de scan moet dekken.
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
 - Zeg in de brief: draai elke testrun of mutant als een los commando, geen lussen of ketens in één shellregel.
+- Een mutant op `tests/proxy/klant.py` of `tests/proxy/compose.traefik.yml` draait in een kopie met `docker-compose.yml`, `compose.api-extern.yml`, `docker/db-init.sh`, een lege map `huisstijl`, een leeg bestand `secrets/api_token` en `tests/proxy/`, alles uit de index (`git show :pad`).
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
 
 #### E2E
@@ -223,6 +225,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
+- Draai `tests/proxy/draai.sh` na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik; herbouw eerst `botenloods-app` als `app/` gewijzigd is, want het script bouwt niet. Schrijf de uitvoer naar een bestand met tijdstempel en controleer daarna met `docker ps -a` en `docker network ls` dat niets met `proxytest` achterblijft. Een mutant op die labels draai je met `EXTERN_BESTAND=<kopie in de scratchpad>`. Het script draait niet twee keer tegelijk (vaste projectnaam) en toetst het gedrag, niet elke vlag van Traefik: zonder `insecure` of met `trustedIPs` blijft het groen.
 - Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
 
 #### Documentatie, backlog en ADR's
@@ -307,6 +310,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.19 | 2026-11-05 | Regel over `tests/proxy/draai.sh` na een wijziging aan de proxy (issue #53); woordgrens per alinea, overlayregels per proef en mutanten op `tests/proxy`, uit de terugblikken van pipeline, aegis en sentinel | Werkwijze, lessen |
 | v0.5.18 | 2026-11-05 | Regel over het platform bij een review van een basisimage, uit de terugblik van sentinel (issue #124) | Lessen |
 | v0.5.17 | 2026-11-05 | Regel over `uv lock` verwijst naar de uv-stage in `docker/Dockerfile` in plaats van een vaste versie; regel over de unitsuite op een proefimage, uit de terugblik van sentinel (issue #105) | Werkwijze, lessen |
 | v0.5.16 | 2026-11-05 | Regels over zoeken in issues op een versienummer en over voorbeeldtests in een brief, uit de terugblik van sentinel (issue #120) | Lessen |

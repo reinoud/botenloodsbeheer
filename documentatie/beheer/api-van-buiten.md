@@ -1,7 +1,7 @@
 # API van buiten
 
-**Versie:** v1.0.0
-**Datum:** 2026-11-03
+**Versie:** v1.1.0
+**Datum:** 2026-11-05
 **Bronnen:** ADR-005, ADR-012, ADR-013, `compose.api-extern.yml`, `app/api/openapi.yaml`
 
 Standaard is de API alleen bereikbaar voor de integratiecontainer, via het entrypoint `intern` van Traefik. Een persoonlijk token of een koppeling buiten de installatie heeft de API op `https://DOMEIN/api/v1` nodig. Die zet je bewust open met `compose.api-extern.yml`. Zonder dat bestand geeft `https://DOMEIN/api/v1/ik` 404.
@@ -42,6 +42,10 @@ De gedeelde Traefik moet aan dezelfde eisen voldoen als bij de installatie, ook 
 
 Van buiten gelden dezelfde grenzen als intern: 60 aanroepen per minuut per token, met een burst van 10, en 300 per minuut per adres. Daarboven antwoordt Traefik met 429 en `Retry-After`. Traefik telt per route, dus een token dat zowel intern als van buiten wordt gebruikt, krijgt op elk van beide 60 per minuut.
 
+## Proef na een wijziging
+
+`tests/proxy/draai.sh` toetst met een losse Traefik en de echte `api` 200, 401 met vervalste koppen, 403, 429 en 404 zonder het bestand. Draai het na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik. Het is een proef voor ontwikkelaars: hij vraagt een checkout van de repository en een lokaal image `botenloods-app`, en toetst een eigen losse Traefik, niet de gedeelde.
+
 ## De leesaanroepen
 
 Elke aanroep geeft de hele lijst, zonder filters of paginering. Het recht `persoonsgegevens` voegt velden toe: zonder dat recht ontbreken adres, telefoon en e-mail, en bij leden ook `lid_sinds` en `opzegdatum`. Een veld zonder waarde is `null`. De volledige beschrijving met voorbeelden staat in `app/api/openapi.yaml`.
@@ -71,3 +75,4 @@ Start zonder `compose.api-extern.yml`: `docker compose up -d api`. Trek daarna d
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
 | v1.0.0 | 2026-11-03 | Eerste versie | BLB-042, slice 10 |
+| v1.1.0 | 2026-11-05 | Proef met een losse Traefik | Issue #53 |
