@@ -46,7 +46,7 @@ def _csv(pad):
 
 
 def _indeling_opbouwen(soort):
-    """11 rekken met 224 plaatsen uit de twee CSV-bestanden. Een bootsoort die nog niet bestaat
+    """11 rekken met 229 plaatsen uit de twee CSV-bestanden. Een bootsoort die nog niet bestaat
     (Wildwaterkano) komt erbij zoals BLB-028 dat doet."""
     vakken = _csv(INDELING_CSV)
     for naam in sorted({v["bootsoort"] for v in vakken} - soort.keys()):

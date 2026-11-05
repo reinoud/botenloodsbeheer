@@ -152,7 +152,7 @@ def test_seed_maakt_de_synthetische_loods(app):
     def tel(model, *waar):
         return db.session.scalar(select(func.count()).select_from(model).where(*waar))
 
-    assert tel(Rek) == 11 and tel(Plaats) == 224 and tel(Plaats, Plaats.is_clubplaats) == 27
+    assert tel(Rek) == 11 and tel(Plaats) == 229 and tel(Plaats, Plaats.is_clubplaats) == 30
     _controleer_bootsoort_per_vak()
     assert tel(Lid) == 208 and tel(Boot) == 180 and tel(Boot, Boot.lid_id.is_(None)) == 6
     assert tel(Plaats, Plaats.boot_id.isnot(None)) == 150
@@ -168,7 +168,7 @@ def test_seed_maakt_de_synthetische_loods(app):
     assert sum(len(rij) for _s, rij in rijen) == tel(Wachtlijst) == 10 and len(rijen) >= 3
     assert tel(Logregel, Logregel.actie == "wachtlijst.toegevoegd") == 10
     seed.seed(echo=lambda _: None)  # tweede keer: niets
-    assert tel(Rek) == 11 and tel(Plaats) == 224
+    assert tel(Rek) == 11 and tel(Plaats) == 229
 
 
 def _controleer_bootsoort_per_vak():
@@ -185,7 +185,7 @@ def _controleer_bootsoort_per_vak():
         assert p.is_clubplaats == (p.rek.naam == "A"), p.code
     assert {p.code for p in db.session.scalars(select(Plaats).where(Plaats.rek.has(naam="A"),
                                                                     Plaats.verdieping == 1))
-            } == {"A/1/1", "A/1/3", "A/1/4", "A/1/6"}  # gaten blijven
+            } == {f"A/1/{k}" for k in range(1, 7)}  # geen gaten (#94)
     assert db.session.scalar(select(Rek.omschrijving).where(Rek.naam == "H")) != ""
 
 

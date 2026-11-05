@@ -29,6 +29,12 @@ def test_rekoverzicht_toont_per_plaats_een_plaatje_met_alt(page):
         expect(plaatje).to_have_attribute("src", f"/static/boten/{bestand}")
         expect(plaatje).to_be_visible()  # het bestand bestaat en laadt
         assert plaatje.evaluate("i => i.naturalWidth") > 0, alt
+    # Issue #94: 2 kolommen en 2 verdiepingen, geen lege kolommen of rijen; de CSS-klasse zet het
+    # raster echt op 2 kolommen (de CSP staat geen inline style toe).
+    expect(sectie.locator(".raster-kop:not(.raster-rij)")).to_have_text(["1", "2"])
+    expect(sectie.locator(".raster-rij")).to_have_text(["Verdieping 2", "Verdieping 1"])
+    kolommen = sectie.locator("a.rek-vak").evaluate_all("els => new Set(els.map(e => Math.round(e.getBoundingClientRect().x))).size")
+    assert kolommen == 2
     expect(sectie.locator("a.rek-vak-club")).to_have_count(1)
     expect(sectie.locator("a.rek-vak-club").get_by_role("img")).to_have_attribute(
         "alt", f"Plaats {rek}/1/2, Kajak, clubplaats, leeg")

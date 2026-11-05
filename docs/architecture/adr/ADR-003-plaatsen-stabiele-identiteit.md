@@ -1,15 +1,15 @@
 # ADR-003 Datamodel van plaatsen met stabiele identiteit
 
 **Status:** Besloten door Foundation (indeling: issue #80, #83)
-**Datum:** 2026-11-04
-**Versie:** v2.2.1
+**Datum:** 2026-11-05
+**Versie:** v2.3.0
 **Stories:** BLB-001 tot en met BLB-003, BLB-010, BLB-011, BLB-020, BLB-021, BLB-044
 
 ## Context
 
-De loods bestaat uit rekken met een naam, verdiepingen 1 tot en met 5 en vakken 1 tot en met 12. Elk vak is een plaats met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1` (issue #80). Elk vak staat los aan of uit; gaten in de nummering mogen (A/1 heeft vak 1, 3, 4 en 6). Een geprint kaartje met QR-code moet na een hernoeming van het rek nog steeds naar dezelfde plaats leiden (overlay §5, contract plaatsnamen). De openbare pagina toont zonder inloggen de naam van de eigenaar en de foto van de boot (BLB-020). Een plaats heeft ten hoogste één boot, en een boot ten hoogste één plaats (backlog §8). Clubplaatsen zijn alleen voor clubboten (BLB-003).
+De loods bestaat uit rekken met een naam, verdiepingen 1 tot en met 5 en vakken 1 tot en met 12. Elk vak is een plaats met de aanduiding `<rek>/<verdieping>/<vak>`, zoals `A/1/1` (issue #80). Elk vak staat aan of uit, maar een verdieping heeft geen gaten: haar vakken zijn altijd 1 tot en met n (issue #94). Een verdieping zonder plaatsen onder de hoogste mag wel. Een geprint kaartje met QR-code moet na een hernoeming van het rek nog steeds naar dezelfde plaats leiden (overlay §5, contract plaatsnamen). De openbare pagina toont zonder inloggen de naam van de eigenaar en de foto van de boot (BLB-020). Een plaats heeft ten hoogste één boot, en een boot ten hoogste één plaats (backlog §8). Clubplaatsen zijn alleen voor clubboten (BLB-003).
 
-Als de aanduiding in de URL van de QR-code staat, breekt elke hernoeming van een rek de kaartjes. Als een volgnummer in de URL staat, kan iedereen met een lus alle 224 pagina's ophalen en zo een lijst van alle eigenaren met foto maken. De leden stemden in met het tonen van hun naam per plaats, niet met een downloadbare ledenlijst.
+Als de aanduiding in de URL van de QR-code staat, breekt elke hernoeming van een rek de kaartjes. Als een volgnummer in de URL staat, kan iedereen met een lus alle 229 pagina's ophalen en zo een lijst van alle eigenaren met foto maken. De leden stemden in met het tonen van hun naam per plaats, niet met een downloadbare ledenlijst.
 
 ## Besluit
 
@@ -57,7 +57,7 @@ De omschrijving van het rek, zoals "Grote botenloods stelling links", staat op d
 
 ### Seed
 
-`flask seed` bouwt de echte indeling op uit `app/seed_rekken.csv` (rek, omschrijving) en `app/seed_indeling.csv` (rek, verdieping, vak, bootsoort, clubplaats): 11 rekken, 224 plaatsen, waarvan 27 clubplaatsen. Een bootsoort die nog niet bestaat, zoals Wildwaterkano, voegt de seed toe zoals BLB-028 dat doet. Leden en boten blijven verzonnen. Een echte installatie vult de beheerder met de hand; er komt geen import van de indeling.
+`flask seed` bouwt de echte indeling op uit `app/seed_rekken.csv` (rek, omschrijving) en `app/seed_indeling.csv` (rek, verdieping, vak, bootsoort, clubplaats): 11 rekken, 229 plaatsen, waarvan 30 clubplaatsen (heel rek A). Een bootsoort die nog niet bestaat, zoals Wildwaterkano, voegt de seed toe zoals BLB-028 dat doet. Leden en boten blijven verzonnen. Een echte installatie vult de beheerder met de hand; er komt geen import van de indeling.
 
 ### Migratie
 
@@ -84,7 +84,8 @@ Migratie `0013` volgt op `0012` en is de enige head. Upgrade: trek DELETE op `ve
 ## Gevolgen
 
 - BLB-004 (plaatscode wijzigen) vervalt. Hernoemen van een rek verandert de aanduiding van alle plaatsen in dat rek en geeft één logregel voor het rek. Kaartjes blijven werken; alleen de tekst op het kaartje is dan verouderd.
-- Een vak of verdieping uitzetten verandert de aanduiding van andere plaatsen niet; er blijft een gat.
+- Een vak of verdieping uitzetten verandert de aanduiding van andere plaatsen niet. Een vak mag alleen uit als de vakken erboven op die verdieping ook uit gaan: `_vakken` in `app/domein/indeling.py` weigert een verdieping met een gat, bij aanmaken en bij `indeling_instellen`, met een melding die verdieping en eerste ontbrekend vak noemt. De database dwingt dit niet af; een bestaande installatie met een gat kan de indeling van dat rek pas opslaan als het gat is gevuld.
+- Het rekoverzicht (BLB-044) toont per rek zoveel kolommen als het hoogste vaknummer en zoveel verdiepingen als de hoogste verdieping met een plaats. De CSP staat geen inline `style` toe, dus het aantal kolommen is een CSS-klasse (`raster-rek-1` tot en met `raster-rek-12`).
 - Een bezoeker kan een plaats niet op aanduiding opzoeken. Dat is besloten: de openbare pagina is alleen via de QR-link te openen (intake, besluit stakeholder 2026-10-30).
 - Een publieke sleutel opnieuw genereren is bewust geen functie. Is een sleutel ooit ongewenst bekend, dan is dat geen probleem: de pagina is openbaar.
 - De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto-URL en naam van de eigenaar (of de naam van de vereniging bij een clubboot) ophaalt. De E2E-test controleert het volledige antwoord op afwezigheid van adres, telefoon, e-mail en lidnummer.
@@ -94,6 +95,7 @@ Migratie `0013` volgt op `0012` en is de enige head. Upgrade: trek DELETE op `ve
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.3.0 | 2026-11-05 | Een verdieping heeft geen gaten (validatie in het domein, geen migratie); seed aangevuld tot 229 plaatsen en 30 clubplaatsen; rekoverzicht zonder lege kolommen en verdiepingen | Besluiten stakeholder 2026-11-05, issue #94 |
 | v2.2.1 | 2026-11-04 | `botenloods_web` houdt SELECT en INSERT op `verdieping_bootsoort`; DELETE vervalt in migratie 0013 | Restpunt uit de reviews van #83, issue #85 |
 | v2.2.0 | 2026-11-04 | Tabel `verdieping_bootsoort`; nieuwe plaats krijgt de bootsoort van haar verdieping; `plaats_verwijderen` vervalt; migratie 0012 | Besluiten stakeholder, vraag 26 en issue #83 |
 | v2.1.1 | 2026-11-04 | `indeling_instellen` vergrendelt alle plaatsen van het rek; migratie 0011 geeft `botenloods_taken` INSERT op `bootsoort` en USAGE op de reeks | Afwijkingen gemeld bij de bouw van slice 12, issue #80 |

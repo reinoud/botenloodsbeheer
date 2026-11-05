@@ -55,6 +55,12 @@ def _vakken(vakken):
     if any(v not in VERDIEPINGEN or k not in VAKKEN for v, k in paren):
         raise Regelfout(f"Een rek heeft verdieping {VERDIEPINGEN[0]} tot en met "
                         f"{VERDIEPINGEN[-1]} en vak {VAKKEN[0]} tot en met {VAKKEN[-1]}.")
+    for v in sorted({v for v, _ in paren}):
+        nummers = {k for w, k in paren if w == v}
+        ontbrekend = min(set(range(1, max(nummers) + 1)) - nummers, default=None)
+        if ontbrekend:
+            raise Regelfout(f"Verdieping {v} heeft een gat: vak {ontbrekend} ontbreekt. Een "
+                            "verdieping loopt van vak 1 tot en met het laatste vak, zonder gaten.")
     return paren
 
 
