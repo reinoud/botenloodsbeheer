@@ -39,5 +39,10 @@ def test_rekoverzicht_toont_per_plaats_een_plaatje_met_alt(page):
     expect(sectie.locator("a.rek-vak-club").get_by_role("img")).to_have_attribute(
         "alt", f"Plaats {rek}/1/2, Kajak, clubplaats, leeg")
 
+    # Issue #95: de tekstballon begint met de aanduiding.
+    titels = sorted(sectie.locator("a.rek-vak").evaluate_all("els => els.map(e => e.title)"))
+    assert titels[0].startswith(f"{rek}/1/1 - Kajak: {bootnaam} ("), titels
+    assert titels[1:] == [f"{rek}/1/2 - Kajak: clubplaats, leeg", f"{rek}/2/1 - Surfski: vrij",
+                          f"{rek}/2/2 - Surfski: vrij"], titels
     sectie.get_by_role("link", name=f"Plaats {rek}/2/1, Surfski, vrij").click()
     expect(page.get_by_role("heading", level=1)).to_have_text(f"Plaats {rek}/2/1")
