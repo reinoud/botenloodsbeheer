@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.6
+**Versie overlay:** v0.5.7
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -195,6 +195,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een test met een bijzondere bronvorm (zoals een MPO of een tweede beeld) controleert eerst zelf dat de bron die vorm heeft, bijvoorbeeld `Image.open(bron).format == "MPO"`; anders test hij stil een ander geval als de bibliotheek verandert.
 - Scan images met `trivy --ignore-unfixed`; meldingen zonder oplossing komen alleen als aantal in het rapport.
 - Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog). Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
+- Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
@@ -291,6 +292,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.7 | 2026-11-05 | Regel over de controle van Dependabot na de merge, uit de terugblik van sentinel (issue #25) | Lessen |
 | v0.5.6 | 2026-11-05 | Regels over een mutant op `upgrade()` en over schrijfproeven op een rijbeleid, uit de terugblikken van sentinel en aegis (issue #24) | Lessen |
 | v0.5.5 | 2026-11-05 | Regels over tests per HTTP-methode of status en over de Python-versie in de brief, uit de terugblikken van aegis en sentinel (issue #23) | Lessen |
 | v0.5.4 | 2026-11-05 | Regels over het citeren van een overlayregel en over een mutant op een staatsassert, uit de terugblikken van aegis en sentinel (issue #12) | Lessen |
