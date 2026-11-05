@@ -13,7 +13,7 @@ from flask import current_app
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Actor, Regelfout, log
+from app.domein import CLI, Actor, Regelfout, log
 from app.models import Beheerder, Token, db
 
 # Vaste lijst in code (ADR-005, ADR-009).
@@ -85,7 +85,7 @@ def maken(soort, naam, rechten, whitelist, dagen, actor):
     if not NAAM.fullmatch(naam):
         raise Regelfout("Naam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
     rechten = _rechten(rechten, soort)
-    if actor.soort != "systeem" and CLI_RECHT in rechten:
+    if actor != CLI and CLI_RECHT in rechten:
         raise Regelfout(f"Het recht {CLI_RECHT} geef je alleen met de CLI (flask token robot).")
     netten = whitelist_lezen(whitelist)
     if soort == "robot" and not netten:
@@ -142,7 +142,7 @@ def rechten_wijzigen(token_id, rechten, actor):
         raise Regelfout("Er is geen actief token met dit nummer.")
     oud = list(token.rechten)
     try:
-        if actor.soort != "systeem":
+        if actor != CLI:  # niet op soort: SYSTEEM deelt die met de CLI (#118)
             # Alleen de CLI geeft of neemt het CLI-recht; voor elke andere actor blijft het zo (#55).
             if CLI_RECHT in rechten and CLI_RECHT not in oud:
                 raise Regelfout(f"Het recht {CLI_RECHT} geef je alleen met de CLI "
