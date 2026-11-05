@@ -2,7 +2,8 @@
 # Maakt alle schermafbeeldingen van de handleiding opnieuw, in documentatie/gebruikers/afbeeldingen/.
 # Het script start een eigen stack (project botenloods-doc) met een lege database, vult die met de
 # synthetische loods uit flask seed en ruimt alles weer op. De lokale stack blijft ongemoeid.
-# Vooraf: de images botenloods-app en botenloods-e2e (docker compose ... build e2e) en een .env.
+# Vooraf: het image botenloods-app en een .env. Het image botenloods-e2e (dat van de lokale stack)
+# bouwt compose zo nodig en blijft na afloop staan.
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 export KOPPELNET=10.203.77.0/24   # botst anders met het vaste subnet van de lokale stack

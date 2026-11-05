@@ -76,8 +76,8 @@ def verberg_geheimen(page):
     tokenwaarde is een geheim."""
     page.evaluate("""() => {
         const qr = document.querySelector('img.qr');
-        if (qr) { const b = qr.getBoundingClientRect(); qr.removeAttribute('src'); qr.alt = '';
-          qr.style.cssText = `width:${b.width}px;height:${b.height}px;background:#ddd;display:block`; }
+        if (qr) { const b = qr.getBoundingClientRect(); const vak = document.createElement('div');
+          vak.style.cssText = `width:${b.width}px;height:${b.height}px;background:#ddd`; qr.replaceWith(vak); }
         const sleutel = document.querySelector('#totp-geheim');
         if (sleutel) sleutel.textContent = 'ABCD EFGH IJKL MNOP';
         const link = document.querySelector('#uitnodigingslink');
@@ -245,7 +245,9 @@ def main():
         opzeggers()
     else:
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            # Het datumveld volgt LANGUAGE van het browserproces, niet de locale van de context, en
+            # alleen de volledige Chromium leest die (de headless shell niet).
+            browser = p.chromium.launch(channel="chromium", env={**os.environ, "LANGUAGE": "nl_NL"})
             schermen(browser)
             browser.close()
 
