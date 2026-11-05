@@ -1,14 +1,14 @@
 # Integratiecontainer
 
-**Versie:** v2.2.0
-**Datum:** 2026-11-03
+**Versie:** v2.3.0
+**Datum:** 2026-11-05
 **Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`
 
 De integratiecontainer haalt de leden uit de ledenbron en stuurt ze naar de API, via het entrypoint `intern` van Traefik over het netwerk `koppeling`. De database en de dienst `api` bereikt hij niet. De inloggegevens van de bron staan alleen in zijn omgeving.
 
 ## Werking
 
-Elke minuut vraagt de container of een beheerder een import heeft aangevraagd ("Leden nu ophalen" op de pagina Leden). Is dat zo, of is `SYNC_TIJDSTIP` gepasseerd zonder geslaagde import die dag, dan stuurt hij de ledenlijst. Na een fout probeert hij het hooguit één keer per uur opnieuw; een nieuw token heft die wachttijd op. De uitkomst staat op de pagina Leden.
+Elke minuut vraagt de container of een beheerder een import heeft aangevraagd ("Leden nu ophalen" op de pagina Leden). Is dat zo, of is `SYNC_TIJDSTIP` gepasseerd zonder geslaagde import die dag, dan stuurt hij de ledenlijst. Na een fout probeert hij het hooguit één keer per uur opnieuw; een nieuw token heft die wachttijd op. Een fout van de bron en de veiligheidsgrens sluiten het verzoek, dus een nieuw verzoek van een beheerder gaat direct. Een fout van de API en een lopende import of opschoning (409, "Er loopt al een import.") laten het verzoek open; dan wacht de container ook met het verzoek een uur. De uitkomst staat op de pagina Leden.
 
 | Variabele | Standaard | Betekenis |
 |-----------|-----------|-----------|
@@ -99,6 +99,7 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.3.0 | 2026-11-05 | Na een 409 door een lopende import een uur stil | Issue #31 |
 | v2.2.0 | 2026-11-03 | 409 ook tijdens de opschoning | Restpunt review #49, issue #51 |
 | v2.1.0 | 2026-11-02 | `GET /bootaantallen` gebouwd, met voorbeeldcode | BLB-009, BLB-040, slice 9 |
 | v2.0.0 | 2026-10-31 | Verplaatst uit `docs/beheer/`; via Traefik; export van bootaantallen; ingekort | ADR-013, issue #30 |

@@ -32,7 +32,7 @@ class NepApi(ThreadingHTTPServer):
 
     def __init__(self):
         super().__init__(("127.0.0.1", 0), Handler)
-        self.aanroepen, self.verzoek, self.status = [], False, {}
+        self.aanroepen, self.verzoek, self.status, self.fout = [], False, {}, "Geen toegang."
         threading.Thread(target=self.serve_forever, daemon=True).start()
 
     @property
@@ -52,7 +52,7 @@ class Handler(BaseHTTPRequestHandler):
         status = self.server.status.get(pad, 201 if self.command == "POST" else 200)
         antwoord = {"aangevraagd": self.server.verzoek} if pad == "/leden/importverzoek" else (
             {"ontvangen": len(lichaam["leden"]), "nieuw": 1} if pad == "/leden" else {})
-        tekst = json.dumps(antwoord if status < 400 else {"fout": "Geen toegang."}).encode()
+        tekst = json.dumps(antwoord if status < 400 else {"fout": self.server.fout}).encode()
         self.send_response(status)
         if 300 <= status < 400:
             self.send_header("Location", self.server.locatie)
@@ -174,13 +174,28 @@ def test_onverwachte_fout_ook_een_uur_stil(api, koppeling):
     assert paden(api) == [("GET", "/leden/importverzoek")]
 
 
-def test_veiligheidsgrens_van_de_api_telt_als_fout(api, koppeling):
+def test_veiligheidsgrens_van_de_api_telt_als_fout(api, koppeling, caplog):
     """BLB-007 criterium 4: de API houdt een halve lijst tegen (409); de container wacht."""
-    api.status["/leden"] = 409
+    api.status["/leden"], api.fout = 409, "De lijst bevat minder dan de helft van de leden."
     koppeling.ronde(OCHTEND)
     assert koppeling.geslaagd_op is None and koppeling.fout_op == OCHTEND
     koppeling.ronde(OCHTEND + timedelta(minutes=30))
     assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
+    api.verzoek = True  # #31: het verzoek van een beheerder gaat na de veiligheidsgrens direct
+    koppeling.ronde(OCHTEND + timedelta(minutes=31))
+    assert paden(api)[3:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+    assert "of direct na een verzoek van een beheerder" in caplog.text
+
+
+def test_lopende_import_een_uur_stil_ook_bij_een_open_verzoek(api, koppeling, caplog):
+    """#31: een vastgehouden importslot sluit het verzoek niet; geen PUT per minuut."""
+    api.status["/leden"], api.fout, api.verzoek = 409, "Er loopt al een import.", True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(minutes=59))
+    assert paden(api) == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+    koppeling.ronde(OCHTEND + timedelta(minutes=60))
+    assert paden(api)[2:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+    assert "HTTP 409 importslot" in caplog.text and "beheerder" not in caplog.text
 
 
 @pytest.mark.parametrize("status", [301, 302, 307, 308])
