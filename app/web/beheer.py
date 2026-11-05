@@ -118,7 +118,7 @@ def plaats_detail(plaats_id):
                       key=lambda w: w.aangemeld_op) if p.boot is None and not p.is_clubplaats else []
     return render_template(
         "plaats.html", plaats=p, oud_lid=p.boot and p.boot.lid and leden.is_oud_lid(p.boot.lid),
-        boten=boten.zonder_plaats() if p.boot is None else [], wachtend=wachtend,
+        boten=[b for b in boten.zonder_plaats() if toewijzing.past(p, b)] if p.boot is None else [], wachtend=wachtend,
         bootsoorten=indeling.bootsoorten(),
         openbare_url=f"{current_app.config['BASIS_URL']}/p/{p.publieke_sleutel}",
         regels=log.regels([f"plaats:{p.id}"]))

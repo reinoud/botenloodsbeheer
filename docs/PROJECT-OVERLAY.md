@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.22
+**Versie overlay:** v0.5.23
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -128,6 +128,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai de unitsuite op een proefimage met `docker compose -f docker-compose.yml -f compose.dev.yml -f <scratchpad>/compose.<proef>.yml --profile test run --rm test pytest -q`; het override-bestand zet alleen `services.test.image: <proefimage>` en `pull_policy: never`. Hertag `botenloods-dev` niet, anderen gebruiken het.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
+- Haalt een mutant een controle met twee kanten weg (zoals clubboot op een ledenplaats en ledenboot op een clubplaats), draai dan per kant een eigen mutant, met per kant de assert die moet falen.
 - Wordt een lus in een Jinja-macro gewijzigd, noem dan elke aanroep van de macro en de mutant die alleen één aanroep raakt.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Een mutant die een object uit `upgrade()` weghaalt, haalt de bijbehorende regel uit `downgrade()` ook weg; anders faalt de mutant op de downgrade in plaats van op de assert van het criterium.
@@ -318,6 +319,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.23 | 2026-11-05 | Regel over een mutant per kant van een tweezijdige controle, uit de terugblik van sentinel (#131) | Lessen |
 | v0.5.22 | 2026-11-05 | Uit #54: tweede ronde van `draai.sh` (PROXY protocol), keep-alive bij een proef op de rate limit, drie aanroepen voor een eigen teller, voorwaarde bij een vertrouwensinstelling | Werkwijze |
 | v0.5.21 | 2026-11-05 | Regel uit de terugblik van foundation bij #54: zoek vóór een besluit naar elke geraakte instelling | Werkwijze |
 | v0.5.20 | 2026-11-05 | Twee regels uit de terugblikken van sentinel en aegis bij #127: mutant op `klant.py` samen met een labelmutant, en welke eigenschap een proef op de rate limit bewijst | Werkwijze |

@@ -16,6 +16,15 @@ def controleer_past(p, bootnaam, bootsoort, heeft_lid):
         raise Regelfout(f"Plaats {p.code} is niet geschikt voor een {bootsoort.naam.lower()}.")
 
 
+def past(p, b):
+    """Voor een keuzelijst: dezelfde regels als toewijzen, zonder te weigeren (#131)."""
+    try:
+        controleer_past(p, b.naam, b.bootsoort, b.lid_id is not None)
+    except Regelfout:
+        return False
+    return b.lid is None or not leden.is_oud_lid(b.lid)
+
+
 def toewijzen(plaats_id, boot_id, actor):
     """Controleert en wijst toe in één transactie. De boot wordt eerst vergrendeld en dan de
     plaats, zodat twee beheerders niet tegelijk dezelfde plaats of boot toewijzen. Dezelfde
