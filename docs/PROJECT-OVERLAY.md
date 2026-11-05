@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.17
+**Versie overlay:** v0.5.18
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -145,6 +145,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
 - Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
+- Noem bij een review van een basisimage dat `.github/workflows/images.yml` alleen `linux/amd64` bouwt, zodat de reviewer weet welke architectuur de scan moet dekken.
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
 - Zeg in de brief: draai elke testrun of mutant als een los commando, geen lussen of ketens in één shellregel.
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
@@ -306,6 +307,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.18 | 2026-11-05 | Regel over het platform bij een review van een basisimage, uit de terugblik van sentinel (issue #124) | Lessen |
 | v0.5.17 | 2026-11-05 | Regel over `uv lock` verwijst naar de uv-stage in `docker/Dockerfile` in plaats van een vaste versie; regel over de unitsuite op een proefimage, uit de terugblik van sentinel (issue #105) | Werkwijze, lessen |
 | v0.5.16 | 2026-11-05 | Regels over zoeken in issues op een versienummer en over voorbeeldtests in een brief, uit de terugblik van sentinel (issue #120) | Lessen |
 | v0.5.15 | 2026-11-05 | Issue per open Dependabot-PR; mutanten van de regie per controle; issue bijwerken als de bouw afwijkt, uit de terugblikken van sentinel en aegis (issue #118) | Besluit stakeholder 2026-11-05, lessen |
