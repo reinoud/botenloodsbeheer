@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.15
+**Versie overlay:** v0.5.16
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -58,6 +58,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elk besluit in de bron of het in deze ronde verwerkt moet worden; een besluit dat niet genoemd is, komt als open vraag terug.
 - Noem welke ongecommitte bestanden (model, migratie) nog een oud besluit bevatten, zodat het agent ze als ontwerppunt meeneemt.
 - Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
+- Zoek in issues naar een versienummer of een andere term met een punt met `gh issue list --json number,title,body --jq`, niet met `--search`; de zoekfunctie van GitHub vindt zulke termen niet betrouwbaar.
 - Noem een criterium met zijn tekst of met de versie van de backlog erbij, niet alleen met een nummer.
 - Wijkt de bouw bewust af van een acceptatiecriterium, pas dan vóór de review het criterium in het issue aan en noem de bron die voorgaat.
 - Geef elk agent een eigen submap in de scratchpad (`<scratchpad>/<agent>-<taak>/`); de scratchpad wordt gedeeld tussen agents van dezelfde sessie.
@@ -112,6 +113,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Review
 
 - Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
+- Noem als voorbeeldtest in een brief alleen een naam die `grep -rn "def test_" tests/` oplevert.
 - Citeer een overlayregel in een brief letterlijk, inclusief de afbakening tussen haakjes, en noem welke routes er bewust buiten vallen.
 - Beantwoordt het issue een vraag die je aan de reviewer stelt, noem dan de regel uit het issue erbij.
 - Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
@@ -303,6 +305,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.16 | 2026-11-05 | Regels over zoeken in issues op een versienummer en over voorbeeldtests in een brief, uit de terugblik van sentinel (issue #120) | Lessen |
 | v0.5.15 | 2026-11-05 | Issue per open Dependabot-PR; mutanten van de regie per controle; issue bijwerken als de bouw afwijkt, uit de terugblikken van sentinel en aegis (issue #118) | Besluit stakeholder 2026-11-05, lessen |
 | v0.5.14 | 2026-11-05 | Regels over een mutant per gewijzigde controle en over de aanroepers bij een controle op `actor.soort`, uit de terugblikken van sentinel en aegis (issue #55) | Lessen |
 | v0.5.13 | 2026-11-05 | Regels over de vormen van een HTTP-antwoord in een test en losse testcommando's, uit de terugblikken van aegis en sentinel (issue #109) | Lessen |
