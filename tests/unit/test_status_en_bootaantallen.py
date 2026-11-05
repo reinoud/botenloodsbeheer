@@ -221,3 +221,10 @@ def test_versie_en_api_uit_de_omgeving(database, monkeypatch):
 
         s = status.status()
     assert (s["versie"], s["api"]["ingeschakeld"]) == ("1.2.3", False)
+
+
+@pytest.mark.parametrize("omgeving,herladen", [({}, False), ({"TEMPLATES_AUTO_RELOAD": "true"}, True)])
+def test_templates_herladen_alleen_als_de_omgeving_het_vraagt(monkeypatch, omgeving, herladen):
+    """#114: de dev-stack herlaadt templates zonder herstart; productie standaard niet."""
+    web = app_uit_omgeving(monkeypatch, rol=WEB, **omgeving)
+    assert web.jinja_env.auto_reload is herladen
