@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.12
+**Versie overlay:** v0.5.13
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -139,6 +139,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
 - Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
+- Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
+- Zeg in de brief: draai elke testrun of mutant als een los commando, geen lussen of ketens in één shellregel.
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
 
 #### E2E
@@ -297,6 +299,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.13 | 2026-11-05 | Regels over de vormen van een HTTP-antwoord in een test en losse testcommando's, uit de terugblikken van aegis en sentinel (issue #109) | Lessen |
 | v0.5.12 | 2026-11-05 | Regel over letters van `reknaam()` per test, uit de terugblik van sentinel (issue #112) | Lessen |
 | v0.5.11 | 2026-11-05 | Regel over de diensten die een instelling lezen, uit de terugblik van sentinel (issue #114) | Lessen |
 | v0.5.10 | 2026-11-05 | Regel over mutanten op een Jinja-macro met meer aanroepen, uit de terugblik van sentinel (issue #110) | Lessen |
