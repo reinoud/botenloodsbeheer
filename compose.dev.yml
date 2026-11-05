@@ -13,6 +13,7 @@ services:
   web:
     environment:
       GUNICORN_CMD_ARGS: --reload
+      TEMPLATES_AUTO_RELOAD: "true"
       LOGO_BESTAND: /app/tests/fixtures/logo.png
     labels:
       - traefik.http.routers.${INSTALLATIE:-botenloods}-web.entrypoints=web
