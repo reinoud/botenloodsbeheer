@@ -297,6 +297,23 @@ def test_recente_inlog_vereist_voor_uitnodigen_herstellen_en_toevoegen(ingelogd,
             db.session.scalar(select(db.func.count()).select_from(Passkey))) == voor
 
 
+@pytest.mark.parametrize("actie", ["blokkeren", "deblokkeren", "verwijderen"])
+def test_recente_inlog_vereist_voor_blokkeren_deblokkeren_en_verwijderen(ingelogd, actie):
+    """Wie een oudere open sessie overneemt, geeft een geblokkeerd account zijn methodes niet
+    terug (#12)."""
+    client, anna, bert = ingelogd
+    if actie == "deblokkeren":
+        beheerders.blokkeren(bert.id, actor(anna))
+    actief = db.session.get(Beheerder, bert.id).actief
+    with client.session_transaction() as s:
+        s["ingelogd_op"] = int(time.time()) - 601
+    r = client.post(f"/beheerders/{bert.id}/{actie}")
+    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    db.session.expire_all()
+    b = db.session.get(Beheerder, bert.id)
+    assert b is not None and b.actief == actief
+
+
 def test_intrekken_beeindigt_alle_eigen_sessies_niet_die_van_anderen(app, ingelogd):
     client, anna, bert = ingelogd
     met_passkey(anna)

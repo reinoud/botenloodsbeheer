@@ -24,9 +24,9 @@ from app.models import Beheerder, db
 bp = Blueprint("web", __name__)
 
 SESSIEDUUR = 12 * 3600
-# Recente inlog vereist voor inlogmethodes, uitnodigen, herstellen en instellingen (ADR-001).
+# Recente inlog vereist voor elke route met blijvend effect op toegang of instellingen (ADR-001).
 RECENT = 10 * 60
-OPNIEUW = "Log opnieuw in om dit te wijzigen. Je inlog is ouder dan 10 minuten."
+OPNIEUW = "Je inlog is ouder dan 10 minuten. Log opnieuw in en probeer het nog eens."
 
 
 def getal(waarde):
