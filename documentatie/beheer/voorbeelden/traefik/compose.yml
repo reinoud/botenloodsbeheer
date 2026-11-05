@@ -26,6 +26,11 @@ services:
       - --entrypoints.web.http.aliasheadersstrategy=delete
       - --entrypoints.websecure.http.aliasheadersstrategy=delete
       - --entrypoints.intern.http.aliasheadersstrategy=delete
+      # Load balancer vóór Traefik: vertrouw het PROXY protocol alleen van zijn adressen, op
+      # websecure en op web als die ook poort 80 doorstuurt. Nooit op intern (ADR-013, #54).
+      # Alleen als de load balancer op elke verbinding zelf een PROXY-kop zet (send-proxy), en
+      # alleen met zijn exacte adressen (/32 of /128); anders kiest een client zijn eigen adres.
+      # - --entrypoints.websecure.proxyprotocol.trustedips=192.0.2.10/32
       # Gecodeerde tekens in het pad weigeren: Traefik geeft zelf 400 (ADR-013).
       - --entrypoints.web.http.encodedcharacters.allowencodedslash=false
       - --entrypoints.web.http.encodedcharacters.allowencodedbackslash=false

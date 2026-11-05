@@ -14,6 +14,9 @@ services:
       - --entrypoints.web.http.aliasheadersstrategy=delete
       - --entrypoints.websecure.http.aliasheadersstrategy=delete
       - --entrypoints.intern.http.aliasheadersstrategy=delete
+      # Tweede ronde van draai.sh (issue #54): PROXY protocol op websecure. Zonder de variabele
+      # staat hier de standaardwaarde van log.level, dus geen wijziging.
+      - ${PROEF_PROXYPROTOCOL:---log.level=ERROR}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:

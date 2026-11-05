@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.21
+**Versie overlay:** v0.5.22
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -70,6 +70,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem per ADR-zin die de opdracht als gebouwd aanneemt (zoals een kolom of een check) of die al in `app/models.py` en de migraties staat; zo niet, dan is het een ontwerppunt van de opdracht.
 - Kijk bij een bouwopdracht aan het begin en halverwege met `git log --oneline` of er commits op de leidende bronnen zijn bijgekomen, en draai vóór elke oplevering `git diff` op die bronnen. Een besluit dat tijdens het werk binnenkomt, gaat voor de opdracht: verwerk het direct en meld het in je antwoord.
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
+- Noem in een reviewbrief de niet-gestagede bestanden in de werkmap (`git status --short`, tweede kolom) en of de review ze negeert.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
 
@@ -228,7 +229,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
-- Draai `tests/proxy/draai.sh` na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik; herbouw eerst `botenloods-app` als `app/` gewijzigd is, want het script bouwt niet. Schrijf de uitvoer naar een bestand met tijdstempel en controleer daarna met `docker ps -a` en `docker network ls` dat niets met `proxytest` achterblijft. Een mutant op die labels draai je met `EXTERN_BESTAND=<kopie in de scratchpad>`. Het script draait niet twee keer tegelijk (vaste projectnaam) en toetst het gedrag, niet elke vlag van Traefik: zonder `insecure` of met `trustedIPs` blijft het groen.
+- Draai `tests/proxy/draai.sh` na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik; herbouw eerst `botenloods-app` als `app/` gewijzigd is, want het script bouwt niet. Schrijf de uitvoer naar een bestand met tijdstempel en controleer daarna met `docker ps -a` en `docker network ls` dat niets met `proxytest` achterblijft. Een mutant op die labels draai je met `EXTERN_BESTAND=<kopie in de scratchpad>`. Het script draait niet twee keer tegelijk (vaste projectnaam) en toetst het gedrag, niet elke vlag van Traefik: zonder `insecure` of met `forwardedHeaders.trustedIPs` blijft het groen. De tweede ronde toetst het PROXY protocol (`proxyprotocol.trustedips`) op `websecure`, niet op `web`.
+- Een proef boven een rate limit van Traefik met TLS stuurt de aanroepen over één keep-alive-verbinding, of controleert dat ze sneller komen dan de grens bijvult; een nieuwe TLS-verbinding per aanroep kost ongeveer 100 ms.
+- Een controle op een eigen teller per adres stuurt vanaf het tweede adres minstens drie aanroepen over één keep-alive-verbinding direct na de 429 van het eerste, en verwacht ze alle drie onder de grens; één aanroep kan een bijgevulde plek van een gedeelde teller krijgen.
+- Beschrijft de documentatie een vertrouwensinstelling (`trustedips`, een whitelist), noem dan in de brief welke voorwaarde aan de andere kant moet gelden (zoals: de load balancer zet op elke verbinding zelf een PROXY-kop), en laat de reviewer toetsen of de documentatie die voorwaarde noemt.
+- Een controle in `draai.sh` die een tweede container start, eist dat die container gestart is en met 0 eindigt; een lege uitkomst van `docker wait` telt als fout. Proef dat met een docker-stub waarin `run -d` faalt. Een herstel van een controle komt met een stub die de oude en de nieuwe conditie draait, met per geval de verwachte uitkomst.
 - Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
 
 #### Documentatie, backlog en ADR's
@@ -313,6 +318,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.22 | 2026-11-05 | Uit #54: tweede ronde van `draai.sh` (PROXY protocol), keep-alive bij een proef op de rate limit, drie aanroepen voor een eigen teller, voorwaarde bij een vertrouwensinstelling | Werkwijze |
 | v0.5.21 | 2026-11-05 | Regel uit de terugblik van foundation bij #54: zoek vóór een besluit naar elke geraakte instelling | Werkwijze |
 | v0.5.20 | 2026-11-05 | Twee regels uit de terugblikken van sentinel en aegis bij #127: mutant op `klant.py` samen met een labelmutant, en welke eigenschap een proef op de rate limit bewijst | Werkwijze |
 | v0.5.19 | 2026-11-05 | Regel over `tests/proxy/draai.sh` na een wijziging aan de proxy (issue #53); woordgrens per alinea, overlayregels per proef en mutanten op `tests/proxy`, uit de terugblikken van pipeline, aegis en sentinel | Werkwijze, lessen |

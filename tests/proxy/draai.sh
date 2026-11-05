@@ -11,7 +11,11 @@
 # Eigen compose-project botenloods-proxytest, INSTALLATIE=proxytest en eigen subnetten
 # 10.213.53-55.0/24; raakt de dev-stack niet. Ruimt containers, volume en netwerken altijd op.
 # EXTERN_BESTAND kiest een ander bestand dan compose.api-extern.yml (voor een mutant).
+# Tweede ronde (issue #54): dezelfde Traefik met proxyprotocol.trustedips op websecure; een client
+# speelt load balancer en stuurt het clientadres in een PROXY v1-kop vóór de TLS.
 set -euo pipefail
+# Alleen de tweede ronde zet de optie; een waarde uit de shell mag ronde 1 niet raken.
+unset PROEF_PROXYPROTOCOL
 cd "$(dirname "$0")/../.."
 start=$SECONDS
 extern=${EXTERN_BESTAND:-compose.api-extern.yml}
@@ -28,17 +32,23 @@ toegestaan=10.213.53.10   # in API_EXTERN_BRONNEN en in de whitelist van het tok
 bron=10.213.53.20         # in API_EXTERN_BRONNEN, niet in de whitelist van het token
 vreemd=10.213.53.40       # buiten API_EXTERN_BRONNEN
 koppel=10.213.55.10       # op koppeling, voor de positieve controle op intern
+koppel2=10.213.55.11      # tweede adres op koppeling, voor de eigen teller in iprem
+lb=10.213.53.30           # load balancer in de tweede ronde; in de bronnen, niet in de tokenwhitelist
+rem=10.213.53.21          # clientadres voor de proef op iprem in de tweede ronde
 
 c=(docker compose -p botenloods-proxytest --env-file /dev/null -f docker-compose.yml
    -f tests/proxy/compose.traefik.yml)
 netwerken=("$INSTALLATIE"_voorkant "$INSTALLATIE"_koppeling "$INSTALLATIE"_klant)
 stack_weg() {
+  docker rm -f botenloods-proxytest-sein >/dev/null 2>&1 || true
   "${c[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
   docker network rm "${netwerken[@]}" >/dev/null 2>&1 || true
 }
 stack_weg  # resten van een afgebroken run
 fout=$(mktemp)
-trap 'stack_weg; rm -f "$fout"' EXIT
+seinmap=$(mktemp -d)  # voor het sein tussen twee clients op intern
+chmod 1777 "$seinmap"  # sticky: een andere gebruiker kan het sein niet vervangen
+trap 'stack_weg; rm -rf "$fout" "$seinmap"' EXIT
 
 fouten=()
 controle() {  # controle <naam> <commando...>; telt een fout en gaat door
@@ -49,10 +59,14 @@ controle() {  # controle <naam> <commando...>; telt een fout en gaat door
 # Een aanroep vanuit een container met een vast adres; het token gaat via de omgeving.
 klant() {  # klant <netwerk> <adres> <doel> <schema> <token> <argumenten van klant.py...>
   TOKEN=$5 docker run --rm --network "$1" --ip "$2" -e DOEL="$3" -e SCHEMA="$4" -e DOMEIN \
-    -e TOKEN -e WACHT="${WACHT:-0}" -e PAD -v "$PWD/tests/proxy:/proef:ro" --entrypoint python \
+    -e TOKEN -e WACHT="${WACHT:-0}" -e PAD -e PROXY -e ANDER -e SEIN \
+    -v "$PWD/tests/proxy:/proef:ro" -v "$seinmap:/sein" --entrypoint python \
     botenloods-app -I /proef/klant.py "${@:6}"
 }
 buiten() { klant "$INSTALLATIE"_klant "$1" "$PROEF_TRAEFIK_KLANT:8443" https "${@:2}"; }
+# via_lb <clientadres> <token> <argumenten...>: aanroep van de load balancer met een PROXY-kop.
+via_lb() { PROXY=$1 buiten "$lb" "${@:2}"; }
+intern() { klant "$INSTALLATIE"_koppeling "$1" "$PROEF_TRAEFIK_KOPPELING:8081" http "${@:2}"; }
 
 # Compose start niet zonder API_EXTERN_BRONNEN, en de waarde komt in de whitelist van Traefik.
 config_extern() {
@@ -103,9 +117,47 @@ controle "429 boven de grens per token" buiten "$toegestaan" "$token_tempo" temp
 echo "== api opnieuw zonder $extern"
 "${c[@]}" up -d --wait --no-build --quiet-pull api 2>"$fout" || { cat "$fout" >&2; exit 1; }
 # Eerst intern via koppeling: de 401 van de applicatie toont dat Traefik api weer kent.
-WACHT=1 controle "intern bereikt api (positieve controle voor de 404)" \
-  klant "$INSTALLATIE"_koppeling "$koppel" "$PROEF_TRAEFIK_KOPPELING:8081" http "" 401
+WACHT=1 controle "intern bereikt api (positieve controle voor de 404)" intern "$koppel" "" 401
 controle "404 op websecure zonder $extern" buiten "$toegestaan" "$token_a" 404
+
+# Tweede ronde. Traefik krijgt een nieuwe container, dus elke teller begint leeg.
+export PROEF_PROXYPROTOCOL=--entrypoints.websecure.proxyprotocol.trustedips=$lb/32
+echo "== tweede ronde: Traefik met proxyprotocol.trustedips=$lb/32, api met $extern"
+"${c[@]}" -f "$extern" up -d --wait --no-build --quiet-pull api traefik 2>"$fout" \
+  || { cat "$fout" >&2; exit 1; }
+# Elke 401 en 403 hieronder volgt het adres uit de PROXY-kop, niet dat van de load balancer.
+WACHT=1 controle "LB: 200 voor een clientadres in de bronnen en in de tokenwhitelist" \
+  via_lb "$toegestaan" "$token_a" 200
+controle "LB: 401 van de applicatie voor een clientadres buiten de tokenwhitelist" \
+  via_lb "$bron" "$token_a" 401 - "X-Forwarded-For: $toegestaan"
+controle "LB: 403 van Traefik voor een clientadres buiten API_EXTERN_BRONNEN" \
+  via_lb "$vreemd" "$token_a" 403
+PAD=/api/v1/%2Fik controle "LB: gecodeerd pad voor een clientadres buiten API_EXTERN_BRONNEN" \
+  via_lb "$vreemd" "$token_a" 400,403
+ANDER=$bron controle "LB: iprem telt per clientadres, ook op het pad met %2F" \
+  via_lb "$rem" "" iprem
+# Traefik vertrouwt de kop alleen van lb; van een ander adres telt het verbindingsadres.
+PROXY=$toegestaan controle "PROXY-kop van $bron, buiten trustedips: 401 op het eigen adres" \
+  buiten "$bron" "$token_a" 401
+PROXY=$toegestaan controle "PROXY-kop van $vreemd, buiten trustedips: 403 op het eigen adres" \
+  buiten "$vreemd" "$token_a" 403
+
+# intern heeft geen PROXY protocol: iprem telt daar per adres op koppeling, zoals zonder de optie.
+# Het tweede adres wacht in een eigen container op het sein van het eerste.
+intern_iprem() {
+  local a=0 b
+  docker run -d --name botenloods-proxytest-sein --network "$INSTALLATIE"_koppeling --ip "$koppel2" \
+    -e DOEL="$PROEF_TRAEFIK_KOPPELING:8081" -e SCHEMA=http -e DOMEIN -e SEIN=/sein/tijd \
+    -v "$PWD/tests/proxy:/proef:ro" -v "$seinmap:/sein" --entrypoint python botenloods-app \
+    -I /proef/klant.py sein >/dev/null
+  SEIN=/sein/tijd intern "$koppel" "" iprem || a=1
+  b=$(docker wait botenloods-proxytest-sein)
+  docker logs botenloods-proxytest-sein
+  docker rm botenloods-proxytest-sein >/dev/null
+  # Een lege b (container niet gestart) telt als fout, niet als 0.
+  ((a == 0)) && [[ $b == 0 ]]
+}
+controle "intern met de optie: 429 na 50 vanaf één adres, 401 voor een tweede adres" intern_iprem
 
 echo "Klaar in $((SECONDS - start)) s."
 if ((${#fouten[@]})); then

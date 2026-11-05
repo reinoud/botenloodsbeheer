@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.4.0
+**Versie:** v1.4.2
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -63,11 +63,11 @@ Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf
 
 `aliasHeadersStrategy=delete` haalt een kop weg waarvan de naam een andere kop nabootst, zoals `X_Forwarded_For`. Zonder instelling laat Traefik zo'n kop ongewijzigd door en waarschuwt hij bij het starten. Gunicorn gebruikt zo'n kop niet (proef met 401 in `werk/traefik-proeven.md`), dus de botenloods is ook zonder de eis niet kwetsbaar. De eis sluit het gat voor de zekerheid: een andere versie van Gunicorn of een andere dienst achter dezelfde entrypoints kan zo'n kop wel lezen. `delete` beschermt de upstream even goed als `reject` en weigert geen verzoeken van clients van andere diensten die zulke koppen sturen.
 
-**Load balancer vóór Traefik (issue #54).** De load balancer geeft het clientadres door met het PROXY protocol. De gedeelde Traefik vertrouwt dat alleen van de load balancer: `--entrypoints.websecure.proxyprotocol.trustedips=<adressen van de load balancer>`, en op `web` als die ook poort 80 doorstuurt. Traefik gebruikt het clientadres dan als verbindingsadres. `externtoegang`, `tokenrem`, `iprem`, `inlogrem` en de whitelist van het token toetsen zo de client, zonder labelwijziging. `PROXY_HOPS` blijft 1. Geen nieuwe omgevingsvariabele: de instelling hoort bij de gedeelde Traefik.
+**Load balancer vóór Traefik (issue #54).** De load balancer geeft het clientadres door met het PROXY protocol. De gedeelde Traefik vertrouwt dat alleen van de load balancer: `--entrypoints.websecure.proxyprotocol.trustedips=<adressen van de load balancer>`, en op `web` als die ook poort 80 doorstuurt. Traefik gebruikt het clientadres dan als verbindingsadres. `externtoegang`, `tokenrem`, `iprem`, `inlogrem` en de whitelist van het token toetsen zo de client, zonder labelwijziging. `PROXY_HOPS` blijft 1. Geen nieuwe omgevingsvariabele: de instelling hoort bij de gedeelde Traefik. Dit is geen optie op het entrypoint als eis van de botenloods (zie de alternatieven): de load balancer staat vóór de hele gedeelde Traefik, en zonder de optie leest Traefik de PROXY-kop niet en werkt geen dienst op `websecure`. De load balancer zet zelf op elke verbinding een PROXY-kop, en `trustedips` bevat alleen zijn exacte adressen; anders kan een client zijn eigen adres opgeven (review aegis).
 
-`api` en `api-extern` blijven dezelfde middlewares delen. De instelling staat alleen op de entrypoints waarop de load balancer aansluit, nooit op `intern`, dus de interne rate limit verandert er niet door. Een PROXY-kop van een ander adres dan de load balancer telt niet (waarschijnlijk; de proef beslist).
+`api` en `api-extern` blijven dezelfde middlewares delen. De instelling staat alleen op de entrypoints waarop de load balancer aansluit, nooit op `intern`, dus de interne rate limit verandert er niet door. Een PROXY-kop van een ander adres dan de load balancer telt niet; Traefik toetst dan het adres van de verbinding (proef `tests/proxy/draai.sh`).
 
-Bewust ontbreken `forwardedHeaders.trustedIPs`, `forwardedHeaders.insecure` en `proxyProtocol.insecure` op elk entrypoint, en `ipStrategy` (`depth`, `excludedIPs`, `ipv6Subnet`) op elke middleware. Een load balancer met alleen `X-Forwarded-For` wordt niet ondersteund. `PROXY_HOPS=2` breekt de interne route: daar staat één adres in `X-Forwarded-For`, dus de applicatie toetst het token van de integratiecontainer op het adres van Traefik.
+Bewust ontbreken `forwardedHeaders.trustedIPs`, `forwardedHeaders.insecure` en `proxyProtocol.insecure` op elk entrypoint, en `ipStrategy` (`depth`, `excludedIPs`, `ipv6Subnet`) op elke middleware. Een load balancer met alleen `X-Forwarded-For` wordt niet ondersteund (besluit stakeholder 2026-11-05). `PROXY_HOPS=2` breekt de interne route: daar staat één adres in `X-Forwarded-For`, dus de applicatie toetst het token van de integratiecontainer op het adres van Traefik.
 
 Proef (losse Traefik met de optie op `websecure`, een client als load balancer): 200, 401 en 403 volgen het clientadres in de PROXY-kop; elke client heeft een eigen teller in `iprem`; een PROXY-kop van een ander adres geeft geen 200; op `intern` geeft één adres 429 na ongeveer 50 aanroepen en krijgt een tweede adres in dezelfde seconde 401. Zonder de optie slagen de bestaande proeven ongewijzigd.
 
@@ -114,6 +114,8 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.2 | 2026-11-05 | Verschil met de verworpen opties op het entrypoint; eisen aan load balancer en `trustedips` | Review aegis, issue #54 |
+| v1.4.1 | 2026-11-05 | Herkomst van het besluit over `X-Forwarded-For`; proef bevestigt `trustedips` | Besluit stakeholder, issue #54 |
 | v1.4.0 | 2026-11-05 | Load balancer via PROXY protocol op het entrypoint; middlewares blijven gedeeld, `PROXY_HOPS=2` vervalt | Issue #54 |
 | v1.3.2 | 2026-11-03 | Toegangslog: pad met procentcodering afgekapt bij het eerste `%` | Issue #72 |
 | v1.3.1 | 2026-11-03 | Waarom drie opties voor gecodeerde tekens ontbreken | Review aegis, issue #65 |
