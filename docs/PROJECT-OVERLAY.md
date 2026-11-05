@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.19
+**Versie overlay:** v0.5.20
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -150,6 +150,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
 - Zeg in de brief: draai elke testrun of mutant als een los commando, geen lussen of ketens in één shellregel.
 - Een mutant op `tests/proxy/klant.py` of `tests/proxy/compose.traefik.yml` draait in een kopie met `docker-compose.yml`, `compose.api-extern.yml`, `docker/db-init.sh`, een lege map `huisstijl`, een leeg bestand `secrets/api_token` en `tests/proxy/`, alles uit de index (`git show :pad`).
+- Een mutant op een controlefunctie in `tests/proxy/klant.py` draai je samen met een mutant op de labels die een antwoord van de applicatie oplevert; anders kan de mutant tegen een echte Traefik niet falen. Opruimen en controleren zijn aparte commando's.
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
 
 #### E2E
@@ -218,6 +219,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
 - `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit het uv-image in de eerste `FROM`-regel van `docker/Dockerfile` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
+- Noem bij een proef op een overlayregel over de rate limit welke eigenschap de proef bewijst, als die een andere middleware toetst (zoals de whitelist).
 - Noem bij een review op de grens van de API elke router naar de dienst `api`, dus ook `api-extern` uit `compose.api-extern.yml`.
 - Noem bij een review van een grens op verzoeken of de dienst ook buiten Traefik bereikbaar is (gepubliceerde poort, gedeeld netwerk), en zo ja via welke route.
 - Een proef via de proxy met `http.client` die de Host-kop zelf zet, gebruikt `putrequest(..., skip_host=True)`; anders geeft Traefik 400.
@@ -310,6 +312,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.20 | 2026-11-05 | Twee regels uit de terugblikken van sentinel en aegis bij #127: mutant op `klant.py` samen met een labelmutant, en welke eigenschap een proef op de rate limit bewijst | Werkwijze |
 | v0.5.19 | 2026-11-05 | Regel over `tests/proxy/draai.sh` na een wijziging aan de proxy (issue #53); woordgrens per alinea, overlayregels per proef en mutanten op `tests/proxy`, uit de terugblikken van pipeline, aegis en sentinel | Werkwijze, lessen |
 | v0.5.18 | 2026-11-05 | Regel over het platform bij een review van een basisimage, uit de terugblik van sentinel (issue #124) | Lessen |
 | v0.5.17 | 2026-11-05 | Regel over `uv lock` verwijst naar de uv-stage in `docker/Dockerfile` in plaats van een vaste versie; regel over de unitsuite op een proefimage, uit de terugblik van sentinel (issue #105) | Werkwijze, lessen |
