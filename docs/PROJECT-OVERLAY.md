@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.7
+**Versie overlay:** v0.5.8
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -124,7 +124,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant die een object uit `upgrade()` weghaalt, haalt de bijbehorende regel uit `downgrade()` ook weg; anders faalt de mutant op de downgrade in plaats van op de assert van het criterium.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
 - Een mutant op een staatsassert verandert de code onder test zo dat de redirect blijft en het effect toch plaatsvindt; noem in de brief het bestand van die code.
-- Noem per mutant de assert (regel) van het criterium waarop hij moet falen; een mutant die op een andere assert faalt, bewijst dat criterium niet.
+- Noem per mutant de assert van het criterium waarop hij moet falen, als bestand:regel en niet als omschrijving; een mutant die op een andere assert faalt, bewijst dat criterium niet.
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
@@ -135,6 +135,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Raken meer pull requests hetzelfde bestand, laat de reviewer ze dan in een eigen clone proefmergen in de voorgestelde volgorde en melden welke een rebase nodig heeft; `mergeable` van GitHub geldt per pull request, niet voor de reeks.
 - Een pull request dat een bestand in `.github/workflows/` wijzigt, mergt alleen met een `gh`-token met de scope `workflow`; zonder die scope weigert GitHub de merge.
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
+- Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
 
 #### E2E
@@ -292,6 +293,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.8 | 2026-11-05 | Mutant met bestand:regel van de assert; bestaand risico op een ander pad als bevinding of advies, uit de terugblikken van sentinel en aegis (issue #31) | Lessen |
 | v0.5.7 | 2026-11-05 | Regel over de controle van Dependabot na de merge, uit de terugblik van sentinel (issue #25) | Lessen |
 | v0.5.6 | 2026-11-05 | Regels over een mutant op `upgrade()` en over schrijfproeven op een rijbeleid, uit de terugblikken van sentinel en aegis (issue #24) | Lessen |
 | v0.5.5 | 2026-11-05 | Regels over tests per HTTP-methode of status en over de Python-versie in de brief, uit de terugblikken van aegis en sentinel (issue #23) | Lessen |
