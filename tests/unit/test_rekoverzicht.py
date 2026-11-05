@@ -31,9 +31,9 @@ def test_bezet_toont_de_soort_van_de_boot_niet_van_de_plaats(app):
 def test_vrij_toont_de_eerste_soort_en_de_alt_noemt_alle_soorten(app):
     # De volgorde is die van de bootsoorten (id). Mutant: de laatste soort nemen valt op bestand;
     # alleen de eerste noemen valt op alt.
-    v = indeling.plaatje(plaats("A/2/3", [soort("Surfski"), soort("Kajak")]))
+    v = indeling.plaatje(plaats("A/1/1", [soort("Surfski"), soort("Kajak")]))
     assert v["bestand"] == "kajak-vrij.jpg" and not v["club"]
-    assert v["alt"] == "Plaats A/2/3, Kajak, Surfski, vrij"
+    assert v["alt"] == "Plaats A/1/1, Kajak, Surfski, vrij"
     assert v["titel"] == "Kajak, Surfski: vrij"
 
 
@@ -78,9 +78,9 @@ def test_elk_plaatje_uit_de_mapping_bestaat():
 
 
 def test_rekoverzicht_zet_elke_plaats_op_verdieping_en_vak(app):
-    p = plaats("A/2/3")
+    p = plaats("A/2/1")
     plaats("A/1/1")
-    assert indeling.rekoverzicht(p.rek).keys() == {(1, 1), (2, 3)}
+    assert indeling.rekoverzicht(p.rek).keys() == {(1, 1), (2, 1)}
 
 
 @pytest.fixture
@@ -128,11 +128,29 @@ def test_pagina_zet_verdieping_1_onderaan(ingelogd):
     assert tekst.index("Verdieping 2") < tekst.index("Verdieping 1"), "verdieping 1 hoort onderaan"
 
 
-def test_pagina_toont_ook_verdiepingen_zonder_plaatsen(ingelogd):
-    # Issue #89: plaatsen op verdieping 1 en 3; verdieping 2 en de lege bovenste blijven staan.
+def test_pagina_toont_verdiepingen_tot_de_hoogste_met_een_plaats(ingelogd):
+    # Issues #89 en #94: plaatsen op verdieping 1 en 3; verdieping 2 blijft staan, 4 en 5 niet.
     plaats("A/1/1")
     plaats("A/3/1")
     tekst = ingelogd.get("/rekoverzicht").text
-    rijen = [f"Verdieping {v}</span>" for v in (5, 4, 3, 2, 1)]
-    assert all(r in tekst for r in rijen), "elke verdieping heeft een rij"
+    rijen = [f"Verdieping {v}</span>" for v in (3, 2, 1)]
     assert sorted(rijen, key=tekst.index) == rijen, "verdieping 1 onderaan"
+    assert tekst.count('class="raster-kop raster-rij"') == 3
+    assert "Verdieping 4" not in tekst and "Verdieping 5" not in tekst
+
+
+def test_pagina_toont_zoveel_kolommen_als_het_hoogste_vak_van_dat_rek(ingelogd):
+    indeling.rek_aanmaken("A", "", {(1, k) for k in range(1, 7)} | {(2, 1)}, CLI)
+    indeling.rek_aanmaken("B", "", {(1, k) for k in range(1, 13)}, CLI)
+    secties = ingelogd.get("/rekoverzicht").text.split("<section")[1:]
+    assert 'raster-rek-6"' in secties[0] and 'raster-rek-12"' in secties[1]
+    assert [s.count('class="raster-kop" aria-hidden="true"') for s in secties] == [6, 12]
+    assert [s.count('class="raster-kop raster-rij"') for s in secties] == [2, 1]
+    assert [s.count("<span></span>") for s in secties] == [5, 0]  # lege vakken
+
+
+def test_stijl_heeft_een_klasse_voor_elk_aantal_kolommen():
+    # De CSP staat geen inline style toe; zonder klasse valt het raster terug op een kolom.
+    css = Path("app/web/static/stijl.css").read_text()
+    for n in indeling.VAKKEN:
+        assert f".raster-rek-{n} {{ grid-template-columns: max-content repeat({n}, 4rem); }}" in css

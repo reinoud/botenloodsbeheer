@@ -21,6 +21,11 @@ def codes(r):
     return [p.code for p in indeling.rek(r.id).plaatsen]
 
 
+def rij(verdieping, aantal_vakken):
+    """Vak 1 tot en met aantal_vakken van één verdieping, zonder gat."""
+    return {(verdieping, k) for k in range(1, aantal_vakken + 1)}
+
+
 def aantal(model):
     return len(db.session.scalars(select(model)).all())
 
@@ -43,7 +48,7 @@ def test_grens_van_de_verdieping(app, verdieping, geldig):
                          ids=["1", "12", "0", "13"])
 def test_grens_van_het_vak(app, vak, geldig):
     if geldig:
-        assert codes(rek(vakken={(1, vak)})) == [f"A/1/{vak}"]
+        assert codes(rek(vakken=rij(1, vak)))[-1] == f"A/1/{vak}"
     else:
         with pytest.raises(Regelfout, match="verdieping 1 tot en met 5 en vak 1 tot en met 12"):
             rek(vakken={(1, vak)})
@@ -83,42 +88,61 @@ def test_aanzetten_maakt_plaatsen_zonder_instellingen_en_laat_de_rest_staan(app)
     oud = indeling.rek(r.id).plaatsen[0]
     indeling.plaats_wijzigen(oud.id, [1, 2], True, CLI)
     sleutel = oud.publieke_sleutel
-    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 5)}, CLI)
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 1)}, CLI)
     p11, _p12, nieuw = indeling.rek(r.id).plaatsen
-    assert nieuw.code == "A/2/5" and nieuw.is_clubplaats is False and nieuw.bootsoorten == []
+    assert nieuw.code == "A/2/1" and nieuw.is_clubplaats is False and nieuw.bootsoorten == []
     assert nieuw.boot_id is None and len(nieuw.publieke_sleutel) == 10
     assert (p11.id, p11.publieke_sleutel, p11.is_clubplaats) == (oud.id, sleutel, True)
     assert len(p11.bootsoorten) == 2
 
 
-def test_uitzetten_zonder_boot_verwijdert_de_plaats_en_laat_een_gat(app):
+def test_uitzetten_zonder_boot_verwijdert_de_plaats(app):
     r = rek(vakken={(1, 1), (1, 2), (1, 3), (2, 1)})
     sleutels = {p.code: p.publieke_sleutel for p in indeling.rek(r.id).plaatsen}
-    indeling.indeling_instellen(r.id, {(1, 1), (1, 3), (2, 1)}, CLI)
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 1)}, CLI)
     r = indeling.rek(r.id)
-    assert [p.code for p in r.plaatsen] == ["A/1/1", "A/1/3", "A/2/1"]  # A/1/3 houdt zijn nummer
+    assert [p.code for p in r.plaatsen] == ["A/1/1", "A/1/2", "A/2/1"]
     assert {p.code: p.publieke_sleutel for p in r.plaatsen} == {
-        c: s for c, s in sleutels.items() if c != "A/1/2"}
+        c: s for c, s in sleutels.items() if c != "A/1/3"}
 
 
-def test_een_gat_in_de_nummering_en_een_lege_verdieping(app):
-    """A/1 met vak 1, 3, 4 en 6 (de echte indeling); verdieping 2 uitzetten laat 1 staan."""
-    r = rek(vakken={(1, 1), (1, 3), (1, 4), (1, 6), (2, 1), (2, 2)})
-    assert codes(r) == ["A/1/1", "A/1/3", "A/1/4", "A/1/6", "A/2/1", "A/2/2"]
-    indeling.indeling_instellen(r.id, {(1, 1), (1, 3), (1, 4), (1, 6)}, CLI)
-    assert codes(r) == ["A/1/1", "A/1/3", "A/1/4", "A/1/6"]  # verdieping 2 bestaat niet meer
-    indeling.indeling_instellen(r.id, {(1, 1), (1, 3), (1, 4), (1, 6), (2, 1)}, CLI)
-    assert codes(r)[-1] == "A/2/1"  # en kan terugkomen, zonder nummering te schuiven
+def test_een_verdieping_kan_leeg_raken_en_terugkomen(app):
+    r = rek(vakken={(1, 1), (1, 2), (2, 1), (2, 2)})
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2)}, CLI)
+    assert codes(r) == ["A/1/1", "A/1/2"]  # verdieping 2 bestaat niet meer
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 1)}, CLI)
+    assert codes(r)[-1] == "A/2/1"
+
+
+@pytest.mark.parametrize("vakken, melding", [
+    ({(1, 1), (1, 3)}, "Verdieping 1 heeft een gat: vak 2 ontbreekt"),
+    ({(1, 2)}, "Verdieping 1 heeft een gat: vak 1 ontbreekt"),
+    ({(1, 1), (2, 1), (2, 4)}, "Verdieping 2 heeft een gat: vak 2 ontbreekt"),
+    ({(1, 1), (3, 1), (3, 3), (3, 4)}, "Verdieping 3 heeft een gat: vak 2 ontbreekt"),
+], ids=["midden", "vak_1", "tweede_verdieping", "eerste_gat_van_twee"])
+def test_een_gat_in_een_verdieping_wordt_geweigerd_bij_aanmaken_en_wijzigen(app, vakken, melding):
+    with pytest.raises(Regelfout, match=melding):
+        rek(vakken=vakken)
+    assert aantal(Rek) == 0 and acties() == []
+    r = rek()
+    voor = acties()
+    with pytest.raises(Regelfout, match=melding):
+        indeling.indeling_instellen(r.id, vakken, CLI)
+    assert codes(r) == ["A/1/1", "A/1/2"] and acties() == voor
+
+
+def test_een_verdieping_zonder_plaatsen_onder_de_hoogste_is_geen_gat(app):
+    assert codes(rek(vakken={(3, 1), (3, 2)})) == ["A/3/1", "A/3/2"]
 
 
 def test_uitzetten_met_boot_geweigerd_en_er_verandert_niets(app):
     r = rek(vakken={(1, 1), (1, 2), (1, 3)})
-    p = indeling.rek(r.id).plaatsen[1]
+    p = indeling.rek(r.id).plaatsen[2]
     indeling.plaats_wijzigen(p.id, [1], False, CLI)
     toewijzing.toewijzen(p.id, boot(lid().id).id, CLI)
     voor = acties()
-    with pytest.raises(Regelfout, match=r"Op plaats A/1/2 ligt een boot\. Geef de plaats eerst vrij"):
-        indeling.indeling_instellen(r.id, {(1, 1), (2, 4)}, CLI)  # ook 1/3 uit en 2/4 aan
+    with pytest.raises(Regelfout, match=r"Op plaats A/1/3 ligt een boot\. Geef de plaats eerst vrij"):
+        indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 1)}, CLI)  # 1/3 uit en 2/1 aan
     db.session.expire_all()
     assert codes(r) == ["A/1/1", "A/1/2", "A/1/3"] and acties() == voor
     assert db.session.get(Plaats, p.id).boot_id is not None
@@ -225,7 +249,7 @@ def test_omschrijving_van_61_tekens_geweigerd(app):
 
 
 def test_hernoemen_houdt_sleutel_en_toewijzing_en_wijzigt_alle_aanduidingen(app):
-    r = rek(vakken={(1, 1), (3, 12)})
+    r = rek(vakken={(1, 1), (3, 1)})
     p = indeling.rek(r.id).plaatsen[0]
     indeling.plaats_wijzigen(p.id, [1], False, CLI)
     b = boot(lid().id)
@@ -233,7 +257,7 @@ def test_hernoemen_houdt_sleutel_en_toewijzing_en_wijzigt_alle_aanduidingen(app)
     sleutels = [q.publieke_sleutel for q in indeling.rek(r.id).plaatsen]
     indeling.rek_wijzigen(r.id, "Noord", "Links", CLI)
     nieuw = indeling.rek(r.id)
-    assert [q.code for q in nieuw.plaatsen] == ["Noord/1/1", "Noord/3/12"]
+    assert [q.code for q in nieuw.plaatsen] == ["Noord/1/1", "Noord/3/1"]
     assert [q.publieke_sleutel for q in nieuw.plaatsen] == sleutels
     assert nieuw.plaatsen[0].boot_id == b.id
     assert indeling.openbaar(sleutels[0])["code"] == "Noord/1/1"
@@ -243,9 +267,9 @@ def test_hernoemen_houdt_sleutel_en_toewijzing_en_wijzigt_alle_aanduidingen(app)
 
 
 def test_volgorde_in_alle_lijsten(app):
-    rek("B", {(2, 1), (1, 12), (1, 2), (1, 1)})  # B eerst gemaakt, dus voor A
-    rek("A", {(2, 3), (1, 5)})
-    verwacht = ["B/1/1", "B/1/2", "B/1/12", "B/2/1", "A/1/5", "A/2/3"]
+    rek("B", rij(1, 12) | {(2, 1)})  # B eerst gemaakt, dus voor A; vak 12 komt na vak 2
+    rek("A", {(1, 1), (2, 1)})
+    verwacht = [f"B/1/{k}" for k in range(1, 13)] + ["B/2/1", "A/1/1", "A/2/1"]
     assert [p.code for r in indeling.rekken() for p in r.plaatsen] == verwacht
     assert [p.code for p in indeling.vrije_plaatsen()] == verwacht
     assert [k["code"] for k in indeling.kaartjes(alle=True)] == verwacht
@@ -256,11 +280,11 @@ def test_export_in_de_volgorde_van_de_loods(app):
     import io
 
     from openpyxl import load_workbook
-    rek("B", {(2, 1), (1, 12), (1, 2)})
+    rek("B", rij(1, 12) | {(2, 1)})
     rek("A", {(1, 1)})
     blad = load_workbook(io.BytesIO(indeling.export("Botenloods"))).active
     assert [(rij[0].value, rij[1].value) for rij in blad.iter_rows(min_row=2)] == [
-        ("B", "B/1/2"), ("B", "B/1/12"), ("B", "B/2/1"), ("A", "A/1/1")]
+        *[("B", f"B/1/{k}") for k in range(1, 13)], ("B", "B/2/1"), ("A", "A/1/1")]
 
 
 def test_kaartjes_en_openbare_pagina_tonen_de_omschrijving_van_het_rek(app):
@@ -318,10 +342,11 @@ def test_keuze_bij_verdieping_zonder_vak_valt_stil_weg(app):
 
 
 def test_indeling_instellen_geeft_een_nieuw_vak_de_bootsoort_van_de_verdieping(app):
-    r = indeling.rek_aanmaken("Y", "", {(1, 1), (1, 3), (2, 1)}, CLI,
+    r = indeling.rek_aanmaken("Y", "", {(1, 1), (1, 2), (2, 1)}, CLI,
                               {1: soort_id("Kajak"), 2: soort_id("Surfski")})
-    indeling.indeling_instellen(r.id, {(1, 1), (1, 4), (2, 1), (2, 2), (3, 1)}, CLI)
-    assert soorten_van(r) == {"Y/1/1": ["Kajak"], "Y/1/4": ["Kajak"], "Y/2/1": ["Surfski"],
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (3, 1)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": ["Kajak"], "Y/1/2": ["Kajak"], "Y/1/3": ["Kajak"],
+                              "Y/2/1": ["Surfski"],
                               "Y/2/2": ["Surfski"], "Y/3/1": []}
 
 
@@ -339,8 +364,8 @@ def test_keuze_blijft_bewaard_als_de_verdieping_leeg_raakt(app):
     r = indeling.rek_aanmaken("Y", "", {(1, 1), (2, 1)}, CLI, {2: soort_id("Surfski")})
     indeling.indeling_instellen(r.id, {(1, 1)}, CLI)
     assert soorten_van(r) == {"Y/1/1": []}
-    indeling.indeling_instellen(r.id, {(1, 1), (2, 5)}, CLI)
-    assert soorten_van(r) == {"Y/1/1": [], "Y/2/5": ["Surfski"]}
+    indeling.indeling_instellen(r.id, {(1, 1), (2, 1)}, CLI)
+    assert soorten_van(r) == {"Y/1/1": [], "Y/2/1": ["Surfski"]}
 
 
 def test_verdieping_zonder_keuze_geeft_ook_later_geen_bootsoort(app):
@@ -391,19 +416,19 @@ def regels(actie):
 
 
 def test_logregels_van_aanmaken_instellen_en_wijzigen(app):
-    r = rek("A", {(1, 1), (1, 2)}, "Links")
+    r = rek("A", {(1, 1), (1, 2), (1, 3)}, "Links")
     [aangemaakt] = regels("rek.aangemaakt")
-    assert aangemaakt.gegevens == {"naam": "A", "omschrijving": "Links", "vakken": 2}
+    assert aangemaakt.gegevens == {"naam": "A", "omschrijving": "Links", "vakken": 3}
     assert aangemaakt.verwijzingen == [f"rek:{r.id}"]
     assert [x.gegevens for x in regels("plaats.aangemaakt")] == [
-        {"plaatscode": "A/1/1"}, {"plaatscode": "A/1/2"}]
+        {"plaatscode": "A/1/1"}, {"plaatscode": "A/1/2"}, {"plaatscode": "A/1/3"}]
     assert all(f"rek:{r.id}" in x.verwijzingen for x in regels("plaats.aangemaakt"))
-    weg = indeling.rek(r.id).plaatsen[0]
-    indeling.indeling_instellen(r.id, {(1, 2), (4, 4)}, CLI)
+    weg = indeling.rek(r.id).plaatsen[2]
+    indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (4, 1)}, CLI)
     [verwijderd] = regels("plaats.verwijderd")
-    assert verwijderd.gegevens == {"plaatscode": "A/1/1"}
+    assert verwijderd.gegevens == {"plaatscode": "A/1/3"}
     assert verwijderd.verwijzingen == [f"plaats:{weg.id}", f"rek:{r.id}"]
-    assert regels("plaats.aangemaakt")[-1].gegevens == {"plaatscode": "A/4/4"}
+    assert regels("plaats.aangemaakt")[-1].gegevens == {"plaatscode": "A/4/1"}
     indeling.rek_wijzigen(r.id, "B", "Rechts", CLI)
     assert regels("rek.gewijzigd")[-1].gegevens == {"naam": ["A", "B"],
                                                     "omschrijving": ["Links", "Rechts"]}
@@ -430,7 +455,7 @@ def test_een_weigering_geeft_geen_logregel(app):
 
 def gevuld_rek():
     r = rek("A", {(1, 1), (1, 2)})
-    return r, indeling.rek(r.id).plaatsen[0], boot(lid().id)
+    return r, indeling.rek(r.id).plaatsen[1], boot(lid().id)
 
 
 def test_gelijktijdig_toewijzen_en_uitzetten(app):
@@ -439,8 +464,8 @@ def test_gelijktijdig_toewijzen_en_uitzetten(app):
     r, p, b = gevuld_rek()
     fouten = race(app, ["SELECT id FROM plaats WHERE id = :p FOR UPDATE",
                         "UPDATE plaats SET boot_id = :b WHERE id = :p"], {"p": p.id, "b": b.id},
-                  lambda: indeling.indeling_instellen(r.id, {(1, 2)}, CLI))
-    assert fouten == ["Op plaats A/1/1 ligt een boot. Geef de plaats eerst vrij."]
+                  lambda: indeling.indeling_instellen(r.id, {(1, 1)}, CLI))
+    assert fouten == ["Op plaats A/1/2 ligt een boot. Geef de plaats eerst vrij."]
     assert codes(r) == ["A/1/1", "A/1/2"] and db.session.get(Plaats, p.id).boot_id == b.id
     assert "plaats.verwijderd" not in acties()
 
@@ -454,12 +479,12 @@ def test_uitzetten_ziet_de_boot_ook_als_de_plaats_al_geladen_was(app):
         # Vasthouden: anders ruimt de identity map de plaats op en laadt de query hem vers.
         geladen = db.session.get(Plaats, p.id)
         assert geladen.boot_id is None
-        indeling.indeling_instellen(r.id, {(1, 2)}, CLI)
+        indeling.indeling_instellen(r.id, {(1, 1)}, CLI)
 
     fouten = race(app, ["SELECT id FROM plaats WHERE id = :p FOR UPDATE",
                         "UPDATE plaats SET boot_id = :b WHERE id = :p"], {"p": p.id, "b": b.id},
                   actie)
-    assert fouten == ["Op plaats A/1/1 ligt een boot. Geef de plaats eerst vrij."]
+    assert fouten == ["Op plaats A/1/2 ligt een boot. Geef de plaats eerst vrij."]
     assert db.session.get(Plaats, p.id).boot_id == b.id
 
 
@@ -470,12 +495,12 @@ def test_twee_keer_gelijktijdig_hetzelfde_vak_aanzetten(app):
     r, _p, _b = gevuld_rek()
     sql = ["SELECT id FROM rek WHERE id = :r FOR UPDATE",
            ("INSERT INTO plaats (rek_id, verdieping, vak, publieke_sleutel) "
-            "VALUES (:r, 2, 2, 'zzzzzzzzzz')")]
+            "VALUES (:r, 2, 1, 'zzzzzzzzzz')")]
     onverwacht = []
 
     def actie():
         try:
-            indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 2)}, CLI)
+            indeling.indeling_instellen(r.id, {(1, 1), (1, 2), (2, 1)}, CLI)
         except Regelfout:
             raise
         except Exception as fout:  # noqa: BLE001  race() vangt alleen Regelfouten; de thread zou stil sterven
@@ -484,7 +509,7 @@ def test_twee_keer_gelijktijdig_hetzelfde_vak_aanzetten(app):
     fouten = race(app, sql, {"r": r.id}, actie)
     assert fouten == [] and onverwacht == []
     nieuw = indeling.rek(r.id).plaatsen
-    assert [p.code for p in nieuw] == ["A/1/1", "A/1/2", "A/2/2"]
+    assert [p.code for p in nieuw] == ["A/1/1", "A/1/2", "A/2/1"]
     assert nieuw[-1].publieke_sleutel == "zzzzzzzzzz"
 
 

@@ -71,8 +71,7 @@ def indeling_overzicht():
 @inloggen_vereist
 def rekoverzicht():
     return render_template("rekoverzicht.html", rekken=indeling.rekken(),
-                           vakken_van=indeling.rekoverzicht,
-                           verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN)
+                           vakken_van=indeling.rekoverzicht)
 
 
 @bp.post("/rekken")

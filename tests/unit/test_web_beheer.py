@@ -46,16 +46,16 @@ def test_bezoeker_kan_niets_wijzigen(client, pad):
     assert db.session.scalar(select(Rek)) is None
 
 
-def test_rek_aanmaken_met_gaten_en_dubbele_naam(ingelogd):
+def test_rek_aanmaken_en_dubbele_naam(ingelogd):
     r = ingelogd.post("/rekken", data={"naam": "X", "omschrijving": "Testrek bij de deur",
-                                       "vak": ["1-1", "1-3", "1-12", "2-1", "2-4"]},
+                                       "vak": ["1-1", "1-2", "1-3", "2-1", "2-2"]},
                       follow_redirects=True)
     assert "Het rek is aangemaakt." in r.text and "Testrek bij de deur" in r.text
     rek = db.session.scalar(select(Rek))
-    assert [p.code for p in rek.plaatsen] == ["X/1/1", "X/1/3", "X/1/12", "X/2/1", "X/2/4"]
-    for code in ("X/1/1", "X/1/12", "X/2/4"):
+    assert [p.code for p in rek.plaatsen] == ["X/1/1", "X/1/2", "X/1/3", "X/2/1", "X/2/2"]
+    for code in ("X/1/1", "X/1/3", "X/2/2"):
         assert f">{code}</a>" in r.text
-    assert ">X/1/2</a>" not in r.text
+    assert ">X/1/4</a>" not in r.text
     r = ingelogd.post("/rekken", data={"naam": "x", "vak": "1-1"}, follow_redirects=True)
     assert "Er is al een rek met de naam X." in r.text
     # BLB-043: onder /indeling geen log; de indeling staat in het technische log.
@@ -98,6 +98,7 @@ def test_plaats_verwijderen_bestaat_niet_meer(ingelogd):
 
 @pytest.mark.parametrize("data,melding", [
     ({"naam": "X"}, "Zet minstens één vak aan."),
+    ({"naam": "X", "vak": ["1-1", "1-3"]}, "Verdieping 1 heeft een gat: vak 2 ontbreekt"),
     ({"naam": "X", "vak": "0-0"}, "Een rek heeft verdieping 1 tot en met 5 en vak 1 tot en met 12."),
     ({"naam": "X", "vak": "6-1"}, "verdieping 1 tot en met 5"),
     ({"naam": "X", "vak": "1-13"}, "vak 1 tot en met 12"),
@@ -109,7 +110,7 @@ def test_plaats_verwijderen_bestaat_niet_meer(ingelogd):
     ({"naam": "A/B", "vak": "1-1"}, "zonder /"),
     ({"naam": "Elfletters1", "vak": "1-1"}, "van 1 tot 10 tekens"),
     ({"naam": "X", "omschrijving": "x" * 61, "vak": "1-1"}, "hooguit 60 tekens"),
-], ids=["leeg", "nul", "verdieping_6", "vak_13", "tekst", "drie_delen", "min", "halve_waarde",
+], ids=["leeg", "gat", "nul", "verdieping_6", "vak_13", "tekst", "drie_delen", "min", "halve_waarde",
         "te_groot", "schuine_streep", "te_lang", "omschrijving_te_lang"])
 def test_rek_aanmaken_geweigerd_met_melding(ingelogd, data, melding):
     """Een misvormde of ongeldige waarde geeft de melding van het domein en geen rek, nooit een 500."""
@@ -119,11 +120,11 @@ def test_rek_aanmaken_geweigerd_met_melding(ingelogd, data, melding):
 
 
 def test_indeling_raster_met_labels_en_aangevinkte_vakken(ingelogd):
-    plaats("X/2/3")
+    plaats("X/1/1")
     tekst = ingelogd.get("/indeling").text
     # Elk vakje heeft een label voor schermlezers; 5 x 12 voor het nieuwe rek en 5 x 12 voor rek X.
-    assert tekst.count("Verdieping 2, vak 3</span>") == 2 and tekst.count('name="vak"') == 120
-    assert 'name="vak" value="2-3" checked>' in tekst and tekst.count(" checked>") == 1
+    assert tekst.count("Verdieping 1, vak 1</span>") == 2 and tekst.count('name="vak"') == 120
+    assert 'name="vak" value="1-1" checked>' in tekst and tekst.count(" checked>") == 1
 
 
 def test_rek_wijzigen_en_indeling_instellen(ingelogd):
@@ -134,23 +135,29 @@ def test_rek_wijzigen_en_indeling_instellen(ingelogd):
     assert "Het rek is opgeslagen." in r.text and "Links van de deur" in r.text and ">Y/1/1</a>" in r.text
     r = ingelogd.post(f"/rekken/{rek_id}/naam", data={"naam": "Y/Z"}, follow_redirects=True)
     assert "zonder /" in r.text
-    r = ingelogd.post(f"/rekken/{rek_id}/indeling", data={"vak": ["1-1", "2-3"]},
+    r = ingelogd.post(f"/rekken/{rek_id}/indeling", data={"vak": ["1-1", "2-1"]},
                       follow_redirects=True)
-    assert "De indeling is opgeslagen." in r.text and ">Y/2/3</a>" in r.text
-    assert [(q.verdieping, q.vak) for q in db.session.get(Rek, rek_id).plaatsen] == [(1, 1), (2, 3)]
+    assert "De indeling is opgeslagen." in r.text and ">Y/2/1</a>" in r.text
+    assert [(q.verdieping, q.vak) for q in db.session.get(Rek, rek_id).plaatsen] == [(1, 1), (2, 1)]
+    r = ingelogd.post(f"/rekken/{rek_id}/indeling", data={"vak": ["1-1", "1-3"]},
+                      follow_redirects=True)
+    assert "Verdieping 1 heeft een gat: vak 2 ontbreekt" in r.text
+    assert [(q.verdieping, q.vak) for q in db.session.get(Rek, rek_id).plaatsen] == [(1, 1), (2, 1)]
     assert db.session.get(Plaats, p.id).publieke_sleutel == p.publieke_sleutel  # blijft staan
     assert ingelogd.post("/rekken/999999/indeling", data={"vak": "1-1"}).status_code == 302
 
 
 def test_vak_met_boot_niet_uitzetten(ingelogd):
-    p = bezette_plaats()
-    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": "1-2"}, follow_redirects=True)
-    assert "Op plaats A/1/1 ligt een boot. Geef de plaats eerst vrij." in r.text
-    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1"]
-    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": ["1-1", "1-2"]},
+    plaats("A/1/1")
+    p = plaats("A/1/2")
+    toewijzing.toewijzen(p.id, boten.boot_aanmaken("Zeemeeuw", 1, lid().id, None, CLI).id, CLI)
+    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": "1-1"}, follow_redirects=True)
+    assert "Op plaats A/1/2 ligt een boot. Geef de plaats eerst vrij." in r.text
+    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1", "A/1/2"]
+    r = ingelogd.post(f"/rekken/{p.rek_id}/indeling", data={"vak": ["1-1", "1-2", "1-3"]},
                       follow_redirects=True)
     assert "De indeling is opgeslagen." in r.text
-    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1", "A/1/2"]
+    assert [q.code for q in db.session.get(Rek, p.rek_id).plaatsen] == ["A/1/1", "A/1/2", "A/1/3"]
 
 
 def test_plaats_aanmaken_route_bestaat_niet_meer(ingelogd):

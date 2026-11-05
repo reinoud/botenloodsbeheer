@@ -54,7 +54,7 @@ Op `/profiel` voeg je een passkey of (als je er nog geen hebt) een wachtwoord me
 
 ## Rekken en plaatsen
 
-De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een gat in de nummering mag, bijvoorbeeld een verdieping met alleen vak 1, 3, 4 en 6.
+De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een verdieping heeft geen gaten: de vakken zijn altijd 1 tot en met n. Een verdieping met alleen vak 1 en 3 weigert de applicatie, met een melding die de verdieping en het ontbrekende vak noemt.
 
 De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen.
 
@@ -62,7 +62,7 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 - **Rek aanmaken:** vul bovenaan een naam in (1 tot 10 tekens, zonder `/`, uniek zonder verschil in hoofdletters) en eventueel een omschrijving (hooguit 60 tekens). Vink in het raster de vakken aan die bestaan. Elk vakje heet "Verdieping 2, vak 3" voor schermlezers. Kies eventueel per verdieping een bootsoort: elke plaats op die verdieping krijgt die soort als geschikte bootsoort. Een verdieping zonder keuze geeft haar plaatsen geen bootsoort. Kies **Rek aanmaken**.
 - **Naam en omschrijving wijzigen:** open **Rek wijzigen of verwijderen**, pas ze aan en kies **Rek opslaan**. Een nieuwe naam verandert de aanduiding van alle plaatsen in het rek. De QR-codes en de toewijzingen blijven gelijk.
-- **Vakken aan- of uitzetten:** open **Rek wijzigen of verwijderen**, verander het raster en kies **Indeling opslaan**. Een nieuw vak is een nieuwe plaats, met de bootsoort die je bij Nieuw rek voor die verdieping koos (geen keuze betekent geen bootsoort). Bestaande plaatsen veranderen niet. Een vak dat uit gaat, verdwijnt met zijn plaats. Ligt er een boot op, dan weigert de applicatie en verandert er niets; geef de plaats eerst vrij. De andere vakken houden hun nummer, boot en QR-code.
+- **Vakken aan- of uitzetten:** open **Rek wijzigen of verwijderen**, verander het raster en kies **Indeling opslaan**. Een nieuw vak is een nieuwe plaats, met de bootsoort die je bij Nieuw rek voor die verdieping koos (geen keuze betekent geen bootsoort). Bestaande plaatsen veranderen niet. Een vak dat uit gaat, verdwijnt met zijn plaats. Ligt er een boot op, dan weigert de applicatie en verandert er niets; geef de plaats eerst vrij. Zet je een vak uit dat niet het laatste van zijn verdieping is, dan weigert de applicatie ook, omdat er dan een gat ontstaat. De andere vakken houden hun nummer, boot en QR-code.
 - **Rek verwijderen:** kies **Rek ... verwijderen**. Dat lukt alleen als er geen boten meer op liggen.
 - **Plaats wijzigen:** open de plaats via de aanduiding. Onder **Plaats wijzigen** pas je bootsoorten en clubstatus aan. De aanduiding zelf wijzigt alleen met de naam van het rek. Een nieuwe plaats heeft de bootsoort van haar verdieping als je die bij Nieuw rek koos; anders vink je er minstens één aan voordat je een boot toewijst. Een plaats weghalen doe je in het raster: zet het vak uit (zie Vakken aan- of uitzetten). Een wijziging die niet past bij de boot die er ligt, weigert de applicatie.
 
@@ -70,7 +70,7 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ### Rekoverzicht
 
-De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping (verdieping 1 onderaan, ook als er op een verdieping geen plaatsen zijn), een kolom per vak, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
+De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
 
 ![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
 

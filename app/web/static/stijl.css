@@ -69,7 +69,20 @@ details { margin-top: var(--ruimte-3); }
 .raster .vakje { position: relative; display: flex; justify-content: center; margin: 0; padding: var(--ruimte-1) 0; }
 .raster input { width: 1.25rem; height: 1.25rem; padding: 0; margin: 0; }
 /* Rekoverzicht (issue #87): een plaatje per plaats, op dezelfde rij en kolom als in het rek. */
-.raster-rek { grid-template-columns: max-content repeat(12, 4rem); gap: var(--ruimte-1); }
+/* De CSP staat geen inline style toe: het aantal kolommen komt uit een klasse (1 tot en met 12). */
+.raster-rek { gap: var(--ruimte-1); }
+.raster-rek-1 { grid-template-columns: max-content repeat(1, 4rem); }
+.raster-rek-2 { grid-template-columns: max-content repeat(2, 4rem); }
+.raster-rek-3 { grid-template-columns: max-content repeat(3, 4rem); }
+.raster-rek-4 { grid-template-columns: max-content repeat(4, 4rem); }
+.raster-rek-5 { grid-template-columns: max-content repeat(5, 4rem); }
+.raster-rek-6 { grid-template-columns: max-content repeat(6, 4rem); }
+.raster-rek-7 { grid-template-columns: max-content repeat(7, 4rem); }
+.raster-rek-8 { grid-template-columns: max-content repeat(8, 4rem); }
+.raster-rek-9 { grid-template-columns: max-content repeat(9, 4rem); }
+.raster-rek-10 { grid-template-columns: max-content repeat(10, 4rem); }
+.raster-rek-11 { grid-template-columns: max-content repeat(11, 4rem); }
+.raster-rek-12 { grid-template-columns: max-content repeat(12, 4rem); }
 .rek-vak { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 4rem; height: 4rem; border: 1px solid var(--kleur-rand); border-radius: var(--radius); overflow: hidden; font-size: 0.75rem; text-align: center; text-decoration: none; }
 .rek-vak img { display: block; width: 100%; height: 100%; }
 .rek-vak-club { border: 2px dashed var(--kleur-tekst); }

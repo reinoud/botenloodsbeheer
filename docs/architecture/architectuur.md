@@ -1,15 +1,15 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.7.0
-**Datum:** 2026-11-04
+**Versie:** v0.7.1
+**Datum:** 2026-11-05
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
 
 ## 1. Samenvatting
 
-Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 224 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
+Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 229 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
 
 De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de aanduiding (`A/1/1`) zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
 
@@ -57,7 +57,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 
 | Entiteit | Belangrijkste velden | Relaties en regels |
 |----------|----------------------|--------------------|
-| `rek` | naam (ten hoogste 10 tekens, zonder `/`, uniek zonder hoofdletters), omschrijving (ten hoogste 60 tekens), volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. Welke verdiepingen en vakken er zijn, volgt uit de plaatsen; gaten mogen (ADR-003). |
+| `rek` | naam (ten hoogste 10 tekens, zonder `/`, uniek zonder hoofdletters), omschrijving (ten hoogste 60 tekens), volgorde | Heeft plaatsen. Verwijderen kan alleen zonder toegewezen plaatsen. Welke verdiepingen en vakken er zijn, volgt uit de plaatsen; een verdieping heeft geen gaten in de vaknummers (ADR-003, issue #94). |
 | `plaats` | verdieping (1 tot en met 5), vak (1 tot en met 12), `publieke_sleutel` (uniek, vast), is_clubplaats, `boot_id` (uniek, leeg als vrij) | Hoort bij één rek, uniek per rek, verdieping en vak. `code` is afgeleid: `<rek>/<verdieping>/<vak>`. Ten hoogste één boot (ADR-003). |
 | `bootsoort` | naam | Startlijst van vijf soorten. Een tabel, geen vaste lijst in code, zodat BLB-028 later geen migratie vraagt. |
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
@@ -140,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 
 `flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
-- 11 rekken met samen 224 plaatsen, waarvan 27 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
+- 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
 - 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam en kleuren voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
@@ -285,6 +285,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.7.1 | 2026-11-05 | Geen gaten in een verdieping, seed met 229 plaatsen (§3, §4, §6.3), rekoverzicht zonder lege kolommen; ADR-003 v2.3.0, issue #94 |
 | v0.7.0 | 2026-11-04 | Tabel `verdieping_bootsoort` en vergrendeling van alle plaatsen van een rek (§4), issue #83; ADR-003 v2.2.0 |
 | v0.6.0 | 2026-11-03 | Nieuwe besluiten issue #80: vak 1 tot en met 12 met gaten, omschrijving van het rek, seed uit de echte indeling (§1, §3, §4, §6.3); ADR-003 v2.1.0 |
 | v0.5.0 | 2026-11-03 | Indeling in rek, verdieping en vak (issue #80): §1, §3, §4; ADR-003 v2.0.0 |

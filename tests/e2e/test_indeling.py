@@ -1,6 +1,6 @@
 """Indeling met rek, verdieping en vak (BLB-001, BLB-044, issues #80 en #83), de route voor een
-mens: rek met gaten en een bootsoort per verdieping aanmaken, boot toewijzen aan <rek>/2/3 zonder
-de plaats eerst in te stellen, uitzetten geweigerd, een vak later aanzetten, kaartje printen en de
+mens: rek en een bootsoort per verdieping aanmaken, boot toewijzen aan <rek>/2/3 zonder de plaats
+eerst in te stellen, uitzetten met boot en een gat geweigerd, een vak later aanzetten, kaartje printen en de
 openbare pagina openen via de QR-link. Eigen rek met een naam die per run uniek is."""
 
 import re
@@ -9,21 +9,20 @@ from conftest import reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, rek_aanmaken, sectie_van, toewijzen
 
-VAKKEN = ((1, 1), (1, 3), (1, 4), (1, 12), (2, 1), (2, 2), (2, 3), (2, 4))
+VAKKEN = ((1, 1), (1, 2), (1, 3), (1, 4), (2, 1), (2, 2), (2, 3))
 
 
-def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, browser, base_url):
+def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, browser, base_url):
     wachtwoord_instellen(page, "indelingraster")
     rek, omschrijving = reknaam("x"), "Testrek bij de deur"
     code = f"{rek}/2/3"
     bootnaam = f"Rasterboot {rek}"
     rek_aanmaken(page, rek, VAKKEN, omschrijving, soorten={1: "Surfski", 2: "Kajak"})
 
-    # Alleen de vakken die aan stonden zijn plaatsen, ook met een gat (vak 2) en vak 12.
+    # Alleen de vakken die aan stonden zijn plaatsen.
     sectie = sectie_van(page, rek)
     expect(sectie).to_contain_text(omschrijving)
     expect(sectie.locator("tbody a")).to_have_text([f"{rek}/{v}/{k}" for v, k in VAKKEN])
-    expect(sectie.get_by_role("link", name=f"{rek}/1/2", exact=True)).to_have_count(0)
 
     # Elke plaats heeft de bootsoort van haar verdieping en er is geen knop om de plaats te
     # verwijderen. De boot hoeft dus niet eerst te worden ingesteld.
@@ -43,7 +42,8 @@ def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page,
     assert all(prive.values())
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 
-    # Een vak met een boot kan niet uit; verandert er niets. Een vak zonder boot wel.
+    # Een vak met een boot kan niet uit en een gat in een verdieping is niet toegestaan; er
+    # verandert niets. Het laatste vak van een verdieping zonder boot kan wel uit.
     page.goto("/indeling")
     sectie = sectie_van(page, rek)
     sectie.get_by_text("Rek wijzigen of verwijderen").click()
@@ -53,19 +53,25 @@ def test_rek_met_gaten_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page,
     expect(sectie_van(page, rek).get_by_role("link", name=code, exact=True)).to_have_count(1)
     sectie = sectie_van(page, rek)
     sectie.get_by_text("Rek wijzigen of verwijderen").click()
-    sectie.get_by_label("Verdieping 2, vak 4", exact=True).uncheck()
+    sectie.get_by_label("Verdieping 2, vak 2", exact=True).uncheck()
+    sectie.get_by_role("button", name="Indeling opslaan").click()
+    expect(page.get_by_role("alert")).to_contain_text("Verdieping 2 heeft een gat: vak 2 ontbreekt")
+    expect(sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/2", exact=True)).to_have_count(1)
+    sectie = sectie_van(page, rek)
+    sectie.get_by_text("Rek wijzigen of verwijderen").click()
+    sectie.get_by_label("Verdieping 1, vak 4", exact=True).uncheck()
     sectie.get_by_role("button", name="Indeling opslaan").click()
     expect(page.get_by_text("De indeling is opgeslagen.")).to_be_visible()
-    expect(sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/4", exact=True)).to_have_count(0)
+    expect(sectie_van(page, rek).get_by_role("link", name=f"{rek}/1/4", exact=True)).to_have_count(0)
     expect(sectie_van(page, rek).get_by_role("link", name=code, exact=True)).to_have_count(1)
 
     # Een vak dat later aan gaat, krijgt de bootsoort van zijn verdieping.
     sectie = sectie_van(page, rek)
     sectie.get_by_text("Rek wijzigen of verwijderen").click()
-    sectie.get_by_label("Verdieping 2, vak 5", exact=True).check()
+    sectie.get_by_label("Verdieping 2, vak 4", exact=True).check()
     sectie.get_by_role("button", name="Indeling opslaan").click()
     expect(page.get_by_text("De indeling is opgeslagen.")).to_be_visible()
-    sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/5", exact=True).click()
+    sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/4", exact=True).click()
     expect(page.get_by_label("Kajak", exact=True)).to_be_checked()
 
     # Het kaartje van de plaats: aanduiding, omschrijving en eigenaar, geen andere gegevens.

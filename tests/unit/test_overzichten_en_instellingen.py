@@ -172,7 +172,9 @@ def test_boten_van_leden_die_gaan_opzeggen_vroegste_eerst(ingelogd):  # noqa: F8
 def test_zelfde_datum_op_rek_verdieping_vak(app, dagen):
     """Issue #81: rek A vóór B ondanks de hogere verdieping, en verdieping vóór vak."""
     from app.domein import indeling
-    codes = ("A/2/1", "B/2/1", "B/1/2")  # rek A eerst aangemaakt, dus eerst in de volgorde
+    plaats("A/1/1")  # rek A eerst aangemaakt, dus eerst in de volgorde
+    plaats("B/1/1")
+    codes = ("A/2/1", "B/2/1", "B/1/2")
     for n, code in enumerate(codes):
         eigenaar = lid(str(n), f"Lid {n}")
         toewijzing.toewijzen(plaats(code).id, boot(eigenaar.id).id, CLI)
