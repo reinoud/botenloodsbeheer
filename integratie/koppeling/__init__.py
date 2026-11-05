@@ -24,6 +24,16 @@ MAX_BYTES = 2 * 1024 * 1024
 log = logging.getLogger("koppeling")
 
 
+class _GeenRedirect(urllib.request.HTTPRedirectHandler):
+    """Een redirect wordt een HTTPError, zodat het token nooit naar een ander adres gaat (#23)."""
+
+    def redirect_request(self, *_):
+        return None
+
+
+_opener = urllib.request.build_opener(_GeenRedirect)
+
+
 class ApiFout(Exception):
     """Een aanroep mislukte; de tekst is alleen de HTTP-status of het soort fout."""
 
@@ -64,7 +74,7 @@ class Koppeling:
             self.cfg["api_url"] + pad, method=methode, data=gegevens,
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"})
         try:
-            with urllib.request.urlopen(verzoek, timeout=60) as antwoord:
+            with _opener.open(verzoek, timeout=60) as antwoord:
                 return json.loads(antwoord.read() or b"{}")
         except urllib.error.HTTPError as fout:
             raise ApiFout(f"HTTP {fout.code}") from None
