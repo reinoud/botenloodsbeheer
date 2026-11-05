@@ -19,7 +19,7 @@ import yaml
 ROOT = Path(__file__).parents[2]
 sys.path.insert(0, str(ROOT / "integratie"))
 
-from koppeling import MAX_BYTES, ApiFout, Koppeling, bronnen, instellingen
+from koppeling import ANTWOORD_MAX, MAX_BYTES, ApiFout, Koppeling, bronnen, instellingen
 
 TZ = ZoneInfo("Europe/Amsterdam")
 OCHTEND = datetime(2026, 10, 31, 10, 0, tzinfo=TZ)
@@ -33,6 +33,7 @@ class NepApi(ThreadingHTTPServer):
     def __init__(self):
         super().__init__(("127.0.0.1", 0), Handler)
         self.aanroepen, self.verzoek, self.status, self.fout = [], False, {}, "Geen toegang."
+        self.groot, self.vrij, self.klaar = False, threading.Event(), False
         threading.Thread(target=self.serve_forever, daemon=True).start()
 
     @property
@@ -54,6 +55,15 @@ class Handler(BaseHTTPRequestHandler):
             {"ontvangen": len(lichaam["leden"]), "nieuw": 1} if pad == "/leden" else {})
         tekst = json.dumps(antwoord if status < 400 else {"fout": self.server.fout}).encode()
         self.send_response(status)
+        if self.server.groot:  # #109: te groot antwoord zonder lengte; de verbinding blijft open
+            self.end_headers()
+            try:
+                self.wfile.write(b" " * (ANTWOORD_MAX + 1))
+            except OSError:
+                return  # de container sloot de verbinding al
+            self.server.vrij.wait(5)
+            self.server.klaar = True
+            return
         if 300 <= status < 400:
             self.send_header("Location", self.server.locatie)
         self.send_header("Content-Type", "application/json")
@@ -68,6 +78,7 @@ class Handler(BaseHTTPRequestHandler):
 def api():
     server = NepApi()
     yield server
+    server.vrij.set()
     server.shutdown()
     server.server_close()
 
@@ -196,6 +207,16 @@ def test_lopende_import_een_uur_stil_ook_bij_een_open_verzoek(api, koppeling, ca
     koppeling.ronde(OCHTEND + timedelta(minutes=60))
     assert paden(api)[2:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
     assert "HTTP 409 importslot" in caplog.text and "beheerder" not in caplog.text
+
+
+@pytest.mark.parametrize("status,melding", [(200, "antwoord te groot"), (409, "HTTP 409)")])
+def test_te_groot_antwoord_leest_hooguit_de_grens_en_telt_als_fout(api, koppeling, caplog,
+                                                                    status, melding):
+    """#109: de container wacht niet op het einde van het antwoord; de ronde eindigt met een fout."""
+    api.status["/leden/importverzoek"], api.groot = status, True
+    koppeling.ronde(OCHTEND)
+    assert not api.klaar  # de nep-API houdt de verbinding nog open
+    assert koppeling.fout_op == OCHTEND and f"Import mislukt ({melding}" in caplog.text
 
 
 @pytest.mark.parametrize("status", [301, 302, 307, 308])
