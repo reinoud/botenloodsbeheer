@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.14
+**Versie overlay:** v0.5.15
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -41,6 +41,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
 - Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
 - Teksten volgen de skill `schrijfstijl`.
+- Elke open pull request van Dependabot krijgt een issue (`taak`, `dependencies`), tenzij er al een is. Het issue noemt wat de PR mist, zoals een pakketversie die niet meebeweegt. Besluit van de stakeholder, 2026-11-05.
 - Normenbibliotheek: `/Users/reinoud/Projects/AI/01. Standaarden/`. Raadplegen mag, kopiëren niet.
 
 ### Briefingchecklist
@@ -130,7 +131,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
 - Een test die een mutant moet vangen, faalt op een assert met een eigen melding; een databasefout als faalreden noemt de reviewer apart.
-- Wijzigt een diff meer dan één controle, dan draait de reviewer per controle een aparte mutant en noemt per mutant de test die valt.
+- Wijzigt een diff meer dan één controle, dan draait de reviewer per controle een aparte mutant en noemt per mutant de test die valt. Levert de regie mutanten aan, dan ook per controle, met de verwachte falende assert als bestand:regel.
+- Kiest de bouw een andere oplossing dan de actie in het issue, werk dan het issue bij vóór de review.
 - Na een update van het lockbestand controleert de reviewer met een versiecheck in de testcontainer dat de suite tegen de nieuwe versies draait, voordat hij het aantal geslaagde tests meldt.
 - Filter de uitvoer van een mutantrun op `^E |FAILED|passed|failed`; de laatste regel kan een logregel van de app zijn.
 - Toets een foutafhandeling van de API ook op een onbekend pad en een verkeerde methode onder `/api/v1/`; een `bp.errorhandler` dekt die niet, een `bp.app_errorhandler` wel.
@@ -301,6 +303,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.15 | 2026-11-05 | Issue per open Dependabot-PR; mutanten van de regie per controle; issue bijwerken als de bouw afwijkt, uit de terugblikken van sentinel en aegis (issue #118) | Besluit stakeholder 2026-11-05, lessen |
 | v0.5.14 | 2026-11-05 | Regels over een mutant per gewijzigde controle en over de aanroepers bij een controle op `actor.soort`, uit de terugblikken van sentinel en aegis (issue #55) | Lessen |
 | v0.5.13 | 2026-11-05 | Regels over de vormen van een HTTP-antwoord in een test en losse testcommando's, uit de terugblikken van aegis en sentinel (issue #109) | Lessen |
 | v0.5.12 | 2026-11-05 | Regel over letters van `reknaam()` per test, uit de terugblik van sentinel (issue #112) | Lessen |
