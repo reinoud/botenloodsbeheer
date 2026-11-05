@@ -1,0 +1,27 @@
+# Losse Traefik voor tests/proxy/draai.sh, volgens de eisen aan de gedeelde Traefik (ADR-013):
+# exposedByDefault=false, entrypoints web, websecure en intern, geen forwardedHeaders.trustedIPs
+# of insecure, aliasHeadersStrategy=delete. Geen certificaat: Traefik toont zijn eigen standaard.
+services:
+  traefik:
+    image: traefik:v3.7.17@sha256:30ff62491aacdb862ceb8c9edcf2627da638d7deafdd4b6dab32fe34f8aa3e90
+    command:
+      - --providers.docker.exposedbydefault=false
+      # Alleen de containers van deze proef, niet die van de dev-stack op dezelfde host.
+      - --providers.docker.constraints=Label(`traefik.docker.network`,`${INSTALLATIE}_voorkant`)
+      - --entrypoints.web.address=:8080
+      - --entrypoints.websecure.address=:8443
+      - --entrypoints.intern.address=:8081
+      - --entrypoints.web.http.aliasheadersstrategy=delete
+      - --entrypoints.websecure.http.aliasheadersstrategy=delete
+      - --entrypoints.intern.http.aliasheadersstrategy=delete
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      voorkant: {}
+      koppeling: {ipv4_address: "${PROEF_TRAEFIK_KOPPELING}"}
+      klant: {ipv4_address: "${PROEF_TRAEFIK_KLANT}"}
+
+networks:
+  klant:
+    name: ${INSTALLATIE}_klant
+    external: true
