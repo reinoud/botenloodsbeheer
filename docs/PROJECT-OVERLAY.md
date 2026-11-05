@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.3
+**Versie overlay:** v0.5.4
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-05
@@ -110,6 +110,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Review
 
 - Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
+- Citeer een overlayregel in een brief letterlijk, inclusief de afbakening tussen haakjes, en noem welke routes er bewust buiten vallen.
 - Beantwoordt het issue een vraag die je aan de reviewer stelt, noem dan de regel uit het issue erbij.
 - Geef een reviewer de paden van de ADR's en de verwachte waarden voor drempels (rate limit, vergrendeling, sessieduur), zodat hij toetst tegen een norm.
 - Noem bij elke bronsoort die een reviewer laat toetsen het verwachte gedrag (opslaan of afwijzen).
@@ -121,6 +122,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Controleer een mutant in een bestand dat al gestaged is met `cmp` tegen een kopie, niet met `git diff`; een mutant die de gestagede versie terugzet, is in `git diff` onzichtbaar.
+- Een mutant op een staatsassert verandert de code onder test zo dat de redirect blijft en het effect toch plaatsvindt; noem in de brief het bestand van die code.
 - Noem per mutant de assert (regel) van het criterium waarop hij moet falen; een mutant die op een andere assert faalt, bewijst dat criterium niet.
 - Een mutant telt pas als gevangen wanneer de reviewer de falende assert noemt, niet alleen het aantal mislukte tests. Meldt een agent dat een mutant overleeft, dan noemt hij de exacte diff van die mutant en het commando, zodat de reviewer hetzelfde kan draaien.
 - Draait sentinel parallel op dezelfde database, zeg dan wie de mutanten draait; aegis draait dan geen suite en geen `draai.sh`.
@@ -285,6 +287,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.4 | 2026-11-05 | Regels over het citeren van een overlayregel en over een mutant op een staatsassert, uit de terugblikken van aegis en sentinel (issue #12) | Lessen |
 | v0.5.3 | 2026-11-05 | Regels over de assert per mutant en over een E2E-mutant op een static-bestand, uit de terugblikken van prism en sentinel (issue #99) | Lessen |
 | v0.5.2 | 2026-11-05 | Regel over een templatemutant als bind mount van alleen het template, uit de terugblik van sentinel (issue #95) | Lessen |
 | v0.5.1 | 2026-11-05 | Vijf regels uit de terugblikken van bedrock, sentinel en pipeline (issues #94 en #96): mutant bij een E2E-assertie, volle suite bij een nieuwe validatieregel, E2E-test van het geweigerde pad, proefmerge van een reeks pull requests, `workflow`-scope | Lessen |
