@@ -19,7 +19,7 @@ import yaml
 ROOT = Path(__file__).parents[2]
 sys.path.insert(0, str(ROOT / "integratie"))
 
-from koppeling import MAX_BYTES, Koppeling, bronnen, instellingen
+from koppeling import MAX_BYTES, ApiFout, Koppeling, bronnen, instellingen
 
 TZ = ZoneInfo("Europe/Amsterdam")
 OCHTEND = datetime(2026, 10, 31, 10, 0, tzinfo=TZ)
@@ -54,6 +54,8 @@ class Handler(BaseHTTPRequestHandler):
             {"ontvangen": len(lichaam["leden"]), "nieuw": 1} if pad == "/leden" else {})
         tekst = json.dumps(antwoord if status < 400 else {"fout": "Geen toegang."}).encode()
         self.send_response(status)
+        if 300 <= status < 400:
+            self.send_header("Location", self.server.locatie)
         self.send_header("Content-Type", "application/json")
         self.send_header("Content-Length", str(len(tekst)))
         self.end_headers()
@@ -179,6 +181,20 @@ def test_veiligheidsgrens_van_de_api_telt_als_fout(api, koppeling):
     assert koppeling.geslaagd_op is None and koppeling.fout_op == OCHTEND
     koppeling.ronde(OCHTEND + timedelta(minutes=30))
     assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
+
+
+@pytest.mark.parametrize("status", [301, 302, 307, 308])
+def test_redirect_faalt_zonder_het_token_naar_het_nieuwe_adres(api, koppeling, status):
+    """#23: de container volgt geen redirect, dus het token gaat niet naar een ander adres."""
+    elders = NepApi()
+    try:
+        api.status["/leden/importverzoek"], api.locatie = status, elders.url + "/leden/importverzoek"
+        with pytest.raises(ApiFout, match=f"HTTP {status}"):
+            koppeling.roep(TOKEN, "GET", "/leden/importverzoek")
+        assert paden(api) == [("GET", "/leden/importverzoek")] and elders.aanroepen == []
+    finally:
+        elders.shutdown()
+        elders.server_close()
 
 
 def test_zonder_token_melden_en_niets_aanroepen(api, koppeling, caplog):
