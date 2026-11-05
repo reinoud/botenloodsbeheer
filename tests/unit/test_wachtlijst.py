@@ -346,7 +346,8 @@ def test_plaats_toont_wachtenden_voor_passende_soort_eerst(ingelogd):  # noqa: F
     r = ingelogd.get(f"/plaatsen/{p.id}").text
     wachtend, overig = r.split("Andere boten zonder plaats")
     assert "Kievit" in wachtend and "sinds 01-01-2024" in wachtend
-    assert "Snoek" in overig and "Otter" in overig and "Kievit" not in overig
+    assert "Otter" in overig and "Kievit" not in overig
+    assert "Snoek" not in r  # #131: een surfski past niet op deze plaats
 
 
 def test_clubplaats_toont_geen_wachtenden(ingelogd):  # noqa: F811
@@ -374,3 +375,21 @@ def test_bezoeker_kan_wachtlijst_niet_zien_of_wijzigen(client):
     for pad in (f"/boten/{b.id}/wachtlijst", f"/boten/{b.id}/wachtlijst/verwijderen"):
         assert client.post(pad).location.endswith("/inloggen")
     assert op_lijst(b) is None
+
+
+def test_keuzelijst_alleen_met_boten_die_toewijzen_accepteert(ingelogd):  # noqa: F811
+    """#131: de regels van toewijzen; elke uitgesloten boot zou toewijzen weigeren."""
+    p, club = plaats(), plaats("A/1/2", club=True)
+    boot(lid().id, naam="Kievit")
+    boot(None, naam="Clubkajak")
+    oud = lid("1002", opzegdatum=vandaag())  # de boot bestond al voor de opzegging
+    db.session.add(Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=oud.id))
+    db.session.commit()
+    r = ingelogd.get(f"/plaatsen/{p.id}").text
+    assert "Kievit" in r and "Clubkajak" not in r and "Oudje" not in r
+    r = ingelogd.get(f"/plaatsen/{club.id}").text
+    assert "Clubkajak" in r and "Kievit" not in r and "Oudje" not in r
+    leeg = plaats("A/1/3", soorten=("Surfski",))
+    r = ingelogd.get(f"/plaatsen/{leeg.id}").text
+    assert "Er zijn geen boten zonder plaats die op deze plaats passen." in r
+    assert 'name="boot_id"' not in r
