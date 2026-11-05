@@ -95,6 +95,18 @@ def test_persoonlijk_token_zonder_leden_importeren(app, twee):
     assert db.session.scalar(select(Token.soort)) == "robot"
 
 
+def test_alleen_de_cli_geeft_leden_importeren(app, twee):
+    """#55: een actor die geen systeem is (token, taak) geeft of neemt het CLI-recht niet."""
+    for actor in (Actor("token", 1, "robot.x"), Actor("taak", None, "ronde")):
+        with pytest.raises(Regelfout, match="alleen met de CLI"):
+            tokens.maken("robot", "via-token", ["leden:importeren"], ["10.0.0.0/8"], None, actor)
+    tokens.robot_maken("met", ["leden:importeren"], [], None, CLI)
+    met = db.session.scalar(select(Token))
+    tokens.rechten_wijzigen(met.id, ["boten:lezen"], Actor("token", 1, "robot.x"))
+    db.session.expire_all()
+    assert db.session.get(Token, met.id).rechten == ["boten:lezen", "leden:importeren"]
+
+
 def test_web_geeft_leden_importeren_niet_en_neemt_het_niet_af(app, twee):
     """#52: het web voegt het CLI-recht niet toe; een token met het recht uit de CLI houdt het.
     Ongewijzigd opslaan in een andere volgorde geeft geen logregel."""
