@@ -322,6 +322,7 @@ def beheerder_herstellen(beheerder_id):
 
 @bp.post("/beheerders/<int:beheerder_id>/<any(blokkeren, deblokkeren, verwijderen):actie>")
 @inloggen_vereist
+@recent_ingelogd
 def beheerder_wijzigen(beheerder_id, actie):
     uitvoeren(getattr(beheerders, actie), beheerder_id, gelukt={
         "blokkeren": "Het account is geblokkeerd.", "deblokkeren": "Het account is gedeblokkeerd.",

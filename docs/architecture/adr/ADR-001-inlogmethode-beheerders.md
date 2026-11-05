@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30 (besluit van de stakeholder; architectuur §9, besluit 1)
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** BLB-022, BLB-023, BLB-038
 
 ## Context
@@ -27,7 +27,7 @@ Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat 
 
 **Sessie.** Ondertekende cookie met beheerder-id en sessieversie (`Secure`, `HttpOnly`, `SameSite=Lax`), 12 uur geldig. Elk verzoek controleert of het account actief is en de versie klopt. Blokkeren en herstel hogen de versie op.
 
-**Methode toevoegen of intrekken (BLB-038, backlog §7, vragen 9 en 10; besluit foundation).** Een beheerder voegt alleen een methode toe of trekt er een in als hij in de afgelopen 10 minuten heeft ingelogd. De webroute toetst dat bij het verzenden van het formulier, met `ingelogd_op` uit de sessie. Is de inlog ouder, dan stuurt de applicatie hem naar het inlogscherm. Hij bewijst zich met een methode die hij al heeft; de vergrendeling geldt gewoon. Wie een open sessie overneemt, kan zo geen eigen passkey toevoegen. Dezelfde eis geldt voor het uitnodigen van een beheerder en het herstellen van een collega, omdat beide een link opleveren waarmee iemand blijvend toegang krijgt (review aegis, slice 2).
+**Methode toevoegen of intrekken (BLB-038, backlog §7, vragen 9 en 10; besluit foundation).** Een beheerder voegt alleen een methode toe of trekt er een in als hij in de afgelopen 10 minuten heeft ingelogd. De webroute toetst dat bij het verzenden van het formulier, met `ingelogd_op` uit de sessie. Is de inlog ouder, dan stuurt de applicatie hem naar het inlogscherm. Hij bewijst zich met een methode die hij al heeft; de vergrendeling geldt gewoon. Wie een open sessie overneemt, kan zo geen eigen passkey toevoegen. Dezelfde eis geldt voor het uitnodigen van een beheerder en het herstellen van een collega, omdat beide een link opleveren waarmee iemand blijvend toegang krijgt (review aegis, slice 2). Ook blokkeren, deblokkeren en verwijderen vragen een recente inlog: deblokkeren geeft een account zijn oude methodes terug, en elke webroute met blijvend effect op toegang valt onder deze eis (issue #12).
 
 Intrekken hoogt de sessieversie op. Alle sessies van die beheerder eindigen, ook de huidige; hij logt opnieuw in met de methode die overblijft. Toevoegen laat de sessies staan. Sessies van andere beheerders veranderen niet.
 
@@ -49,13 +49,14 @@ Intrekken hoogt de sessieversie op. Alle sessies van die beheerder eindigen, ook
 - Tabel `beheerder` krijgt wachtwoordhash, versleuteld TOTP-geheim, laatste tijdstap, teller en blokkeertijd (architectuur §4).
 - E2E-tests gebruiken de virtuele authenticator van Chromium en `pyotp` met een testgeheim; er komt geen inlogomweg.
 - Aegis beoordeelt inlog, TOTP, brute-forceregels en herstel vóór de commit (overlay §4).
-- Restrisico: wie binnen 10 minuten na de inlog een open sessie overneemt, kan nog een methode toevoegen, een beheerder uitnodigen of een collega herstellen. Het log toont dat, en een andere beheerder kan herstellen.
+- Restrisico: wie binnen 10 minuten na de inlog een open sessie overneemt, kan nog een methode toevoegen, een beheerder uitnodigen of een collega herstellen of deblokkeren. Het log toont dat, en een andere beheerder kan herstellen.
 - Uitwerking in slice 2 (issue #11), binnen dit besluit: een beheerder kan zijn eigen account niet blokkeren, verwijderen of herstellen. Daardoor blijft er altijd een actieve beheerder (BLB-023). Een geblokkeerd account is weer te deblokkeren; herstel vraagt eerst deblokkeren. De controle op een recente inlog geldt ook voor het opvragen van de passkeyopties.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v1.2.1 | 2026-11-05 | Recente inlog ook voor blokkeren, deblokkeren en verwijderen (issue #12) |
 | v1.2.0 | 2026-10-31 | Rate limit per IP in Traefik in plaats van Nginx (Besluit stakeholder 2026-10-31, issue #29 (ADR-013)) |
 | v1.1.2 | 2026-10-30 | Recente inlog ook voor uitnodigen en herstellen (review aegis, issue #11) |
 | v1.1.1 | 2026-10-30 | Uitwerking van slice 2 bij de gevolgen (forge, issue #11) |

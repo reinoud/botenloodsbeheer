@@ -201,7 +201,7 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 | Dreiging | Ingang | Kans | Impact | Maatregel | ADR |
 |----------|--------|------|--------|-----------|-----|
 | Overname van een beheeraccount door phishing of een gelekt wachtwoord | Inlogscherm | M | H | Passkey: phishingbestendig. Wachtwoord met TOTP: argon2id, TOTP-code eenmalig bruikbaar, vergrendeling per account na vijf pogingen, rate limit per IP; phishing blijft mogelijk en is door de stakeholder geaccepteerd (restrisico) | 001 |
-| Overgenomen open sessie voegt een eigen passkey toe, trekt een methode in, nodigt een beheerder uit of herstelt een collega | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
+| Overgenomen open sessie voegt een eigen passkey toe, trekt een methode in, nodigt een beheerder uit of herstelt of deblokkeert een collega | Profiel | L | H | Alleen binnen 10 minuten na de inlog; intrekken beëindigt alle sessies van de beheerder | 001 |
 | Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vijf velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
