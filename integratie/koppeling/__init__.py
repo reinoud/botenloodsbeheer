@@ -20,6 +20,7 @@ NIEUWE_POGING = timedelta(hours=1)
 # De grenzen van PUT /api/v1/leden; daarboven meldt de container de bron als onleesbaar.
 MAX_RECORDS = 5000
 MAX_BYTES = 2 * 1024 * 1024
+IMPORT_LOOPT = b"Er loopt al een import."  # de tekst van de 409 bij een vastgehouden importslot
 
 log = logging.getLogger("koppeling")
 
@@ -77,7 +78,9 @@ class Koppeling:
             with _opener.open(verzoek, timeout=60) as antwoord:
                 return json.loads(antwoord.read() or b"{}")
         except urllib.error.HTTPError as fout:
-            raise ApiFout(f"HTTP {fout.code}") from None
+            # Een lopende import houdt het slot vast en sluit het verzoek niet (#31).
+            slot = fout.code == 409 and IMPORT_LOOPT in fout.read()
+            raise ApiFout(f"HTTP {fout.code}" + (" importslot" if slot else "")) from None
         except (OSError, ValueError) as fout:  # URLError en time-out zijn OSError
             raise ApiFout(type(fout).__name__) from None
 
@@ -119,13 +122,14 @@ class Koppeling:
         except bronnen.LedenbronFout as fout:
             self._fout(nu, token, str(fout), van_api=False)
         except ApiFout as fout:
-            # Een 409 is geen fout van de API: de veiligheidsgrens sluit het verzoek, en een
-            # lopende import of opschoning houdt het importslot (#49). Een verzoek dat dan nog
-            # open staat, pakt de volgende ronde van de lus op.
+            # De 409 van de veiligheidsgrens sluit het verzoek; een nieuw verzoek gaat direct. Houdt
+            # een lopende import of opschoning het slot (#49), dan blijft het verzoek open en
+            # wacht de lus een uur, zodat hij niet elke minuut een PUT stuurt (#31).
             self._fout(nu, token, str(fout), van_api=str(fout) != "HTTP 409")
         except Exception as fout:  # noqa: BLE001  de lus draait door; alleen het soort fout
             self._fout(nu, token, type(fout).__name__, van_api=True)
 
     def _fout(self, nu, token, tekst, van_api):
         self.fout_op, self.fout_token, self.fout_van_api = nu, token, van_api
-        log.warning("Import mislukt (%s); nieuwe poging over een uur.", tekst)
+        log.warning("Import mislukt (%s); nieuwe poging over een uur%s.", tekst,
+                    "" if van_api else ", of direct na een verzoek van een beheerder")
