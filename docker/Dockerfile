@@ -1,4 +1,4 @@
-FROM python:3.14-slim AS app
+FROM python:3.14-slim@sha256:cd89c30eda26ee911a4611b18680086e0ea42e6f5f8cbe653d07fa7958c9cec8 AS app
 ENV PYTHONUNBUFFERED=1 \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install --yes --no-install-recommends libpq5 \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
-RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5,source=/uv,target=/bin/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7,source=/uv,target=/bin/uv \
     uv sync --locked --no-dev
 COPY alembic.ini ./
 COPY migrations migrations
@@ -32,7 +32,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--access-logfile",
 # Alleen voor ontwikkeling en tests: voegt pytest en ruff toe.
 FROM app AS dev
 USER root
-RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5,source=/uv,target=/bin/uv \
+RUN --mount=from=ghcr.io/astral-sh/uv:0.9.5@sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7,source=/uv,target=/bin/uv \
     uv sync --locked
 COPY tests tests
 USER 10001
