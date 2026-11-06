@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.35
+**Versie overlay:** v0.5.36
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -122,9 +122,16 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Sluit een agentopdracht af met het eindrapport als laatste bericht; een terugblik in een bestand vervangt het rapport niet.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand.
+- Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
+- Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
+- Een import of export volgt de regels van de schermactie die dezelfde gegevens wijzigt. Noem in de opdracht die functie en haar test (bijvoorbeeld `_soorten` en `tests/unit/test_plaats_wijzigen_en_vrijgeven.py`), en laat het agent bij elke kolom beslissen wat een lege waarde betekent, voor een nieuw en een bestaand record.
+- Test een rondgang (export, ongewijzigd importeren) ook met elke toestand die het scherm toelaat, zoals een plaats zonder bootsoort, en niet alleen met de standaardwaarden van de testhulpfuncties.
+- Verandert een herstel een regel die ook in een gebruikerstekst staat (sjabloon, handleiding, ADR, schermuitleg), noem dan elke plek met bestand:regel en werk ze in dezelfde ronde bij.
 
 #### Review
 
+- Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
+- Noem bij een logregel uit een ADR voor welke story hij geldt, en bij een nareview de regel in de ADR die de reviewer moet terugzien.
 - Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
 - Noem als voorbeeldtest in een brief alleen een naam die `grep -rn "def test_" tests/` oplevert.
 - Citeer een overlayregel in een brief letterlijk, inclusief de afbakening tussen haakjes, en noem welke routes er bewust buiten vallen.
@@ -341,6 +348,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.36 | 2026-11-06 | Zeven regels in de briefingchecklist (Bouw, Review) uit de terugblikken van bedrock, sentinel en aegis bij #157 | Lessen |
 | v0.5.35 | 2026-11-06 | Regels uit de terugblikken van prism en sentinel bij #150 deel 1: afname controleren, structuurselectors, escapingtest, migratieheadtest, wachtlus | Lessen |
 | v0.5.34 | 2026-11-06 | §6: imports en exports met andere systemen in de integratiecontainer, CSV via de webinterface in `web` (ADR-014) | Besluit ADR-014 |
 | v0.5.33 | 2026-11-06 | Regel uit de terugblik van foundation (ADR-014): ADR bij bestandsnaam noemen | Lessen |
