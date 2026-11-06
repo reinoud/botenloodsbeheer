@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.31
+**Versie overlay:** v0.5.32
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -50,6 +50,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Algemeen (elke brief)
 
+- Geef bij elke agentopdracht model en effort expliciet mee (besluit stakeholder, 2026-11-06). Reviews (sentinel, aegis): Opus 5.5 met effort `higher`. Bouw (prism, bedrock en andere bouwers): Sonnet 5.5, effort standaard. Mechanische opdrachten die zichzelf controleren (zoeken en rapporteren, een vaste reeks stappen nalopen): effort `lower`. Een grote review (meer dan 50 bestanden of een migratie) krijgt altijd `higher`.
 - Geef de omvang (10 rekken, 160 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
 - Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal. Een woordgrens voor een alinea telt alleen de alinea; kop, versieregel en wijzigingslog tellen apart.
@@ -334,6 +335,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.32 | 2026-11-06 | Model en effort per soort agentopdracht, besluit van de stakeholder | Werkwijze |
 | v0.5.31 | 2026-11-06 | Regels uit de review van #143: mutant met telling, volgorde los van alfabet | Lessen |
 | v0.5.30 | 2026-11-06 | Regel uit de terugblik van sentinel (#144): mutant op de serverroute, één per kant | Lessen |
 | v0.5.29 | 2026-11-06 | Regel uit de terugblik van sentinel (#145): unieke reknamen in E2E controleren | Lessen |
