@@ -98,6 +98,27 @@ def toewijzen(page, code, bootnaam):
     page.get_by_role("button", name="Plaats toewijzen").click()
 
 
+def toewijzen_buiten_lijst(page, code, bootnaam):
+    """Sinds #131 staat een boot die niet past niet in de keuzelijst (en zonder passende boot is
+    er geen formulier); een POST met zijn id moet de server toch weigeren (#144)."""
+    page.goto("/boten")
+    boot_id = page.get_by_role("link", name=bootnaam, exact=True).get_attribute("href").rsplit("/", 1)[1]
+    page.goto("/indeling")
+    page.get_by_role("link", name=code, exact=True).click()
+    expect(page.locator("#boot option", has_text=bootnaam)).to_have_count(0)
+    with page.expect_navigation():
+        page.evaluate("""boot => {
+            const f = document.createElement("form");
+            f.method = "post";
+            f.action = location.pathname + "/toewijzen";
+            const csrf = document.querySelector("input[name=csrf_token]").cloneNode();
+            const id = Object.assign(document.createElement("input"), {name: "boot_id", value: boot});
+            f.append(csrf, id);
+            document.body.append(f);
+            f.submit();
+        }""", boot_id)
+
+
 def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     wachtwoord_instellen(page, "indeling")
     rek, bootnaam = reknaam("i"), f"Boot {reknaam('i')}"
@@ -149,9 +170,9 @@ def test_clubboot_op_ledenplaats_en_verkeerde_bootsoort_geweigerd(page):
     boot_vastleggen(page, f"Kajak {rek}", "Kajak", eigenaar_index=2)
     boot_vastleggen(page, f"Clubboot {rek}", "Supboard")
 
-    toewijzen(page, code, f"Kajak {rek}")
+    toewijzen_buiten_lijst(page, code, f"Kajak {rek}")
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een kajak")
-    toewijzen(page, code, f"Clubboot {rek}")
+    toewijzen_buiten_lijst(page, code, f"Clubboot {rek}")
     expect(page.get_by_role("alert")).to_contain_text("is een clubboot en hoort op een clubplaats")
     expect(page.get_by_role("heading", name="Deze plaats is vrij")).to_be_visible()
     expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
@@ -194,7 +215,7 @@ def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):
     page.get_by_label("Clubplaats (alleen voor clubboten)").check()
     page.get_by_role("button", name="Plaats opslaan").click()
     expect(page.get_by_text("De plaats is opgeslagen.")).to_be_visible()
-    toewijzen(page, code, bootnaam)
+    toewijzen_buiten_lijst(page, code, bootnaam)
     expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")
 
 
