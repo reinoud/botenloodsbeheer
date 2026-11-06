@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.1.0
+**Versie:** v0.2.0
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting)
 
 ## Context
@@ -43,7 +43,7 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 
 ### 3. Bezetting (#158)
 
-**Lopende import.** Na de upload staat de import in tabel `bezettingsimport`, niet in de cookie: ingelezen regels en keuzes als JSON, niet het ruwe bestand. Hooguit één per beheerder (`beheerder_id` uniek); een nieuwe upload vervangt de vorige. Alleen de uploader ziet en bevestigt hem, dus de routes dragen geen id. Verlooptijd 2 uur. `web` verwijdert verlopen rijen bij elke upload en elk koppelscherm, de dagelijkse opschoning (ADR-006) ook.
+**Lopende import.** Na de upload staat de import in tabel `bezettingsimport`, niet in de cookie: ingelezen regels en keuzes als JSON, niet het ruwe bestand. Hooguit één voor de hele installatie (stakeholder 2026-11-06, open vraag 3): elke beheerder ziet de lopende import en kan koppelen, bevestigen of annuleren, dus de routes dragen geen id. De tabel bewaart wie uploadde (`beheerder_id`) en toont dat in het overzicht. Een nieuwe upload terwijl er een loopt, wordt geweigerd met een melding dat eerst de lopende import bevestigd of geannuleerd moet worden. Bevestigen vergrendelt de rij, zodat twee beheerders niet tegelijk bevestigen. Verlooptijd 2 uur. `web` verwijdert verlopen rijen bij elke upload en elk koppelscherm, de dagelijkse opschoning (ADR-006) ook.
 
 **Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Eigenaar en lidnummer leeg is een clubboot. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
 
@@ -128,14 +128,15 @@ De standaard geldt tot een besluit.
 
 | # | Vraag | Blokkerend | Standaard |
 |---|-------|------------|-----------|
-| 1 | Mag een oud-lid via de import een plaats of nieuwe boot krijgen? | Nee | Nee, zoals `toewijzen` |
-| 2 | Boot uit het bestand die elders ligt: verplaatsen of fout? | Nee | Verplaatsen, zichtbaar in het overzicht |
-| 3 | Ziet elke beheerder een lopende import, of alleen de uploader? | Nee | Alleen de uploader |
-| 4 | Bewaartermijn van onthouden koppelingen | Nee | Weg met het lid, en 5 jaar na laatste gebruik |
-| 5 | Betreft "imports en exports in de integratiecontainer" alleen koppelingen met andere systemen? | Nee | Ja; overlay §6 krijgt die verduidelijking |
+| 1 | Mag een oud-lid via de import een plaats of nieuwe boot krijgen? | Besloten | Nee, zoals `toewijzen` (stakeholder 2026-11-06) |
+| 2 | Boot uit het bestand die elders ligt: verplaatsen of fout? | Besloten | Verplaatsen, zichtbaar in het overzicht (stakeholder 2026-11-06) |
+| 3 | Ziet elke beheerder een lopende import, of alleen de uploader? | Besloten | Elke beheerder; één lopende import voor de installatie (stakeholder 2026-11-06) |
+| 4 | Bewaartermijn van onthouden koppelingen | Besloten | Weg met het lid, en 5 jaar na laatste gebruik (stakeholder 2026-11-06) |
+| 5 | Betreft "imports en exports in de integratiecontainer" alleen koppelingen met andere systemen? | Besloten | Ja (regie 2026-11-06, volgt de standaard); overlay §6 verduidelijkt |
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.0 | 2026-11-06 | Open vragen besloten; één lopende bezettingsimport voor de installatie, zichtbaar voor elke beheerder | Besluiten stakeholder |
 | v0.1.0 | 2026-11-06 | Eerste versie | Issues #157 en #158 |

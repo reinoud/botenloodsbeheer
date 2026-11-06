@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.33
+**Versie overlay:** v0.5.34
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -292,7 +292,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 | Stack: Python, Flask, Gunicorn, PostgreSQL in docker-compose, achter Traefik (ADR-013) | Standaardregel, intake en besluit stakeholder 2026-10-31 (#29) | foundation |
 | Tenancy: één vereniging per installatie, geen tenantlaag en geen tenantadministratie | Besluit stakeholder 2026-10-30 | stakeholder |
 | Huisstijl: geen vaste huisstijl. Alle styling via design tokens. Naam, kleuren en logo zijn per installatie in te stellen. | Besluit stakeholder 2026-10-30; de applicatie is voor meerdere verenigingen bedoeld | foundation |
-| Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de opschoning) buiten het webproces; imports en exports in de integratiecontainer (ADR-012). | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
+| Hosting: eigen docker-compose, geen Hansel. De basis blijft gelden: 12-factor-configuratie, secrets via verwijzing, health endpoints, logs naar stdout, container zonder root, achtergrondwerk (zoals de opschoning) buiten het webproces; imports en exports met andere systemen in de integratiecontainer (ADR-012); een CSV die een beheerder in de webinterface uploadt of downloadt, hoort bij `web` (ADR-014). | Afwijking van de standaardregel, besluit stakeholder 2026-10-30. Reden: elke vereniging draait een eigen kleine installatie. | stakeholder |
 | Externe API `/api/v1` met OpenAPI-specificatie, aan en uit te zetten in de installatie via de omgeving (`API_INGESCHAKELD`, standaard aan, standaardwhitelist het interne netwerk van docker-compose). Imports en exports (ledenbron, terugschrijven) draaien in een aparte, vervangbare container die alleen via de API werkt (besluit 2026-10-31). Persoonlijke tokens hooguit 3 jaar geldig. Wie de API van buiten openzet, geeft verplicht de toegestane bronadressen op (`API_EXTERN_BRONNEN`, besluit 2026-11-03). Robottokens zonder gebruiker. Rechten per token. IP-whitelist (IPv4 en IPv6) per token. Elke aanroep geautoriseerd, met rate limiting en logging, via dezelfde bedrijfsregels als de UI. | Standaardregel, aangevuld door stakeholder 2026-10-30 | foundation, aegis |
 | Inloggen: lokale beheerders met een passkey of met wachtwoord plus TOTP, beide beschikbaar (ADR-001) | Intake, besluit stakeholder 2026-10-30 | foundation, aegis |
 | Statusrapportage: `docs/status/status.html` voor de stakeholder; health endpoints en een technische statuspagina (JSON en HTML, na inloggen) | Standaardregel | forge |
@@ -336,6 +336,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.34 | 2026-11-06 | §6: imports en exports met andere systemen in de integratiecontainer, CSV via de webinterface in `web` (ADR-014) | Besluit ADR-014 |
 | v0.5.33 | 2026-11-06 | Regel uit de terugblik van foundation (ADR-014): ADR bij bestandsnaam noemen | Lessen |
 | v0.5.32 | 2026-11-06 | Model en effort per soort agentopdracht, besluit van de stakeholder | Werkwijze |
 | v0.5.31 | 2026-11-06 | Regels uit de review van #143: mutant met telling, volgorde los van alfabet | Lessen |
