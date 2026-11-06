@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.0
+**Versie:** v0.8.1
 **Datum:** 2026-11-06
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -72,7 +72,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 | `token` | naam, soort (persoonlijk of robot), beheerder (leeg bij robot), prefix, hash, rechten, ip_whitelist, verloopt_op, ingetrokken_op, laatst_gebruikt_op | ADR-005. |
 | `logregel` | tijdstip, soort (mutatie of api), actor_soort, actor_id, actor_naam, actie, verwijzingen, gegevens (JSON) | ADR-006. Alleen toevoegen; de applicatie kent geen wijzigen of verwijderen behalve de opschoning. |
 
-Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor naam en kleuren die de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
+Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor de naam die de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
 
 De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna alle plaatsen van dat rek. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
 
@@ -143,7 +143,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 - 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
 - 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
-- een naam en kleuren voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
+- een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
 Alle namen, adressen en nummers zijn verzonnen; e-mailadressen eindigen op `@example.org` (overlay §8). `flask seed` weigert te draaien als `APP_OMGEVING=productie`.
 
@@ -240,7 +240,7 @@ De stakeholder besloot over de eerste vijf keuzes op 2026-10-30 (bron: `docs/bus
 | 3 | Wat "een boot in de loods" is voor de bewaartermijn | Besloten zoals aanbevolen: een oud-lid valt onder de opschoning zodra 5 jaar na de opzegdatum geen boot van het oud-lid nog een plaats heeft. Bij het opschonen worden ook de boten en foto's van het oud-lid verwijderd (ADR-006). | Een boot zonder plaats houdt het opschonen niet tegen. Wil de vereniging boten zonder plaats als "in de loods" tellen, dan blijven gegevens langer staan. |
 | 4 | Begin van de termijn voor een lid dat uit de bron verdwijnt zonder opzegdatum | Besloten zoals aanbevolen: de datum waarop de synchronisatie het lid niet meer vond, telt als opzegdatum (ADR-004, ADR-006). | Zonder deze regel begint de termijn van zo'n oud-lid nooit en blijven de gegevens onbeperkt staan. |
 | 5 | Wie de API aan- en uitzet (ADR-009) | De API gaat aan en uit in de installatie, via de omgevingsvariabele `API_INGESCHAKELD`, niet door de beheerder in de applicatie. Afwijking van de aanbeveling. De standaard is sinds besluit 7 `true`. | Er komt geen scherm voor de schakelaar. Wijzigen vraagt iemand met servertoegang en een herstart van `api`. |
-| 6 | Waar het logo staat (ADR-008, ADR-009) | In de installatie (docker-compose), niet in de applicatie; wijzigen wordt niet gelogd. Naam en kleuren blijven in de applicatie. | Geen uploadscherm meer; het logo staat in `./huisstijl` en een nieuw logo vraagt een herstart van `web`. |
+| 6 | Waar het logo staat (ADR-008, ADR-009) | In de installatie (docker-compose), niet in de applicatie; wijzigen wordt niet gelogd. De naam blijft in de applicatie; de kleuren zijn vast (ADR-002). | Geen uploadscherm meer; het logo staat in `./huisstijl` en een nieuw logo vraagt een herstart van `web`. |
 | 7 | Imports en exports (ADR-004, ADR-012) | Een aparte, vervangbare container doet alle imports en exports, alleen via de API over het interne netwerk. De API staat standaard aan met als whitelist het interne netwerk en is niet meer alleen-lezen. | Dienst `api` met eigen databaserol, interne server op 8081, robottoken via de CLI; de synchronisatie verdwijnt uit de worker. |
 | 8 | Proxy vóór de containers (ADR-013, issue #29) | Traefik vervangt Nginx en neemt de controles over. | Gedeelde Traefik op de host via extern aangemaakte netwerken en labels; toegangslog in de applicatie; 429 als tekst. |
 
@@ -285,6 +285,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.1 | 2026-11-06 | Issue #150: kleuren niet meer instelbaar, alleen de naam in `instelling` (ADR-002 v1.2.0, ADR-009 v1.4.0) |
 | v0.8.0 | 2026-11-06 | Verwijzing naar ADR-014 v0.1.0, CSV-import en -export van rekindeling en bezetting (§1), issues #157 en #158 |
 | v0.7.1 | 2026-11-05 | Geen gaten in een verdieping, seed met 229 plaatsen (§3, §4, §6.3), rekoverzicht zonder lege kolommen; ADR-003 v2.3.0, issue #94 |
 | v0.7.0 | 2026-11-04 | Tabel `verdieping_bootsoort` en vergrendeling van alle plaatsen van een rek (§4), issue #83; ADR-003 v2.2.0 |

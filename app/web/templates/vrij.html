@@ -1,36 +1,41 @@
 {% extends "base.html" %}
 {% from "_log.html" import logtabel %}
+{% from "_melding.html" import meldingblok %}
 {% block titel %}Vrije plaatsen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Vrije plaatsen</h1>
 <p>Plaatsen zonder boot, voor boten van leden. Clubplaatsen staan er niet in.</p>
 
 <form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="kaart">
-  <label for="bootsoort">Geschikt voor</label>
-  <select id="bootsoort" name="bootsoort"{% if gekozen %} autofocus{% endif %}>
-    <option value="">Alle bootsoorten</option>
-    {% for s in bootsoorten %}
-    <option value="{{ s.id }}"{% if gekozen and s.id == gekozen.id %} selected{% endif %}>{{ s.naam }}</option>
-    {% endfor %}
-  </select>
-  <noscript><button type="submit" class="knop">Filteren</button></noscript>
+  <div class="ds-field">
+    <label class="ds-field__label" for="bootsoort">Geschikt voor</label>
+    <select class="dj-select" id="bootsoort" name="bootsoort"{% if gekozen %} autofocus{% endif %}>
+      <option value="">Alle bootsoorten</option>
+      {% for s in bootsoorten %}
+      <option value="{{ s.id }}"{% if gekozen and s.id == gekozen.id %} selected{% endif %}>{{ s.naam }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <noscript><button type="submit" class="ds-btn ds-btn--primary">Filteren</button></noscript>
 </form>
 
 {% if plaatsen %}
-<table>
-  <thead><tr><th>Rek</th><th>Plaats</th><th>Geschikt voor</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Rek</th><th role="columnheader">Plaats</th><th role="columnheader">Geschikt voor</th></tr></thead>
+  <tbody role="rowgroup">
   {% for p in plaatsen %}
-    <tr>
-      <td data-label="Rek">{{ p.rek.naam }}</td>
-      <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
-      <td data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Rek">{{ p.rek.naam }}</td>
+      <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td role="cell" data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
-<p class="melding" role="status">Er zijn geen vrije plaatsen{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}.</p>
+{% call meldingblok() %}Er zijn geen vrije plaatsen{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}.{% endcall %}
 {% endif %}
 
 {{ logtabel(regels) }}

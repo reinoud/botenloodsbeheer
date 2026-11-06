@@ -37,7 +37,7 @@ with create_app().app_context():
 " 2>/dev/null | tail -n 1)
 e2e opzeggers -e "DOC_TOKEN=$token" -e "DOC_OPZEGGERS=$opzeggers" "${api[@]}"
 
-rm -f documentatie/gebruikers/afbeeldingen/*.png
+[ -n "${DOC_BREEDTE:-}" ] || rm -f documentatie/gebruikers/afbeeldingen/*.png  # een eigen breedte is voor controle en laat de handleiding staan
 link=$(flask beheerder uitnodigen beheerder.een)
-e2e schermen -e "DOC_LINK=$link"
+e2e schermen -e "DOC_LINK=$link" -e DOC_BREEDTE -e DOC_UIT
 ls documentatie/gebruikers/afbeeldingen | wc -l | xargs echo "Schermafbeeldingen gemaakt:"

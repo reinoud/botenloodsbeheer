@@ -1,4 +1,4 @@
-"""Overzichten (BLB-015 tot en met 019), Excel-export (BLB-017) en naam, kleuren en logo
+"""Overzichten (BLB-015 tot en met 019), Excel-export (BLB-017) en naam en logo
 (BLB-027). Verschoven uit slice 2: BLB-011 criterium 2 en BLB-003 criterium 1."""
 
 import io
@@ -66,7 +66,7 @@ def test_vrije_plaatsen_filter_zonder_knop_met_script_en_focus(ingelogd):  # noq
     assert "<script>" not in zichtbaar and "onchange" not in zichtbaar, "geen inline script"
     assert "autofocus" not in zonder, "autofocus zonder gekozen bootsoort"
     met = ingelogd.get(f"/vrij?bootsoort={soort('Surfski')}").text
-    assert re.search(r'<select id="bootsoort"[^>]* autofocus', met), "autofocus met gekozen bootsoort"
+    assert re.search(r'<select[^>]* id="bootsoort"[^>]* autofocus', met), "autofocus met gekozen bootsoort"
 
 
 def test_vrije_plaatsen_scherm_met_filter_en_vrijgeven(ingelogd):  # noqa: F811
@@ -245,60 +245,72 @@ def test_export_vraagt_inloggen(client):
     assert r.status_code == 302 and r.location.endswith("/inloggen")
 
 
-# Naam, kleuren en logo (BLB-027)
+# Naam en logo (BLB-027); de kleuren vervielen met issue #150
 
 
 def test_neutrale_standaard_zonder_instellingen_en_zonder_logo(app, client):
     assert app.config["LOGO_BESTAND"] == "/huisstijl/logo.png"  # bestaat niet in de testcontainer
     assert app.extensions["logo"] is None
     assert instellingen.huidig() == instellingen.STANDAARD
-    assert "--kleur-primair: #3f6fb5" in client.get("/huisstijl.css").text
     tekst = client.get("/inloggen").text
     assert "Inloggen · Botenloods</title>" in tekst and 'class="logo"' not in tekst
 
 
+def test_pagina_laadt_de_dajaks_basis_en_geen_huisstijl(client):
+    """Laadvolgorde van de basis (#150): tokens, ds-, dj-, product. Geen stylesheet met kleuren."""
+    tekst = client.get("/inloggen").text
+    volgorde = ["ds/tokens/dajaks.css", "ds/ds-components.css", "dj/dj-components.css", "stijl.css"]
+    assert [tekst.index(f"/static/{css}") for css in volgorde] == sorted(
+        tekst.index(f"/static/{css}") for css in volgorde)
+    assert "huisstijl.css" not in tekst
+    assert client.get("/huisstijl.css").status_code == 404
+
+
 def test_opslaan_met_log_en_overal_zichtbaar(app, ingelogd):  # noqa: F811
     p = plaats()
-    r = ingelogd.post("/instellingen", data={"naam": "KV De Fuut", "kleur_primair": "#1A4D2E",
-                                             "kleur_secundair": "#333333"}, follow_redirects=True)
-    assert "De instellingen zijn opgeslagen." in r.text and "slecht leesbaar" not in r.text
+    r = ingelogd.post("/instellingen", data={"naam": "KV De Fuut"}, follow_redirects=True)
+    assert "De instellingen zijn opgeslagen." in r.text
     assert "instelling.gewijzigd" in ingelogd.get("/log/techniek").text  # BLB-043
     regel = db.session.scalar(select(Logregel).where(Logregel.actie == "instelling.gewijzigd"))
-    assert regel.gegevens["kleur_primair"] == ["#3f6fb5", "#1a4d2e"]
-    assert regel.gegevens["naam"] == ["Botenloods", "KV De Fuut"]
+    assert regel.gegevens == {"naam": ["Botenloods", "KV De Fuut"]}
     client = app.test_client()  # bezoeker
-    openbaar = client.get(f"/p/{p.publieke_sleutel}")
-    assert "KV De Fuut" in openbaar.text and "/huisstijl.css" in openbaar.text
-    css = client.get("/huisstijl.css")
-    assert "--kleur-primair: #1a4d2e" in css.text and css.mimetype == "text/css"
-    assert "Set-Cookie" not in css.headers
+    assert "KV De Fuut" in client.get(f"/p/{p.publieke_sleutel}").text
 
 
-def test_slecht_contrast_geeft_waarschuwing_maar_slaat_op(app):
-    waarschuwingen = instellingen.opslaan("KV", "#ffff00", "#eeeeee", CLI)
-    assert len(waarschuwingen) == 2 and "kopbalk" in waarschuwingen[0]
-    assert instellingen.huidig()["kleur_primair"] == "#ffff00"
-    assert instellingen.opslaan("KV", "#000000", "#000000", CLI) == []
+def test_geen_kleurkiezers_en_kleurvelden_worden_genegeerd(app, ingelogd):  # noqa: F811
+    assert 'type="color"' not in ingelogd.get("/instellingen").text
+    ingelogd.post("/instellingen", data={"naam": "KV", "kleur_primair": "#1a4d2e",
+                                         "kleur_secundair": "#333333"})
+    assert db.session.scalars(select(Instelling.sleutel)).all() == ["naam"]
 
 
-def test_contrast_volgens_wcag():
-    assert instellingen.contrast("#000000", "#ffffff") == pytest.approx(21)
-    assert instellingen.contrast("#777777", "#ffffff") == pytest.approx(4.48, abs=0.01)
-
-
-@pytest.mark.parametrize("naam, kleur", [("", "#123456"), ("x" * 101, "#123456"),
-                                         ("KV", "red"), ("KV", "#12345"),
-                                         ("KV", "#123456;}body{x")])
-def test_ongeldige_naam_of_kleur_geweigerd(app, naam, kleur):
+@pytest.mark.parametrize("naam", ["", "   ", "x" * 101], ids=["leeg", "spaties", "te lang"])
+def test_ongeldige_naam_geweigerd(app, naam):
     with pytest.raises(Regelfout):
-        instellingen.opslaan(naam, kleur, "#000000", CLI)
+        instellingen.opslaan(naam, CLI)
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0
 
 
-def test_ongeldige_kleur_in_database_wordt_standaard(app):
-    db.session.add(Instelling(sleutel="kleur_primair", waarde="red;}*{x"))
-    db.session.commit()
-    assert instellingen.huidig()["kleur_primair"] == "#3f6fb5"
+X = "<b>x</b>"
+GEESCAPET = "&lt;b&gt;x&lt;/b&gt;"
+
+
+def test_melding_en_schermen_escapen_invoer(app, ingelogd):  # noqa: F811
+    """Issue #150: de macro meldingblok en de gewijzigde sjablonen tonen invoer geëscapet."""
+    from flask import render_template_string
+    html = render_template_string('{% from "_melding.html" import meldingblok %}'
+                                  "{% call meldingblok('danger') %}{{ x }}{% endcall %}", x=X)
+    assert GEESCAPET in html and X not in html
+    with ingelogd.session_transaction() as s:  # een flashbericht, zoals base.html het toont
+        s["_flashes"] = [("fout", X)]
+    tekst = ingelogd.get("/").text
+    assert GEESCAPET in tekst and X not in tekst
+    p = plaats()
+    b = boot(lid(naam=X).id, naam=X)
+    for pad in (f"/boten/{b.id}", f"/plaatsen/{p.id}", "/boten", "/leden", "/instellingen"):
+        tekst = ingelogd.get(pad).text
+        assert X not in tekst, pad
+    assert GEESCAPET in ingelogd.get(f"/boten/{b.id}").text
 
 
 def logo_uit_installatie(app, tmp_path, inhoud):
@@ -373,8 +385,7 @@ def test_geen_logo_uploaden_of_verwijderen(ingelogd):  # noqa: F811
 def test_recente_inlog_vereist(ingelogd):  # noqa: F811
     with ingelogd.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
-    r = ingelogd.post("/instellingen", data={"naam": "Overgenomen", "kleur_primair": "#000000",
-                                             "kleur_secundair": "#000000"})
+    r = ingelogd.post("/instellingen", data={"naam": "Overgenomen"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0
 
@@ -386,7 +397,6 @@ def test_schermen_vragen_inloggen(client, pad):
 
 
 def test_bezoeker_wijzigt_geen_instellingen(client):
-    r = client.post("/instellingen", data={"naam": "X", "kleur_primair": "#000000",
-                                           "kleur_secundair": "#000000"})
+    r = client.post("/instellingen", data={"naam": "X"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0

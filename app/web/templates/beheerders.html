@@ -8,28 +8,31 @@
   <h2>Beheerder uitnodigen</h2>
   <form method="post" action="{{ url_for('web.beheerder_uitnodigen') }}">
     {% include "_csrf.html" %}
-    <label for="gebruikersnaam">Gebruikersnaam (a-z, cijfers, punt, - en _)</label>
-    <input id="gebruikersnaam" name="gebruikersnaam" maxlength="50" required>
-    <button type="submit" class="knop">Uitnodigen</button>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="gebruikersnaam">Gebruikersnaam (a-z, cijfers, punt, - en _)</label>
+      <input class="ds-input" id="gebruikersnaam" name="gebruikersnaam" maxlength="50" required>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Uitnodigen</button>
   </form>
 </section>
 
 <section class="kaart">
   <h2>Accounts</h2>
-  <table>
-    <thead><tr><th>Gebruikersnaam</th><th>Status</th><th>Inlogmethodes</th><th>Acties</th></tr></thead>
-    <tbody>
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Gebruikersnaam</th><th role="columnheader">Status</th><th role="columnheader">Inlogmethodes</th><th role="columnheader">Acties</th></tr></thead>
+    <tbody role="rowgroup">
     {% for b in beheerders %}
-      <tr>
-        <td data-label="Gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</td>
-        <td data-label="Status">{{ 'Actief' if b.actief else 'Geblokkeerd' }}</td>
-        <td data-label="Inlogmethodes">{{ [(b.passkeys|length ~ ' passkey(s)') if b.passkeys, 'wachtwoord en TOTP' if b.wachtwoordhash]|select|join(', ') or 'nog niet ingesteld' }}</td>
-        <td data-label="Acties">
+      <tr role="row">
+        <td role="cell" data-label="Gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</td>
+        <td role="cell" data-label="Status">{{ 'Actief' if b.actief else 'Geblokkeerd' }}</td>
+        <td role="cell" data-label="Inlogmethodes">{{ [(b.passkeys|length ~ ' passkey(s)') if b.passkeys, 'wachtwoord en TOTP' if b.wachtwoordhash]|select|join(', ') or 'nog niet ingesteld' }}</td>
+        <td role="cell" data-label="Acties">
           {% if b.id != g.beheerder.id %}
           {% for actie, knop in ([('herstellen', 'Toegang herstellen'), ('blokkeren', 'Blokkeren')] if b.actief else [('deblokkeren', 'Deblokkeren')]) + [('verwijderen', 'Verwijderen')] %}
           <form method="post" action="{{ url_for('web.beheerder_herstellen', beheerder_id=b.id) if actie == 'herstellen' else url_for('web.beheerder_wijzigen', beheerder_id=b.id, actie=actie) }}">
             {% include "_csrf.html" %}
-            <button type="submit" class="knop{% if actie in ('blokkeren', 'verwijderen') %} knop-gevaar{% endif %}" aria-label="{{ knop }}: {{ b.gebruikersnaam }}">{{ knop }}</button>
+            <button type="submit" class="ds-btn {{ 'ds-btn--danger' if actie in ('blokkeren', 'verwijderen') else 'ds-btn--primary' }}" aria-label="{{ knop }}: {{ b.gebruikersnaam }}">{{ knop }}</button>
           </form>
           {% endfor %}
           {% endif %}
@@ -38,6 +41,7 @@
     {% endfor %}
     </tbody>
   </table>
+  </div>
 </section>
 
 {% endblock %}

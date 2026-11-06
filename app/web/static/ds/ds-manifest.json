@@ -1,0 +1,126 @@
+{
+  "repo": "Mathison/design-system",
+  "versie": "0.3.0",
+  "commit": "3f212e0746d5bd40352c32f90c0c65ec123d8500",
+  "datum": "2026-11-06",
+  "label": "dajaks",
+  "bestanden": [
+    {
+      "pad": "ds-components.css",
+      "sha256": "220c104fd75d9b2fade306c71e4d4f903ad4e184079c73ec181cea62f29fd0b8"
+    },
+    {
+      "pad": "fonts/OFL-pt-sans.txt",
+      "sha256": "7891a86f2a41025e4ee327e3542e2499d9ac71f9adaf3411731480c03ef8ed58"
+    },
+    {
+      "pad": "fonts/OFL-rubik.txt",
+      "sha256": "46a250495a963b0b84f2736c0185d0e3af8df9d23427bd425b92a8ece020283c"
+    },
+    {
+      "pad": "fonts/pt-sans-latin-400-normal.woff2",
+      "sha256": "2dea6190c113af617923c6b71f7f10ffbdf72074556f79963610254fe40e49be"
+    },
+    {
+      "pad": "fonts/pt-sans-latin-700-normal.woff2",
+      "sha256": "05ea99a48ece3c624fd9df15f5cf4e1d94703bde9ed2b384495900f55e28befe"
+    },
+    {
+      "pad": "fonts/rubik-latin-500-normal.woff2",
+      "sha256": "54ad302324aa8000449efd8643186deb46777f0ca4d97f10deb9333536933613"
+    },
+    {
+      "pad": "fonts/rubik-latin-600-normal.woff2",
+      "sha256": "6182043a20faf3fe1a8f0e2c7c964009e11de5e09852617fef3517cbf3c35513"
+    },
+    {
+      "pad": "fonts/rubik-latin-700-normal.woff2",
+      "sha256": "e423f8ae1668156addf5e32f1056d5b22b5b113a9a23afd364df84a6fa88602d"
+    },
+    {
+      "pad": "tokens/dajaks.css",
+      "sha256": "bb962cfe8aa6d1f08d23667d98f7bff56d54efad3593c45bc541325b29ff9abb"
+    }
+  ],
+  "basistokens": [
+    "brand",
+    "brand-deep",
+    "on-deep",
+    "on-deep-muted",
+    "on-deep-accent",
+    "deep-hover",
+    "deep-line",
+    "brand-mid",
+    "accent",
+    "on-accent",
+    "accent-hover",
+    "on-accent-hover",
+    "accent-tint",
+    "page",
+    "surface",
+    "surface-raised",
+    "surface-sunken",
+    "ink",
+    "ink-muted",
+    "ink-inverse",
+    "line",
+    "line-strong",
+    "focus",
+    "success",
+    "success-tint",
+    "warning",
+    "warning-tint",
+    "danger",
+    "danger-tint",
+    "radius-none",
+    "radius-round",
+    "radius-control",
+    "radius-field",
+    "radius-surface",
+    "stroke-1",
+    "stroke-2",
+    "stroke-4",
+    "font-heading",
+    "font-body",
+    "font-mono",
+    "font-weight-heading",
+    "type-mega",
+    "type-mega-narrow",
+    "type-big",
+    "type-big-narrow",
+    "type-headline",
+    "type-headline-narrow",
+    "type-title",
+    "type-heading",
+    "type-subheading",
+    "type-body",
+    "type-body-sm",
+    "type-label",
+    "type-caption",
+    "type-control",
+    "type-figure",
+    "type-figure-lg",
+    "type-mono",
+    "tracking-mega",
+    "tracking-big",
+    "tracking-headline",
+    "tracking-figure",
+    "tracking-label",
+    "space-1",
+    "space-2",
+    "space-3",
+    "space-4",
+    "space-5",
+    "space-6",
+    "space-7",
+    "space-8",
+    "control-height",
+    "control-height-lg",
+    "content-max",
+    "shadow-surface",
+    "shadow-menu"
+  ],
+  "aanpasbare_tokens": [
+    "brand-mid"
+  ]
+}

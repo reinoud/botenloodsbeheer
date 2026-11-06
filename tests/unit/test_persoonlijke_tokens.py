@@ -235,7 +235,7 @@ def test_robot_blijft_werken_na_vertrek_van_de_maker(app, api, twee, scherm):
     beheerders.verwijderen(bert.id, Actor.van(anna))
     assert boten(api, waarde).status_code == 200
     html = scherm.get("/tokens").get_data(as_text=True)
-    assert '<td data-label="Eigenaar of maker">bert</td>' in html
+    assert '<td role="cell" data-label="Eigenaar of maker">bert</td>' in html
 
 
 # Rechten wijzigen (BLB-032 criterium 4) en intrekken (BLB-035 criterium 2)
@@ -299,11 +299,11 @@ def test_overzicht_toont_alles_behalve_waarde_en_hash(app, twee, scherm):
     waarde = persoonlijk(anna, rechten=("boten:lezen", "persoonsgegevens"))
     t = db.session.scalar(select(Token))
     html = scherm.get("/tokens").get_data(as_text=True)
-    for tekst in ('<td data-label="Naam">anna-laptop</td>', '<td data-label="Soort">persoonlijk</td>',
-                  '<td data-label="Eigenaar of maker">anna</td>',
-                  '<td data-label="Rechten">boten:lezen, persoonsgegevens</td>',
-                  '<td data-label="Whitelist">elk adres</td>',
-                  '<td data-label="Laatst gebruikt">nooit</td>', 'data-label="Verloopt op"'):
+    for tekst in ('<td role="cell" data-label="Naam">anna-laptop</td>', '<td role="cell" data-label="Soort">persoonlijk</td>',
+                  '<td role="cell" data-label="Eigenaar of maker">anna</td>',
+                  '<td role="cell" data-label="Rechten">boten:lezen, persoonsgegevens</td>',
+                  '<td role="cell" data-label="Whitelist">elk adres</td>',
+                  '<td role="cell" data-label="Laatst gebruikt">nooit</td>', 'data-label="Verloopt op"'):
         assert tekst in html, tekst
     assert waarde[12:] not in html and t.hash not in html
 
@@ -385,7 +385,7 @@ def test_rechten_wijzigen_via_het_scherm(app, twee, scherm):
 
 
 def test_menu_item_tokens(app, scherm):
-    assert '<a href="/tokens">Tokens</a>' in scherm.get("/").text
+    assert '<a class="dj-nav__link" href="/tokens">Tokens</a>' in scherm.get("/").text
 
 
 def test_bezoeker_gaat_naar_inloggen(client):

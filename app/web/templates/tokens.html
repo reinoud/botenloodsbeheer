@@ -3,29 +3,29 @@
 {% block inhoud %}
 <h1>Tokens</h1>
 <p>Met een token gebruikt een koppeling of een beheerder de API. Elke beheerder ziet en beheert alle tokens. De waarde van een token is alleen direct na het maken te zien. Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud.</p>
-<p><a class="knop" href="{{ url_for('web.token_nieuw') }}">Token maken</a></p>
+<p><a class="ds-btn ds-btn--primary" href="{{ url_for('web.token_nieuw') }}">Token maken</a></p>
 
 <section class="kaart">
   <h2>Alle tokens</h2>
   {% if tokens %}
-  <div class="schuif">
-  <table>
-    <thead><tr><th>Naam</th><th>Soort</th><th>Eigenaar of maker</th><th>Rechten</th><th>Whitelist</th><th>Verloopt op</th><th>Laatst gebruikt</th><th>Intrekken</th></tr></thead>
-    <tbody>
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Naam</th><th role="columnheader">Soort</th><th role="columnheader">Eigenaar of maker</th><th role="columnheader">Rechten</th><th role="columnheader">Whitelist</th><th role="columnheader">Verloopt op</th><th role="columnheader">Laatst gebruikt</th><th role="columnheader">Intrekken</th></tr></thead>
+    <tbody role="rowgroup">
     {% for t in tokens %}
-      <tr>
-        <td data-label="Naam">{{ t.naam }}</td>
-        <td data-label="Soort">{{ t.soort }}</td>
-        <td data-label="Eigenaar of maker">{{ t.beheerder.gebruikersnaam if t.beheerder else t.gemaakt_door }}</td>
-        <td data-label="Rechten">{{ t.rechten|join(', ') }}</td>
-        <td data-label="Whitelist">{{ t.ip_whitelist|join(', ') or 'elk adres' }}</td>
-        <td data-label="Verloopt op">{{ t.verloopt_op|tijd }}</td>
-        <td data-label="Laatst gebruikt">{{ t.laatst_gebruikt_op|tijd if t.laatst_gebruikt_op else 'nooit' }}</td>
-        <td data-label="Intrekken">
+      <tr role="row">
+        <td role="cell" data-label="Naam">{{ t.naam }}</td>
+        <td role="cell" data-label="Soort">{{ t.soort }}</td>
+        <td role="cell" data-label="Eigenaar of maker">{{ t.beheerder.gebruikersnaam if t.beheerder else t.gemaakt_door }}</td>
+        <td role="cell" data-label="Rechten">{{ t.rechten|join(', ') }}</td>
+        <td role="cell" data-label="Whitelist">{{ t.ip_whitelist|join(', ') or 'elk adres' }}</td>
+        <td role="cell" data-label="Verloopt op">{{ t.verloopt_op|tijd }}</td>
+        <td role="cell" data-label="Laatst gebruikt">{{ t.laatst_gebruikt_op|tijd if t.laatst_gebruikt_op else 'nooit' }}</td>
+        <td role="cell" data-label="Intrekken">
           {% if not t.ingetrokken_op %}
           <form method="post" action="{{ url_for('web.token_intrekken', token_id=t.id) }}">
             {% include "_csrf.html" %}
-            <button type="submit" class="knop knop-gevaar" aria-label="Intrekken: {{ t.naam }}">Intrekken</button>
+            <button type="submit" class="ds-btn ds-btn--danger" aria-label="Intrekken: {{ t.naam }}">Intrekken</button>
           </form>
           {% else %}
           Ingetrokken op {{ t.ingetrokken_op|tijd }}
@@ -47,18 +47,18 @@
   <h2>Rechten wijzigen</h2>
   <p>Nieuwe rechten gelden vanaf de volgende aanroep. Naam, whitelist en vervaldatum zijn niet te wijzigen; maak daarvoor een nieuw token.</p>
   {% for t in actief %}
-  <details>
+  <details class="dj-disclosure">
     <summary>{{ t.naam }}</summary>
     <form method="post" action="{{ url_for('web.token_rechten', token_id=t.id) }}">
       {% include "_csrf.html" %}
-      <fieldset>
+      <fieldset class="dj-choices dj-choices--columns">
         <legend>Rechten van {{ t.naam }}</legend>
         {% for r in rechten %}
-        <label class="keuze"><input type="checkbox" name="recht" value="{{ r }}"{% if r in t.rechten %} checked{% endif %}> {{ r }}</label>
+        <div class="ds-check"><input type="checkbox" id="recht-{{ t.id }}-{{ r }}" name="recht" value="{{ r }}"{% if r in t.rechten %} checked{% endif %}><label for="recht-{{ t.id }}-{{ r }}">{{ r }}</label></div>
         {% endfor %}
         {% if 'leden:importeren' in t.rechten %}<p>Dit token heeft ook het recht leden:importeren. Dat blijft staan; het is alleen met de CLI te geven of af te nemen.</p>{% endif %}
       </fieldset>
-      <button type="submit" class="knop" aria-label="Rechten opslaan: {{ t.naam }}">Rechten opslaan</button>
+      <button type="submit" class="ds-btn ds-btn--primary" aria-label="Rechten opslaan: {{ t.naam }}">Rechten opslaan</button>
     </form>
   </details>
   {% endfor %}

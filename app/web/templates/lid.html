@@ -7,33 +7,37 @@
 
 <h2>Boten in de loods</h2>
 {% if lid.boten %}
-<table>
-  <thead><tr><th>Boot</th><th>Bootsoort</th><th>Plaats</th><th>Wachtlijst</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Boot</th><th role="columnheader">Bootsoort</th><th role="columnheader">Plaats</th><th role="columnheader">Wachtlijst</th></tr></thead>
+  <tbody role="rowgroup">
   {% for b in lid.boten %}
-    <tr>
-      <td data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
-      <td data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
-      <td data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}Geen plaats{% endif %}</td>
-      <td data-label="Wachtlijst">{% if b.wachtlijst %}Sinds {{ b.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}Nee{% endif %}</td>
+    <tr role="row">
+      <td role="cell" data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
+      <td role="cell" data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
+      <td role="cell" data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}Geen plaats{% endif %}</td>
+      <td role="cell" data-label="Wachtlijst">{% if b.wachtlijst %}Sinds {{ b.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}Nee{% endif %}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
 <p>Dit lid heeft geen boten in de loods.</p>
 {% endif %}
 
 <h2>Aantal boten per bootsoort</h2>
 <p>Alleen boten met een plaats tellen. Dit zijn de aantallen voor de ledenadministratie.</p>
-<table>
-  <thead><tr><th>Bootsoort</th><th>Aantal</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Bootsoort</th><th role="columnheader">Aantal</th></tr></thead>
+  <tbody role="rowgroup">
   {% for soort, aantal in aantallen.items() %}
-    <tr><td data-label="Bootsoort">{{ soort }}</td><td data-label="Aantal">{{ aantal }}</td></tr>
+    <tr role="row"><td role="cell" data-label="Bootsoort">{{ soort }}</td><td role="cell" data-label="Aantal">{{ aantal }}</td></tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 
 {{ logtabel(regels) }}
 {% endblock %}

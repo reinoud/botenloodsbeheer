@@ -54,8 +54,8 @@ def test_lijst_per_lid_toont_dezelfde_aantallen(app, ingelogd):
     html = ingelogd.get(f"/leden/{anna.id}").get_data(as_text=True)
     assert "Aantal boten per bootsoort" in html
     for soort, aantal in VERWACHT[0]["aantallen"].items():
-        assert f'<td data-label="Bootsoort">{soort}</td><td data-label="Aantal">{aantal}</td>' in html
-    assert '<td data-label="Aantal">1</td>' not in ingelogd.get(f"/leden/{bert.id}").get_data(
+        assert f'<td role="cell" data-label="Bootsoort">{soort}</td><td role="cell" data-label="Aantal">{aantal}</td>' in html
+    assert '<td role="cell" data-label="Aantal">1</td>' not in ingelogd.get(f"/leden/{bert.id}").get_data(
         as_text=True)
 
 

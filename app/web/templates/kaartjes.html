@@ -4,18 +4,18 @@
 <h1>Kaartjes</h1>
 <p>Kies de plaatsen, een heel rek of alle plaatsen. Je krijgt een pagina met acht kaartjes per A4, die je print via de browser.</p>
 <form method="get" action="{{ url_for('web.kaartjes_print') }}">
-  <label class="keuze"><input type="checkbox" name="alle" value="1"> Alle plaatsen</label>
+  <div class="ds-check"><input type="checkbox" id="alle" name="alle" value="1"><label for="alle">Alle plaatsen</label></div>
   {% for rek in rekken if rek.plaatsen %}
-  <fieldset>
+  <fieldset class="dj-choices dj-choices--columns">
     <legend>{{ rek.naam }}</legend>
-    <label class="keuze"><input type="checkbox" name="rek" value="{{ rek.id }}"> Heel {{ rek.naam }}</label>
+    <div class="ds-check"><input type="checkbox" id="rek-{{ rek.id }}" name="rek" value="{{ rek.id }}"><label for="rek-{{ rek.id }}">Heel {{ rek.naam }}</label></div>
     {% for p in rek.plaatsen %}
-    <label class="keuze"><input type="checkbox" name="plaats" value="{{ p.id }}"> {{ p.code }}</label>
+    <div class="ds-check"><input type="checkbox" id="plaats-{{ p.id }}" name="plaats" value="{{ p.id }}"><label for="plaats-{{ p.id }}">{{ p.code }}</label></div>
     {% endfor %}
   </fieldset>
   {% else %}
   <p>Er zijn nog geen plaatsen.</p>
   {% endfor %}
-  <button type="submit" class="knop">Kaartjes maken</button>
+  <button type="submit" class="ds-btn ds-btn--primary">Kaartjes maken</button>
 </form>
 {% endblock %}

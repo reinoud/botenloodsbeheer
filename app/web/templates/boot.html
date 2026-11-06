@@ -4,7 +4,7 @@
 {% block inhoud %}
 <h1>{{ boot.naam }}</h1>
 <section class="kaart">
-  <dl>
+  <dl class="dj-dl">
     <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
     <dt>Eigenaar</dt><dd>{{ boot.lid.naam if boot.lid else vereniging ~ ' (clubboot)' }}</dd>
     <dt>Plaats</dt><dd>{% if boot.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">{{ boot.plaats.code }}</a>{% else %}geen{% endif %}</dd>
@@ -20,11 +20,13 @@
   {% elif vrij %}
   <form method="post" action="{{ url_for('web.boot_toewijzen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
-    <label for="plaats">Vrije {{ 'clubplaats' if not boot.lid else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}</label>
-    <select id="plaats" name="plaats_id" required>
-      {% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
-    </select>
-    <button type="submit" class="knop">Wijs toe aan plek</button>
+    <div class="ds-field">
+      <label class="ds-field__label" for="plaats">Vrije {{ 'clubplaats' if not boot.lid else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}</label>
+      <select class="dj-select" id="plaats" name="plaats_id" required>
+        {% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Wijs toe aan plek</button>
   </form>
   {% else %}
   <p>Er is geen vrije {{ 'clubplaats' if not boot.lid else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}.</p>
@@ -36,7 +38,7 @@
   <p>{{ boot.naam }} staat sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }} op de wachtlijst voor {{ boot.bootsoort.naam|lower }}. De aanmelddatum is niet te wijzigen.</p>
   <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
-    <button type="submit" class="knop">Van de wachtlijst halen</button>
+    <button type="submit" class="ds-btn ds-btn--primary">Van de wachtlijst halen</button>
   </form>
   {% elif not boot.lid %}
   <p>Een clubboot kan niet op de wachtlijst.</p>
@@ -45,9 +47,11 @@
   {% else %}
   <form method="post" action="{{ url_for('web.boot_op_wachtlijst', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
-    <label for="aangemeld-op">Aanmelddatum (leeg is vandaag; een eerdere datum mag)</label>
-    <input id="aangemeld-op" name="aangemeld_op" type="date" max="{{ vandaag.isoformat() }}">
-    <button type="submit" class="knop">Op de wachtlijst zetten</button>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="aangemeld-op">Aanmelddatum (leeg is vandaag; een eerdere datum mag)</label>
+      <input class="ds-input" id="aangemeld-op" name="aangemeld_op" type="date" max="{{ vandaag.isoformat() }}">
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Op de wachtlijst zetten</button>
   </form>
   {% endif %}
 </section>
@@ -56,33 +60,41 @@
   <h2>Boot wijzigen</h2>
   <form method="post" action="{{ url_for('web.boot_wijzigen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
-    <label for="boot-naam">Naam van de boot</label>
-    <input id="boot-naam" name="naam" maxlength="100" value="{{ boot.naam }}" required>
-    <label for="bootsoort">Bootsoort</label>
-    <select id="bootsoort" name="bootsoort" required>
-      {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == boot.bootsoort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
-    </select>
-    <label for="eigenaar">Eigenaar</label>
-    <select id="eigenaar" name="eigenaar" required>
-      <option value="club"{% if boot.lid_id is none %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
-      {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
-      {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-    </select>
-    <button type="submit" class="knop">Boot opslaan</button>
+    <div class="ds-field">
+      <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
+      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" value="{{ boot.naam }}" required>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="bootsoort">Bootsoort</label>
+      <select class="dj-select" id="bootsoort" name="bootsoort" required>
+        {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == boot.bootsoort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
+      <select class="dj-select" id="eigenaar" name="eigenaar" required>
+        <option value="club"{% if boot.lid_id is none %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
+        {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
+        {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Boot opslaan</button>
   </form>
 </section>
 <section class="kaart">
   <h2>Foto</h2>
   <form method="post" action="{{ url_for('web.boot_foto', boot_id=boot.id) }}" enctype="multipart/form-data">
     {% include "_csrf.html" %}
-    <label for="foto">Nieuwe foto (JPEG, PNG of WebP)</label>
-    <input id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" required>
-    <button type="submit" class="knop">Foto opslaan</button>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="foto">Nieuwe foto (JPEG, PNG of WebP)</label>
+      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" required>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Foto opslaan</button>
   </form>
 </section>
 <form method="post" action="{{ url_for('web.boot_verwijderen', boot_id=boot.id) }}">
   {% include "_csrf.html" %}
-  <button type="submit" class="knop knop-gevaar">Boot {{ boot.naam }} verwijderen</button>
+  <button type="submit" class="ds-btn ds-btn--danger">Boot {{ boot.naam }} verwijderen</button>
 </form>
 {{ logtabel(regels) }}
 {% endblock %}

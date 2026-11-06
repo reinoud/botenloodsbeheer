@@ -3,20 +3,22 @@
 <section class="log" aria-labelledby="log-kop">
   <h2 id="log-kop">Log</h2>
   {% if regels %}
-  <table>
-    <thead><tr><th>Tijdstip</th><th>Door</th><th>Actie</th><th>Betreft</th><th>Gegevens</th></tr></thead>
-    <tbody>
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Tijdstip</th><th role="columnheader">Door</th><th role="columnheader">Actie</th><th role="columnheader">Betreft</th><th role="columnheader">Gegevens</th></tr></thead>
+    <tbody role="rowgroup">
     {% for r in regels %}
-      <tr>
-        <td data-label="Tijdstip">{{ r.tijdstip|tijd }}</td>
-        <td data-label="Door">{{ r.actor_naam }}</td>
-        <td data-label="Actie">{{ r.actie }}</td>
-        <td data-label="Betreft">{{ r.verwijzingen|join(', ') }}</td>
-        <td data-label="Gegevens">{% for k, v in r.gegevens.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+      <tr role="row">
+        <td role="cell" data-label="Tijdstip">{{ r.tijdstip|tijd }}</td>
+        <td role="cell" data-label="Door">{{ r.actor_naam }}</td>
+        <td role="cell" data-label="Actie">{{ r.actie }}</td>
+        <td role="cell" data-label="Betreft">{{ r.verwijzingen|join(', ') }}</td>
+        <td role="cell" data-label="Gegevens">{% for k, v in r.gegevens.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+  </div>
   {# shortcut: de link opent het hele log zonder het filter van dit scherm; een filter in de url als een scherm vaak meer dan 50 regels heeft. #}
   {% if naar_log and regels|length >= 50 %}<p><a href="{{ url_for('web.logboek') }}">Meer in het log</a></p>{% endif %}
   {% else %}

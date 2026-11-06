@@ -1,27 +1,30 @@
 {% extends "base.html" %}
 {% from "_log.html" import logtabel %}
+{% from "_melding.html" import meldingblok %}
 {% block titel %}Boten van leden die gaan opzeggen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten van leden die gaan opzeggen</h1>
 <p>Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste opzegdatum bovenaan. Deze boten horen vóór die datum weg te zijn.</p>
 
 {% if plaatsen %}
-<table>
-  <thead><tr><th>Lid</th><th>Boot</th><th>Rek</th><th>Plaats</th><th>Opzegdatum</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Lid</th><th role="columnheader">Boot</th><th role="columnheader">Rek</th><th role="columnheader">Plaats</th><th role="columnheader">Opzegdatum</th></tr></thead>
+  <tbody role="rowgroup">
   {% for p in plaatsen %}
-    <tr>
-      <td data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a></td>
-      <td data-label="Boot">{{ p.boot.naam }}</td>
-      <td data-label="Rek">{{ p.rek.naam }}</td>
-      <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
-      <td data-label="Opzegdatum">{{ p.boot.lid.opzegdatum.strftime('%d-%m-%Y') }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a></td>
+      <td role="cell" data-label="Boot">{{ p.boot.naam }}</td>
+      <td role="cell" data-label="Rek">{{ p.rek.naam }}</td>
+      <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td role="cell" data-label="Opzegdatum">{{ p.boot.lid.opzegdatum.strftime('%d-%m-%Y') }}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
-<p class="melding" role="status">Er zijn geen boten van leden die gaan opzeggen.</p>
+{% call meldingblok() %}Er zijn geen boten van leden die gaan opzeggen.{% endcall %}
 {% endif %}
 
 {{ logtabel(regels) }}

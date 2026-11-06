@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_log.html" import logtabel %}
+{% from "_melding.html" import meldingblok %}
 {% block titel %}Wachtlijst · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Wachtlijst</h1>
@@ -8,30 +9,32 @@
 {% for soort, rij in lijsten %}
 <section class="kaart" aria-labelledby="soort-{{ soort.id }}">
   <h2 id="soort-{{ soort.id }}">{{ soort.naam }}</h2>
-  <table>
-    <thead><tr><th>Boot</th><th>Lid</th><th>Aangemeld op</th><th>Wachttijd</th><th>Actie</th></tr></thead>
-    <tbody>
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Boot</th><th role="columnheader">Lid</th><th role="columnheader">Aangemeld op</th><th role="columnheader">Wachttijd</th><th role="columnheader">Actie</th></tr></thead>
+    <tbody role="rowgroup">
     {% for w in rij %}
-      <tr>
-        <td data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a></td>
-        <td data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a></td>
-        <td data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</td>
-        <td data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</td>
-        <td data-label="Actie">
+      <tr role="row">
+        <td role="cell" data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a></td>
+        <td role="cell" data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a></td>
+        <td role="cell" data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</td>
+        <td role="cell" data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</td>
+        <td role="cell" data-label="Actie">
           <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=w.boot.id) }}">
             {% include "_csrf.html" %}
             <input type="hidden" name="terug" value="wachtlijst">
-            <button type="submit" class="knop">{{ w.boot.naam }} van de lijst halen</button>
+            <button type="submit" class="ds-btn ds-btn--primary">{{ w.boot.naam }} van de lijst halen</button>
           </form>
         </td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+  </div>
   <p><a href="{{ url_for('web.vrije_plaatsen', bootsoort=soort.id) }}">Vrije plaatsen voor {{ soort.naam|lower }}</a></p>
 </section>
 {% else %}
-<p class="melding" role="status">Er staan geen boten op de wachtlijst.</p>
+{% call meldingblok() %}Er staan geen boten op de wachtlijst.{% endcall %}
 {% endfor %}
 
 {{ logtabel(regels) }}

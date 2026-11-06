@@ -28,7 +28,7 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     expect(page.get_by_role("link", name=ski, exact=True)).to_be_visible()
     expect(page.get_by_role("link", name=club, exact=True)).to_have_count(0)
     expect(page.get_by_role("link", name=kajak, exact=True)).to_have_count(0)
-    for rij in page.locator("main > table tbody tr").all():
+    for rij in page.locator("main > .ds-table-wrap > table tbody tr").all():
         expect(rij.locator("td").nth(2)).to_contain_text("Surfski")
     page.get_by_label("Geschikt voor").select_option(label="Alle bootsoorten")
     page.wait_for_url(re.compile(r"/vrij\?bootsoort=$"))
@@ -60,7 +60,7 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     page.goto("/leden")
     page.get_by_label("Zoek op naam of lidnummer").fill("1001")
     page.get_by_role("button", name="Zoeken").click()
-    leden = page.locator("main > table tbody tr")
+    leden = page.locator("main > .ds-table-wrap > table tbody tr")
     expect(leden).to_have_count(1)
     leden.get_by_role("link").click()
     expect(page.get_by_role("heading", name="Boten in de loods")).to_be_visible()
@@ -68,7 +68,7 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     assert "@example.org" not in page.content()
 
     page.goto("/opgezegd")
-    rijen = page.locator("main > table tbody tr")
+    rijen = page.locator("main > .ds-table-wrap > table tbody tr")
     expect(rijen.first).to_be_visible()  # de seed heeft oud-leden met een plaats
     datums = [re.sub(r"(\d+)-(\d+)-(\d+)", r"\3\2\1", t)
               for t in rijen.locator("td[data-label='Opgezegd op']").all_inner_texts()]
@@ -78,27 +78,28 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     expect(page.get_by_role("button", name=f"Plaats {code} vrijgeven")).to_be_visible()
 
 
-def test_huisstijl_instellen_en_terugzetten(page, browser, base_url):
+def test_naam_instellen_en_terugzetten(page, browser, base_url):
     wachtwoord_instellen(page, "huisstijl")
     code = rek_met_plaats(page, reknaam("h"), ["Kajak"])
     page.get_by_role("link", name=code, exact=True).click()
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 
     page.goto("/instellingen")
-    oud = {veld: page.locator(f"#{veld}").input_value()
-           for veld in ("naam", "kleur-primair", "kleur-secundair")}
+    oud = page.locator("#naam").input_value()
     try:
         naam = f"KV Proef {STEMPEL}"
         page.get_by_label("Naam van de vereniging").fill(naam)
-        page.locator("#kleur-primair").fill("#ffee00")
         page.get_by_role("button", name="Opslaan", exact=True).click()
         expect(page.get_by_text("De instellingen zijn opgeslagen.")).to_be_visible()
-        expect(page.get_by_role("alert")).to_contain_text("is de tekst in de kopbalk slecht leesbaar")
+        expect(page.get_by_role("alert")).to_have_count(0)  # geen contrastwaarschuwing meer: de kleuren vervielen (#150)
         expect(page.locator("section.log")).to_have_count(0)  # BLB-043: alleen technisch log
         page.goto("/log/techniek")
         expect(page.locator("section.log")).to_contain_text("instelling.gewijzigd")
         page.goto("/instellingen")
 
+        # De kleuren staan vast in de huisstijl (#150): geen kleurkiezer en geen stylesheet van de beheerder.
+        expect(page.locator("input[type=color]")).to_have_count(0)
+        expect(page.locator("link[href*='huisstijl.css']")).to_have_count(0)
         # Het logo komt uit de installatie: geen upload in de applicatie (BLB-027 criterium 4).
         expect(page.locator("input[type=file]")).to_have_count(0)
         expect(page.get_by_text("Het logo staat in de installatie")).to_be_visible()
@@ -109,16 +110,15 @@ def test_huisstijl_instellen_en_terugzetten(page, browser, base_url):
         logo = bezoeker.locator(".kop-naam img.logo")
         expect(logo).to_be_visible()
         expect(logo).to_have_attribute("src", re.compile(r"^/logo/[0-9a-f]{16}$"))
-        kleur = bezoeker.evaluate("getComputedStyle(document.querySelector('.kop')).backgroundColor")
-        assert kleur == "rgb(255, 238, 0)"
+        # Rubik en PT Sans komen als woff2 uit /static en laden onder de CSP (default-src 'self').
+        geladen = bezoeker.evaluate("document.fonts.ready.then(() => [...document.fonts]"
+                                    ".filter(f => f.status === 'loaded').map(f => f.family + ' ' + f.weight))")
+        assert {"Rubik 700", "PT Sans 400"} <= {f.replace('"', '') for f in geladen}  # kop en lopende tekst
         bezoeker.close()
     finally:
-        # Ook na een fout terugzetten, zodat andere tests en de handmatige route de oude naam
-        # en kleuren zien.
+        # Ook na een fout terugzetten, zodat andere tests en de handmatige route de oude naam zien.
         page.goto("/instellingen")
-        page.get_by_label("Naam van de vereniging").fill(oud["naam"])
-        page.locator("#kleur-primair").fill(oud["kleur-primair"])
-        page.locator("#kleur-secundair").fill(oud["kleur-secundair"])
+        page.get_by_label("Naam van de vereniging").fill(oud)
         page.get_by_role("button", name="Opslaan", exact=True).click()
-        expect(page.locator(".kop-naam")).to_have_text(oud["naam"])
+        expect(page.locator(".kop-naam")).to_have_text(oud)
     uitloggen(page)

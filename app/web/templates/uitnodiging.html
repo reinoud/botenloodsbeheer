@@ -6,25 +6,34 @@
 <section class="kaart">
   <h2>Passkey (aanbevolen)</h2>
   <p>Je logt in met je telefoon, vingerafdruk of beveiligingssleutel. Een passkey is niet te phishen.</p>
-  <button type="button" class="knop" id="passkey-registreren"
+  <button type="button" class="ds-btn ds-btn--primary" id="passkey-registreren"
           data-opties="{{ url_for('web.uitnodiging_passkey_opties', code=code) }}"
           data-verifieer="{{ url_for('web.uitnodiging_passkey', code=code) }}">Passkey instellen</button>
-  <p class="melding melding-fout" id="passkey-fout" role="alert" hidden></p>
+  <div class="ds-notice ds-notice--danger melding" hidden>
+    <span class="ds-notice__mark" aria-hidden="true">!</span>
+    <p class="ds-notice__body" id="passkey-fout" role="alert"></p>
+  </div>
 </section>
 <section class="kaart">
   <h2>Wachtwoord en authenticator-app</h2>
   <form method="post" action="{{ url_for('web.uitnodiging_wachtwoord', code=code) }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label for="wachtwoord">Wachtwoord (12 tot 128 tekens)</label>
-    <input id="wachtwoord" name="wachtwoord" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
-    <label for="herhaling">Wachtwoord nog een keer</label>
-    <input id="herhaling" name="herhaling" type="password" autocomplete="new-password" required>
+    <div class="ds-field">
+      <label class="ds-field__label" for="wachtwoord">Wachtwoord (12 tot 128 tekens)</label>
+      <input class="ds-input" id="wachtwoord" name="wachtwoord" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="herhaling">Wachtwoord nog een keer</label>
+      <input class="ds-input" id="herhaling" name="herhaling" type="password" autocomplete="new-password" required>
+    </div>
     <p>Scan de QR-code met je authenticator-app, of voer de sleutel met de hand in.</p>
     <img src="{{ qr }}" alt="QR-code voor de authenticator-app" class="qr">
     <p>Sleutel: <code id="totp-geheim">{{ geheim }}</code></p>
-    <label for="code">Code van zes cijfers uit de app</label>
-    <input id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required>
-    <button type="submit" class="knop">Wachtwoord instellen</button>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="code">Code van zes cijfers uit de app</label>
+      <input class="ds-input" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Wachtwoord instellen</button>
   </form>
 </section>
 {% endblock %}

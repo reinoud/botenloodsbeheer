@@ -82,7 +82,7 @@ De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de 
 
 De kleur is niet de enige aanwijzing: elk vak heeft een tekst voor schermlezers, bijvoorbeeld "Plaats A/2/3, Surfski, vrij".
 
-Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, kleuren, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
+Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
 
 ## Boten
 
@@ -179,7 +179,7 @@ De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naa
 
 ## De openbare pagina
 
-Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de aanduiding van de plaats, de omschrijving van het rek en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam, kleuren en het logo van de vereniging.
+Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de aanduiding van de plaats, de omschrijving van het rek en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
 
 ![De openbare pagina van een plaats met boot, eigenaar en foto.](afbeeldingen/openbaar.png)
 
@@ -290,9 +290,9 @@ Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vin
 
 Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud. Elke handeling staat in het technische log, zonder de waarde van het token.
 
-## Naam, kleuren, logo en bootsoorten
+## Naam, logo en bootsoorten
 
-Op `/instellingen` pas je de naam van de vereniging en twee kleuren aan. Ze staan op elke pagina, ook de openbare. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het hier alleen.
+Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het hier alleen.
 
 Onder **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Ook elke wijziging hier vraagt een inlog van hooguit 10 minuten oud.
 
@@ -302,7 +302,7 @@ Onder **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Ook e
 
 Twee soorten met dezelfde naam kunnen niet, ook niet als ze alleen in hoofdletters verschillen. Toevoegen, hernoemen (met de oude en de nieuwe naam) en verwijderen staan in het technische log.
 
-![De instellingen met naam, kleuren, het huidige logo en de bootsoorten.](afbeeldingen/instellingen.png)
+![De instellingen met de naam, het huidige logo en de bootsoorten.](afbeeldingen/instellingen.png)
 
 ## Alle adressen
 
@@ -334,12 +334,11 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/leden/{nummer}` | Een lid |
 | `/log` | Mutatielog: boten en plaatsen |
 | `/log/techniek` | Technisch log |
-| `/instellingen` | Naam, kleuren, logo en bootsoorten |
+| `/instellingen` | Naam, logo en bootsoorten |
 | `/status` | Technische status |
 | `/status.json` | Technische status als JSON |
 | `/p/{sleutel}` | Openbare pagina van een plaats |
 | `/afbeelding/{sleutel}` | Foto op de pagina van een boot of plaats |
 | `/logo/{kenmerk}` | Logo in de kopbalk |
-| `/huisstijl.css` | Kleuren van de vereniging |
 
 Ververs de afbeeldingen met `documentatie/gebruikers/schermafbeeldingen.sh` (start een eigen testomgeving en ruimt die op).

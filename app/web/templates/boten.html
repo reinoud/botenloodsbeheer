@@ -8,39 +8,49 @@
   <h2>Nieuwe boot</h2>
   <form method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">
     {% include "_csrf.html" %}
-    <label for="boot-naam">Naam van de boot</label>
-    <input id="boot-naam" name="naam" maxlength="100" required>
-    <label for="bootsoort">Bootsoort</label>
-    <select id="bootsoort" name="bootsoort" required>
-      {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
-    </select>
-    <label for="eigenaar">Eigenaar</label>
-    <select id="eigenaar" name="eigenaar" required>
-      <option value="">Kies een eigenaar</option>
-      <option value="club">{{ vereniging }} (clubboot)</option>
-      {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-    </select>
-    <label for="foto">Foto (JPEG, PNG of WebP, niet verplicht)</label>
-    <input id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
-    <button type="submit" class="knop">Boot vastleggen</button>
+    <div class="ds-field">
+      <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
+      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" required>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="bootsoort">Bootsoort</label>
+      <select class="dj-select" id="bootsoort" name="bootsoort" required>
+        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
+      <select class="dj-select" id="eigenaar" name="eigenaar" required>
+        <option value="">Kies een eigenaar</option>
+        <option value="club">{{ vereniging }} (clubboot)</option>
+        {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+      </select>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="foto">Foto (JPEG, PNG of WebP, niet verplicht)</label>
+      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Boot vastleggen</button>
   </form>
 </section>
 
-<table>
-  <thead><tr><th>Boot</th><th>Bootsoort</th><th>Eigenaar</th><th>Plaats</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Boot</th><th role="columnheader">Bootsoort</th><th role="columnheader">Eigenaar</th><th role="columnheader">Plaats</th></tr></thead>
+  <tbody role="rowgroup">
   {% for b in boten %}
-    <tr>
-      <td data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
-      <td data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
-      <td data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' }}</td>
-      <td data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}geen{% endif %}</td>
+    <tr role="row">
+      <td role="cell" data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
+      <td role="cell" data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
+      <td role="cell" data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' }}</td>
+      <td role="cell" data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}geen{% endif %}</td>
     </tr>
   {% else %}
-    <tr><td colspan="4">Er zijn nog geen boten.</td></tr>
+    <tr role="row"><td role="cell" colspan="4">Er zijn nog geen boten.</td></tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 
 {{ logtabel(regels) }}
 {% endblock %}

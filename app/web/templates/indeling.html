@@ -12,7 +12,7 @@
       {% for verdieping in verdiepingen|reverse %}
       <span class="raster-kop raster-rij" aria-hidden="true">Verdieping {{ verdieping }}</span>
       {% for vak in vakken %}
-      <label class="vakje"><input type="checkbox" name="vak" value="{{ verdieping }}-{{ vak }}"{% if plaatsen|selectattr('verdieping', 'equalto', verdieping)|selectattr('vak', 'equalto', vak)|first is defined %} checked{% endif %}><span class="verborgen">Verdieping {{ verdieping }}, vak {{ vak }}</span></label>
+      <label class="vakje"><input type="checkbox" name="vak" value="{{ verdieping }}-{{ vak }}"{% if plaatsen|selectattr('verdieping', 'equalto', verdieping)|selectattr('vak', 'equalto', vak)|first is defined %} checked{% endif %}><span class="dj-sr-only">Verdieping {{ verdieping }}, vak {{ vak }}</span></label>
       {% endfor %}
       {% endfor %}
     </div>
@@ -28,23 +28,29 @@
   <h2>Nieuw rek</h2>
   <form method="post" action="{{ url_for('web.rek_aanmaken') }}">
     {% include "_csrf.html" %}
-    <label for="rek-naam">Naam van het rek (hooguit {{ naam_max }} tekens, zonder /)</label>
-    <input id="rek-naam" name="naam" maxlength="{{ naam_max }}" required>
-    <label for="rek-omschrijving">Omschrijving (hooguit {{ omschrijving_max }} tekens, niet verplicht)</label>
-    <input id="rek-omschrijving" class="breed" name="omschrijving" maxlength="{{ omschrijving_max }}">
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="rek-naam">Naam van het rek (hooguit {{ naam_max }} tekens, zonder /)</label>
+      <input class="ds-input" id="rek-naam" name="naam" maxlength="{{ naam_max }}" required>
+    </div>
+    <div class="ds-field breed">
+      <label class="ds-field__label label-lang" for="rek-omschrijving">Omschrijving (hooguit {{ omschrijving_max }} tekens, niet verplicht)</label>
+      <input class="ds-input" id="rek-omschrijving" name="omschrijving" maxlength="{{ omschrijving_max }}">
+    </div>
     {{ raster() }}
     <fieldset>
       <legend>Bootsoort per verdieping (niet verplicht)</legend>
-      <p>Elke plaats op die verdieping krijgt deze bootsoort, ook een vak dat later aan gaat. Zonder keuze krijgt een nieuwe plaats geen bootsoort.</p>
+      <p class="uitleg">Elke plaats op die verdieping krijgt deze bootsoort, ook een vak dat later aan gaat. Zonder keuze krijgt een nieuwe plaats geen bootsoort.</p>
       {% for verdieping in verdiepingen|reverse %}
-      <label for="bootsoort-{{ verdieping }}">Verdieping {{ verdieping }}</label>
-      <select id="bootsoort-{{ verdieping }}" name="bootsoort-{{ verdieping }}">
-        <option value="">Geen bootsoort</option>
-        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
-      </select>
+      <div class="ds-field">
+        <label class="ds-field__label" for="bootsoort-{{ verdieping }}">Verdieping {{ verdieping }}</label>
+        <select class="dj-select" id="bootsoort-{{ verdieping }}" name="bootsoort-{{ verdieping }}">
+          <option value="">Geen bootsoort</option>
+          {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
+        </select>
+      </div>
       {% endfor %}
     </fieldset>
-    <button type="submit" class="knop">Rek aanmaken</button>
+    <button type="submit" class="ds-btn ds-btn--primary">Rek aanmaken</button>
   </form>
 </section>
 
@@ -53,40 +59,46 @@
   <h2 id="rek-{{ rek.id }}">{{ rek.naam }}</h2>
   {% if rek.omschrijving %}<p>{{ rek.omschrijving }}</p>{% endif %}
   {% if rek.plaatsen %}
-  <table>
-    <thead><tr><th>Plaats</th><th>Status</th><th>Boot</th><th>Eigenaar</th><th>Geschikt voor</th></tr></thead>
-    <tbody>
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Plaats</th><th role="columnheader">Status</th><th role="columnheader">Boot</th><th role="columnheader">Eigenaar</th><th role="columnheader">Geschikt voor</th></tr></thead>
+    <tbody role="rowgroup">
     {% for p in rek.plaatsen %}
-      <tr>
-        <td data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
-        <td data-label="Status" class="status-{{ status(p) }}">{{ status(p) }}</td>
-        <td data-label="Boot">{{ p.boot.naam if p.boot else '' }}</td>
-        <td data-label="Eigenaar">{% if p.boot %}{{ p.boot.lid.naam if p.boot.lid else vereniging }}{% endif %}</td>
-        <td data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
+      <tr role="row">
+        <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+        <td role="cell" data-label="Status" class="status-{{ status(p) }}">{{ status(p) }}</td>
+        <td role="cell" data-label="Boot">{{ p.boot.naam if p.boot else '' }}</td>
+        <td role="cell" data-label="Eigenaar">{% if p.boot %}{{ p.boot.lid.naam if p.boot.lid else vereniging }}{% endif %}</td>
+        <td role="cell" data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
+  </div>
   {% endif %}
 
-  <details>
+  <details class="dj-disclosure">
     <summary>Rek wijzigen of verwijderen</summary>
     <form method="post" action="{{ url_for('web.rek_wijzigen', rek_id=rek.id) }}">
       {% include "_csrf.html" %}
-      <label for="naam-{{ rek.id }}">Naam</label>
-      <input id="naam-{{ rek.id }}" name="naam" value="{{ rek.naam }}" maxlength="{{ naam_max }}" required>
-      <label for="omschrijving-{{ rek.id }}">Omschrijving</label>
-      <input id="omschrijving-{{ rek.id }}" class="breed" name="omschrijving" value="{{ rek.omschrijving }}" maxlength="{{ omschrijving_max }}">
-      <button type="submit" class="knop">Rek opslaan</button>
+      <div class="ds-field">
+        <label class="ds-field__label" for="naam-{{ rek.id }}">Naam</label>
+        <input class="ds-input" id="naam-{{ rek.id }}" name="naam" value="{{ rek.naam }}" maxlength="{{ naam_max }}" required>
+      </div>
+      <div class="ds-field breed">
+        <label class="ds-field__label" for="omschrijving-{{ rek.id }}">Omschrijving</label>
+        <input class="ds-input" id="omschrijving-{{ rek.id }}" name="omschrijving" value="{{ rek.omschrijving }}" maxlength="{{ omschrijving_max }}">
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">Rek opslaan</button>
     </form>
     <form method="post" action="{{ url_for('web.indeling_instellen', rek_id=rek.id) }}">
       {% include "_csrf.html" %}
       {{ raster(rek.plaatsen) }}
-      <button type="submit" class="knop">Indeling opslaan</button>
+      <button type="submit" class="ds-btn ds-btn--primary">Indeling opslaan</button>
     </form>
     <form method="post" action="{{ url_for('web.rek_verwijderen', rek_id=rek.id) }}">
       {% include "_csrf.html" %}
-      <button type="submit" class="knop knop-gevaar">Rek {{ rek.naam }} verwijderen</button>
+      <button type="submit" class="ds-btn ds-btn--danger">Rek {{ rek.naam }} verwijderen</button>
     </form>
   </details>
 </section>

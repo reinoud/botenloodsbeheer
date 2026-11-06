@@ -1,0 +1,125 @@
+/* Dajaks, basis voor applicaties en de website. Kleur en fonts uit www.dajaks.nl (peildatum 2026-11-06), voorstel A "Vertrouwd water"
+   (keuze van de stakeholder, 2026-11-06). Afgeleide kleurwaarden staan per waarde in basis/README.md. De namen staan in tokencontract.json. */
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 500; font-display: swap; src: url("../fonts/rubik-latin-500-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 600; font-display: swap; src: url("../fonts/rubik-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 700; font-display: swap; src: url("../fonts/rubik-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "PT Sans"; font-style: normal; font-weight: 400; font-display: swap; src: url("../fonts/pt-sans-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+@font-face { font-family: "PT Sans"; font-style: normal; font-weight: 700; font-display: swap; src: url("../fonts/pt-sans-latin-700-normal.woff2") format("woff2"); unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+
+:root, [data-theme="light"] {
+  --brand: #215387;
+  --brand-deep: #1A202C;
+  --on-deep: #EDF2F7;
+  --on-deep-muted: #A0AEC0;
+  --on-deep-accent: #FB923C;
+  --deep-hover: #2D3748;
+  --deep-line: #718096;
+  --brand-mid: #215387;
+  --accent: #215387;
+  --on-accent: #FFFFFF;
+  --accent-hover: #1A3F69;
+  --on-accent-hover: #FFFFFF;
+  --accent-tint: #EBF4FF;
+  --page: #FFFFFF;
+  --surface: #F7FAFC;
+  --surface-raised: #FFFFFF;
+  --surface-sunken: #EDF2F7;
+  --ink: #1A202C;
+  --ink-muted: #4A5568;
+  --ink-inverse: #FFFFFF;
+  --line: #E2E8F0;
+  --line-strong: #718096;
+  --focus: #C2410C;
+  --success: #276749;
+  --success-tint: #F0FFF4;
+  --warning: #975A16;
+  --warning-tint: #FFFAF0;
+  --danger: #C53030;
+  --danger-tint: #FFF5F5;
+}
+
+[data-theme="dark"] {
+  --brand: #EDF2F7;
+  --brand-deep: #0F141C;
+  --on-deep: #EDF2F7;
+  --on-deep-muted: #A0AEC0;
+  --on-deep-accent: #FB923C;
+  --deep-hover: #2D3748;
+  --deep-line: #718096;
+  --brand-mid: #90CDF4;
+  --accent: #90CDF4;
+  --on-accent: #1A202C;
+  --accent-hover: #BEE3F8;
+  --on-accent-hover: #1A202C;
+  --accent-tint: #1E3A5F;
+  --page: #1A202C;
+  --surface: #222A38;
+  --surface-raised: #2D3748;
+  --surface-sunken: #141922;
+  --ink: #EDF2F7;
+  --ink-muted: #A0AEC0;
+  --ink-inverse: #1A202C;
+  --line: #2D3748;
+  --line-strong: #8A96A8;
+  --focus: #FB923C;
+  --success: #68D391;
+  --success-tint: #1C3B2E;
+  --warning: #F6AD55;
+  --warning-tint: #3B2F1E;
+  --danger: #FC8181;
+  --danger-tint: #3F2224;
+}
+
+:root {
+  --radius-none: 0;
+  --radius-round: 50%;
+  --radius-control: 0;
+  --radius-field: 0;
+  --radius-surface: 0;
+
+  --stroke-1: 1px;
+  --stroke-2: 2px;
+  --stroke-4: 4px;
+
+  --font-heading: "Rubik", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-body: "PT Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-weight-heading: 700;
+  --type-mega: var(--font-weight-heading) 72px/76px var(--font-heading);
+  --type-mega-narrow: var(--font-weight-heading) 44px/48px var(--font-heading);
+  --type-big: var(--font-weight-heading) 56px/60px var(--font-heading);
+  --type-big-narrow: var(--font-weight-heading) 36px/40px var(--font-heading);
+  --type-headline: var(--font-weight-heading) 40px/46px var(--font-heading);
+  --type-headline-narrow: var(--font-weight-heading) 32px/38px var(--font-heading);
+  --type-title: var(--font-weight-heading) 28px/34px var(--font-heading);
+  --type-heading: 600 22px/30px var(--font-heading);
+  --type-subheading: 600 18px/26px var(--font-heading);
+  --type-body: 400 17px/26px var(--font-body);
+  --type-body-sm: 400 15px/22px var(--font-body);
+  --type-label: 700 13px/18px var(--font-body);
+  --type-caption: 400 14px/20px var(--font-body);
+  --type-control: 600 16px/22px var(--font-heading);
+  --type-figure: 600 32px/36px var(--font-heading);
+  --type-figure-lg: 700 56px/56px var(--font-heading);
+  --type-mono: 400 14px/20px var(--font-mono);
+  --tracking-mega: -0.02em;
+  --tracking-big: -0.015em;
+  --tracking-headline: -0.01em;
+  --tracking-figure: -0.02em;
+  --tracking-label: 0.08em;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --control-height: 48px;
+  --control-height-lg: 56px;
+  --content-max: 1200px;
+
+  --shadow-surface: none;
+  --shadow-menu: 0 8px 24px rgba(26, 32, 44, 0.16);
+}
