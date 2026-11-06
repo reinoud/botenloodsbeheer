@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.24
+**Versie overlay:** v0.5.25
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-05
+**Bijgewerkt:** 2026-11-06
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -158,6 +158,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant op `tests/proxy/klant.py` of `tests/proxy/compose.traefik.yml` draait in een kopie met `docker-compose.yml`, `compose.api-extern.yml`, `docker/db-init.sh`, een lege map `huisstijl`, een leeg bestand `secrets/api_token` en `tests/proxy/`, alles uit de index (`git show :pad`).
 - Een mutant op een controlefunctie in `tests/proxy/klant.py` draai je samen met een mutant op de labels die een antwoord van de applicatie oplevert; anders kan de mutant tegen een echte Traefik niet falen. Opruimen en controleren zijn aparte commando's.
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
+- Een reviewer van de API proeft via Traefik vanaf het netwerk `koppeling` op `10.203.0.2:8081`, niet via `127.0.0.1:8080`: daar is geen router voor `/api/`. Traefik weigert `%2F`, `%5C`, `%25` en `%00` in het pad zelf (lege 400, `compose.dev.yml`); noem in de brief welke weigering van Traefik komt en welke van de applicatie.
+- Vraag je of een proefscript moet veranderen, noem dan de functies die de geraakte status beoordelen (zoals `status()` en `iprem()` in `tests/proxy/klant.py`) en welke bron daar als goed telt.
 
 #### E2E
 
@@ -322,6 +324,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.25 | 2026-11-06 | Twee regels uit de terugblikken van aegis en sentinel (#133): proef op de API via `koppeling`, functies die een status beoordelen bij een vraag over een proefscript | Lessen |
 | v0.5.24 | 2026-11-05 | Drie regels uit de terugblikken van sentinel en aegis (#132): aanroepers van een gedeelde functie, gecombineerde mutant op route en template, `draai.sh -k` op de testnaam | Lessen |
 | v0.5.23 | 2026-11-05 | Regel over een mutant per kant van een tweezijdige controle, uit de terugblik van sentinel (#131) | Lessen |
 | v0.5.22 | 2026-11-05 | Uit #54: tweede ronde van `draai.sh` (PROXY protocol), keep-alive bij een proef op de rate limit, drie aanroepen voor een eigen teller, voorwaarde bij een vertrouwensinstelling | Werkwijze |

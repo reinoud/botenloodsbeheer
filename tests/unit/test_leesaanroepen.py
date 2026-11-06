@@ -151,6 +151,19 @@ def test_onbekend_pad_en_verkeerde_methode_geven_json(api, client):
     assert client.get("/bestaatniet").content_type.startswith("text/html")
 
 
+@pytest.mark.parametrize("pad", ["/api/v1/%2Fik", "/api/v1/ik%2F", "/api%2Fv1/ik", "/api/v1/%61k"])
+def test_gecodeerd_pad_geeft_json(api, client, pad):
+    """#133: de 400 op procentcodering in het foutformaat van de API; web houdt zijn eigen pagina."""
+    r = api.get(pad)
+    assert r.status_code == 400 and r.json == {"fout": "Ongeldig verzoek."}
+    assert client.get(pad).content_type.startswith("text/html")
+
+
+def test_nul_teken_geeft_json(api):
+    r = api.get("/api/v1/ik?x=%00")
+    assert r.status_code == 400 and r.json == {"fout": "Ongeldig verzoek."}
+
+
 @pytest.mark.parametrize("methode, pad", [("put", "/api/v1/bestaatniet"), ("post", "/api/v1/ik")])
 def test_te_groot_op_pad_zonder_view_geeft_json(api, methode, pad):
     """#91: ook zonder view de 413 van de API, niet de HTML van werkzeug."""

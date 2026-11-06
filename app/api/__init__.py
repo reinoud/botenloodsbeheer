@@ -62,7 +62,13 @@ def te_groot(_fout):
 
 
 # app_errorhandler: een onbekend pad of een verkeerde methode raakt geen view van de blueprint, en
-# alleen de dienst api registreert hem (#68).
+# alleen de dienst api registreert hem (#68). De 400 komt uit gecodeerd_pad_weigeren, vóór de
+# routering (#133).
+@bp.app_errorhandler(400)
+def ongeldig_verzoek(_fout):
+    return {"fout": "Ongeldig verzoek."}, 400
+
+
 @bp.app_errorhandler(404)
 def onbekend_pad(_fout):
     return {"fout": "Onbekend pad."}, 404
