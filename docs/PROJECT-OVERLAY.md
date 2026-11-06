@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.29
+**Versie overlay:** v0.5.30
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -181,6 +181,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Eerdere runs laten rijen achter. Een E2E-test op een gedeelde lijst controleert daarom de volgorde over de hele kolom, niet op de eerste rij. Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
 - Een letter van `reknaam()` mag binnen één test vaker voorkomen (hetzelfde rek), maar niet in twee verschillende tests; controleer met `grep -rn 'reknaam(' tests/e2e`.
 - Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
+- Voedt de functie van een mutant ook de keuzelijst of het formulier (zoals `controleer_past` via `past()`), muteer dan alleen de aanroep in de serverroute, één mutant per kant, en noem per mutant de assert die moet falen als bestand:regel.
 - Verplaats je de dekking van een criterium van E2E naar unittests, noem dan per gegeven uit het criterium (zoals tijdstip en aantallen) de assert die het dekt, en draai een mutant die dat gegeven weghaalt.
 
 #### Migratie en database
@@ -331,6 +332,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.30 | 2026-11-06 | Regel uit de terugblik van sentinel (#144): mutant op de serverroute, één per kant | Lessen |
 | v0.5.29 | 2026-11-06 | Regel uit de terugblik van sentinel (#145): unieke reknamen in E2E controleren | Lessen |
 | v0.5.28 | 2026-11-06 | Regel uit de terugblik van sentinel (#142): een telling van 0 in het bewijs verklaren | Lessen |
 | v0.5.27 | 2026-11-06 | Regel uit de terugblik van sentinel (#130): een reeks statuscodes ook op herkomst toetsen | Lessen |
