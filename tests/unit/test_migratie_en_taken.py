@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic import command
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
 
@@ -119,6 +120,28 @@ def test_migratie_verwijdert_geupload_logo(database):
     with engine.begin() as c:
         c.execute(text(rij), {"s": "logo"})
     engine.dispose()
+
+
+def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
+    """Issue #150: de instelbare kleuren vervallen. De downgrade herstelt niets en faalt niet."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0014")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    with engine.begin() as c:
+        c.execute(text("INSERT INTO instelling (sleutel, waarde) VALUES ('naam', 'KV'), "
+                       "('kleur_primair', '#123456'), ('kleur_secundair', '#654321')"))
+    command.upgrade(cfg, "head")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
+    command.downgrade(cfg, "0014")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
+    engine.dispose()
+
+
+def test_precies_een_migratiehead(database):
+    scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
+    assert scripts.get_heads() == ["0015"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",

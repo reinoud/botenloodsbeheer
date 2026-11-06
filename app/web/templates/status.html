@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
 {% macro moment(t) %}{{ t|tijd if t else 'nog niet' }}{% endmacro %}
 {% macro aantallen(a) %}{% for k, v in a.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}{% endmacro %}
 {% block titel %}Status · {{ vereniging }}{% endblock %}
@@ -7,70 +8,74 @@
 <p>Totaal: <strong>{{ s.status }}</strong>. Versie {{ s.versie }}. Opgevraagd op {{ s.tijdstip|tijd }}. Dezelfde gegevens staan als JSON op <a href="{{ url_for('web.statuspagina') }}.json">/status.json</a>.</p>
 
 {% if s.tokens_verlopen.tokens %}
-<div class="melding melding-fout" role="alert">
+{% call meldingblok('danger') %}
   <p>Deze tokens verlopen binnen 31 dagen. Maak een nieuw token en trek het oude in.</p>
   <ul>
   {% for t in s.tokens_verlopen.tokens %}
     <li>{{ t.naam }} ({{ t.soort }}), vervalt op {{ t.vervaldatum.strftime('%d-%m-%Y') }}</li>
   {% endfor %}
   </ul>
-</div>
+{% endcall %}
 {% endif %}
 
-<table>
-  <thead><tr><th>Onderdeel</th><th>Status</th><th>Gegevens</th></tr></thead>
-  <tbody>
-    <tr>
-      <td data-label="Onderdeel">Database</td>
-      <td data-label="Status">{{ s.database.status }}</td>
-      <td data-label="Gegevens">PostgreSQL {{ s.database.postgresql }}, migratie {{ s.database.migratie }} (verwacht {{ s.database.verwacht }})</td>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Onderdeel</th><th role="columnheader">Status</th><th role="columnheader">Gegevens</th></tr></thead>
+  <tbody role="rowgroup">
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Database</td>
+      <td role="cell" data-label="Status">{{ s.database.status }}</td>
+      <td role="cell" data-label="Gegevens">PostgreSQL {{ s.database.postgresql }}, migratie {{ s.database.migratie }} (verwacht {{ s.database.verwacht }})</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">Worker</td>
-      <td data-label="Status">{{ s.worker.status }}</td>
-      <td data-label="Gegevens">Laatste heartbeat: {{ moment(s.worker.heartbeat) }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Worker</td>
+      <td role="cell" data-label="Status">{{ s.worker.status }}</td>
+      <td role="cell" data-label="Gegevens">Laatste heartbeat: {{ moment(s.worker.heartbeat) }}</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">Import van leden</td>
-      <td data-label="Status">{{ s.import.status }}</td>
-      <td data-label="Gegevens">Laatste import: {{ moment(s.import.tijdstip) }}{% if s.import.resultaat %}, {{ s.import.resultaat }}{% endif %}{% if s.import.reden %}: {{ s.import.reden }}{% endif %}{% if s.import.aantallen %} ({{ aantallen(s.import.aantallen) }}){% endif %}. Laatst geslaagd: {{ moment(s.import.laatst_geslaagd) }}.{% if s.import.status != 'ok' %} Een import hoort elke dag te slagen; kijk of de integratiecontainer draait.{% endif %}</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Import van leden</td>
+      <td role="cell" data-label="Status">{{ s.import.status }}</td>
+      <td role="cell" data-label="Gegevens">Laatste import: {{ moment(s.import.tijdstip) }}{% if s.import.resultaat %}, {{ s.import.resultaat }}{% endif %}{% if s.import.reden %}: {{ s.import.reden }}{% endif %}{% if s.import.aantallen %} ({{ aantallen(s.import.aantallen) }}){% endif %}. Laatst geslaagd: {{ moment(s.import.laatst_geslaagd) }}.{% if s.import.status != 'ok' %} Een import hoort elke dag te slagen; kijk of de integratiecontainer draait.{% endif %}</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">Opschoning</td>
-      <td data-label="Status">{{ s.opschoning.status }}</td>
-      <td data-label="Gegevens">Laatste opschoning: {{ moment(s.opschoning.tijdstip) }}{% if s.opschoning.resultaat %}, {{ s.opschoning.resultaat }}{% endif %}{% if s.opschoning.reden %}: {{ s.opschoning.reden }}{% endif %}{% if s.opschoning.aantallen %} (verwijderd: {{ aantallen(s.opschoning.aantallen) }}){% endif %}</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Opschoning</td>
+      <td role="cell" data-label="Status">{{ s.opschoning.status }}</td>
+      <td role="cell" data-label="Gegevens">Laatste opschoning: {{ moment(s.opschoning.tijdstip) }}{% if s.opschoning.resultaat %}, {{ s.opschoning.resultaat }}{% endif %}{% if s.opschoning.reden %}: {{ s.opschoning.reden }}{% endif %}{% if s.opschoning.aantallen %} (verwijderd: {{ aantallen(s.opschoning.aantallen) }}){% endif %}</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">API</td>
-      <td data-label="Status">{{ s.api.status }}</td>
-      <td data-label="Gegevens">{{ 'Aan' if s.api.ingeschakeld else 'Uit' }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">API</td>
+      <td role="cell" data-label="Status">{{ s.api.status }}</td>
+      <td role="cell" data-label="Gegevens">{{ 'Aan' if s.api.ingeschakeld else 'Uit' }}</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">Bootaantallen</td>
-      <td data-label="Status">{{ s.bootaantallen.status }}</td>
-      <td data-label="Gegevens">Laatst opgehaald: {{ moment(s.bootaantallen.laatst_opgehaald) }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Bootaantallen</td>
+      <td role="cell" data-label="Status">{{ s.bootaantallen.status }}</td>
+      <td role="cell" data-label="Gegevens">Laatst opgehaald: {{ moment(s.bootaantallen.laatst_opgehaald) }}</td>
     </tr>
-    <tr>
-      <td data-label="Onderdeel">Tokens die verlopen</td>
-      <td data-label="Status">{{ s.tokens_verlopen.status }}</td>
-      <td data-label="Gegevens">{{ s.tokens_verlopen.tokens|length }} binnen 31 dagen</td>
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Tokens die verlopen</td>
+      <td role="cell" data-label="Status">{{ s.tokens_verlopen.status }}</td>
+      <td role="cell" data-label="Gegevens">{{ s.tokens_verlopen.tokens|length }} binnen 31 dagen</td>
     </tr>
   </tbody>
 </table>
+</div>
 
 <h2>Robottokens</h2>
 {% if s.robottokens.tokens %}
-<table>
-  <thead><tr><th>Token</th><th>Laatste aanroep</th></tr></thead>
-  <tbody>
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Token</th><th role="columnheader">Laatste aanroep</th></tr></thead>
+  <tbody role="rowgroup">
   {% for t in s.robottokens.tokens %}
-    <tr>
-      <td data-label="Token">{{ t.naam }}</td>
-      <td data-label="Laatste aanroep">{{ moment(t.laatste_aanroep) }}</td>
+    <tr role="row">
+      <td role="cell" data-label="Token">{{ t.naam }}</td>
+      <td role="cell" data-label="Laatste aanroep">{{ moment(t.laatste_aanroep) }}</td>
     </tr>
   {% endfor %}
   </tbody>
 </table>
+</div>
 {% else %}
 <p>Er is geen geldig robottoken.</p>
 {% endif %}

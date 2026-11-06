@@ -1,76 +1,77 @@
-/* Design tokens (ADR-002). Geen enkele template bevat een vaste kleur.
-   /huisstijl.css overschrijft de primaire en secundaire kleur met de instellingen (BLB-027);
-   de waarden hier zijn de neutrale standaard. */
-:root {
-  --kleur-primair: #3f6fb5;
-  --kleur-primair-tekst: #ffffff;
-  --kleur-secundair: #5f6b7a;
-  --kleur-tekst: #1d232b;
-  --kleur-achtergrond: #f5f6f8;
-  --kleur-vlak: #ffffff;
-  --kleur-rand: #d3d8de;
-  --kleur-fout: #a32020;
-  --kleur-fout-vlak: #fbeaea;
-  --kleur-info-vlak: #e8f0fb;
-  --lettertype: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --ruimte-1: 0.25rem;
-  --ruimte-2: 0.5rem;
-  --ruimte-3: 1rem;
-  --ruimte-4: 1.5rem;
-  --radius: 6px;
-  --breedte-inhoud: 60rem;
-}
+/* Stijl van het product (ADR-002). De tokens en ds- komen uit de Dajaks-basis in /static/ds, dj- uit /static/dj (aanvulling, handmatig gekopieerd), en laden
+   eerst (tokens, ds-components, dj-components, dit bestand). Hier staat alleen wat de basis niet kent:
+   alleen var(--token), geen .ds- of .dj- selector en geen vaste kleur. Alleen licht thema. */
 
 * { box-sizing: border-box; }
-body { margin: 0; font-family: var(--lettertype); color: var(--kleur-tekst); background: var(--kleur-achtergrond); line-height: 1.5; }
-.kop { display: flex; flex-wrap: wrap; gap: var(--ruimte-3); align-items: center; justify-content: space-between; padding: var(--ruimte-3); background: var(--kleur-primair); color: var(--kleur-primair-tekst); }
-.kop a, .kop .knop-link { color: var(--kleur-primair-tekst); }
-.kop { border-bottom: 4px solid var(--kleur-secundair); }
-.kop-naam { display: flex; gap: var(--ruimte-2); align-items: center; font-weight: 700; text-decoration: none; }
-.logo { display: block; max-height: 2.5rem; max-width: 10rem; width: auto; }
-.kop-menu { display: flex; flex-wrap: wrap; gap: var(--ruimte-2) var(--ruimte-3); align-items: center; }
-h1, h2 { color: var(--kleur-secundair); }
-.kop-menu form { margin: 0; }
-.inhoud { max-width: var(--breedte-inhoud); margin: 0 auto; padding: var(--ruimte-3); }
-.kaart { background: var(--kleur-vlak); border: 1px solid var(--kleur-rand); border-radius: var(--radius); padding: var(--ruimte-3); margin-bottom: var(--ruimte-3); }
-label { display: block; margin-top: var(--ruimte-3); font-weight: 600; }
-input[type="color"] { width: 4rem; height: 2.5rem; padding: var(--ruimte-1); }
-input { width: 100%; max-width: 24rem; padding: var(--ruimte-2); border: 1px solid var(--kleur-rand); border-radius: var(--radius); font: inherit; }
-.knop { margin-top: var(--ruimte-3); padding: var(--ruimte-2) var(--ruimte-3); border: 0; border-radius: var(--radius); background: var(--kleur-primair); color: var(--kleur-primair-tekst); font: inherit; cursor: pointer; }
-.knop-link { background: none; border: 0; padding: 0; font: inherit; text-decoration: underline; cursor: pointer; }
-.melding { padding: var(--ruimte-2) var(--ruimte-3); border-radius: var(--radius); background: var(--kleur-info-vlak); }
-.melding-fout { background: var(--kleur-fout-vlak); color: var(--kleur-fout); }
-.qr { display: block; max-width: 12rem; background: var(--kleur-vlak); }
-table { width: 100%; border-collapse: collapse; background: var(--kleur-vlak); }
-th, td { text-align: left; padding: var(--ruimte-2); border-bottom: 1px solid var(--kleur-rand); vertical-align: top; }
-:focus-visible { outline: 3px solid var(--kleur-primair); outline-offset: 2px; }
+[hidden] { display: none !important; }
+body { margin: 0; font: var(--type-body); color: var(--ink); background: var(--page); }
+h1 { margin: var(--space-5) 0 var(--space-4); font: var(--type-title); }
+h2 { margin: var(--space-5) 0 var(--space-3); font: var(--type-heading); }
+a { color: var(--brand-mid); }
+a:hover { text-decoration-thickness: 2px; }
+code { font: var(--type-mono); overflow-wrap: anywhere; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
-/* Smalle schermen: elke tabelrij wordt een kaart. */
-@media (max-width: 40rem) {
-  thead { display: none; }
-  table, tbody, tr, td { display: block; }
-  tr { border: 1px solid var(--kleur-rand); border-radius: var(--radius); margin-bottom: var(--ruimte-2); }
-  td { border: 0; }
-  td::before { content: attr(data-label) ": "; font-weight: 600; }
+/* Kop en menu: veel items, dus de lijst loopt door op een nieuwe regel. */
+.kop-balk { flex-wrap: wrap; }
+.kop-naam { flex-wrap: wrap; gap: var(--space-2); min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.logo { display: block; max-height: 2.5rem; max-width: min(10rem, 100%); width: auto; }
+.menu-lijst { flex-wrap: wrap; }
+.menu-lijst a { padding: 0 var(--space-3); min-height: 2.75rem; }
+.menu-lijst form { margin: 0; }
+@media (width >= 56.25rem) {
+  .kop-menu { flex: 1 1 100%; }
+}
+.inhoud { padding-block: var(--space-4) var(--space-7); }
+.inhoud > form { margin-block: var(--space-5); }
+
+/* Kaart: een blok met een kop om gegevens of een formulier te groeperen. */
+.kaart { margin-bottom: var(--space-5); padding: var(--space-5); border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); background: var(--surface-raised); }
+.kaart > :first-child { margin-top: 0; }
+.kaart > :last-child { margin-bottom: 0; }
+
+@media (width < 40rem) {
+  .kaart { padding: var(--space-4); }
 }
 
-select { width: 100%; max-width: 24rem; padding: var(--ruimte-2); border: 1px solid var(--kleur-rand); border-radius: var(--radius); font: inherit; background: var(--kleur-vlak); }
-fieldset { min-width: 0; border: 1px solid var(--kleur-rand); border-radius: var(--radius); margin-top: var(--ruimte-3); }
-.keuze { display: flex; gap: var(--ruimte-2); align-items: center; font-weight: 400; }
+/* Formulieren: velden onder elkaar, knoppen links. */
+form { display: grid; gap: var(--space-4); }
+form > *, fieldset > * { min-width: 0; margin-block: 0; }
+form > button, form > a { justify-self: start; }
+fieldset { display: grid; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-4); border: var(--stroke-1) solid var(--line-strong); }
+legend { padding-inline: var(--space-2); color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+input.radio { border-radius: var(--radius-round); } /* de basis tekent elk keuzeteken vierkant; een radio is rond */
 .breed { max-width: 40rem; }
-.keuze input { width: auto; }
-details { margin-top: var(--ruimte-3); }
-.schuif { overflow-x: auto; }
-.verborgen { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.label-lang { font: var(--type-body-sm); letter-spacing: normal; text-transform: none; }
+.uitleg { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); }
+details { margin-top: var(--space-4); }
+.tabel { margin-block: var(--space-4); }
+.tabel button { height: 2.75rem; padding: 0 var(--space-3); }
+.tabel td { padding-block: var(--space-3); padding-right: var(--space-3); }
+.tabel th { padding-right: var(--space-3); }
+td form { gap: var(--space-2); }
+
+/* Meldingen */
+.melding { margin-bottom: var(--space-4); }
+.melding p { margin: 0 0 var(--space-2); }
+.melding p:last-child, .melding ul { margin-bottom: 0; }
+
+.qr { display: block; max-width: 12rem; background: var(--surface-raised); }
+.foto { display: block; max-width: 100%; height: auto; margin-top: var(--space-4); }
+.log { margin-top: var(--space-6); }
+.status-vrij { color: var(--brand-mid); font-weight: 700; }
+.status-clubplaats { font-style: italic; }
+
 /* Raster van de indeling (BLB-044): een rij per verdieping, een kolom per vak. */
-.raster { display: grid; grid-template-columns: max-content repeat(12, 2.25rem); align-items: center; gap: var(--ruimte-1); width: max-content; }
-.raster-kop { text-align: center; font-size: 0.875rem; }
-.raster-rij { text-align: left; padding-right: var(--ruimte-2); }
-.raster .vakje { position: relative; display: flex; justify-content: center; margin: 0; padding: var(--ruimte-1) 0; }
-.raster input { width: 1.25rem; height: 1.25rem; padding: 0; margin: 0; }
+.schuif { overflow-x: auto; }
+.raster { display: grid; grid-template-columns: max-content repeat(12, 2.25rem); align-items: center; gap: var(--space-1); width: max-content; }
+.raster-kop { text-align: center; font: var(--type-caption); }
+.raster-rij { text-align: left; padding-right: var(--space-2); }
+.raster .vakje { position: relative; display: flex; justify-content: center; margin: 0; padding: var(--space-1) 0; }
+.raster input { width: 1.25rem; height: 1.25rem; padding: 0; margin: 0; accent-color: var(--accent); }
 /* Rekoverzicht (issue #87): een plaatje per plaats, op dezelfde rij en kolom als in het rek. */
 /* De CSP staat geen inline style toe: het aantal kolommen komt uit een klasse (1 tot en met 12). */
-.raster-rek { gap: var(--ruimte-1); }
+.raster-rek { gap: var(--space-1); }
 .raster-rek-1 { grid-template-columns: max-content repeat(1, 4rem); }
 .raster-rek-2 { grid-template-columns: max-content repeat(2, 4rem); }
 .raster-rek-3 { grid-template-columns: max-content repeat(3, 4rem); }
@@ -83,32 +84,23 @@ details { margin-top: var(--ruimte-3); }
 .raster-rek-10 { grid-template-columns: max-content repeat(10, 4rem); }
 .raster-rek-11 { grid-template-columns: max-content repeat(11, 4rem); }
 .raster-rek-12 { grid-template-columns: max-content repeat(12, 4rem); }
-.rek-vak { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 4rem; height: 4rem; border: 1px solid var(--kleur-rand); border-radius: var(--radius); overflow: hidden; font-size: 0.75rem; text-align: center; text-decoration: none; }
+.rek-vak { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); overflow: hidden; font: var(--type-caption); text-align: center; text-decoration: none; }
 .rek-vak img { display: block; width: 100%; height: 100%; }
-.rek-vak-club { border: 2px dashed var(--kleur-tekst); }
-summary { cursor: pointer; font-weight: 600; }
-.knop-gevaar { background: var(--kleur-fout); }
-dl { display: grid; grid-template-columns: max-content 1fr; gap: var(--ruimte-1) var(--ruimte-3); }
-dt { font-weight: 600; }
-dd { margin: 0; }
-.foto { display: block; max-width: 100%; height: auto; border-radius: var(--radius); margin-top: var(--ruimte-3); }
-.log { margin-top: var(--ruimte-4); }
-.status-vrij { color: var(--kleur-primair); font-weight: 600; }
-.status-clubplaats { font-style: italic; }
+.rek-vak-club { border: var(--stroke-2) dashed var(--ink); }
 
 /* Kaartjes (BLB-021, ADR-011): acht per A4, twee kolommen van 95 mm bij vier rijen van 68 mm,
-   binnen een marge van 10 mm. De stippellijn is de snijlijn. Een blad is één A4. */
+   binnen een marge van 10 mm. De stippellijn is de snijlijn. Een blad is één A4. Altijd licht. */
 @page { size: A4; margin: 10mm; }
-.blad { display: grid; width: max-content; grid-template-columns: repeat(2, 95mm); grid-auto-rows: 68mm; margin-bottom: var(--ruimte-4); }
-.kaartje { display: grid; grid-template-columns: 1fr 40mm; gap: 4mm; align-items: center; padding: 5mm; border: 1px dashed var(--kleur-tekst); background: var(--kleur-vlak); overflow: hidden; overflow-wrap: anywhere; }
+.blad { display: grid; width: max-content; grid-template-columns: repeat(2, 95mm); grid-auto-rows: 68mm; margin-bottom: var(--space-5); }
+.kaartje { display: grid; grid-template-columns: 1fr 40mm; gap: 4mm; align-items: center; padding: 5mm; border: 1px dashed var(--ink); background: var(--surface-raised); color: var(--ink); overflow: hidden; overflow-wrap: anywhere; }
 .kaartje p { margin: 0 0 2mm; }
 .kaartje-logo { display: block; max-width: 100%; max-height: 15mm; margin-bottom: 3mm; }
-.kaartje-code { font-size: 20pt; font-weight: 700; }
-.kaartje-soorten { font-size: 12pt; }
+.kaartje-code { font: var(--type-figure); font-size: 20pt; }
+.kaartje-soorten { font: var(--type-body); font-size: 12pt; }
 .qr-kaartje { display: block; width: 40mm; height: 40mm; }
 @media print {
-  .kop, .niet-printen, .melding { display: none; }
-  body { background: var(--kleur-vlak); }
+  .kop, .sla-over, .niet-printen, .melding { display: none; }
+  body { background: var(--surface-raised); }
   .inhoud { max-width: none; padding: 0; }
   .blad { margin: 0; break-after: page; }
   .blad:last-child { break-after: auto; }

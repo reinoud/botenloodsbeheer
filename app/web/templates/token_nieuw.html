@@ -5,24 +5,30 @@
 <section class="kaart">
   <form method="post" action="{{ url_for('web.token_nieuw') }}">
     {% include "_csrf.html" %}
-    <fieldset>
+    <fieldset class="dj-choices">
       <legend>Soort</legend>
-      <label class="keuze"><input type="radio" name="soort" value="persoonlijk"{% if invoer.soort != 'robot' %} checked{% endif %}> Persoonlijk: hoort bij jou en werkt niet meer als je account geblokkeerd of verwijderd is</label>
-      <label class="keuze"><input type="radio" name="soort" value="robot"{% if invoer.soort == 'robot' %} checked{% endif %}> Robot: voor een koppeling, blijft werken als jij vertrekt</label>
+      <div class="ds-check"><input class="radio" type="radio" id="soort-persoonlijk" name="soort" value="persoonlijk"{% if invoer.soort != 'robot' %} checked{% endif %}><label for="soort-persoonlijk">Persoonlijk: hoort bij jou en werkt niet meer als je account geblokkeerd of verwijderd is</label></div>
+      <div class="ds-check"><input class="radio" type="radio" id="soort-robot" name="soort" value="robot"{% if invoer.soort == 'robot' %} checked{% endif %}><label for="soort-robot">Robot: voor een koppeling, blijft werken als jij vertrekt</label></div>
     </fieldset>
-    <label for="naam">Naam (a-z, cijfers, punt, - en _)</label>
-    <input id="naam" name="naam" value="{{ invoer.naam }}" maxlength="50" required>
-    <label for="dagen">Geldig, in dagen (hooguit {{ max_dagen }}, dat is 3 jaar)</label>
-    <input id="dagen" name="dagen" type="number" min="1" max="{{ max_dagen }}" value="{{ invoer.dagen }}" required>
-    <fieldset>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="naam">Naam (a-z, cijfers, punt, - en _)</label>
+      <input class="ds-input" id="naam" name="naam" value="{{ invoer.naam }}" maxlength="50" required>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="dagen">Geldig, in dagen (hooguit {{ max_dagen }}, dat is 3 jaar)</label>
+      <input class="ds-input" id="dagen" name="dagen" type="number" min="1" max="{{ max_dagen }}" value="{{ invoer.dagen }}" required>
+    </div>
+    <fieldset class="dj-choices dj-choices--columns">
       <legend>Rechten (minstens één)</legend>
       {% for r in rechten %}
-      <label class="keuze"><input type="checkbox" name="recht" value="{{ r }}"{% if r in invoer.rechten %} checked{% endif %}> {{ r }}</label>
+      <div class="ds-check"><input type="checkbox" id="recht-{{ r }}" name="recht" value="{{ r }}"{% if r in invoer.rechten %} checked{% endif %}><label for="recht-{{ r }}">{{ r }}</label></div>
       {% endfor %}
     </fieldset>
-    <label for="whitelist">IP-whitelist: adressen of reeksen, gescheiden door komma's. Verplicht bij een robot. Leeg bij een persoonlijk token: elk adres dat de installatie doorlaat.</label>
-    <input id="whitelist" name="whitelist" value="{{ invoer.whitelist }}">
-    <button type="submit" class="knop">Token maken</button>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="whitelist">IP-whitelist: adressen of reeksen, gescheiden door komma's. Verplicht bij een robot. Leeg bij een persoonlijk token: elk adres dat de installatie doorlaat.</label>
+      <input class="ds-input" id="whitelist" name="whitelist" value="{{ invoer.whitelist }}">
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Token maken</button>
   </form>
 </section>
 <p><a href="{{ url_for('web.tokens_overzicht') }}">Terug naar tokens</a></p>

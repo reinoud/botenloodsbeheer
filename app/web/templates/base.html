@@ -1,45 +1,58 @@
+{% from "_melding.html" import meldingblok %}
 <!doctype html>
 <html lang="nl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   {# csrf_token() maakt een sessiecookie; de openbare pagina laat dit blok leeg (#9). #}
   {% block csrf %}<meta name="csrf-token" content="{{ csrf_token() }}">{% endblock %}
   <title>{% block titel %}{{ vereniging }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='ds/tokens/dajaks.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='ds/ds-components.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='dj/dj-components.css') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='stijl.css') }}">
-  <link rel="stylesheet" href="{{ url_for('web.huisstijl_css') }}">
 </head>
 <body>
-  <header class="kop">
-    <a class="kop-naam" href="{{ url_for('web.start') }}">{% if logo %}<img class="logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>
-    {% if g.beheerder %}
-    <nav class="kop-menu" aria-label="Hoofdmenu">
-      <a href="{{ url_for('web.indeling_overzicht') }}">Indeling</a>
-      <a href="{{ url_for('web.rekoverzicht') }}">Rekoverzicht</a>
-      <a href="{{ url_for('web.vrije_plaatsen') }}">Vrije plaatsen</a>
-      <a href="{{ url_for('web.wachtlijst_overzicht') }}">Wachtlijst</a>
-      <a href="{{ url_for('web.opgezegd') }}">Opgezegd</a>
-      <a href="{{ url_for('web.opzeggend') }}">Gaan opzeggen</a>
-      <a href="{{ url_for('web.kaartjes_kiezen') }}">Kaartjes</a>
-      <a href="{{ url_for('web.boten_overzicht') }}">Boten</a>
-      <a href="{{ url_for('web.leden_overzicht') }}">Leden</a>
-      <a href="{{ url_for('web.logboek') }}">Log</a>
-      <a href="{{ url_for('web.technisch_log') }}">Technisch log</a>
-      <a href="{{ url_for('web.beheerders_overzicht') }}">Beheerders</a>
-      <a href="{{ url_for('web.tokens_overzicht') }}">Tokens</a>
-      <a href="{{ url_for('web.instellingen_scherm') }}">Instellingen</a>
-      <a href="{{ url_for('web.statuspagina') }}">Status</a>
-      <a href="{{ url_for('web.profiel') }}">Profiel</a>
-      <form method="post" action="{{ url_for('web.uitloggen') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="knop-link">Uitloggen</button>
-      </form>
-    </nav>
-    {% endif %}
+  <a class="dj-skip sla-over" href="#inhoud">Naar de inhoud</a>
+  <header class="dj-header kop">
+    <div class="dj-container dj-header__bar kop-balk">
+      <a class="dj-logo kop-naam" href="{{ url_for('web.start') }}">{% if logo %}<img class="logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>
+      {% if g.beheerder %}
+      <details class="dj-menu kop-menu">
+        <summary class="dj-menu__button">Menu</summary>
+        <nav class="dj-menu__panel" aria-label="Hoofdmenu">
+          <ul class="dj-nav__list menu-lijst">
+          <li><a class="dj-nav__link" href="{{ url_for('web.indeling_overzicht') }}">Indeling</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.rekoverzicht') }}">Rekoverzicht</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.vrije_plaatsen') }}">Vrije plaatsen</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.wachtlijst_overzicht') }}">Wachtlijst</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.opgezegd') }}">Opgezegd</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.opzeggend') }}">Gaan opzeggen</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.kaartjes_kiezen') }}">Kaartjes</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.boten_overzicht') }}">Boten</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.leden_overzicht') }}">Leden</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.logboek') }}">Log</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.technisch_log') }}">Technisch log</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.beheerders_overzicht') }}">Beheerders</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.tokens_overzicht') }}">Tokens</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.instellingen_scherm') }}">Instellingen</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.statuspagina') }}">Status</a></li>
+          <li><a class="dj-nav__link" href="{{ url_for('web.profiel') }}">Profiel</a></li>
+          <li>
+            <form method="post" action="{{ url_for('web.uitloggen') }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="ds-btn ds-btn--quiet">Uitloggen</button>
+            </form>
+          </li>
+          </ul>
+        </nav>
+      </details>
+      {% endif %}
+    </div>
   </header>
-  <main class="inhoud">
+  <main class="dj-container inhoud" id="inhoud">
     {% for soort, bericht in get_flashed_messages(with_categories=true) %}
-    <p class="melding melding-{{ soort }}" role="{{ 'alert' if soort == 'fout' else 'status' }}">{{ bericht }}</p>
+    {% call meldingblok('danger' if soort == 'fout' else 'info') %}{{ bericht }}{% endcall %}
     {% endfor %}
     {% block inhoud %}{% endblock %}
   </main>

@@ -1,9 +1,9 @@
-"""Instellingen: naam, kleuren en logo van de vereniging (BLB-027, ADR-008, ADR-009) en de
+"""Instellingen: naam en logo van de vereniging (BLB-027, ADR-008, ADR-009) en de
 bootsoorten (BLB-028)."""
 
 import hashlib
 
-from flask import current_app, flash, redirect, render_template, request, url_for
+from flask import current_app, redirect, render_template, request, url_for
 
 from app.config import UPLOAD_MAX
 from app.domein import Regelfout, afbeeldingen, indeling, instellingen
@@ -50,16 +50,6 @@ def logo(kenmerk):
     }
 
 
-@bp.get("/huisstijl.css")
-def huisstijl_css():
-    # Openbaar, want ook de openbare pagina gebruikt de kleuren. Een eigen stylesheet past in
-    # de CSP (style-src 'self'); huidig() geeft alleen geldige hexkleuren.
-    stijl = instellingen.huidig()
-    css = (f":root {{ --kleur-primair: {stijl['kleur_primair']}; "
-           f"--kleur-secundair: {stijl['kleur_secundair']}; }}\n")
-    return css, {"Content-Type": "text/css; charset=utf-8"}
-
-
 @bp.get("/instellingen")
 @inloggen_vereist
 def instellingen_scherm():
@@ -71,12 +61,8 @@ def instellingen_scherm():
 @inloggen_vereist
 @recent_ingelogd
 def instellingen_opslaan():
-    waarschuwingen = uitvoeren(instellingen.opslaan, request.form.get("naam"),
-                               request.form.get("kleur_primair"),
-                               request.form.get("kleur_secundair"),
-                               gelukt="De instellingen zijn opgeslagen.")
-    for tekst in waarschuwingen or []:
-        flash(tekst, "fout")
+    uitvoeren(instellingen.opslaan, request.form.get("naam"),
+              gelukt="De instellingen zijn opgeslagen.")
     return redirect(url_for("web.instellingen_scherm"))
 
 

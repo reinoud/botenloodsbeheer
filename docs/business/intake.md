@@ -74,7 +74,7 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 ### Inrichting
 
 - Eén vereniging per installatie. Een andere vereniging draait een eigen installatie.
-- Geen vaste huisstijl. Elke vereniging stelt zelf naam, kleuren en logo in.
+- De kleuren volgen de Dajaks-huisstijl en zijn niet in te stellen. Elke vereniging stelt zelf naam en logo in. (Besluit stakeholder 2026-11-06, issue #150; vervangt "geen vaste huisstijl".)
 - Hosting met een eigen docker-compose, niet op Hansel.
 - Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`.
 
@@ -117,7 +117,7 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 ### Na slice 3 (issue #17)
 
-- Het logo staat in de installatie (docker-compose), niet in de applicatie. Het wijzigen van het logo is daardoor geen mutatie en hoeft niet gelogd te worden. Naam en kleuren blijft de beheerder in de applicatie instellen.
+- Het logo staat in de installatie (docker-compose), niet in de applicatie. Het wijzigen van het logo is daardoor geen mutatie en hoeft niet gelogd te worden. De naam blijft de beheerder in de applicatie instellen; de kleuren zijn vast (besluit 2026-11-06).
 - In de Excel-export staat bij een vrije plaats in de kolom Bootsoort "(geschikt voor …)", met de bootsoorten die op die plaats mogen.
 - De kolom "Opgezegd op" volgt het besluit van 2026-10-30: verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond.
 

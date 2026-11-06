@@ -18,7 +18,8 @@ import pyotp
 from playwright.sync_api import expect, sync_playwright
 
 BASIS = "http://localhost:8080"
-UIT = Path("/documentatie/gebruikers/afbeeldingen")
+UIT = Path(os.environ.get("DOC_UIT", "/documentatie/gebruikers/afbeeldingen"))
+BREEDTE = int(os.environ.get("DOC_BREEDTE", "1100"))  # een andere breedte is voor controle, bijvoorbeeld 390 (telefoon)
 LEDEN = json.loads(Path("/fixtures/leden.json").read_text(encoding="utf-8"))
 WACHTWOORD = "voorbeeld wachtwoord voor de loods"
 
@@ -66,7 +67,7 @@ class Opnamen:
             element.screenshot(path=pad)
         elif hoogte:
             self.page.screenshot(path=pad, full_page=True,
-                                 clip={"x": 0, "y": 0, "width": 1100, "height": hoogte})
+                                 clip={"x": 0, "y": 0, "width": BREEDTE, "height": hoogte})
         else:
             self.page.screenshot(path=pad, full_page=True)
 
@@ -95,7 +96,7 @@ def nieuwe_code(totp, vorige):
 
 
 def schermen(browser):
-    ctx = browser.new_context(base_url=BASIS, viewport={"width": 1100, "height": 800},
+    ctx = browser.new_context(base_url=BASIS, viewport={"width": BREEDTE, "height": 800},
                               locale="nl-NL", timezone_id="Europe/Amsterdam")
     page = ctx.new_page()
     foto_bytes = foto()
@@ -115,7 +116,7 @@ def schermen(browser):
     ctx.close()
 
     # Inloggen, zoals een beheerder het doet. Deze sessie blijft voor de rest.
-    ctx = browser.new_context(base_url=BASIS, viewport={"width": 1100, "height": 800},
+    ctx = browser.new_context(base_url=BASIS, viewport={"width": BREEDTE, "height": 800},
                               locale="nl-NL", timezone_id="Europe/Amsterdam")
     page = ctx.new_page()
     o = Opnamen(page)

@@ -9,7 +9,7 @@
 {% if boot %}
 <section class="kaart">
   <h2>Boot</h2>
-  <dl>
+  <dl class="dj-dl">
     <dt>Naam</dt><dd><a href="{{ url_for('web.boot_detail', boot_id=boot.id) }}">{{ boot.naam }}</a></dd>
     <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
   </dl>
@@ -18,7 +18,7 @@
 <section class="kaart">
   <h2>Eigenaar</h2>
   {% if boot.lid %}
-  <dl>
+  <dl class="dj-dl">
     <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
     <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
     <dt>Adres</dt><dd data-veld="adres">{{ boot.lid.adres or '' }}</dd>
@@ -31,7 +31,7 @@
 </section>
 <form method="post" action="{{ url_for('web.plaats_vrijgeven', plaats_id=plaats.id) }}">
   {% include "_csrf.html" %}
-  <button type="submit" class="knop">Plaats {{ plaats.code }} vrijgeven</button>
+  <button type="submit" class="ds-btn ds-btn--primary">Plaats {{ plaats.code }} vrijgeven</button>
 </form>
 {% else %}
 <section class="kaart">
@@ -39,21 +39,23 @@
   {% if boten %}
   <form method="post" action="{{ url_for('web.plaats_toewijzen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
-    <label for="boot">Boot zonder plaats</label>
-    <select id="boot" name="boot_id" required>
-      {% if wachtend %}
-      <optgroup label="Op de wachtlijst, langst wachtend eerst">
-        {% for w in wachtend %}<option value="{{ w.boot.id }}">{{ w.boot.naam }} ({{ w.boot.bootsoort.naam }}, {{ w.boot.lid.naam }}, sinds {{ w.aangemeld_op.strftime('%d-%m-%Y') }})</option>{% endfor %}
-      </optgroup>
-      <optgroup label="Andere boten zonder plaats">
-      {% endif %}
-      {% for b in boten if b.wachtlijst not in wachtend %}
-      <option value="{{ b.id }}">{{ b.naam }} ({{ b.bootsoort.naam }}, {{ b.lid.naam if b.lid else 'clubboot' }})</option>
-      {% endfor %}
-      {% if wachtend %}</optgroup>{% endif %}
-    </select>
-    <p>De applicatie kiest niet zelf: jij bepaalt welke boot de plaats krijgt.</p>
-    <button type="submit" class="knop">Plaats toewijzen</button>
+    <div class="ds-field">
+      <label class="ds-field__label" for="boot">Boot zonder plaats</label>
+      <select class="dj-select" id="boot" name="boot_id" required>
+        {% if wachtend %}
+        <optgroup label="Op de wachtlijst, langst wachtend eerst">
+          {% for w in wachtend %}<option value="{{ w.boot.id }}">{{ w.boot.naam }} ({{ w.boot.bootsoort.naam }}, {{ w.boot.lid.naam }}, sinds {{ w.aangemeld_op.strftime('%d-%m-%Y') }})</option>{% endfor %}
+        </optgroup>
+        <optgroup label="Andere boten zonder plaats">
+        {% endif %}
+        {% for b in boten if b.wachtlijst not in wachtend %}
+        <option value="{{ b.id }}">{{ b.naam }} ({{ b.bootsoort.naam }}, {{ b.lid.naam if b.lid else 'clubboot' }})</option>
+        {% endfor %}
+        {% if wachtend %}</optgroup>{% endif %}
+      </select>
+    </div>
+    <p class="uitleg">De applicatie kiest niet zelf: jij bepaalt welke boot de plaats krijgt.</p>
+    <button type="submit" class="ds-btn ds-btn--primary">Plaats toewijzen</button>
   </form>
   {% else %}
   <p>Er zijn geen boten zonder plaats die op deze plaats passen.</p>
@@ -65,14 +67,14 @@
   <h2>Plaats wijzigen</h2>
   <form method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
-    <fieldset>
+    <fieldset class="dj-choices dj-choices--columns">
       <legend>Geschikt voor</legend>
       {% for s in bootsoorten %}
-      <label class="keuze"><input type="checkbox" name="bootsoort" value="{{ s.id }}"{% if s in plaats.bootsoorten %} checked{% endif %}> {{ s.naam }}</label>
+      <div class="ds-check"><input type="checkbox" id="bootsoort-{{ s.id }}" name="bootsoort" value="{{ s.id }}"{% if s in plaats.bootsoorten %} checked{% endif %}><label for="bootsoort-{{ s.id }}">{{ s.naam }}</label></div>
       {% endfor %}
     </fieldset>
-    <label class="keuze"><input type="checkbox" name="clubplaats" value="1"{% if plaats.is_clubplaats %} checked{% endif %}> Clubplaats (alleen voor clubboten)</label>
-    <button type="submit" class="knop">Plaats opslaan</button>
+    <div class="ds-check"><input type="checkbox" id="clubplaats" name="clubplaats" value="1"{% if plaats.is_clubplaats %} checked{% endif %}><label for="clubplaats">Clubplaats (alleen voor clubboten)</label></div>
+    <button type="submit" class="ds-btn ds-btn--primary">Plaats opslaan</button>
   </form>
 </section>
 

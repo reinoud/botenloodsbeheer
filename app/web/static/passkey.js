@@ -19,7 +19,7 @@
   function toon(fout) {
     const el = document.getElementById("passkey-fout");
     el.textContent = fout;
-    el.hidden = false;
+    el.parentElement.hidden = false;
   }
 
   function koppel(id, vraag) {

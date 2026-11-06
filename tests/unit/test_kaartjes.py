@@ -49,7 +49,7 @@ def test_bootsoorten_op_id_zonder_eigenaar_vrij_of_vereniging(ingelogd):  # noqa
     _vrij, _bezet, club, _c11, _anna = loods()
     zonder = indeling.rek_aanmaken("B", "", {(1, 1)}, CLI)  # een nieuw vak heeft geen bootsoort
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
-    instellingen.opslaan("KV De Fuut", "#1a4d2e", "#333333", CLI)
+    instellingen.opslaan("KV De Fuut", CLI)
     kaarten = kaartjes(ingelogd.get(f"/kaartjes/print?rek={club.rek_id}&rek={zonder.id}").text)
     soorten = {code: re.findall(r'kaartje-soorten">([^<]*)<', html) for code, html in kaarten.items()}
     assert soorten == {"A/1/1": ["Geschikt voor Kajak/Surfski"], "A/1/2": ["Geschikt voor Kajak"],
@@ -105,8 +105,8 @@ def test_lege_of_onbekende_selectie_terug_met_melding(ingelogd, query):  # noqa:
 def test_kiezen_toont_rekken_plaatsen_en_alles(ingelogd):  # noqa: F811
     _vrij, bezet, _club, _c11, _anna = loods()
     tekst = ingelogd.get("/kaartjes").text
-    assert 'name="alle"' in tekst and f'name="rek" value="{bezet.rek_id}"> Heel A' in tekst
-    assert f'name="plaats" value="{bezet.id}"> A/1/2' in tekst
+    assert 'name="alle"' in tekst and f'name="rek" value="{bezet.rek_id}"><label for="rek-{bezet.rek_id}">Heel A</label>' in tekst
+    assert f'name="plaats" value="{bezet.id}"><label for="plaats-{bezet.id}">A/1/2</label>' in tekst
     assert "Anna de Vries" not in tekst
 
 

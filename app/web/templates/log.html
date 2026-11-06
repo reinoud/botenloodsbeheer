@@ -12,9 +12,11 @@
 {{ logtabel(regels, naar_log=false) }}
 {% set eigen = 'web.technisch_log' if technisch else 'web.logboek' %}
 {% if pagina > 1 or ouder %}
-<nav aria-label="Pagina's van het log"><p>
-  {% if pagina > 1 %}<a href="{{ url_for(eigen, pagina=pagina - 1) }}">Nieuwere regels</a>{% endif %}
-  {% if ouder %}<a href="{{ url_for(eigen, pagina=pagina + 1) }}">Oudere regels</a>{% endif %}
-</p></nav>
+<nav aria-label="Pagina's van het log">
+  <ul class="dj-pagination">
+    {% if pagina > 1 %}<li><a class="dj-pagination__link" href="{{ url_for(eigen, pagina=pagina - 1) }}">Nieuwere regels</a></li>{% endif %}
+    {% if ouder %}<li><a class="dj-pagination__link" href="{{ url_for(eigen, pagina=pagina + 1) }}">Oudere regels</a></li>{% endif %}
+  </ul>
+</nav>
 {% endif %}
 {% endblock %}

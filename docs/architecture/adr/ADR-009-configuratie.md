@@ -7,7 +7,7 @@
 
 ## Context
 
-Elke vereniging draait een eigen installatie met eigen naam, kleuren en logo (intake). Het logo staat sinds 2026-10-31 in de installatie; naam en kleuren stelt de beheerder in de applicatie in. De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
+Elke vereniging draait een eigen installatie met eigen naam en logo (intake). Het logo staat sinds 2026-10-31 in de installatie; de naam stelt de beheerder in de applicatie in. De kleuren zijn vast sinds 2026-11-06 (ADR-002). De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
 
 De vuistregel: wat de installatie technisch laat werken of een geheim is, staat in de omgeving. Wat een beheerder in het dagelijks werk wil aanpassen, staat in de applicatie, in de tabel `instelling`, en wijzigen geeft een logregel.
 
@@ -34,7 +34,6 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `LOG_NIVEAU` | Omgeving | `INFO` | Techniek |
 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` | Omgeving (compose-labels en netwerknamen) | Geen, `botenloods`, geen | `DOMEIN` gelijk aan de host uit `BASIS_URL`; `INSTALLATIE` uniek per host (ADR-013) |
 | Naam van de vereniging | Applicatie | "Botenloods" | BLB-027 |
-| Primaire en secundaire kleur | Applicatie | Neutraal grijs en blauw | BLB-027, design tokens (ADR-002) |
 | Bootsoorten | Applicatie (tabel `bootsoort`, blok Bootsoorten op `/instellingen`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
 
 Vaste waarden in code, niet instelbaar: de bewaartermijn van 5 jaar, de maximale tokenduur van 3 jaar, de waarschuwing 31 dagen voor verlopen, de rechtenlijst van tokens, de uploadgrens. Dit zijn besluiten van de stakeholder of beveiligingsgrenzen, geen voorkeuren per vereniging. Wijzigen gaat via een release.
@@ -54,7 +53,7 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 ## Gevolgen
 
-- Een nieuwe installatie start met neutrale naam en stijl (BLB-027). Naam en kleuren zijn na de eerste inlog in te stellen; het logo zet wie de installatie draait in `./huisstijl`.
+- Een nieuwe installatie start met een neutrale naam (BLB-027). De naam is na de eerste inlog in te stellen; het logo zet wie de installatie draait in `./huisstijl`.
 - Er komt geen scherm om de API aan of uit te zetten. Een wijziging van de schakelaar staat niet in het mutatielog; `api` meldt de stand bij het opstarten in de containerlog. Hetzelfde geldt voor het logo.
 - De statuspagina toont of de API aan staat, de laatste import en wanneer de bootaantallen voor het laatst zijn opgehaald, nooit de waarden van geheimen (BLB-037, ADR-010). Welke bron de integratiecontainer gebruikt, weet de applicatie niet.
 
@@ -62,6 +61,7 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.0 | 2026-11-06 | Primaire en secundaire kleur vervallen; migratie 0015 verwijdert de rijen `kleur_primair` en `kleur_secundair` uit `instelling` | Besluit stakeholder 2026-11-06, issue #150 |
 | v1.3.1 | 2026-11-03 | Bootsoorten beheerd op `/instellingen` | Bouw slice 11, issue #56 |
 | v1.3.0 | 2026-11-02 | `APP_VERSIE`; `OPSCHOON_TIJDSTIP` alleen bij `worker`; `API_INGESCHAKELD` ook bij `web` | Bouw slice 9, issue #48 |
 | v1.2.0 | 2026-10-31 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` toegevoegd; `API_URL` instelbaar | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |

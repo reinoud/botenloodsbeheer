@@ -12,7 +12,7 @@
 {% if plaats.vrij %}
 <p>Deze plaats is vrij.</p>
 {% else %}
-<dl class="kaart">
+<dl class="dj-dl kaart">
   <dt>Boot</dt><dd>{{ plaats.boot }}</dd>
   <dt>Eigenaar</dt><dd>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</dd>
 </dl>
