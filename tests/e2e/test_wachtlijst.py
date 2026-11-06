@@ -69,7 +69,7 @@ def test_wachtende_boot_krijgt_plaats_vanaf_de_bootpagina(page):
     """#132: kies een vrije plaats op de bootpagina; de boot gaat van de wachtlijst."""
     wachtwoord_instellen(page, "bootplaats")
     wachter = f"Bootplaats {STEMPEL}"
-    code = rek_met_plaats(page, reknaam("b"), ["Surfski"])
+    code = rek_met_plaats(page, reknaam("c"), ["Surfski"])
     boot_vastleggen(page, wachter, "Surfski", eigenaar_index=2)
     page.get_by_role("button", name="Op de wachtlijst zetten").click()
     expect(page.get_by_text("De boot staat op de wachtlijst.")).to_be_visible()
