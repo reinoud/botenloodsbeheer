@@ -49,7 +49,7 @@ De import van de bestaande spreadsheet volgt later en hoort niet bij de eerste v
 8. Als beheerder wil ik een plaats vrijgeven waar een boot lag.
 9. Als beheerder wil ik een overzicht van toegewezen plaatsen van leden die hebben opgezegd.
 10. Als beheerder wil ik per lid een lijst van de boten in de loods en hun plaats.
-11. Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de code van de plaats, de naam van de eigenaar en een QR-code. De QR-code linkt naar een pagina in de applicatie met de openbare informatie over die plaats: welke boot, de foto en de eigenaar zonder adresgegevens.
+11. Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de code van de plaats, de bootsoorten waarvoor de plaats geschikt is en een QR-code (gewijzigd 2026-11-06, issue #143). De QR-code linkt naar een pagina in de applicatie met de openbare informatie over die plaats: welke boot, de foto en de eigenaar zonder adresgegevens.
 12. Als beheerder wil ik de indeling van de loods beheren: rekken, plaatsen, gereserveerde plaatsen voor clubboten en welke bootsoorten op welke plaats passen.
 
 ## Besluiten en antwoorden van de stakeholder (2026-10-30)
@@ -181,3 +181,9 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 ### Certificaten
 
 - De gedeelde Traefik vraagt de certificaten aan bij Let's Encrypt.
+
+### Kaartje (2026-11-06, issue #143)
+
+- Het kaartje toont geen omschrijving van het rek en geen naam van de eigenaar, ook geen "vrij" en geen naam van de vereniging bij een clubplaats. De naam van de vereniging staat al bij het logo. Wie op de plaats ligt, staat op de openbare pagina achter de QR-code.
+- Het kaartje krijgt de regel "Geschikt voor" met de namen van de bootsoorten van de plaats zoals ze in de applicatie staan, gescheiden door een schuine streep, in de volgorde van de bootsoorten (bijvoorbeeld "Geschikt voor Kajak/Canadese kano"). Heeft de plaats geen bootsoort, dan valt de regel weg.
+- De aanduiding van de plaats (zoals `A/1/1`) blijft op het kaartje.

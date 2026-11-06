@@ -104,8 +104,7 @@ dd { margin: 0; }
 .kaartje p { margin: 0 0 2mm; }
 .kaartje-logo { display: block; max-width: 100%; max-height: 15mm; margin-bottom: 3mm; }
 .kaartje-code { font-size: 20pt; font-weight: 700; }
-.kaartje-omschrijving { font-size: 9pt; }
-.kaartje-eigenaar { font-size: 12pt; }
+.kaartje-soorten { font-size: 12pt; }
 .qr-kaartje { display: block; width: 40mm; height: 40mm; }
 @media print {
   .kop, .niet-printen, .melding { display: none; }

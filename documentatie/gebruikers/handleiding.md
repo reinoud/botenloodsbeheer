@@ -169,11 +169,11 @@ Bovenaan `/indeling` staat **Indeling exporteren naar Excel**. Je krijgt het bes
 
 Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
 
-Elk kaartje toont het logo (zonder logo de naam van de vereniging), de aanduiding van de plaats, de omschrijving van het rek, de naam van de eigenaar en een QR-code. Bij een vrije plaats staat er "vrij", bij een clubplaats de naam van de vereniging. Adres, telefoon, e-mail en lidnummer staan er niet op.
+Elk kaartje toont het logo (zonder logo de naam van de vereniging), de aanduiding van de plaats, de bootsoorten waarvoor de plaats geschikt is (bijvoorbeeld "Geschikt voor Kajak/Canadese kano") en een QR-code. Heeft de plaats geen bootsoort, dan valt die regel weg. De omschrijving van het rek en de naam van de eigenaar staan er niet op, zodat je geen nieuw kaartje hoeft te printen als een plaats een andere boot krijgt. Wie op de plaats ligt, staat op de openbare pagina achter de QR-code. Adres, telefoon, e-mail en lidnummer staan nooit op een kaartje.
 
 Print de pagina met **Afdrukken** in de browser, of bewaar haar als pdf. Zet de schaal op 100 procent en de marges op standaard. Knip langs de stippellijnen.
 
-![De printpagina met kaartjes: logo, aanduiding, omschrijving, eigenaar en QR-code, met stippellijnen om te knippen.](afbeeldingen/kaartjes.png)
+![De printpagina met kaartjes: logo, aanduiding, bootsoorten en QR-code, met stippellijnen om te knippen.](afbeeldingen/kaartjes.png)
 
 De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naam, dan blijft het oude kaartje naar dezelfde plaats wijzen; alleen de aanduiding op het kaartje is verouderd. Print dan een nieuw kaartje.
 
