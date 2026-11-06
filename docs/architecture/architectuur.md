@@ -1,15 +1,15 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.7.1
-**Datum:** 2026-11-05
+**Versie:** v0.8.0
+**Datum:** 2026-11-06
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
 
 ## 1. Samenvatting
 
-Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 229 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image.
+Botenloodsbeheer is één Flask-applicatie met één PostgreSQL-database, voor één vereniging per installatie. Het ontwerp is bewust klein: 229 plaatsen, 210 leden en 3 beheerders vragen geen services, wachtrij, cache of frontend-build. De webinterface is server-rendered. De API is een tweede ingang op dezelfde domeinlaag, in een eigen container die alleen over het interne netwerk bereikbaar is. Imports en exports van leden doet een aparte, vervangbare integratiecontainer die alleen de API gebruikt (ADR-012). Opschonen en de heartbeat draaien in een workercontainer van hetzelfde image. CSV-import en -export van rekindeling en bezetting doet een beheerder in de webinterface (ADR-014, voorgesteld).
 
 De drie keuzes met de meeste gevolgen zijn: beheerders loggen in met een passkey of met een wachtwoord plus TOTP (ADR-001, besluit van de stakeholder), een plaats heeft een vaste openbare sleutel los van de aanduiding (`A/1/1`) zodat de QR-code blijft werken (ADR-003), en elke bedrijfsregel staat op één plek in de domeinlaag, die zowel de webinterface als de API gebruikt.
 
@@ -285,6 +285,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.0 | 2026-11-06 | Verwijzing naar ADR-014 v0.1.0, CSV-import en -export van rekindeling en bezetting (§1), issues #157 en #158 |
 | v0.7.1 | 2026-11-05 | Geen gaten in een verdieping, seed met 229 plaatsen (§3, §4, §6.3), rekoverzicht zonder lege kolommen; ADR-003 v2.3.0, issue #94 |
 | v0.7.0 | 2026-11-04 | Tabel `verdieping_bootsoort` en vergrendeling van alle plaatsen van een rek (§4), issue #83; ADR-003 v2.2.0 |
 | v0.6.0 | 2026-11-03 | Nieuwe besluiten issue #80: vak 1 tot en met 12 met gaten, omschrijving van het rek, seed uit de echte indeling (§1, §3, §4, §6.3); ADR-003 v2.1.0 |
