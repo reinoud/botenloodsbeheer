@@ -2,7 +2,7 @@
 /api/v1/ik aan via de losse Traefik. Geeft exitcode 1 als een status afwijkt.
 
     klant.py <verwacht>[,<verwacht>...] [Kop: waarde | -]...   een aanroep per kop, - is zonder kop
-    klant.py tempo                              12 aanroepen achter elkaar, vanaf de 11e 429
+    klant.py tempo [code]                       12 aanroepen: eerst code (standaard 200), dan 429
     klant.py iprem                              60 aanroepen vanaf een adres, dan 429 van iprem
     klant.py sein                               wacht op het sein van iprem, dan drie aanroepen
 
@@ -69,9 +69,6 @@ def herkomst(code, antwoord, lichaam):
     soort = antwoord.getheader("Content-Type") or ""
     if soort.startswith("application/json"):
         return "applicatie"
-    # De foutpagina van Werkzeug, zoals de 400 op een pad met procentcodering (ADR-013).
-    if soort.startswith("text/html") and lichaam.startswith(b"<!doctype html>"):
-        return "applicatie"
     # De 403 en 429 van Traefik hebben geen Content-Type, de 404 wel text/plain.
     if soort in ("", "text/plain; charset=utf-8") and lichaam == TRAEFIK.get(code):
         return "Traefik"
@@ -99,15 +96,15 @@ def status(verwacht, koppen):
     return goed
 
 
-def tempo():
+def tempo(eerst="200"):
     antwoorden = [aanroep() for _ in range(12)]
     codes = [code for code, _, _ in antwoorden]
     # Burst 10: de eerste tien slagen; binnen een seconde komt er één bij, dus 429 op 11 of 12.
     remmen = [(a, l) for c, a, l in antwoorden if c == 429]
-    ok = (codes[:10] == [200] * 10 and 429 in codes[10:]
+    ok = (codes[:10] == [int(eerst)] * 10 and 429 in codes[10:]
           and all(herkomst(429, a, l) == "Traefik" and a.getheader("Retry-After")
                   for a, l in remmen))
-    print(f"{'OK ' if ok else 'FOUT'} 12 aanroepen met hetzelfde token: {codes}; "
+    print(f"{'OK ' if ok else 'FOUT'} {PAD}: 12 aanroepen met hetzelfde token: {codes}; "
           f"Retry-After: {[a.getheader('Retry-After') for a, _ in remmen]}")
     return ok
 
@@ -175,7 +172,7 @@ def sein():
 
 if __name__ == "__main__":
     if sys.argv[1] in ("tempo", "iprem", "sein"):
-        geslaagd = globals()[sys.argv[1]]()
+        geslaagd = globals()[sys.argv[1]](*sys.argv[2:])
     else:
         geslaagd = status([int(c) for c in sys.argv[1].split(",")], sys.argv[2:])
     sys.exit(0 if geslaagd else 1)

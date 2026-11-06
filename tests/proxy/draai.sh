@@ -98,7 +98,8 @@ robot() {
 }
 token_a=$(robot proxytest-a --whitelist "$toegestaan/32")
 token_tempo=$(robot proxytest-tempo --whitelist "$toegestaan/32")
-for t in "$token_a" "$token_tempo"; do
+token_pad=$(robot proxytest-pad --whitelist "$toegestaan/32")
+for t in "$token_a" "$token_tempo" "$token_pad"; do
   [[ $t == blb_* ]] || { echo "Token aanmaken gaf geen token:" >&2; cat "$fout" >&2; exit 1; }
 done
 
@@ -112,7 +113,13 @@ controle "403 buiten API_EXTERN_BRONNEN" buiten "$vreemd" "$token_a" 403
 # Een gecodeerd pad mag niet langs externtoegang (overlay §4, issue #127).
 PAD=/api/v1/%2Fik controle "gecodeerd pad buiten API_EXTERN_BRONNEN" \
   buiten "$vreemd" "$token_a" 400,403
+# Traefik zet %61 om naar a vóór de routering; dit pad krijgt dus de whitelist (issue #130).
+PAD=/%61pi/v1/ik controle "ander gecodeerd teken buiten API_EXTERN_BRONNEN" \
+  buiten "$vreemd" "$token_a" 403
 controle "429 boven de grens per token" buiten "$toegestaan" "$token_tempo" tempo
+# Het pad met %2F bereikt api (400 als JSON) en telt in de grens per token.
+PAD=/api/v1/%2Fik controle "429 boven de grens per token, ook op het pad met %2F" \
+  buiten "$toegestaan" "$token_pad" tempo 400
 
 echo "== api opnieuw zonder $extern"
 "${c[@]}" up -d --wait --no-build --quiet-pull api 2>"$fout" || { cat "$fout" >&2; exit 1; }
