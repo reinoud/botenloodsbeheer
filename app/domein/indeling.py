@@ -4,6 +4,7 @@ aanduiding <rek>/<verdieping>/<vak>, zoals A/1/1."""
 
 import io
 import secrets
+import unicodedata
 
 from openpyxl import Workbook
 from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
@@ -33,10 +34,18 @@ NAAM_MAX = 10
 OMSCHRIJVING_MAX = 60
 
 
+def _stuurteken(tekst):
+    """De CSV-import weigert stuurtekens in een veld (ADR-014); het scherm slaat ze dus niet op."""
+    return any(unicodedata.category(t) == "Cc" for t in tekst)
+
+
 def _naam(naam):
     naam = (naam or "").strip()
-    if not 1 <= len(naam) <= NAAM_MAX or "/" in naam:
-        raise Regelfout(f"Geef het rek een naam van 1 tot {NAAM_MAX} tekens, zonder /.")
+    # Een naam met # is een commentaarregel in het CSV-bestand (ADR-014).
+    if (not 1 <= len(naam) <= NAAM_MAX or "/" in naam or naam.startswith("#")
+            or _stuurteken(naam)):
+        raise Regelfout(f"Geef het rek een naam van 1 tot {NAAM_MAX} tekens, zonder / en "
+                        "zonder # vooraan en zonder stuurtekens.")
     return naam
 
 
@@ -44,6 +53,8 @@ def _omschrijving(tekst):
     tekst = (tekst or "").strip()
     if len(tekst) > OMSCHRIJVING_MAX:
         raise Regelfout(f"De omschrijving heeft hooguit {OMSCHRIJVING_MAX} tekens.")
+    if _stuurteken(tekst):
+        raise Regelfout("De omschrijving mag geen stuurtekens of regeleinden bevatten.")
     return tekst
 
 
@@ -64,11 +75,23 @@ def _vakken(vakken):
     return paren
 
 
+def _transactie(functie):
+    """Roept een kern aan en commit; bij elke fout een rollback en dezelfde fout opnieuw. De
+    kernen (_rek_aanmaken, _rek_wijzigen, _plaats_wijzigen) commit en rollbacken zelf niet, zodat
+    de CSV-import (ADR-014) er meer in één transactie kan doen."""
+    try:
+        resultaat = functie()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
+    return resultaat
+
+
 def _flush_rek(naam):
     try:
         db.session.flush()
     except IntegrityError as fout:
-        db.session.rollback()
         # De index op lower(naam) vangt ook twee gelijktijdige aanvragen af.
         if fout.orig.diag.constraint_name == "uq_rek_naam":
             raise Regelfout(f"Er is al een rek met de naam {naam}.") from None
@@ -91,8 +114,10 @@ def bootsoorten():
 def _soortnaam(naam, bootsoort_id=None):
     """Getrimd, 1 tot 50 tekens, uniek zonder verschil in hoofdletters (BLB-028)."""
     naam = (naam or "").strip()
-    if not 1 <= len(naam) <= 50:
-        raise Regelfout("Geef de bootsoort een naam van 1 tot 50 tekens.")
+    # De CSV-export scheidt de bootsoorten van een plaats met een / (ADR-014).
+    if not 1 <= len(naam) <= 50 or "/" in naam or _stuurteken(naam):
+        raise Regelfout("Geef de bootsoort een naam van 1 tot 50 tekens, zonder / en zonder "
+                        "stuurtekens.")
     q = select(Bootsoort.naam).where(func.lower(Bootsoort.naam) == naam.lower())
     if bootsoort_id is not None:
         q = q.where(Bootsoort.id != bootsoort_id)
@@ -344,13 +369,14 @@ def rek_aanmaken(naam, omschrijving, vakken, actor, bootsoort_per_verdieping=Non
     """Maakt het rek met een plaats per vak dat aan staat (BLB-001). bootsoort_per_verdieping is
     {verdieping: bootsoort-id}: elke plaats op die verdieping krijgt die soort, en het rek
     onthoudt haar voor vakken die later aan gaan (ADR-003 v2.2.0)."""
+    return _transactie(lambda: _rek_aanmaken(naam, omschrijving, vakken, actor,
+                                             bootsoort_per_verdieping))
+
+
+def _rek_aanmaken(naam, omschrijving, vakken, actor, bootsoort_per_verdieping=None):
     naam, omschrijving, vakken = _naam(naam), _omschrijving(omschrijving), _vakken(vakken)
-    try:
-        soorten = _verdiepingsoorten(bootsoort_per_verdieping, vakken)
-        _naam_vrij(naam)
-    except Regelfout:
-        db.session.rollback()
-        raise
+    soorten = _verdiepingsoorten(bootsoort_per_verdieping, vakken)
+    _naam_vrij(naam)
     volgorde = db.session.scalar(select(func.coalesce(func.max(Rek.volgorde), 0))) + 1
     r = Rek(naam=naam, omschrijving=omschrijving, volgorde=volgorde)
     db.session.add(r)
@@ -362,7 +388,6 @@ def rek_aanmaken(naam, omschrijving, vakken, actor, bootsoort_per_verdieping=Non
     db.session.add_all(VerdiepingBootsoort(rek_id=r.id, verdieping=v, bootsoort_id=s.id)
                        for v, s in soorten.items())
     _plaatsen_erbij(r, vakken, actor, soorten)
-    db.session.commit()
     return r
 
 
@@ -383,7 +408,10 @@ def _plaatsen_erbij(r, vakken, actor, soorten):
 def rek_wijzigen(rek_id, naam, omschrijving, actor):
     """Naam en omschrijving. Een nieuwe naam verandert de aanduiding van alle plaatsen in het
     rek; publieke sleutels en toewijzingen blijven (ADR-003)."""
-    r = rek(rek_id)
+    return _transactie(lambda: _rek_wijzigen(rek(rek_id), naam, omschrijving, actor))
+
+
+def _rek_wijzigen(r, naam, omschrijving, actor):
     naam, omschrijving = _naam(naam), _omschrijving(omschrijving)
     _naam_vrij(naam, r.id)
     wijzigingen = {k: [oud, nieuw] for k, oud, nieuw in (("naam", r.naam, naam),
@@ -392,7 +420,6 @@ def rek_wijzigen(rek_id, naam, omschrijving, actor):
         log.schrijf(actor, "rek.gewijzigd", [f"rek:{r.id}"], wijzigingen)
         r.naam, r.omschrijving = naam, omschrijving
         _flush_rek(naam)
-    db.session.commit()
     return r
 
 
@@ -450,13 +477,16 @@ def rek_verwijderen(rek_id, actor):
     db.session.commit()
 
 
+GEEN_SOORT = "Kies minstens één bootsoort die op de plaats past."
+
+
 def _soorten(bootsoort_ids):
     # KEY SHARE: wacht op een lopende bootsoort_verwijderen in plaats van een fout van de FK.
     soorten = db.session.scalars(
         select(Bootsoort).where(Bootsoort.id.in_(bootsoort_ids)).order_by(Bootsoort.id)
         .with_for_update(key_share=True)).all()
     if not soorten:
-        raise Regelfout("Kies minstens één bootsoort die op de plaats past.")
+        raise Regelfout(GEEN_SOORT)
     return soorten
 
 
@@ -464,22 +494,31 @@ def plaats_wijzigen(plaats_id, bootsoort_ids, is_clubplaats, actor):
     """Geschikte bootsoorten en clubplaats (BLB-002, 003). De aanduiding wijzigt alleen met de
     naam van het rek. De plaats wordt eerst vergrendeld, zodat geen boot verschijnt tussen
     controle en wijziging."""
-    try:
+    def wijzig():
         p = db.session.get(Plaats, plaats_id, with_for_update=True)
         if p is None:
             raise Regelfout("Deze plaats bestaat niet.")
-        soorten = _soorten(bootsoort_ids)
-        is_clubplaats = bool(is_clubplaats)
-        b = p.boot
-        if b is not None and b.bootsoort not in soorten:
-            raise Regelfout(f"Op plaats {p.code} ligt {b.naam}, een {b.bootsoort.naam.lower()}. "
-                            "Geef de plaats eerst vrij of laat die bootsoort staan.")
-        if b is not None and is_clubplaats != p.is_clubplaats:
-            raise Regelfout(f"Op plaats {p.code} ligt {b.naam}. Geef de plaats eerst vrij "
-                            "voordat je de clubplaats wijzigt.")
-    except Regelfout:
-        db.session.rollback()
-        raise
+        _plaats_wijzigen(p, _soorten(bootsoort_ids), is_clubplaats, actor)
+        return p
+
+    return _transactie(wijzig)
+
+
+def controleer_plaats(p, soorten, is_clubplaats):
+    """Weigert als de boot op de vergrendelde plaats p niet meer past of de clubplaats wijzigt."""
+    b = p.boot
+    if b is not None and b.bootsoort not in soorten:
+        raise Regelfout(f"Op plaats {p.code} ligt {b.naam}, een {b.bootsoort.naam.lower()}. "
+                        "Geef de plaats eerst vrij of laat die bootsoort staan.")
+    if b is not None and is_clubplaats != p.is_clubplaats:
+        raise Regelfout(f"Op plaats {p.code} ligt {b.naam}. Geef de plaats eerst vrij "
+                        "voordat je de clubplaats wijzigt.")
+
+
+def _plaats_wijzigen(p, soorten, is_clubplaats, actor):
+    """Kern van plaats_wijzigen op een vergrendelde plaats; True als er iets veranderde."""
+    is_clubplaats = bool(is_clubplaats)
+    controleer_plaats(p, soorten, is_clubplaats)
     wijzigingen = {}
     if soorten != p.bootsoorten:
         wijzigingen["bootsoorten"] = [[s.naam for s in p.bootsoorten], [s.naam for s in soorten]]
@@ -489,8 +528,7 @@ def plaats_wijzigen(plaats_id, bootsoort_ids, is_clubplaats, actor):
         p.is_clubplaats = is_clubplaats
     if wijzigingen:
         log.schrijf(actor, "plaats.gewijzigd", [f"plaats:{p.id}", f"rek:{p.rek_id}"], wijzigingen)
-    db.session.commit()
-    return p
+    return bool(wijzigingen)
 
 
 def _publieke_sleutel():

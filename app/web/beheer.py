@@ -4,20 +4,24 @@ Schermen over boten en plaatsen tonen de bootmutaties die erbij horen (BLB-025, 
 import json
 from functools import partial
 
-from flask import abort, current_app, flash, redirect, render_template, request, url_for
+from flask import abort, current_app, flash, g, redirect, render_template, request, url_for
 
 from app.domein import (
+    Actor,
     Regelfout,
     beheerders,
     boten,
+    csvbestand,
     indeling,
     leden,
     log,
+    rekindeling_csv,
     status,
     toewijzing,
     vandaag,
     wachtlijst,
 )
+from app.domein.csvbestand import CsvFout
 from app.web import bp, getal, inloggen_vereist, recent_ingelogd, uitvoeren
 
 
@@ -58,13 +62,58 @@ def _bootsoorten_per_verdieping():
     return keuze
 
 
-@bp.get("/indeling")
-@inloggen_vereist
-def indeling_overzicht():
+def _indeling_scherm(**extra):
     return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
                            bootsoorten=indeling.bootsoorten(),
                            verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN,
-                           naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX)
+                           naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX,
+                           csv_max=csvbestand.MAX_BYTES // 1024, **extra)
+
+
+@bp.get("/indeling")
+@inloggen_vereist
+def indeling_overzicht():
+    return _indeling_scherm()
+
+
+@bp.get("/rekindeling.csv")
+@inloggen_vereist
+def rekindeling_export():
+    leeg = request.args.get("leeg") == "1"
+    try:
+        inhoud = rekindeling_csv.export(leeg)
+    except Regelfout as fout:
+        flash(str(fout), "fout")
+        return redirect(url_for("web.indeling_overzicht"))
+    return inhoud, {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": f'attachment; filename="rekindeling{"-leeg" if leeg else ""}.csv"',
+    }
+
+
+@bp.post("/rekindeling/import")
+@inloggen_vereist
+@recent_ingelogd
+def rekindeling_importeren():
+    bestand = request.files.get("bestand")
+    if bestand is None or not bestand.filename:
+        flash("Kies een CSV-bestand.", "fout")
+    elif not bestand.filename.lower().endswith(".csv"):
+        flash("Kies een bestand met de extensie .csv.", "fout")
+    else:
+        # Eén byte meer dan de grens: de import weigert dan, zonder verder te lezen.
+        data = bestand.stream.read(csvbestand.MAX_BYTES + 1)
+        try:
+            n = rekindeling_csv.importeren(data, Actor.van(g.beheerder))
+        except CsvFout as fout:
+            return _indeling_scherm(import_fouten=fout.regels), 422
+        except Regelfout as fout:
+            flash(str(fout), "fout")
+        else:
+            flash(f"De indeling is geïmporteerd. Rekken: {n['rekken_nieuw']} nieuw, "
+                  f"{n['rekken_gewijzigd']} gewijzigd. Plaatsen: {n['plaatsen_nieuw']} nieuw, "
+                  f"{n['plaatsen_gewijzigd']} gewijzigd.", "info")
+    return redirect(url_for("web.indeling_overzicht"))
 
 
 @bp.get("/rekoverzicht")

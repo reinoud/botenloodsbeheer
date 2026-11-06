@@ -165,6 +165,18 @@ Een lid verhuist van **Gaan opzeggen** naar **Opgezegd** zodra de opzegdatum is 
 
 Bovenaan `/indeling` staat **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
 
+## Indeling als CSV exporteren en importeren
+
+Op `/indeling` staan onder **Indeling als CSV** twee downloads en een uploadformulier. **Indeling exporteren als CSV** geeft `rekindeling.csv` met een regel per plaats. **Leeg sjabloon met uitleg downloaden** geeft `rekindeling-leeg.csv`: de kopregel, de uitleg en een voorbeeldregel, alles als commentaar.
+
+De kolommen zijn `rek`, `omschrijving`, `verdieping`, `vak`, `bootsoorten` en `clubplaats`. Zet bij `bootsoorten` de namen zoals de applicatie ze toont, gescheiden door een `/`, bijvoorbeeld `Kajak/Surfski`. Een lege cel betekent "geen bootsoort"; dat kan alleen bij een nieuwe plaats of een plaats die al geen bootsoort heeft. Bij `clubplaats` staat `ja` of `nee`. De omschrijving is op alle regels van hetzelfde rek gelijk.
+
+Het bestand is UTF-8 met puntkomma's, zoals Excel in het Nederlands het opent en opslaat (kies "CSV UTF-8"). Een regel die met `#` begint, is commentaar. Het bestand is hooguit 256 kB en heeft hooguit 2000 regels. Een tekst die met `=`, `+`, `-` of `@` begint, krijgt in de export een `'` ervoor, zodat Excel er geen formule van maakt. De import haalt die `'` weer weg.
+
+**Importeren** vult aan en werkt bij. Een nieuw rek of een nieuwe plaats komt erbij en een bestaande plaats krijgt de waarden uit het bestand. Een rek wordt herkend aan zijn naam, een plaats aan rek, verdieping en vak. Plaatsen die niet in het bestand staan, blijven. Een rek hernoemen kan alleen op het scherm. Je moet kort geleden zijn ingelogd; anders log je opnieuw in.
+
+Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elke foute regel met het regelnummer en de reden. Fouten zijn bijvoorbeeld een onbekende bootsoort, een gat in een verdieping, een verkeerd scheidingsteken en een bezette plaats die ongeschikt wordt voor haar boot of van clubplaats verandert. Een export die je ongewijzigd importeert, verandert niets. Je vindt de wijziging terug in het technische log (`indeling.geimporteerd`, alleen aantallen) en in het rekoverzicht.
+
 ## Kaartjes printen
 
 Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
@@ -320,6 +332,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken, omschrijvingen en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
+| `/rekindeling.csv` | Export van de indeling als CSV, met `?leeg=1` het sjabloon |
 | `/rekoverzicht` | Plaatje per plaats, per rek |
 | `/kaartjes` | Plaatsen kiezen voor kaartjes |
 | `/kaartjes/print` | Kaartjes met QR-code om te printen |

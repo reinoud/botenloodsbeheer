@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.4
+**Versie:** v0.6.5
 **Datum:** 2026-11-06
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -27,9 +27,9 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 
 | Meting | Waarde |
 |--------|--------|
-| Aantal stories | 44, waarvan BLB-004 vervallen (issue #80) |
+| Aantal stories | 45, waarvan BLB-004 vervallen (issue #80) |
 | Must | 34 |
-| Should | 8 |
+| Should | 9 |
 | Could | 1 |
 | Af (slice 1 tot en met 3) | 24, waarvan BLB-006, 007, 008, 017, 024 en 027 nieuwe criteria hebben voor slice 4 of 6 |
 | Gereed voor bouw | Slice 4 tot en met 11 (§5) |
@@ -439,6 +439,21 @@ Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zi
 - Gegeven een plaats waaraan een boot is toegewezen of waarvan een boot is vrijgegeven, wanneer de beheerder het detail van die plaats opent, dan staat die mutatie in het log onder het detail. Een wijziging van de plaats zelf (bootsoorten, clubplaats) of van de indeling staat in het technische log (BLB-043).
 - Gegeven de openbare pagina, wanneer een bezoeker die opent, dan staat daar geen log.
 
+#### BLB-045 Rekindeling exporteren en importeren als CSV
+
+Prioriteit: Should. Bron: issue #157, besluiten stakeholder 2026-11-06, ADR-014. Afhankelijk van: BLB-001, BLB-002, BLB-044.
+
+Als beheerder wil ik de rekindeling als CSV-bestand exporteren en importeren, met een lege export als sjabloon, zodat ik de indeling in een spreadsheet kan opzetten, bewaren of overzetten.
+
+- Gegeven de indeling, wanneer de beheerder exporteert, dan krijgt die een UTF-8-bestand met BOM, puntkomma's en een regel per plaats: `rek;omschrijving;verdieping;vak;bootsoorten;clubplaats`. Een tekst die met `=`, `+`, `-`, `@`, tab of CR begint, krijgt een `'` ervoor.
+- Gegeven de lege export, wanneer de beheerder die downloadt, dan staan daarin uitleg, de toegestane bootsoorten en een voorbeeldregel als commentaar, en de kopregel. Importeert de beheerder dit bestand, dan verandert er niets.
+- Gegeven een bestand, wanneer de beheerder het importeert, dan komen nieuwe rekken en plaatsen erbij, krijgen bestaande plaatsen de waarden uit het bestand en blijven plaatsen buiten het bestand staan.
+- Gegeven een export, wanneer de beheerder die ongewijzigd importeert, dan verandert er niets.
+- Gegeven een bestand met een fout (te groot, meer dan 2000 regels, verkeerd scheidingsteken of codering, onbekende bootsoort, gat in een verdieping, bezette plaats die ongeschikt wordt of van clubplaats verandert), wanneer de beheerder het importeert, dan verandert er niets en noemt de melding elke foute regel met regelnummer en reden.
+- Gegeven een import, dan vraagt die een recente inlog en staat in het technische log alleen een regel met aantallen.
+
+Route voor een mens (issue #157): open de indeling, exporteer, voeg in een spreadsheet een rek toe, importeer en controleer het rekoverzicht. Download het lege sjabloon en lees de uitleg.
+
 #### BLB-043 Twee logs: bootmutaties en techniek
 
 Prioriteit: Should. Bron: stakeholder 2026-11-01, intake (Twee logs). Afhankelijk van: BLB-024, BLB-025. Wijzigt: BLB-025 voor het technische log.
@@ -756,6 +771,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.5 | 2026-11-06 | Issue #157: BLB-045, rekindeling als CSV exporteren en importeren (ADR-014) |
 | v0.6.4 | 2026-11-06 | Issue #150: BLB-027 zonder instelbare kleuren (besluit stakeholder 2026-11-06); het criterium over een waarschuwing bij slecht leesbare kleuren vervalt |
 | v0.6.3 | 2026-11-06 | Issue #143: het kaartje toont de bootsoorten van de plaats, geen omschrijving van het rek en geen eigenaar (BLB-021, BLB-001) |
 | v0.6.2 | 2026-11-05 | Issue #94: een verdieping heeft geen gaten, het rekoverzicht toont alleen de kolommen en verdiepingen van het rek, 229 plaatsen (BLB-001, BLB-044) |
