@@ -100,6 +100,28 @@ De link werkt één keer en is 24 uur geldig. Open hem op de host uit `BASIS_URL
 
 Daarna volgt het token van de integratiecontainer, zie [integratiecontainer](integratiecontainer.md). Zonder token importeert hij geen leden.
 
+## Probleem: wachtwoord van een databaserol geweigerd
+
+In de log van `db` staat bijvoorbeeld:
+
+```text
+FATAL:  password authentication failed for user "botenloods_taken"
+```
+
+De rol bestaat, maar het wachtwoord in de database is niet het wachtwoord in `.env`. Dat gebeurt zo: `docker/db-init.sh` maakt de rollen `botenloods_web`, `botenloods_taken` en `botenloods_api` en zet hun wachtwoorden alleen bij de eerste start met een lege database. Bestaat het volume `dbdata` al, dan slaat PostgreSQL het script over. Een nieuwe `.env`, een gewijzigd wachtwoord of een volume van een eerdere installatie geeft dan deze fout. De rol in de melding hoort bij één dienst: `botenloods_taken` bij `worker`, `botenloods_web` bij `web` en `botenloods_api` bij `api`.
+
+Zet de wachtwoorden uit `.env` opnieuw in de database:
+
+```sh
+docker compose up -d db
+docker compose exec db sh /docker-entrypoint-initdb.d/rollen.sh
+docker compose restart worker web api
+```
+
+De eerste regel maakt `db` opnieuw aan als `.env` is gewijzigd. Dat is nodig, want het script leest de wachtwoorden uit de omgeving van de container en die staat vast vanaf het moment dat de container is gemaakt. De gegevens in het volume blijven bewaard.
+
+Blijft de fout, controleer dan of het wachtwoord alleen letters en cijfers bevat (zie stap 2). Een teken als `@`, `/`, `:` of `%` breekt de database-URL, en dan komt er een ander wachtwoord bij de database aan dan in `.env` staat.
+
 ## Controle
 
 - `curl -I http://DOMEIN/` geeft 308 naar `https://`.
