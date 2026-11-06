@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.34
+**Versie overlay:** v0.5.35
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -111,6 +111,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een nieuwe webroute krijgt als vaste afwerklijst: het menu-item, een rij in de routetabel van de handleiding (`test_handleiding_noemt_elke_webroute`) en een uitnodigingssoort in `tests/e2e/draai.sh`.
 - `Plaats.bootsoorten` staat op id gesorteerd; "eerste soort" is de laagste id, niet de volgorde van aanvinken. `plaats()` in `tests/unit/hulp.py` weigert een lege soortenlijst; een plaats zonder soort maak je via `rek_aanmaken`.
 - Verandert een wijziging de volgorde of weergave op één scherm, noem dan de andere schermen die hetzelfde gegeven tonen en of die bewust ongewijzigd blijven.
+- Een bron buiten de repository (zoals designsystem) wordt gelezen op een genoemde commit, met `git show <commit>:<pad>`; de werkboom telt niet. Draai na een afname van de Dajaks-basis vóór de oplevering `python3 basis/controleer_product.py <repo> --doel app/web/static/ds --ref main` vanuit designsystem en meld de uitkomst; bestanden die niet uit de afname komen, staan buiten die map.
+- Wijzigt de HTML-structuur (zoals een wrapper om een tabel), zoek dan eerst met `grep -rn` naar CSS-selectors in `tests/e2e/` die op de structuur leunen (`main > table`, `h2 + p + table`, `section.kaart`) en noem ze. Controleer een scherm ook op 360 pixels breed.
+- Een nieuwe macro of een gewijzigd sjabloon dat gebruikersinvoer toont, krijgt een unittest met `<b>x</b>` die de geëscapete vorm toetst; de mutant met `|safe` op dat veld moet falen. Een fonttest controleert familie plus gewicht.
+- Een test op het aantal migratieheads gebruikt de fixture `database` niet, zodat een tweede head op de eigen assert valt.
+- Een wachtlus op een achtergrondproces gebruikt `docker ps` of een pidbestand, niet `pgrep -f` met de naam van het script in de eigen opdracht.
 - Noem bij een nieuwe plaats of een nieuwe plaatsinvoer de beginwaarden (bootsoorten, clubplaats), zodat de E2E-helpers de juiste stappen krijgen.
 - Noem bij elke wijziging van de signatuur van een domeinfunctie alle aanroepers (web, `app/seed.py`, `tests/unit/hulp.py`).
 - Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
@@ -336,6 +341,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.35 | 2026-11-06 | Regels uit de terugblikken van prism en sentinel bij #150 deel 1: afname controleren, structuurselectors, escapingtest, migratieheadtest, wachtlus | Lessen |
 | v0.5.34 | 2026-11-06 | §6: imports en exports met andere systemen in de integratiecontainer, CSV via de webinterface in `web` (ADR-014) | Besluit ADR-014 |
 | v0.5.33 | 2026-11-06 | Regel uit de terugblik van foundation (ADR-014): ADR bij bestandsnaam noemen | Lessen |
 | v0.5.32 | 2026-11-06 | Model en effort per soort agentopdracht, besluit van de stakeholder | Werkwijze |
