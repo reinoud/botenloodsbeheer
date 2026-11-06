@@ -27,11 +27,27 @@ class _Id(IntegerConverter):
 
 class _JsonLog(logging.Formatter):
     def format(self, record):
-        return json.dumps(
-            {"tijd": self.formatTime(record), "niveau": record.levelname,
-             "bron": record.name, "bericht": record.getMessage()},
-            ensure_ascii=False,
-        )
+        regel = {"tijd": self.formatTime(record), "niveau": record.levelname,
+                 "bron": record.name, "bericht": record.getMessage()}
+        if record.exc_info:  # zonder traceback is een 500 in productie niet te herleiden (#137)
+            tekst = self.formatException(record.exc_info)
+            for detail in _details(record.exc_info[1]):
+                tekst = tekst.replace(detail, "[weggelaten]")
+            regel["traceback"] = tekst
+        return json.dumps(regel, ensure_ascii=False)
+
+
+def _details(fout):
+    """De DETAIL van PostgreSQL in de keten van een uitzondering: de rij of sleutel van een fout,
+    met persoonsgegevens. Letterlijk, want een veldwaarde kan een regelovergang bevatten."""
+    gezien = set()
+    while fout is not None and id(fout) not in gezien:
+        gezien.add(id(fout))
+        for f in (fout, getattr(fout, "orig", None)):
+            detail = getattr(getattr(f, "diag", None), "message_detail", None)
+            if detail:
+                yield detail
+        fout = fout.__cause__ or fout.__context__
 
 
 def create_app(overrides=None):

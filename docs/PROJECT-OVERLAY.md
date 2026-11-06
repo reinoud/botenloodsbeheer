@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.25
+**Versie overlay:** v0.5.26
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -160,6 +160,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een configwijziging welke diensten (web, api, worker) de instelling lezen, zodat de reviewer niet hoeft te zoeken of een andere dienst geraakt wordt.
 - Een reviewer van de API proeft via Traefik vanaf het netwerk `koppeling` op `10.203.0.2:8081`, niet via `127.0.0.1:8080`: daar is geen router voor `/api/`. Traefik weigert `%2F`, `%5C`, `%25` en `%00` in het pad zelf (lege 400, `compose.dev.yml`); noem in de brief welke weigering van Traefik komt en welke van de applicatie.
 - Vraag je of een proefscript moet veranderen, noem dan de functies die de geraakte status beoordelen (zoals `status()` en `iprem()` in `tests/proxy/klant.py`) en welke bron daar als goed telt.
+- Reviewen twee agents tegelijk en draait er één de suite, geef de ander dan voor zijn eigen proef met de fixtures een eigen `TEST_DB` (regel in Bouw); ook een losse proef op `botenloods_test` verstoort de suite. Maak die database met een kopie van `tests/unit/conftest.py` waarin alleen `TEST_DB` anders is, gemount over `/app/tests/unit/conftest.py`; een conftest die `TEST_DB` na de import overschrijft, verandert de URL's niet. De proefmap op `/app/scratch` krijgt daarnaast een `conftest.py` met `from tests.unit.conftest import *`.
+- Loopt een filter meer wegen af naar dezelfde gegevens (zoals `__cause__` en `.orig`), maak dan per weg een mutant en noem welke test die weg dekt.
+- Noemt een regel in de overlay een tabel, kolom of constraint, toets die dan tegen `app/models.py`.
 
 #### E2E
 
@@ -241,6 +244,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Beschrijft de documentatie een vertrouwensinstelling (`trustedips`, een whitelist), noem dan in de brief welke voorwaarde aan de andere kant moet gelden (zoals: de load balancer zet op elke verbinding zelf een PROXY-kop), en laat de reviewer toetsen of de documentatie die voorwaarde noemt.
 - Een controle in `draai.sh` die een tweede container start, eist dat die container gestart is en met 0 eindigt; een lege uitkomst van `docker wait` telt als fout. Proef dat met een docker-stub waarin `run -d` faalt. Een herstel van een controle komt met een stub die de oude en de nieuwe conditie draait, met per geval de verwachte uitkomst.
 - Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
+- Zet een wijziging meer in de applicatielog (zoals een traceback), dan toetst de test de JSON-logregel na een fout van de database zelf (NOT NULL of UNIQUE op `lid`) met de rol `api` en met een regelovergang in een veldwaarde, en met een fout die de oorspronkelijke tekst zonder keten overneemt (zoals `PendingRollbackError`); `hide_parameters` verbergt de DETAIL van PostgreSQL niet. Een foutmelding in de code bevat geen veldwaarden.
 
 #### Documentatie, backlog en ADR's
 
@@ -324,6 +328,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.26 | 2026-11-06 | Vier regels uit de terugblikken van aegis en sentinel (#137): eigen `TEST_DB` voor een proef naast de suite (met kopie van de conftest), mutant per weg van een filter, overlayregel getoetst tegen het model, logtest op een databasefout met de rol `api`, een regelovergang en een fout zonder keten | Lessen |
 | v0.5.25 | 2026-11-06 | Twee regels uit de terugblikken van aegis en sentinel (#133): proef op de API via `koppeling`, functies die een status beoordelen bij een vraag over een proefscript | Lessen |
 | v0.5.24 | 2026-11-05 | Drie regels uit de terugblikken van sentinel en aegis (#132): aanroepers van een gedeelde functie, gecombineerde mutant op route en template, `draai.sh -k` op de testnaam | Lessen |
 | v0.5.23 | 2026-11-05 | Regel over een mutant per kant van een tweezijdige controle, uit de terugblik van sentinel (#131) | Lessen |

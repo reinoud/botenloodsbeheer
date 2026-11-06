@@ -463,6 +463,19 @@ def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid(
     assert 'name="plaats_id"' not in r and "De eigenaar is oud-lid. De boot krijgt geen plaats." in r
 
 
+def test_bootpagina_zonder_plaats_geeft_200(ingelogd):  # noqa: F811
+    """#137: een boot op de wachtlijst, een clubboot en een boot van een oud-lid, alle zonder plaats."""
+    plaats(), plaats("A/1/2", club=True)
+    kievit = boot(lid().id, naam="Kievit")
+    wachtlijst.erop_zetten(kievit.id, "2024-03-01", CLI)
+    # Na de aanmelding opgezegd: tot de volgende import staat de boot nog op de lijst.
+    oudje = Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=lid("1002", opzegdatum=vandaag()).id)
+    db.session.add_all([oudje, Wachtlijst(boot=oudje, aangemeld_op=date(2024, 3, 1))])
+    db.session.commit()
+    for b in (kievit, oudje, boot(None, naam="Clubkajak")):
+        assert ingelogd.get(f"/boten/{b.id}").status_code == 200
+
+
 def test_bezoeker_kan_niet_toewijzen_vanaf_bootpagina(client):
     p, b = plaats(), boot(lid().id, naam="Kievit")
     assert client.post(f"/boten/{b.id}/toewijzen", data={"plaats_id": p.id}).location.endswith(
