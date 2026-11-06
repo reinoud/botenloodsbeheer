@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.28
+**Versie overlay:** v0.5.29
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -101,6 +101,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
+- Controleer of elke letter van `reknaam()` in `tests/e2e/` uniek is met `grep -onE 'reknaam\([^)]*\)' tests/e2e/*.py`; dezelfde letter voor het rek en de bootnaam binnen één test telt niet als dubbel.
 - Verandert een validatieregel in het domein, draai dan eerst de volledige unitsuite: die geeft de lijst van tests en E2E-helpers die met de oude regel gegevens maken.
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
 - Vervang je een aanroep op meer plekken door een gedeelde functie, draai dan per aanroep een mutant die de oude aanroep terugzet, en noem per aanroep de test die valt of waarom de mutant gelijkwaardig is.
@@ -330,6 +331,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.29 | 2026-11-06 | Regel uit de terugblik van sentinel (#145): unieke reknamen in E2E controleren | Lessen |
 | v0.5.28 | 2026-11-06 | Regel uit de terugblik van sentinel (#142): een telling van 0 in het bewijs verklaren | Lessen |
 | v0.5.27 | 2026-11-06 | Regel uit de terugblik van sentinel (#130): een reeks statuscodes ook op herkomst toetsen | Lessen |
 | v0.5.26 | 2026-11-06 | Vier regels uit de terugblikken van aegis en sentinel (#137): eigen `TEST_DB` voor een proef naast de suite (met kopie van de conftest), mutant per weg van een filter, overlayregel getoetst tegen het model, logtest op een databasefout met de rol `api`, een regelovergang en een fout zonder keten | Lessen |
