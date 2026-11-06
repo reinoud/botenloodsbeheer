@@ -27,6 +27,17 @@ API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0
 # beheerdocumentatie. Een nieuw token in secrets/api_token. De container staat stil terwijl
 # er een importverzoek klaarkomt; anders pakt hij het op vóór het log hieronder begint, en
 # zonder verzoek importeert hij tussen 00:00 en SYNC_TIJDSTIP niet (#45).
+# Na elke run, ook na een mislukte, ruimt tests/e2e/opruimen.sql op wat van een E2E-run is, ook de
+# resten van eerdere runs (#142). Eigenaarsrol in de db-container van de dev-stack; de logregels blijven.
+opruimen() {
+  local rc=$?
+  trap - EXIT
+  "${c[@]}" exec -T db psql -q -U botenloods -d botenloods -v stempel="$stempel" \
+    < tests/e2e/opruimen.sql >/dev/null || { echo "Opruimen van de E2E-gegevens mislukt." >&2; rc=1; }
+  rm -f "$dummy" "$fout"
+  exit $rc
+}
+trap opruimen EXIT
 # Maakt een robottoken en geeft alleen de waarde; de uitleg op stderr komt alleen bij een fout.
 robot() {
   "${c[@]}" exec -T web flask token robot "$@" 2>"$fout" | tail -n 1 \
