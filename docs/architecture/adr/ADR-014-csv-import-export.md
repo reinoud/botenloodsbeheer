@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.0
+**Versie:** v0.2.1
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting)
 
 ## Context
@@ -17,7 +17,7 @@ Het voorstel uit de issues blijft.
 
 | Bestand | Kopregel |
 |---------|----------|
-| Rekindeling | `rek;omschrijving;verdieping;vak;bootsoorten;clubplaats`, één regel per plaats; `bootsoorten` gescheiden door `/`, `clubplaats` is `ja` of `nee` |
+| Rekindeling | `rek;omschrijving;verdieping;vak;bootsoorten;clubplaats`, één regel per plaats; `bootsoorten` gescheiden door `/` (leeg is geen bootsoort, alleen bij een nieuwe plaats of een plaats die al geen bootsoort heeft, zoals op het scherm), `clubplaats` is `ja` of `nee` |
 | Bezetting | `plaats;boot;bootsoort;eigenaar;lidnummer`, één regel per bezette plaats; `lidnummer` optioneel; een clubboot heeft beide leeg |
 
 | Onderwerp | Regel |
@@ -26,14 +26,14 @@ Het voorstel uit de issues blijft.
 | Codering | Export UTF-8 met BOM. Import leest UTF-8 met of zonder BOM, anders "sla op als CSV UTF-8". Geen gok naar Windows-1252 |
 | Commentaar | Een regel waarvan de eerste cel na inlezen met `#` begint; dat werkt ook als Excel de cel tussen aanhalingstekens zet. De lege export heeft uitleg, toegestane bootsoorten, een voorbeeldregel als commentaar en de kopregel |
 | Kolommen | Precies die van de kopregel, volgorde vrij |
-| Grenzen | Hooguit 256 kB (de route leest niet verder) en 2000 regels. Alleen `.csv`, gecontroleerd op inhoud. Veldlengtes als in het model. Een stuurteken of regeleinde in een veld is een fout |
+| Grenzen | Hooguit 256 kB (de route leest niet verder) en 2000 regels. Alleen `.csv`, gecontroleerd op inhoud. Veldlengtes als in het model. Een stuurteken of regeleinde in een veld is een fout; naam, omschrijving en bootsoort weigeren stuurtekens ook op het scherm, zodat een rondgang altijd slaagt |
 | Formules | Een exportcel die begint met `=`, `+`, `-`, `@`, tab of CR krijgt een `'` ervoor; de import haalt precies die `'` weg, zodat een rondgang niets verandert |
 
 Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bestaande soort met `/` moet eerst hernoemd worden voor de export. Een reknaam die met `#` begint, is commentaar en dus een fout.
 
 ### 2. Rekindeling (#157)
 
-**Alles of niets.** De import valideert het hele bestand en verzamelt per regel de reden van elke fout. Bij één fout verandert er niets en toont het scherm de lijst. Anders volgt alles in één transactie met één commit. Een lege export verandert niets.
+**Alles of niets.** De import valideert het hele bestand en verzamelt per regel de reden van elke fout, in twee rondes: eerst de opbouw van elke regel, daarna de controles die de database vragen (bootsoort, gat, bezette plaats), hooguit 50 meldingen. Bij één fout verandert er niets en toont het scherm de lijst. Anders volgt alles in één transactie met één commit. Een lege export verandert niets.
 
 **Herkennen.** Een rek aan zijn naam zonder verschil in hoofdletters (ADR-003), een plaats aan rek, verdieping en vak. Een andere naam is een nieuw rek; hernoemen kan alleen in het scherm. De omschrijving is binnen één rek gelijk. Plaatsen buiten het bestand blijven (besluit stakeholder).
 
@@ -138,5 +138,6 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.1 | 2026-11-06 | Fouten in twee rondes; lege cel `bootsoorten`; stuurtekens ook op het scherm geweigerd | Bouw en review #157 |
 | v0.2.0 | 2026-11-06 | Open vragen besloten; één lopende bezettingsimport voor de installatie, zichtbaar voor elke beheerder | Besluiten stakeholder |
 | v0.1.0 | 2026-11-06 | Eerste versie | Issues #157 en #158 |

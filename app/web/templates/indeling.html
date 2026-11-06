@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
 {# Het raster: een vakje per verdieping en vak, waarde "<verdieping>-<vak>" (BLB-044). Het label van
    een vakje is de tekst voor schermlezers; de koppen erboven en ernaast zijn alleen om te zien. #}
 {% macro raster(plaatsen=()) %}
@@ -22,7 +23,27 @@
 {% block titel %}Indeling · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Indeling</h1>
+{% if import_fouten %}
+{% call meldingblok('danger') %}
+<p>Het bestand is niet geïmporteerd. Er is niets veranderd. Herstel dit en probeer het opnieuw:</p>
+<ul>{% for f in import_fouten %}<li>{{ f }}</li>{% endfor %}</ul>
+{% endcall %}
+{% endif %}
 <p><a href="{{ url_for('web.indeling_export') }}" download>Indeling exporteren naar Excel</a></p>
+
+<section class="kaart">
+  <h2>Indeling als CSV</h2>
+  <p><a href="{{ url_for('web.rekindeling_export') }}" download>Indeling exporteren als CSV</a> · <a href="{{ url_for('web.rekindeling_export', leeg=1) }}" download>Leeg sjabloon met uitleg downloaden</a></p>
+  <form method="post" action="{{ url_for('web.rekindeling_importeren') }}" enctype="multipart/form-data">
+    {% include "_csrf.html" %}
+    <div class="ds-field breed">
+      <label class="ds-field__label label-lang" for="csv-bestand">CSV-bestand importeren (UTF-8, puntkomma, hooguit {{ csv_max }} kB)</label>
+      <input class="ds-input" id="csv-bestand" name="bestand" type="file" accept=".csv,text/csv" required>
+    </div>
+    <p class="uitleg">Importeren vult aan en werkt bij. Plaatsen die niet in het bestand staan, blijven. Bij één fout verandert er niets.</p>
+    <button type="submit" class="ds-btn ds-btn--primary">Indeling importeren</button>
+  </form>
+</section>
 
 <section class="kaart">
   <h2>Nieuw rek</h2>
