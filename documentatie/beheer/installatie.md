@@ -110,7 +110,15 @@ FATAL:  password authentication failed for user "botenloods_taken"
 
 De rol bestaat, maar het wachtwoord in de database is niet het wachtwoord in `.env`. Dat gebeurt zo: `docker/db-init.sh` maakt de rollen `botenloods_web`, `botenloods_taken` en `botenloods_api` en zet hun wachtwoorden alleen bij de eerste start met een lege database. Bestaat het volume `dbdata` al, dan slaat PostgreSQL het script over. Een nieuwe `.env`, een gewijzigd wachtwoord of een volume van een eerdere installatie geeft dan deze fout. De rol in de melding hoort bij één dienst: `botenloods_taken` bij `worker`, `botenloods_web` bij `web` en `botenloods_api` bij `api`.
 
-Zet de wachtwoorden uit `.env` opnieuw in de database:
+Staat er ook `DETAIL:  User "botenloods_taken" has no password assigned.`, dan heeft het script nooit gedraaid op deze database: de migratie heeft de rol zonder wachtwoord aangemaakt. Meestal stond `docker/db-init.sh` niet op de host bij de eerste start. Docker maakt dan een lege map op die plek, en PostgreSQL slaat die over. Controleer dat het een bestand is:
+
+```sh
+docker compose exec db ls -l /docker-entrypoint-initdb.d/
+```
+
+Staat er `rollen.sh` als map (een regel die met `d` begint), stop dan de stack, verwijder de map `docker/db-init.sh` op de host, haal het bestand op volgens de [voorbeelden](voorbeelden.md) en start opnieuw.
+
+Zet daarna de wachtwoorden uit `.env` in de database:
 
 ```sh
 docker compose up -d db
