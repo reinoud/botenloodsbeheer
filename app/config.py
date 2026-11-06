@@ -89,6 +89,9 @@ def laad():
         "KOPPELNET": koppelnet,
         "SECRET_KEY": secret_key,
         "SQLALCHEMY_DATABASE_URI": _verplicht("DATABASE_URL"),
+        # Geen parameters in een SQL-fout: die komt met traceback in de log (#137) en bevat
+        # anders persoonsgegevens. De DETAIL van PostgreSQL haalt _JsonLog weg.
+        "SQLALCHEMY_ENGINE_OPTIONS": {"hide_parameters": True},
         "BASIS_URL": basis_url,
         "TOTP_SLEUTEL": totp_sleutel,
         "WEBAUTHN_RP_ID": _lees("WEBAUTHN_RP_ID") or urlsplit(basis_url).hostname,
