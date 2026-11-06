@@ -15,7 +15,8 @@ info:
     weigering geeft 401, of 403 bij een
     ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
     dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`. Een onbekend pad geeft 404
-    en een methode die het pad niet kent 405 (met `Allow`), beide als JSON met `fout`. Een
+    en een methode die het pad niet kent 405 (met `Allow`), een pad met procentcodering of een
+    NUL-teken in de querystring 400, alle als JSON met `fout`. Een
     lichaam boven 2 MB geeft op elk pad 413 (zie TeGroot); alleen PUT /leden en
     POST /leden/import-mislukt nemen een lichaam aan en noemen hem.
 servers:
