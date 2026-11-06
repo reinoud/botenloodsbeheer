@@ -287,11 +287,11 @@ def test_export_in_de_volgorde_van_de_loods(app):
         *[("B", f"B/1/{k}") for k in range(1, 13)], ("B", "B/2/1"), ("A", "A/1/1")]
 
 
-def test_kaartjes_en_openbare_pagina_tonen_de_omschrijving_van_het_rek(app):
+def test_openbare_pagina_toont_de_omschrijving_van_het_rek_het_kaartje_niet(app):
     r = rek(omschrijving="Grote botenloods stelling links")
     p = indeling.rek(r.id).plaatsen[0]
     [kaartje] = indeling.kaartjes(plaats_ids=[p.id])
-    assert kaartje["omschrijving"] == "Grote botenloods stelling links" and kaartje["code"] == "A/1/1"
+    assert set(kaartje) == {"code", "sleutel", "bootsoorten"} and kaartje["code"] == "A/1/1"  # #143
     assert indeling.openbaar(p.publieke_sleutel)["omschrijving"] == "Grote botenloods stelling links"
     # Er komen geen velden bij in de API (issue #80): de plaatsen houden dezelfde vijf sleutels.
     assert set(uitlezen.plaatsen()[0]) == {"code", "rek", "clubplaats", "bootsoorten", "boot"}

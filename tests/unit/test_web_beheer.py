@@ -236,21 +236,20 @@ def test_openbare_pagina_alleen_openbare_gegevens(client):
 
 
 def test_omschrijving_op_openbare_pagina_plaatsdetail_en_kaartje(ingelogd, client):
-    """BLB-020, BLB-021: de omschrijving van het rek staat op de openbare pagina en het kaartje,
-    en wordt als tekst getoond (geen opmaak)."""
+    """BLB-020, BLB-021: de omschrijving van het rek staat op de openbare pagina, als tekst (geen
+    opmaak), en niet meer op het kaartje (issue #143)."""
     p = bezette_plaats()
     ingelogd.post(f"/rekken/{p.rek_id}/naam", data={"naam": "A", "omschrijving": "Stelling <b>links</b>"})
     openbaar = client.get(f"/p/{p.publieke_sleutel}").text
     assert "<p>Stelling &lt;b&gt;links&lt;/b&gt;</p>" in openbaar
     assert "Stelling &lt;b&gt;links&lt;/b&gt;" in ingelogd.get(f"/plaatsen/{p.id}").text
     kaartje = ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
-    assert '<p class="kaartje-omschrijving">Stelling &lt;b&gt;links&lt;/b&gt;</p>' in kaartje
+    assert "Stelling" not in kaartje
     assert "Proefweg" not in kaartje and "Zeemeeuw" not in kaartje  # verder alleen wat mag
 
 
 def test_zonder_omschrijving_geen_lege_regel(ingelogd, client):
     p = bezette_plaats()
-    assert "kaartje-omschrijving" not in ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
     assert "<p></p>" not in client.get(f"/p/{p.publieke_sleutel}").text
 
 

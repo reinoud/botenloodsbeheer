@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.2
-**Datum:** 2026-11-05
+**Versie:** v0.6.3
+**Datum:** 2026-11-06
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -83,7 +83,7 @@ Als beheerder wil ik rekken aanmaken, hernoemen en verwijderen, met per rek verd
 - Gegeven een nieuw rek, wanneer de beheerder geen enkel vak aanzet, of verdieping 0 of 6, of vak 0 of vak 13 opgeeft, dan weigert de applicatie met een duidelijke melding. Een verdieping zonder vak dat aan staat, bestaat niet en wordt niet geweigerd (issue #82).
 - Gegeven een nieuw rek, wanneer de beheerder per verdieping een bootsoort kiest en het rek opslaat, dan heeft elke plaats van die verdieping die bootsoort als geschikte soort (BLB-002, issue #82). De keuze is niet verplicht en per verdieping is er één bootsoort; zonder keuze krijgen de plaatsen geen bootsoort (vraag 26).
 - Gegeven een reknaam die al bestaat (ook met andere hoofdletters), die langer is dan 10 tekens of die een `/` bevat, wanneer de beheerder die invoert, dan weigert de applicatie met een duidelijke melding.
-- Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een kaartje print, of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. De aanduiding houdt de korte naam, zoals `A/1/1`. De omschrijving is niet verplicht en ten hoogste 60 tekens; 61 tekens weigert de applicatie (vraag 24).
+- Gegeven een rek met een omschrijving, zoals "Grote botenloods stelling links", wanneer de beheerder de indeling opent of een bezoeker de openbare pagina opent, dan staat de omschrijving bij het rek. Op het kaartje staat ze niet (issue #143). De aanduiding houdt de korte naam, zoals `A/1/1`. De omschrijving is niet verplicht en ten hoogste 60 tekens; 61 tekens weigert de applicatie (vraag 24).
 - Gegeven een plaats, wanneer de beheerder die bewerkt, dan is de aanduiding niet los te wijzigen. Ze verandert alleen met de naam van het rek; toewijzing, publieke sleutel en instellingen blijven staan.
 - Gegeven een kaartje dat vóór een nieuwe reknaam is geprint, wanneer een bezoeker de QR-code scant, dan opent de pagina van dezelfde plaats, met de nieuwe aanduiding.
 - Gegeven een rek met een toegewezen boot, wanneer de beheerder het wil verwijderen, dan weigert de applicatie en wijst op het vrijgeven van de plaats.
@@ -135,7 +135,7 @@ Route voor een mens (issue #80):
 2. Maak rek `X` met omschrijving "Testrek bij de deur", op verdieping 1 vak 1 tot en met 4 aan en op verdieping 2 vak 1 tot en met 3 aan.
 3. Controleer dat `X/1/1` tot en met `X/1/4` en `X/2/1` tot en met `X/2/3` er staan. Zet bij een nieuw rek alleen vak 1 en 3 van een verdieping aan: de melding noemt verdieping en vak 2.
 4. Wijs een boot toe aan `X/2/3` en probeer vak 3 van verdieping 2 uit te zetten: dat wordt geweigerd.
-5. Print het kaartje van `X/2/3` en open de QR-link: kaartje en openbare pagina tonen `X/2/3` en de omschrijving.
+5. Print het kaartje van `X/2/3` en open de QR-link: het kaartje toont `X/2/3` zonder omschrijving, de openbare pagina `X/2/3` en de omschrijving.
 
 ### EP-02 Leden en boten
 
@@ -367,13 +367,13 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 
 Prioriteit: Must. Bron: intake 11. Afhankelijk van: BLB-020, BLB-027.
 
-Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de aanduiding van de plaats, de naam van de eigenaar en een QR-code zodat elke plaats in de loods herkenbaar is.
+Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen met het logo van de vereniging, de aanduiding van de plaats, de bootsoorten van de plaats en een QR-code zodat elke plaats in de loods herkenbaar is en te zien is welke boot er past.
 
-- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, aanduiding, omschrijving van het rek, naam van de eigenaar en QR-code.
+- Gegeven een selectie van een, meerdere of alle plaatsen, wanneer de beheerder het printen start, dan komt er een printbaar document met per plaats een kaartje met logo, aanduiding, de regel "Geschikt voor" met de bootsoorten van de plaats (zoals "Geschikt voor Kajak/Canadese kano") en QR-code. Er staat geen omschrijving van het rek en geen naam van een eigenaar op (issue #143).
 - Gegeven een QR-code op een kaartje, wanneer een bezoeker die scant, dan opent de openbare pagina van die plaats (BLB-020).
 - Gegeven een kaartje, wanneer de beheerder het bekijkt, dan staan er geen adres, telefoonnummer of e-mailadres op.
-- Gegeven een vrije plaats, wanneer de beheerder het kaartje maakt, dan staat er de aanduiding en de vermelding vrij in plaats van een naam.
-- Gegeven een clubplaats, met of zonder clubboot, wanneer de beheerder het kaartje maakt, dan staat er de aanduiding en de naam van de vereniging in plaats van een naam van een lid (ADR-011).
+- Gegeven een vrije plaats of een clubplaats, wanneer de beheerder het kaartje maakt, dan staat er geen "vrij" en geen naam van de vereniging bij de aanduiding; de naam van de vereniging staat alleen bij het logo (issue #143).
+- Gegeven een plaats zonder bootsoort, wanneer de beheerder het kaartje maakt, dan valt de regel "Geschikt voor" weg.
 
 ### EP-07 Inloggen en beheerders
 
@@ -756,6 +756,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.3 | 2026-11-06 | Issue #143: het kaartje toont de bootsoorten van de plaats, geen omschrijving van het rek en geen eigenaar (BLB-021, BLB-001) |
 | v0.6.2 | 2026-11-05 | Issue #94: een verdieping heeft geen gaten, het rekoverzicht toont alleen de kolommen en verdiepingen van het rek, 229 plaatsen (BLB-001, BLB-044) |
 | v0.6.1 | 2026-11-04 | Vraag 26 besloten: bootsoort per verdieping optioneel, één, en ook voor een vak dat later aan gaat (BLB-001, BLB-044) |
 | v0.6.0 | 2026-11-04 | Issue #82: BLB-001 krijgt een bootsoort per verdieping en een nieuw criterium 3; BLB-044 krijgt een andere melding en geen knop om een plaats te verwijderen; vraag 26 |

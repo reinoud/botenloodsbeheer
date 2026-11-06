@@ -74,7 +74,8 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     sectie_van(page, rek).get_by_role("link", name=f"{rek}/2/4", exact=True).click()
     expect(page.get_by_label("Kajak", exact=True)).to_be_checked()
 
-    # Het kaartje van de plaats: aanduiding, omschrijving en eigenaar, geen andere gegevens.
+    # Het kaartje van de plaats: aanduiding en bootsoort; geen omschrijving, geen eigenaar en geen
+    # andere gegevens (issue #143).
     page.goto("/kaartjes")
     page.get_by_label(code, exact=True).check()
     page.get_by_role("button", name="Kaartjes maken").click()
@@ -82,12 +83,11 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     kaartje = page.locator("section.kaartje")
     expect(kaartje).to_have_count(1)
     expect(kaartje.locator(".kaartje-code")).to_have_text(code)
-    expect(kaartje.locator(".kaartje-omschrijving")).to_have_text(omschrijving)
-    expect(kaartje.locator(".kaartje-eigenaar")).to_have_text(prive["naam"])
+    expect(kaartje.locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak")
     html = page.content()
-    for veld in ("lidnummer", "adres", "telefoon", "email"):
+    for veld in ("naam", "lidnummer", "adres", "telefoon", "email"):
         assert prive[veld] not in html, veld
-    assert bootnaam not in html
+    assert bootnaam not in html and omschrijving not in html
 
     # De link uit de QR-code, als bezoeker zonder inloggen: aanduiding en omschrijving, en in de
     # hele respons geen adres, telefoon, e-mail of lidnummer.

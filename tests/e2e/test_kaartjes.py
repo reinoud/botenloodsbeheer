@@ -48,7 +48,7 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     omschrijving = "Proefstelling links bij de deur, tot 60 tekens lang gehouden"
     bezet, vrij, club = f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"
     rek_aanmaken(page, rek, vakken=((1, 1), (1, 2), (1, 3)), omschrijving=omschrijving)
-    plaats_instellen(page, bezet, ["Kajak"])
+    plaats_instellen(page, bezet, ["Kajak", "Canadese kano"])
     plaats_instellen(page, vrij, ["Kajak"])
     plaats_instellen(page, club, ["Kajak"], club=True)
     boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
@@ -62,25 +62,25 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     expect(page.get_by_role("alert")).to_have_text(
         "Kies een of meer plaatsen, een rek of alle plaatsen.")
 
-    # Eén plaats: logo, code, eigenaar en QR-code; geen andere persoonsgegevens.
+    # Eén plaats: logo, code, bootsoorten en QR-code; geen eigenaar, geen omschrijving van het rek
+    # en geen andere persoonsgegevens (issue #143).
     kiezen(page, bezet)
     expect(page.locator("section.kaartje")).to_have_count(1)
     een = kaartje(page, bezet)
     expect(een.locator("img.kaartje-logo")).to_be_visible()
-    expect(een.locator(".kaartje-eigenaar")).to_have_text(prive["naam"])
-    expect(een.locator(".kaartje-omschrijving")).to_have_text(omschrijving)  # BLB-021
+    expect(een.locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak/Canadese kano")
     expect(een.get_by_role("img", name=f"QR-code naar de openbare pagina van {bezet}")).to_be_visible()
     html = page.content()
-    for veld in ("lidnummer", "adres", "telefoon", "email"):
+    for veld in ("naam", "lidnummer", "adres", "telefoon", "email"):
         assert prive[veld] not in html, veld
-    assert bootnaam not in html
+    assert bootnaam not in html and omschrijving not in html
     qr = een.locator("svg.qr-kaartje path").get_attribute("d")
 
     # Per rek: vrije plaats en clubplaats; past op A4 in Chromium.
     kiezen(page, f"Heel {rek}")
     expect(page.locator(".kaartje-code")).to_have_text([bezet, vrij, club])
-    expect(kaartje(page, vrij).locator(".kaartje-eigenaar")).to_have_text("vrij")
-    expect(kaartje(page, club).locator(".kaartje-eigenaar")).to_have_text(vereniging)
+    expect(kaartje(page, vrij).locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak")
+    expect(kaartje(page, club)).not_to_contain_text(vereniging)  # de naam staat alleen bij het logo
     past_op_a4(page)
     per_rek = page.url
 

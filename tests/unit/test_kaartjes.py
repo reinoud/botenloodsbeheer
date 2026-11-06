@@ -27,32 +27,39 @@ def qr_van(url):
     return qr_pad(segno.make(url, error="m").svg_inline(svgclass="qr-kaartje"))
 
 
-def test_kaartje_met_logo_code_eigenaar_en_qr_naar_openbare_pagina(app, ingelogd, tmp_path):  # noqa: F811
+def test_kaartje_met_logo_code_bootsoort_en_qr_naar_openbare_pagina(app, ingelogd, tmp_path):  # noqa: F811
     kenmerk, _ = logo_uit_installatie(app, tmp_path, png())
     _vrij, bezet, _club, _c11, _anna = loods()
+    indeling.rek_wijzigen(bezet.rek_id, "A", "Grote botenloods stelling links", CLI)
     r = ingelogd.get(f"/kaartjes/print?plaats={bezet.id}")
     assert r.status_code == 200
     kaart = kaartjes(r.text)["A/1/2"]
-    assert f'src="/logo/{kenmerk}"' in kaart and ">A/1/2<" in kaart and "Anna de Vries" in kaart
+    assert f'src="/logo/{kenmerk}"' in kaart and ">A/1/2<" in kaart
+    assert '<p class="kaartje-soorten">Geschikt voor Kajak</p>' in kaart
     assert qr_pad(kaart) == qr_van(f"http://localhost:8080/p/{bezet.publieke_sleutel}")
-    # Geen adres, telefoon, e-mail, lidnummer of boot (overlay §8); de QR-code zelf zonder tekst.
-    for verboden in ("Proefweg", "06-0000", "@example.org", "1001", "Zeemeeuw"):
+    # Geen eigenaar en geen omschrijving van het rek (issue #143); geen adres, telefoon, e-mail,
+    # lidnummer of boot (overlay §8); de QR-code zelf zonder tekst.
+    for verboden in ("Anna de Vries", "Grote botenloods", "Proefweg", "06-0000", "@example.org",
+                     "1001", "Zeemeeuw"):
         assert verboden not in r.text
     assert "<title" not in kaart.split("<svg", 1)[1]
 
 
-def test_vrije_plaats_en_clubplaats(ingelogd):  # noqa: F811
+def test_bootsoorten_op_id_zonder_eigenaar_vrij_of_vereniging(ingelogd):  # noqa: F811
     _vrij, _bezet, club, _c11, _anna = loods()
-    lege_club = plaats("A/1/5", club=True)
+    zonder = indeling.rek_aanmaken("B", "", {(1, 1)}, CLI)  # een nieuw vak heeft geen bootsoort
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
     instellingen.opslaan("KV De Fuut", "#1a4d2e", "#333333", CLI)
-    kaarten = kaartjes(ingelogd.get(f"/kaartjes/print?rek={club.rek_id}").text)
-    eigenaren = {code: re.search(r'kaartje-eigenaar">([^<]*)<', html).group(1)
-                 for code, html in kaarten.items()}
-    assert eigenaren == {"A/1/1": "vrij", "A/1/2": "Anna de Vries", "A/1/3": "KV De Fuut",
-                         "A/1/4": "vrij", lege_club.code: "KV De Fuut"}
-    # Zonder logo de naam van de vereniging bovenaan (BLB-027 criterium 3).
+    kaarten = kaartjes(ingelogd.get(f"/kaartjes/print?rek={club.rek_id}&rek={zonder.id}").text)
+    soorten = {code: re.findall(r'kaartje-soorten">([^<]*)<', html) for code, html in kaarten.items()}
+    assert soorten == {"A/1/1": ["Geschikt voor Kajak/Surfski"], "A/1/2": ["Geschikt voor Kajak"],
+                       "A/1/3": ["Geschikt voor Surfski"], "A/1/4": ["Geschikt voor C11"],
+                       "B/1/1": []}  # zonder bootsoort geen regel
+    for html in kaarten.values():
+        assert "vrij" not in html and "Anna de Vries" not in html and "kaartje-eigenaar" not in html
+    # Zonder logo de naam van de vereniging bovenaan (BLB-027 criterium 3), en alleen daar.
     assert "<p>KV De Fuut</p>" in kaarten["A/1/1"] and "kaartje-logo" not in kaarten["A/1/1"]
+    assert all(html.count("KV De Fuut") == 1 for html in kaarten.values())
 
 
 def test_selectie_een_meerdere_per_rek_en_alle_in_volgorde_van_de_loods(ingelogd):  # noqa: F811
