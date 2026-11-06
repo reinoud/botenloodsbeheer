@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.26
+**Versie overlay:** v0.5.27
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -98,6 +98,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen.
+- Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
 - Verandert een validatieregel in het domein, draai dan eerst de volledige unitsuite: die geeft de lijst van tests en E2E-helpers die met de oude regel gegevens maken.
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
@@ -328,6 +329,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.27 | 2026-11-06 | Regel uit de terugblik van sentinel (#130): een reeks statuscodes ook op herkomst toetsen | Lessen |
 | v0.5.26 | 2026-11-06 | Vier regels uit de terugblikken van aegis en sentinel (#137): eigen `TEST_DB` voor een proef naast de suite (met kopie van de conftest), mutant per weg van een filter, overlayregel getoetst tegen het model, logtest op een databasefout met de rol `api`, een regelovergang en een fout zonder keten | Lessen |
 | v0.5.25 | 2026-11-06 | Twee regels uit de terugblikken van aegis en sentinel (#133): proef op de API via `koppeling`, functies die een status beoordelen bij een vraag over een proefscript | Lessen |
 | v0.5.24 | 2026-11-05 | Drie regels uit de terugblikken van sentinel en aegis (#132): aanroepers van een gedeelde functie, gecombineerde mutant op route en template, `draai.sh -k` op de testnaam | Lessen |
