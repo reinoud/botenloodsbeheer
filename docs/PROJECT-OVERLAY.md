@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.30
+**Versie overlay:** v0.5.31
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-06
@@ -182,6 +182,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een letter van `reknaam()` mag binnen één test vaker voorkomen (hetzelfde rek), maar niet in twee verschillende tests; controleer met `grep -rn 'reknaam(' tests/e2e`.
 - Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
 - Voedt de functie van een mutant ook de keuzelijst of het formulier (zoals `controleer_past` via `past()`), muteer dan alleen de aanroep in de serverroute, één mutant per kant, en noem per mutant de assert die moet falen als bestand:regel.
+- Controleer bij een mutant via tekstvervanging met een telling dat de vervangen tekst precies één keer voorkomt; anders raakt de mutant ook andere functies.
+- Kies in een test op volgorde gegevens waarbij de bedoelde volgorde (zoals op id) afwijkt van de alfabetische.
 - Verplaats je de dekking van een criterium van E2E naar unittests, noem dan per gegeven uit het criterium (zoals tijdstip en aantallen) de assert die het dekt, en draai een mutant die dat gegeven weghaalt.
 
 #### Migratie en database
@@ -332,6 +334,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.31 | 2026-11-06 | Regels uit de review van #143: mutant met telling, volgorde los van alfabet | Lessen |
 | v0.5.30 | 2026-11-06 | Regel uit de terugblik van sentinel (#144): mutant op de serverroute, één per kant | Lessen |
 | v0.5.29 | 2026-11-06 | Regel uit de terugblik van sentinel (#145): unieke reknamen in E2E controleren | Lessen |
 | v0.5.28 | 2026-11-06 | Regel uit de terugblik van sentinel (#142): een telling van 0 in het bewijs verklaren | Lessen |
