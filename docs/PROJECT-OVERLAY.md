@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.37
+**Versie overlay:** v0.5.38
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -185,6 +185,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Reviewen twee agents tegelijk en draait er één de suite, geef de ander dan voor zijn eigen proef met de fixtures een eigen `TEST_DB` (regel in Bouw); ook een losse proef op `botenloods_test` verstoort de suite. Maak die database met een kopie van `tests/unit/conftest.py` waarin alleen `TEST_DB` anders is, gemount over `/app/tests/unit/conftest.py`; een conftest die `TEST_DB` na de import overschrijft, verandert de URL's niet. De proefmap op `/app/scratch` krijgt daarnaast een `conftest.py` met `from tests.unit.conftest import *`.
 - Loopt een filter meer wegen af naar dezelfde gegevens (zoals `__cause__` en `.orig`), maak dan per weg een mutant en noem welke test die weg dekt.
 - Noemt een regel in de overlay een tabel, kolom of constraint, toets die dan tegen `app/models.py`.
+- Noem een mutant alleen met een code die in de specificatiebestanden van de bouwer staat; staat hij er niet in, noem dan de vervangtekst.
 
 #### E2E
 
@@ -207,6 +208,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Migratie en database
 
+- SQL in de db-container gaat via een bestand in de scratchpad, op stdin aan `psql -At`; geen query als argument in de shellregel.
 - Na een nieuwe migratie eerst `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d --wait`; de dienst migrate leest de migraties uit het image. Downgrade en upgrade controleer je via `docker compose -f docker-compose.yml -f compose.dev.yml run --rm migrate alembic ...`, databasecontroles in de db-container met `psql -U botenloods -d botenloods`. Controleer na een migratie de rechten in de database.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
 - Moet een reviewer het schrijfgedrag van een rijbeleid of recht bevestigen (zoals het wijzigen van de sleutelkolom of `RETURNING`), geef dan een eigen database via `nieuwe_database` vrij voor proeven met `ROLLBACK`, of zeg dat afleiden uit de documentatie volstaat.
@@ -353,6 +355,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.38 | 2026-11-07 | Twee regels (Review, Migratie en database) uit de terugblikken van sentinel en aegis bij #158 | Lessen |
 | v0.5.37 | 2026-11-07 | Zes regels in de briefingchecklist (Algemeen, Bouw) uit de bouw van #158 en de toets van Design System | Lessen |
 | v0.5.36 | 2026-11-06 | Zeven regels in de briefingchecklist (Bouw, Review) uit de terugblikken van bedrock, sentinel en aegis bij #157 | Lessen |
 | v0.5.35 | 2026-11-06 | Regels uit de terugblikken van prism en sentinel bij #150 deel 1: afname controleren, structuurselectors, escapingtest, migratieheadtest, wachtlus | Lessen |
