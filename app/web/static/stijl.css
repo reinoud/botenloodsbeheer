@@ -1,6 +1,6 @@
 /* Stijl van het product (ADR-002). De tokens en ds- komen uit de Dajaks-basis in /static/ds, dj- uit /static/dj (aanvulling, handmatig gekopieerd), en laden
    eerst (tokens, ds-components, dj-components, dit bestand). Hier staat alleen wat de basis niet kent:
-   alleen var(--token), geen .ds- of .dj- selector en geen vaste kleur. Alleen licht thema. */
+   alleen var(--token), een .ds- of .dj- klasse alleen onder een bl-klasse, geen vaste kleur. Alleen licht thema. */
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -11,19 +11,6 @@ a { color: var(--brand-mid); }
 a:hover { text-decoration-thickness: 2px; }
 code { font: var(--type-mono); overflow-wrap: anywhere; }
 :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-
-/* Kop en menu: veel items, dus de lijst loopt door op een nieuwe regel. */
-.kop-balk { flex-wrap: wrap; }
-.kop-naam { flex-wrap: wrap; gap: var(--space-2); min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
-.logo { display: block; max-height: 2.5rem; max-width: min(10rem, 100%); width: auto; }
-.menu-lijst { flex-wrap: wrap; }
-.menu-lijst a { padding: 0 var(--space-3); min-height: 2.75rem; }
-.menu-lijst form { margin: 0; }
-@media (width >= 56.25rem) {
-  .kop-menu { flex: 1 1 100%; }
-}
-.inhoud { padding-block: var(--space-4) var(--space-7); }
-.inhoud > form { margin-block: var(--space-5); }
 
 /* Kaart: een blok met een kop om gegevens of een formulier te groeperen. */
 .kaart { margin-bottom: var(--space-5); padding: var(--space-5); border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); background: var(--surface-raised); }
@@ -59,34 +46,92 @@ td form { gap: var(--space-2); }
 .qr { display: block; max-width: 12rem; background: var(--surface-raised); }
 .foto { display: block; max-width: 100%; height: auto; margin-top: var(--space-4); }
 .log { margin-top: var(--space-6); }
-.status-vrij { color: var(--brand-mid); font-weight: 700; }
-.status-clubplaats { font-style: italic; }
 
-/* Raster van de indeling (BLB-044): een rij per verdieping, een kolom per vak. */
-.schuif { overflow-x: auto; }
-.raster { display: grid; grid-template-columns: max-content repeat(12, 2.25rem); align-items: center; gap: var(--space-1); width: max-content; }
-.raster-kop { text-align: center; font: var(--type-caption); }
-.raster-rij { text-align: left; padding-right: var(--space-2); }
-.raster .vakje { position: relative; display: flex; justify-content: center; margin: 0; padding: var(--space-1) 0; }
-.raster input { width: 1.25rem; height: 1.25rem; padding: 0; margin: 0; accent-color: var(--accent); }
-/* Rekoverzicht (issue #87): een plaatje per plaats, op dezelfde rij en kolom als in het rek. */
-/* De CSP staat geen inline style toe: het aantal kolommen komt uit een klasse (1 tot en met 12). */
-.raster-rek { gap: var(--space-1); }
-.raster-rek-1 { grid-template-columns: max-content repeat(1, 4rem); }
-.raster-rek-2 { grid-template-columns: max-content repeat(2, 4rem); }
-.raster-rek-3 { grid-template-columns: max-content repeat(3, 4rem); }
-.raster-rek-4 { grid-template-columns: max-content repeat(4, 4rem); }
-.raster-rek-5 { grid-template-columns: max-content repeat(5, 4rem); }
-.raster-rek-6 { grid-template-columns: max-content repeat(6, 4rem); }
-.raster-rek-7 { grid-template-columns: max-content repeat(7, 4rem); }
-.raster-rek-8 { grid-template-columns: max-content repeat(8, 4rem); }
-.raster-rek-9 { grid-template-columns: max-content repeat(9, 4rem); }
-.raster-rek-10 { grid-template-columns: max-content repeat(10, 4rem); }
-.raster-rek-11 { grid-template-columns: max-content repeat(11, 4rem); }
-.raster-rek-12 { grid-template-columns: max-content repeat(12, 4rem); }
-.rek-vak { display: flex; align-items: center; justify-content: center; width: 4rem; height: 4rem; border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); overflow: hidden; font: var(--type-caption); text-align: center; text-decoration: none; }
-.rek-vak img { display: block; width: 100%; height: 100%; }
-.rek-vak-club { border: var(--stroke-2) dashed var(--ink); }
+/* Schermen van blok 1 (issue #150, designsystem fbd54dd, schermen.css): pagina, kop, menu, paneel, plaatsscherm, rekraster en indelingsformulier.
+   Afwijking van schermen.css: `position: relative` op .bl-vak en .bl-vakje, anders valt de dj-sr-only in de cel buiten de scroller en rekt de pagina op een telefoon op. */
+/* Pagina */
+.bl-main { display: grid; gap: var(--space-5); padding-block: var(--space-5) var(--space-8); }
+.bl-main > * { min-width: 0; margin-block: 0; }
+.bl-main h1 { margin: 0; font: var(--type-headline-narrow); }
+.bl-main :where(a) { color: var(--brand-mid); text-underline-offset: 3px; }
+.bl-main a:hover { text-decoration-thickness: 2px; }
+.bl-main a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.bl-main .ds-btn { justify-self: start; }
+.bl-meldingen { display: grid; gap: var(--space-3); }
+.bl-main .ds-tag { justify-self: start; }
+.bl-hint { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); }
+
+/* Kop: logo-plek en naam, zoekveld en menu, in die volgorde in markup en beeld (WCAG 2.4.3, geen order). Op een telefoon
+   staat het logo op een regel en staan zoekveld en menuknop eronder; op een laptop staat het zoekveld rechts van het logo en het menu eronder. */
+.bl-kop .dj-header__bar { flex-wrap: wrap; gap: var(--space-2); }
+.bl-kop .dj-logo { flex: 1 1 100%; gap: var(--space-2); min-width: 0; overflow-wrap: break-word; font: var(--type-control); }
+.bl-logo { display: block; flex: none; width: auto; max-width: 2.5rem; max-height: 2.5rem; }
+.bl-kop .dj-search { flex: 1 1 0; min-width: 0; }
+.bl-kop .dj-menu__panel { max-height: calc(100dvh - 10rem); overflow-y: auto; }
+.bl-nav__blok { min-width: 0; }
+.bl-nav__groep { margin: 0; padding: var(--space-3) var(--space-4) 0; color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.bl-nav__knop { width: 100%; margin: 0; border: 0 solid transparent; border-left-width: var(--stroke-4); background: transparent; text-align: left; cursor: pointer; }
+.bl-nav__form { margin: 0; }
+
+@media (width >= 56.25rem) {
+  .bl-kop .dj-logo { flex: none; }
+  .bl-kop .dj-search { flex: 0 1 30rem; margin-left: auto; }
+  .bl-kop .dj-menu { flex: 1 1 100%; }
+  .bl-kop .dj-menu__panel { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); }
+  .bl-nav__groep { padding-block: var(--space-2) 0; }
+  .bl-kop .dj-nav__list { flex-wrap: wrap; }
+  .bl-nav__knop { border-left-width: 0; border-bottom-width: var(--stroke-4); width: auto; }
+}
+
+/* Formulieren in een paneel */
+.bl-formulier { display: grid; gap: var(--space-4); }
+.bl-formulier .ds-field__label { letter-spacing: normal; text-transform: none; }
+.bl-formulier .ds-field { max-width: 26rem; }
+.bl-formulier .bl-breed { max-width: 40rem; }
+.bl-formulier .ds-input { min-width: 0; } /* afwijking: een bestandsveld rekt anders buiten het paneel op een telefoon */
+.bl-velden { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }
+.bl-velden .ds-field { max-width: none; }
+.bl-uitklap__inhoud { display: grid; gap: var(--space-5); }
+.bl-foto { display: block; max-width: 100%; height: auto; margin-top: var(--space-4); border-radius: var(--radius-surface); }
+
+/* Plaatsscherm: gegevens en acties naast elkaar vanaf 60rem */
+.bl-kolommen { display: grid; gap: var(--space-5); align-items: start; }
+.bl-kolommen > * { display: grid; gap: var(--space-5); min-width: 0; }
+
+/* Raster van een rek: een rij per verdieping, een kolom per vak. De kolommen komen uit de volgorde van de cellen
+   (grid-auto-flow), dus 1 tot en met 12 vakken vragen geen eigen klasse en geen inline stijl. */
+.bl-schuif { overflow-x: auto; padding-bottom: var(--space-2); }
+.bl-rek { display: grid; gap: var(--space-1); width: max-content; }
+.bl-rek__rij { display: grid; grid-template-columns: 6.5rem; grid-auto-flow: column; grid-auto-columns: calc(var(--control-height) + var(--space-2)); gap: var(--space-1); align-items: center; width: max-content; }
+.bl-rek__label { position: sticky; left: 0; z-index: 1; display: flex; align-self: stretch; align-items: center; padding-right: var(--space-2); background: var(--surface-raised); color: var(--ink); font: var(--type-caption); }
+.bl-rek__nr { color: var(--ink-muted); font: var(--type-caption); text-align: center; }
+.bl-vak { position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(var(--control-height) + var(--space-2)); height: calc(var(--control-height) + var(--space-2)); overflow: hidden; border: var(--stroke-2) solid var(--ink); border-radius: var(--radius-control); background: var(--surface-raised); color: var(--ink); text-decoration: none; }
+.bl-vak > img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.bl-vak--leeg { border-style: dashed; }
+.bl-vak--bezet { background: var(--ink); color: var(--ink-inverse); }
+.bl-vak__tekst { font-size: 0.6875rem; font-weight: 700; line-height: 1; overflow-wrap: anywhere; text-align: center; }
+.bl-vak:not(.bl-vak--bezet):hover { background: var(--surface); }
+.bl-vak:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.bl-legenda { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: 0; padding: 0; list-style: none; font: var(--type-body-sm); }
+.bl-legenda li { display: flex; align-items: center; gap: var(--space-2); }
+.bl-legenda .bl-vak { width: 2rem; height: 2rem; }
+
+/* Vakje van het indelingsformulier: een keuzevak in de maat van een cel van het rek */
+.bl-vakje { position: relative; display: flex; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); margin: 0; }
+.bl-vakje input { margin: 0; }
+
+@media (width >= 60rem) {
+  .bl-kolommen { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+
+@media (width >= 40rem) {
+  .bl-main h1 { font: var(--type-headline); }
+}
+
+@media (width >= 40rem) {
+  .bl-logo { max-width: 10rem; }
+  .bl-kop .dj-logo { gap: var(--space-3); font: var(--type-subheading); }
+}
 
 /* Kaartjes (BLB-021, ADR-011): acht per A4, twee kolommen van 95 mm bij vier rijen van 68 mm,
    binnen een marge van 10 mm. De stippellijn is de snijlijn. Een blad is één A4. Altijd licht. */
@@ -99,9 +144,9 @@ td form { gap: var(--space-2); }
 .kaartje-soorten { font: var(--type-body); font-size: 12pt; }
 .qr-kaartje { display: block; width: 40mm; height: 40mm; }
 @media print {
-  .kop, .sla-over, .niet-printen, .melding { display: none; }
+  .bl-kop, .sla-over, .niet-printen, .melding { display: none; }
   body { background: var(--surface-raised); }
-  .inhoud { max-width: none; padding: 0; }
+  .bl-main { max-width: none; padding: 0; }
   .blad { margin: 0; break-after: page; }
   .blad:last-child { break-after: auto; }
 }

@@ -91,8 +91,8 @@ def test_indeling_toont_status_boot_en_eigenaar(ingelogd):  # noqa: F811
     tekst = ingelogd.get("/indeling").text
     assert f'href="/plaatsen/{bezet.id}">A/1/2</a>' in tekst
     assert "Zeemeeuw" in tekst and "Anna de Vries" in tekst
-    assert "status-clubplaats" in tekst and "Clubski" in tekst and "Botenloods" in tekst
-    assert tekst.count('class="status-vrij"') == 2
+    assert '<span class="ds-tag">clubplaats</span>' in tekst and "Clubski" in tekst and "Botenloods" in tekst
+    assert tekst.count('<span class="ds-tag">vrij</span>') == 2
     assert "Proefweg" not in tekst and "@example.org" not in tekst
 
 
@@ -253,7 +253,7 @@ def test_neutrale_standaard_zonder_instellingen_en_zonder_logo(app, client):
     assert app.extensions["logo"] is None
     assert instellingen.huidig() == instellingen.STANDAARD
     tekst = client.get("/inloggen").text
-    assert "Inloggen · Botenloods</title>" in tekst and 'class="logo"' not in tekst
+    assert "Inloggen · Botenloods</title>" in tekst and 'class="bl-logo"' not in tekst
 
 
 def test_pagina_laadt_de_dajaks_basis_en_geen_huisstijl(client):
@@ -329,7 +329,7 @@ def test_logo_uit_installatie_op_alle_paginas_zonder_metadata(app, client, tmp_p
     assert "Logo geladen" in caplog.text
     p = plaats()
     for pad in ("/inloggen", f"/p/{p.publieke_sleutel}"):
-        assert f'src="/logo/{kenmerk}"' in client.get(pad).text
+        assert f'class="bl-logo" src="/logo/{kenmerk}"' in client.get(pad).text
     r = client.get(f"/logo/{kenmerk}")
     assert r.status_code == 200 and r.mimetype == "image/png"
     assert r.headers["Cache-Control"] == "public, max-age=31536000, immutable"
@@ -366,7 +366,7 @@ def test_ontbrekend_of_ongeldig_logo_toont_alleen_de_naam(app, client, tmp_path,
     assert app.extensions["logo"] is None
     assert "alleen de naam" in caplog.text and caplog.records[-1].levelname == "WARNING"
     tekst = client.get("/inloggen").text
-    assert 'class="logo"' not in tekst and "/logo/" not in tekst
+    assert 'class="bl-logo"' not in tekst and "/logo/" not in tekst
 
 
 def test_worker_leest_geen_logo(monkeypatch):

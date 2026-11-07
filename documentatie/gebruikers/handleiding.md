@@ -2,7 +2,7 @@
 
 Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
 
-Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
+Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft drie groepen: Dagelijks, Registers en Beheer. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
 ## Inloggen
 
@@ -16,7 +16,7 @@ Je logt in met een passkey (telefoon, vingerafdruk of beveiligingssleutel) of me
 
 ![Het scherm waar je de code van zes cijfers uit je authenticator-app invult.](afbeeldingen/code.png)
 
-Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** in de menubalk sluit je hem eerder af.
+Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (groep Beheer) sluit je hem eerder af.
 
 Een paar handelingen vragen een inlog van hooguit 10 minuten oud: een beheerder uitnodigen, herstellen, blokkeren, deblokkeren of verwijderen, inlogmethodes wijzigen en de instellingen opslaan. Is je inlog ouder, dan vraagt de applicatie je opnieuw in te loggen.
 
@@ -70,14 +70,14 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ### Rekoverzicht
 
-De pagina `/rekoverzicht` (menu **Rekoverzicht**) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen.
+De pagina `/rekoverzicht` (menu **Rekoverzicht**, groep Dagelijks) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen. Een rek met veel vakken schuift op een telefoon opzij; de verdiepingen blijven in beeld.
 
 ![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
 
-- **Donkere romp:** de plaats is bezet, met het plaatje van de bootsoort van de boot die er ligt.
-- **Lichte romp:** de plaats is vrij, met het plaatje van de eerste bootsoort waarvoor de plaats geschikt is. Is de plaats voor meer soorten geschikt, dan noemt de alternatieve tekst ze allemaal.
-- **Gestippelde rand:** een clubplaats zonder boot. Die is niet vrij voor leden. Een clubplaats met een clubboot toont een donkere romp.
-- **Alleen een naam:** een bootsoort zonder plaatje, bijvoorbeeld een soort die je zelf toevoegt, toont de naam als tekst. De C11 gebruikt het plaatje van de Canadese kano.
+- **Gevulde romp:** de plaats is bezet, met het plaatje van de bootsoort van de boot die er ligt.
+- **Romp met alleen een omtrek:** de plaats is vrij, met het plaatje van de eerste bootsoort waarvoor de plaats geschikt is. Is de plaats voor meer soorten geschikt, dan noemt de alternatieve tekst ze allemaal.
+- **Gestippelde rand:** een clubplaats zonder boot. Die is niet vrij voor leden. Een clubplaats met een clubboot toont een gevulde romp.
+- **Alleen een naam:** een bootsoort zonder plaatje, bijvoorbeeld een soort die je zelf toevoegt, toont de naam als tekst, in een gevulde cel bij bezet en een omrande cel bij vrij. De C11 gebruikt het plaatje van de Canadese kano.
 - **Leeg vak:** een plaats zonder bootsoort heeft geen plaatje.
 
 De kleur is niet de enige aanwijzing: elk vak heeft een tekst voor schermlezers, bijvoorbeeld "Plaats A/2/3, Surfski, vrij".
@@ -145,7 +145,7 @@ Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, adres, tele
 
 ## Overzichten
 
-De menubalk bevat drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf.
+In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf.
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|

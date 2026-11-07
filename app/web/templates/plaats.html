@@ -5,18 +5,20 @@
 <h1>Plaats {{ plaats.code }}</h1>
 <p>Rek {{ plaats.rek.naam }}{% if plaats.rek.omschrijving %} ({{ plaats.rek.omschrijving }}){% endif %}{% if plaats.is_clubplaats %}, clubplaats{% endif %}. Geschikt voor: {{ plaats.bootsoorten|map(attribute='naam')|join(', ') }}.</p>
 
+<div class="bl-kolommen">
+<div>
 {% set boot = plaats.boot %}
 {% if boot %}
-<section class="kaart">
-  <h2>Boot</h2>
+<section class="dj-panel" aria-labelledby="boot-kop">
+  <h2 class="dj-panel__title" id="boot-kop">Boot</h2>
   <dl class="dj-dl">
     <dt>Naam</dt><dd><a href="{{ url_for('web.boot_detail', boot_id=boot.id) }}">{{ boot.naam }}</a></dd>
     <dt>Bootsoort</dt><dd>{{ boot.bootsoort.naam }}</dd>
   </dl>
-  {% if boot.afbeelding %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}">{% endif %}
+  {% if boot.afbeelding %}<img class="bl-foto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}" width="{{ boot.afbeelding.breedte }}" height="{{ boot.afbeelding.hoogte }}">{% endif %}
 </section>
-<section class="kaart">
-  <h2>Eigenaar</h2>
+<section class="dj-panel" aria-labelledby="eigenaar-kop">
+  <h2 class="dj-panel__title" id="eigenaar-kop">Eigenaar</h2>
   {% if boot.lid %}
   <dl class="dj-dl">
     <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
@@ -31,13 +33,13 @@
 </section>
 <form method="post" action="{{ url_for('web.plaats_vrijgeven', plaats_id=plaats.id) }}">
   {% include "_csrf.html" %}
-  <button type="submit" class="ds-btn ds-btn--primary">Plaats {{ plaats.code }} vrijgeven</button>
+  <button type="submit" class="ds-btn">Plaats {{ plaats.code }} vrijgeven</button>
 </form>
 {% else %}
-<section class="kaart">
-  <h2>Deze plaats is vrij</h2>
+<section class="dj-panel" aria-labelledby="vrij-kop">
+  <h2 class="dj-panel__title" id="vrij-kop">Deze plaats is vrij</h2>
   {% if boten %}
-  <form method="post" action="{{ url_for('web.plaats_toewijzen', plaats_id=plaats.id) }}">
+  <form class="bl-formulier" method="post" action="{{ url_for('web.plaats_toewijzen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="boot">Boot zonder plaats</label>
@@ -54,7 +56,7 @@
         {% if wachtend %}</optgroup>{% endif %}
       </select>
     </div>
-    <p class="uitleg">De applicatie kiest niet zelf: jij bepaalt welke boot de plaats krijgt.</p>
+    <p class="bl-hint">De applicatie kiest niet zelf: jij bepaalt welke boot de plaats krijgt.</p>
     <button type="submit" class="ds-btn ds-btn--primary">Plaats toewijzen</button>
   </form>
   {% else %}
@@ -62,10 +64,11 @@
   {% endif %}
 </section>
 {% endif %}
-
-<section class="kaart">
-  <h2>Plaats wijzigen</h2>
-  <form method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
+</div>
+<div>
+<section class="dj-panel" aria-labelledby="wijzigen-kop">
+  <h2 class="dj-panel__title" id="wijzigen-kop">Plaats wijzigen</h2>
+  <form class="bl-formulier" method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
     <fieldset class="dj-choices dj-choices--columns">
       <legend>Geschikt voor</legend>
@@ -77,11 +80,12 @@
     <button type="submit" class="ds-btn ds-btn--primary">Plaats opslaan</button>
   </form>
 </section>
-
-<section class="kaart">
-  <h2>Openbare pagina</h2>
+<section class="dj-panel" aria-labelledby="openbaar-kop">
+  <h2 class="dj-panel__title" id="openbaar-kop">Openbare pagina</h2>
   <p>Deze link staat later in de QR-code op het kaartje: <a href="{{ openbare_url }}" id="openbare-link">{{ openbare_url }}</a></p>
 </section>
+</div>
+</div>
 
 {{ logtabel(regels) }}
 {% endblock %}

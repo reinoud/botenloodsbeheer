@@ -43,8 +43,8 @@ def test_csv_exporteren_aangepast_importeren_en_fout_bestand_geweigerd(page):
     expect(sectie.locator("tbody a")).to_have_text([f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"])
     page.get_by_role("link", name="Rekoverzicht", exact=True).click()
     sectie = sectie_van(page, rek)
-    expect(sectie.locator("a.rek-vak")).to_have_count(3)
-    expect(sectie.locator("a.rek-vak-club")).to_have_count(1)
+    expect(sectie.locator("a.bl-vak")).to_have_count(3)
+    expect(sectie.locator("a.bl-vak--leeg")).to_have_count(1)
     expect(sectie.get_by_role("img", name=f"Plaats {rek}/1/2, Kajak, Surfski, vrij")).to_be_visible()
 
     # Een fout bestand: elke foute regel met nummer en reden, en de indeling blijft zoals ze was.
@@ -56,6 +56,6 @@ def test_csv_exporteren_aangepast_importeren_en_fout_bestand_geweigerd(page):
     expect(alert).to_contain_text(f"Regel 2: rek {rek}: Verdieping 1 heeft een gat")
     page.get_by_role("link", name="Rekoverzicht", exact=True).click()
     sectie = sectie_van(page, rek)
-    expect(sectie.locator("a.rek-vak")).to_have_count(3)
+    expect(sectie.locator("a.bl-vak")).to_have_count(3)
     page.goto("/indeling")
     expect(sectie_van(page, rek)).to_contain_text("Via CSV")

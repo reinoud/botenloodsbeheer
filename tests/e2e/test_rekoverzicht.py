@@ -17,7 +17,7 @@ def test_rekoverzicht_toont_per_plaats_een_plaatje_met_alt(page):
 
     page.get_by_role("link", name="Rekoverzicht", exact=True).click()
     sectie = sectie_van(page, rek)
-    expect(sectie.locator("a.rek-vak")).to_have_count(4)
+    expect(sectie.locator("a.bl-vak")).to_have_count(4)
     verwacht = {
         f"Plaats {rek}/1/1, Kajak, bezet": "kajak-bezet.jpg",
         f"Plaats {rek}/1/2, Kajak, clubplaats, leeg": "kajak-vrij.jpg",
@@ -31,16 +31,16 @@ def test_rekoverzicht_toont_per_plaats_een_plaatje_met_alt(page):
         assert plaatje.evaluate("i => i.naturalWidth") > 0, alt
     # Issue #94: 2 kolommen en 2 verdiepingen, geen lege kolommen of rijen; de CSS-klasse zet het
     # raster echt op 2 kolommen (de CSP staat geen inline style toe).
-    expect(sectie.locator(".raster-kop:not(.raster-rij)")).to_have_text(["1", "2"])
-    expect(sectie.locator(".raster-rij")).to_have_text(["Verdieping 2", "Verdieping 1"])
-    kolommen = sectie.locator("a.rek-vak").evaluate_all("els => new Set(els.map(e => Math.round(e.getBoundingClientRect().x))).size")
+    expect(sectie.locator(".bl-rek__nr")).to_have_text(["1", "2"])
+    expect(sectie.locator(".bl-rek__label")).to_have_text(["Verdieping 2", "Verdieping 1"])
+    kolommen = sectie.locator("a.bl-vak").evaluate_all("els => new Set(els.map(e => Math.round(e.getBoundingClientRect().x))).size")
     assert kolommen == 2
-    expect(sectie.locator("a.rek-vak-club")).to_have_count(1)
-    expect(sectie.locator("a.rek-vak-club").get_by_role("img")).to_have_attribute(
+    expect(sectie.locator("a.bl-vak--leeg")).to_have_count(1)
+    expect(sectie.locator("a.bl-vak--leeg").get_by_role("img")).to_have_attribute(
         "alt", f"Plaats {rek}/1/2, Kajak, clubplaats, leeg")
 
     # Issue #95: de tekstballon begint met de aanduiding.
-    titels = sorted(sectie.locator("a.rek-vak").evaluate_all("els => els.map(e => e.title)"))
+    titels = sorted(sectie.locator("a.bl-vak").evaluate_all("els => els.map(e => e.title)"))
     assert titels[0].startswith(f"{rek}/1/1 - Kajak: {bootnaam} ("), titels
     assert titels[1:] == [f"{rek}/1/2 - Kajak: clubplaats, leeg", f"{rek}/2/1 - Surfski: vrij",
                           f"{rek}/2/2 - Surfski: vrij"], titels

@@ -128,7 +128,7 @@ def test_html_en_json_uit_dezelfde_gegevens(app, ingelogd):
     assert s["api"] == {"status": "ok", "ingeschakeld": True}
     assert s["bootaantallen"]["laatst_opgehaald"] is None
     html = ingelogd.get("/status").get_data(as_text=True)
-    assert 'href="/status">Status</a>' in html and 'href="/status.json"' in html
+    assert 'href="/status" aria-current="page">Status</a>' in html and 'href="/status.json"' in html
     assert all(t in html for t in ("logregels: 7", "leden: 2", "boten: 3", "fotos: 1", "nieuw: 3"))
     assert s["opschoning"]["tijdstip"] is not None and "Laatste opschoning: nog niet" not in html
 
