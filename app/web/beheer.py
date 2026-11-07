@@ -10,6 +10,7 @@ from app.domein import (
     Actor,
     Regelfout,
     beheerders,
+    bezetting_csv,
     boten,
     csvbestand,
     indeling,
@@ -67,7 +68,8 @@ def _indeling_scherm(**extra):
                            bootsoorten=indeling.bootsoorten(),
                            verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN,
                            naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX,
-                           csv_max=csvbestand.MAX_BYTES // 1024, **extra)
+                           csv_max=csvbestand.MAX_BYTES // 1024,
+                           lopende_import=bezetting_csv.lopend(), **extra)
 
 
 @bp.get("/indeling")
@@ -91,10 +93,8 @@ def rekindeling_export():
     }
 
 
-@bp.post("/rekindeling/import")
-@inloggen_vereist
-@recent_ingelogd
-def rekindeling_importeren():
+def _csv_data():
+    """De inhoud van het geüploade CSV-bestand, of None met een melding (ADR-014 §1)."""
     bestand = request.files.get("bestand")
     if bestand is None or not bestand.filename:
         flash("Kies een CSV-bestand.", "fout")
@@ -102,7 +102,16 @@ def rekindeling_importeren():
         flash("Kies een bestand met de extensie .csv.", "fout")
     else:
         # Eén byte meer dan de grens: de import weigert dan, zonder verder te lezen.
-        data = bestand.stream.read(csvbestand.MAX_BYTES + 1)
+        return bestand.stream.read(csvbestand.MAX_BYTES + 1)
+    return None
+
+
+@bp.post("/rekindeling/import")
+@inloggen_vereist
+@recent_ingelogd
+def rekindeling_importeren():
+    data = _csv_data()
+    if data is not None:
         try:
             n = rekindeling_csv.importeren(data, Actor.van(g.beheerder))
         except CsvFout as fout:
@@ -114,6 +123,95 @@ def rekindeling_importeren():
                   f"{n['rekken_gewijzigd']} gewijzigd. Plaatsen: {n['plaatsen_nieuw']} nieuw, "
                   f"{n['plaatsen_gewijzigd']} gewijzigd.", "info")
     return redirect(url_for("web.indeling_overzicht"))
+
+
+# Bezetting als CSV (issue #158, ADR-014 §3 en §5). Geen naam of veld uit het bestand in een
+# flash: de sessiecookie is leesbaar. Het overzicht toont ze, geëscapet, in het antwoord zelf.
+
+
+@bp.get("/bezetting.csv")
+@inloggen_vereist
+def bezetting_export():
+    leeg = request.args.get("leeg") == "1"
+    try:
+        inhoud = bezetting_csv.export(leeg)
+    except Regelfout as fout:
+        flash(str(fout), "fout")
+        return redirect(url_for("web.indeling_overzicht"))
+    return inhoud, {
+        "Content-Type": "text/csv; charset=utf-8",
+        "Content-Disposition": f'attachment; filename="bezetting{"-leeg" if leeg else ""}.csv"',
+    }
+
+
+@bp.post("/bezetting/import")
+@inloggen_vereist
+@recent_ingelogd
+def bezetting_uploaden():
+    data = _csv_data()
+    if data is not None:
+        try:
+            bezetting_csv.uploaden(data, Actor.van(g.beheerder))
+        except CsvFout as fout:
+            return _indeling_scherm(import_fouten=fout.regels), 422
+        except Regelfout as fout:
+            flash(str(fout), "fout")
+        else:
+            return redirect(url_for("web.bezetting_import"))
+    return redirect(url_for("web.indeling_overzicht"))
+
+
+@bp.get("/bezetting/import")
+@inloggen_vereist
+def bezetting_import():
+    overzicht = bezetting_csv.overzicht()
+    if overzicht is None:
+        flash("Er loopt geen bezettingsimport. Upload een bestand op de pagina Indeling.", "info")
+        return redirect(url_for("web.indeling_overzicht"))
+    return render_template("bezetting_import.html", **overzicht)
+
+
+@bp.post("/bezetting/import/koppelen")
+@inloggen_vereist
+def bezetting_koppelen():
+    keuzes = {naam.removeprefix("keuze-"): waarde for naam, waarde in request.form.items()
+              if naam.startswith("keuze-")}
+    uitvoeren(bezetting_csv.koppelen, keuzes, gelukt="De keuzes zijn opgeslagen.")
+    return redirect(url_for("web.bezetting_import"))
+
+
+@bp.post("/bezetting/import/bevestigen")
+@inloggen_vereist
+@recent_ingelogd
+def bezetting_bevestigen():
+    n = uitvoeren(bezetting_csv.bevestigen)
+    if n is None:
+        return redirect(url_for("web.bezetting_import"))
+    flash(f"De bezetting is geïmporteerd. Nieuwe boten: {n['nieuw']}, toegewezen: "
+          f"{n['toegewezen']}, overschreven: {n['overschreven']}, verplaatst: {n['verplaatst']}, "
+          f"ongewijzigd: {n['ongewijzigd']}, overgeslagen: {n['overgeslagen']}.", "info")
+    return redirect(url_for("web.indeling_overzicht"))
+
+
+@bp.post("/bezetting/import/annuleren")
+@inloggen_vereist
+def bezetting_annuleren():
+    uitvoeren(bezetting_csv.annuleren, gelukt="De import is geannuleerd.")
+    return redirect(url_for("web.indeling_overzicht"))
+
+
+@bp.get("/bezetting/koppelingen")
+@inloggen_vereist
+def bezetting_koppelingen():
+    return render_template("bezetting_koppelingen.html", koppelingen=bezetting_csv.koppelingen())
+
+
+@bp.post("/bezetting/koppelingen/<int:koppeling_id>/verwijderen")
+@inloggen_vereist
+def bezetting_koppeling_verwijderen(koppeling_id):
+    uitvoeren(bezetting_csv.koppeling_verwijderen, koppeling_id,
+              gelukt="De koppeling is verwijderd.")
+    return redirect(url_for("web.bezetting_koppelingen"))
 
 
 @bp.get("/rekoverzicht")

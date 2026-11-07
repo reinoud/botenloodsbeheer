@@ -1,5 +1,6 @@
 """Alle tabellen (architectuur §4). Slice 1a: beheerders, inloggen, log en techniek.
-Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen. Slice 5: token. Slice 7: wachtlijst."""
+Slice 1b: indeling, bootsoorten, leden, boten en afbeeldingen. Slice 5: token. Slice 7: wachtlijst.
+Issue #158: de lopende bezettingsimport en de onthouden naamkoppelingen (ADR-014)."""
 
 from datetime import date, datetime
 
@@ -318,3 +319,39 @@ class Token(db.Model):
 
     # Alleen web laadt deze relatie: api mag van beheerder alleen id en actief lezen.
     beheerder: Mapped[Beheerder | None] = relationship()
+
+
+class Bezettingsimport(db.Model):
+    """De lopende import van de bezetting (ADR-014 §3): hooguit één voor de hele installatie. De
+    database dwingt dat af: `enige` is altijd waar en uniek. Ingelezen regels en keuzes als JSON,
+    niet het ruwe bestand. Verwijderen van de beheerder die uploadde haalt de import weg."""
+
+    __tablename__ = "bezettingsimport"
+    __table_args__ = (CheckConstraint("enige", name="enige_waar"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    enige: Mapped[bool] = mapped_column(default=True, server_default=text("true"), unique=True)
+    beheerder_id: Mapped[int] = mapped_column(ForeignKey("beheerder.id", ondelete="CASCADE"))
+    aangemaakt_op: Mapped[datetime] = mapped_column(Tijdstip, server_default=func.now())
+    verloopt_op: Mapped[datetime] = mapped_column(Tijdstip)
+    regels: Mapped[list] = mapped_column(JSONB)  # [{regel, plaats, boot, bootsoort, eigenaar, lidnummer}]
+    keuzes: Mapped[dict] = mapped_column(JSONB, server_default="{}")  # {regelnummer: "overslaan" | "club" | lid-id}
+
+    beheerder: Mapped[Beheerder] = relationship()
+
+
+class Naamkoppeling(db.Model):
+    """Een naam uit een bezettingsbestand die de beheerder aan een lid of de vereniging koppelde
+    (ADR-014 §3). Verdwijnt met het lid (ON DELETE CASCADE, in de database: Lid heeft geen
+    relatie naar deze tabel) en 5 jaar na het laatste gebruik."""
+
+    __tablename__ = "naamkoppeling"
+    __table_args__ = (CheckConstraint("(lid_id IS NOT NULL) <> clubboot", name="lid_of_clubboot"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    naam: Mapped[str] = mapped_column(String(100), unique=True)
+    lid_id: Mapped[int | None] = mapped_column(ForeignKey("lid.id", ondelete="CASCADE"))
+    clubboot: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    gebruikt_op: Mapped[datetime] = mapped_column(Tijdstip, server_default=func.now())
+
+    lid: Mapped[Lid | None] = relationship()

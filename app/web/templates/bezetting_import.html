@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
+{# Overzicht en koppelscherm van de lopende bezettingsimport (ADR-014 §3). Alles wat uit het bestand komt (plaats, boot, bootsoort, eigenaar, lidnummer en de meldingen) wordt geëscapet. #}
+{% macro leden_keuze(u) %}
+<label class="dj-sr-only" for="keuze-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
+<select class="dj-select" id="keuze-{{ u.regel }}" name="keuze-{{ u.regel }}">
+  <option value="">Geen keuze</option>
+  <option value="overslaan"{% if u.keuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>
+  {% if u.uitkomst == 'te koppelen' or u.via == 'keuze' %}
+  <option value="club"{% if u.keuze == 'club' %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
+  {% for l in leden %}<option value="{{ l.id }}"{% if u.keuze == l.id|string %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+  {% endif %}
+</select>
+{% endmacro %}
+{% block titel %}Bezetting importeren · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Bezetting importeren</h1>
+<p>Geüpload door {{ lopend.beheerder.naam }} op {{ lopend.aangemaakt_op|tijd }}. De import verloopt op {{ lopend.verloopt_op|tijd }}. Er verandert niets tot je bevestigt.</p>
+<p>{{ uitkomsten|length }} regels: {% for naam, aantal in telling.items() %}<span class="ds-tag ds-tag--telling">{{ aantal }} {{ naam }}</span>{% if not loop.last %} {% endif %}{% endfor %}</p>
+{% if kan_bevestigen %}
+{% call meldingblok('success') %}<p>Alle regels zijn in orde. Bevestig om de bezetting te importeren.</p>{% endcall %}
+{% else %}
+{% call meldingblok('warning') %}<p>Bevestigen kan pas als geen regel nog te koppelen is of een fout heeft. Kies bij een regel een lid of de vereniging, of sla de regel over.</p>{% endcall %}
+{% endif %}
+
+<form method="post" action="{{ url_for('web.bezetting_koppelen') }}">
+  {% include "_csrf.html" %}
+  <div class="ds-table-wrap tabel">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Regel</th><th role="columnheader">Plaats</th><th role="columnheader">Boot (bootsoort)</th><th role="columnheader">Eigenaar (lidnummer)</th><th role="columnheader">Uitkomst</th><th role="columnheader">Keuze</th></tr></thead>
+    <tbody role="rowgroup">
+    {% for u in uitkomsten %}
+      <tr role="row">
+        <td role="cell" data-label="Regel">{{ u.regel }}</td>
+        <td role="cell" data-label="Plaats">{{ u.tekst.plaats }}</td>
+        <td role="cell" data-label="Boot (bootsoort)">{{ u.tekst.boot }} ({{ u.tekst.bootsoort }})</td>
+        <td role="cell" data-label="Eigenaar (lidnummer)">{% if u.tekst.eigenaar or u.tekst.lidnummer %}{{ u.tekst.eigenaar }}{% if u.tekst.lidnummer %}{% if u.tekst.eigenaar %} ({{ u.tekst.lidnummer }}){% else %}{{ u.tekst.lidnummer }}{% endif %}{% endif %}{% else %}clubboot{% endif %}{% if u.lid and u.via != 'naam' %}<br>Gekoppeld: {{ u.lid.naam }} ({{ u.lid.lidnummer }}){% endif %}</td>
+        <td role="cell" data-label="Uitkomst"><span class="ds-tag">{{ u.uitkomst }}</span>{% if u.melding %}<br>{{ u.melding }}{% endif %}</td>
+        <td role="cell" data-label="Keuze">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.via == 'keuze' %}{{ leden_keuze(u) }}{% else %}-{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  <button type="submit" class="ds-btn">Keuzes opslaan</button>
+</form>
+
+<section class="kaart">
+  <form method="post" action="{{ url_for('web.bezetting_bevestigen') }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="ds-btn ds-btn--primary"{% if not kan_bevestigen %} disabled{% endif %}>Bezetting importeren</button>
+    <p class="uitleg">Alles of niets: faalt één regel, dan verandert er niets. Sla eerst je keuzes op.</p>
+  </form>
+  <form method="post" action="{{ url_for('web.bezetting_annuleren') }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="ds-btn">Import annuleren</button>
+  </form>
+</section>
+{% endblock %}

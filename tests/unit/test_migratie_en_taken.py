@@ -43,7 +43,7 @@ def test_migratie_0010_beperkt_rechten_taken_en_downgrade_zet_ze_terug(database)
     cfg = nieuwe_database("botenloods_migratie")
     command.upgrade(cfg, "0009")
     oud = rechten_taken(cfg)
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0015")
     nieuw = rechten_taken(cfg)
     assert nieuw < oud and ("beheerder", "INSERT") in oud - nieuw
     command.downgrade(cfg, "0009")
@@ -56,7 +56,7 @@ def test_migratie_0013_trekt_delete_op_verdieping_bootsoort_in_voor_web(database
     command.upgrade(cfg, "0012")
     oud = rechten_taken(cfg, "botenloods_web")
     assert ("verdieping_bootsoort", "DELETE") in oud
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0015")
     assert rechten_taken(cfg, "botenloods_web") == oud - {("verdieping_bootsoort", "DELETE")}
     command.downgrade(cfg, "0012")
     assert rechten_taken(cfg, "botenloods_web") == oud
@@ -69,7 +69,7 @@ def test_migratie_0011_geeft_taken_insert_op_bootsoort_en_downgrade_trekt_het_in
     oud = rechten_taken(cfg)
     nieuw_recht = {("bootsoort", "INSERT"), ("bootsoort_id_seq", "USAGE")}
     assert not nieuw_recht & oud
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0015")
     assert rechten_taken(cfg) == oud | nieuw_recht
     command.downgrade(cfg, "0010")
     assert rechten_taken(cfg) == oud
@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0015"]
+    assert scripts.get_heads() == ["0016"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",

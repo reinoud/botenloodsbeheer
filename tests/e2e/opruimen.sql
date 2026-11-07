@@ -8,13 +8,15 @@
 --   rek         <letter> + stempel in 36-tallig (reknaam() in conftest.py); plaatsen gaan mee
 --   boot        naam eindigt op een spatie plus de stempel of zo'n reknaam; foto en wachtlijstregel mee
 --   bootsoort   "Waterfiets <stempel>" en "Pedalo <stempel>" (test_bootsoorten.py)
---   token, beheerder   naam met de stempel; uitnodiging en passkeys gaan mee (ON DELETE CASCADE)
+--   token, beheerder   naam met de stempel; uitnodiging, passkeys en een lopende bezettingsimport gaan mee (ON DELETE CASCADE)
+--   naamkoppeling      naam eindigt op een spatie plus zo'n reknaam (test_bezetting_csv.py)
 \set ON_ERROR_STOP on
 BEGIN;
 SELECT set_config('e2e.stempel', :'stempel', true) \g /dev/null
 DO $$
 DECLARE
     n_plaats int; n_boot int; n_foto int; n_soort int; n_rek int; n_token int; n_beheerder int;
+    n_koppeling int;
     rest text;
 BEGIN
     CREATE TEMP TABLE e2e_stempel ON COMMIT DROP AS
@@ -60,12 +62,14 @@ BEGIN
     DELETE FROM token WHERE EXISTS (
         SELECT 1 FROM e2e_stempel WHERE token.naam ~ ('^e2e-[a-z]+-' || s || '(-[0-9]+)?$'));
     GET DIAGNOSTICS n_token = ROW_COUNT;
+    DELETE FROM naamkoppeling WHERE EXISTS (SELECT 1 FROM e2e_b36 WHERE naam ~ (' [a-z]' || b36 || '$'));
+    GET DIAGNOSTICS n_koppeling = ROW_COUNT;
     DELETE FROM beheerder WHERE EXISTS (
         SELECT 1 FROM e2e_stempel WHERE beheerder.gebruikersnaam ~ ('^e2e-[a-z]+-' || s || '$'));
     GET DIAGNOSTICS n_beheerder = ROW_COUNT;
 
-    RAISE NOTICE 'Opgeruimd: % rekken, % plaatsen, % boten, % foto''s, % bootsoorten, % tokens, % beheerders',
-        n_rek, n_plaats, n_boot, n_foto, n_soort, n_token, n_beheerder;
+    RAISE NOTICE 'Opgeruimd: % rekken, % plaatsen, % boten, % foto''s, % bootsoorten, % tokens, % beheerders, % koppelingen',
+        n_rek, n_plaats, n_boot, n_foto, n_soort, n_token, n_beheerder, n_koppeling;
 
     -- Wat op een E2E-rest lijkt maar niet aan een bekende stempel hangt: laten staan en melden.
     SELECT string_agg(naam, ', ') INTO rest FROM rek WHERE naam ~ '^[a-z][0-9a-z]{6}$';

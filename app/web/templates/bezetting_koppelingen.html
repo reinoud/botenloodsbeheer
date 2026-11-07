@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titel %}Onthouden koppelingen · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Onthouden koppelingen</h1>
+<p>Een naam uit een bezettingsbestand die je aan een lid of aan de vereniging koppelde, wordt bij de volgende import herkend. Een koppeling verdwijnt met het lid en vijf jaar na het laatste gebruik.</p>
+{% if koppelingen %}
+<div class="ds-table-wrap tabel">
+<table class="ds-table dj-table--stack" role="table">
+  <thead role="rowgroup"><tr role="row"><th role="columnheader">Naam in het bestand</th><th role="columnheader">Gekoppeld aan</th><th role="columnheader">Laatst gebruikt</th><th role="columnheader">Actie</th></tr></thead>
+  <tbody role="rowgroup">
+  {% for k in koppelingen %}
+    <tr role="row">
+      <td role="cell" data-label="Naam in het bestand">{{ k.naam }}</td>
+      <td role="cell" data-label="Gekoppeld aan">{% if k.lid %}<a href="{{ url_for('web.lid_detail', lid_id=k.lid.id) }}">{{ k.lid.naam }}</a> ({{ k.lid.lidnummer }}){% else %}{{ vereniging }} (clubboot){% endif %}</td>
+      <td role="cell" data-label="Laatst gebruikt">{{ k.gebruikt_op|tijd }}</td>
+      <td role="cell" data-label="Actie">
+        <form method="post" action="{{ url_for('web.bezetting_koppeling_verwijderen', koppeling_id=k.id) }}">
+          {% include "_csrf.html" %}
+          <button type="submit" class="ds-btn ds-btn--danger">Koppeling verwijderen</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<div class="dj-empty">
+  <h2 class="dj-empty__title">Geen onthouden koppelingen</h2>
+  <p class="dj-empty__text">Een koppeling ontstaat als je bij een bezettingsimport een naam aan een lid koppelt.</p>
+  <a class="ds-btn" href="{{ url_for('web.indeling_overzicht') }}">Naar de indeling</a>
+</div>
+{% endif %}
+{% endblock %}
