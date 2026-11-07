@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.40
+**Versie overlay:** v0.5.41
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -132,6 +132,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een testhulp die de database als eigenaar wijzigt (`eigenaar()`), doet daarna `db.session.expire_all()`; anders ziet de test oude waarden.
 - Een test met de rol van de worker kan `beheerder` niet lezen. Zet testgegevens voor die rol met één SQL-regel als eigenaar (met een subselect), niet met een aparte leesactie.
 - De werkmap is gemount in `web`: een sjabloonwijziging werkt direct door in een lopende E2E-run. Draai de baseline op `main` vóór je iets wijzigt, of in een aparte worktree.
+- Zeg in de opdracht of de baseline op `main` in een aparte worktree draait of dat de bouwer de ongeveer 15 minuten wacht; tot de baseline klaar is, ligt de werkmap vast.
+- Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
 - Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
@@ -360,6 +362,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.41 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij blok 2 van #150: baseline in een worktree of wachten, foto voor een visuele controle | Lessen |
 | v0.5.40 | 2026-11-07 | Vijf regels (Bouw) uit de terugblikken van prism en sentinel bij blok 1 van #150: `web` met `compose.dev.yml`, baseline vóór wijzigingen, selectors zoeken, test op CSS-afwijking, vervangen klassen | Lessen |
 | v0.5.39 | 2026-11-07 | Regel (Review) uit de terugblik van sentinel bij #156: rechten van een opgehaald bestand, resultaat in de database | Lessen |
 | v0.5.38 | 2026-11-07 | Twee regels (Review, Migratie en database) uit de terugblikken van sentinel en aegis bij #158 | Lessen |
