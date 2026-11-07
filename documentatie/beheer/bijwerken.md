@@ -17,6 +17,8 @@ Migratie 0012 voegt de tabel `verdieping_bootsoort` toe (de bootsoort die een be
 
 Migratie 0013 trekt een ongebruikt recht van de webapplicatie op die tabel in. Er verandert niets aan gegevens of schermen.
 
+Migratie 0015 (versie 0.3.0) haalt de instelbare kleuren weg: de app volgt vast de Dajaks-huisstijl. De downgrade zet de oude kleuren niet terug. Naam en logo blijven instelbaar. Migratie 0016 voegt de tabellen voor de bezettingsimport en de onthouden naamkoppelingen toe; bestaande gegevens veranderen niet. `docker-compose.yml` is in 0.3.0 gewijzigd: haal hem opnieuw op bij de tag. Compose start daarna niet als `docker/db-init.sh` ontbreekt (`installatie.md`).
+
 Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
 
 ## Tokens

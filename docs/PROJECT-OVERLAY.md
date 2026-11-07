@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.39
+**Versie overlay:** v0.5.40
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -81,7 +81,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Controleer vóór een bouwopdracht of Docker draait, en noem in de opdracht welke images al lokaal staan.
 - Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`. Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad. Een proef met de fixtures van de unittests krijgt daarbij een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef`.
 - Bewerk geen Python-bestanden in de werkmap terwijl een reviewer de log van `web` en `api` controleert (`--reload` laadt halve bestanden); noem het tijdstip van de laatste `up --build` in de brief.
-- Wijzig je templates of CSS, maak `web` dan opnieuw aan; `--reload` laadt alleen Python opnieuw. Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, wacht je tot de containers healthy zijn voordat je E2E-tests of curl-controles draait; tot dan geeft Traefik 404. Een herstart van de proxy is niet nodig.
+- Wijzig je templates of CSS, maak `web` dan opnieuw aan met `docker compose -f docker-compose.yml -f compose.dev.yml up -d --no-deps --force-recreate web`, nooit zonder `compose.dev.yml` (dan leidt `:8080` om naar https en valt de hele E2E-suite); `--reload` laadt alleen Python opnieuw. Controleer vóór een E2E-run met `docker inspect -f '{{index .Config.Labels "com.docker.compose.project.config_files"}}' botenloods-web-1` dat `web` met `compose.dev.yml` draait. Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, wacht je tot de containers healthy zijn voordat je E2E-tests of curl-controles draait; tot dan geeft Traefik 404. Een herstart van de proxy is niet nodig.
 - Een nieuwe map in de repository die een test leest, moet in de testcontainer gemount worden in `compose.dev.yml`.
 - Draai geen compose-commando terwijl een `git stash` actief is; vergelijk een baseline in een aparte worktree.
 - Een script met een eigen compose-project noemt welke images het bouwt en of het die na afloop laat staan.
@@ -131,6 +131,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een nieuw scherm of een nieuwe knop de linktekst. Die mag geen deel zijn van een bestaande link- of knoptekst op dezelfde pagina; Playwright `get_by_role(name=...)` zoekt op een deel van de tekst.
 - Een testhulp die de database als eigenaar wijzigt (`eigenaar()`), doet daarna `db.session.expire_all()`; anders ziet de test oude waarden.
 - Een test met de rol van de worker kan `beheerder` niet lezen. Zet testgegevens voor die rol met één SQL-regel als eigenaar (met een subselect), niet met een aparte leesactie.
+- De werkmap is gemount in `web`: een sjabloonwijziging werkt direct door in een lopende E2E-run. Draai de baseline op `main` vóór je iets wijzigt, of in een aparte worktree.
+- Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
+- Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
+- Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
 - Noem bij een reeks zoekstappen (zoals lidnummer, koppeling, naam) wat een onbekende waarde in een stap doet: doorvallen naar de volgende stap of een fout.
 
 #### Review
@@ -356,6 +360,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.40 | 2026-11-07 | Vijf regels (Bouw) uit de terugblikken van prism en sentinel bij blok 1 van #150: `web` met `compose.dev.yml`, baseline vóór wijzigingen, selectors zoeken, test op CSS-afwijking, vervangen klassen | Lessen |
 | v0.5.39 | 2026-11-07 | Regel (Review) uit de terugblik van sentinel bij #156: rechten van een opgehaald bestand, resultaat in de database | Lessen |
 | v0.5.38 | 2026-11-07 | Twee regels (Review, Migratie en database) uit de terugblikken van sentinel en aegis bij #158 | Lessen |
 | v0.5.37 | 2026-11-07 | Zes regels in de briefingchecklist (Algemeen, Bouw) uit de bouw van #158 en de toets van Design System | Lessen |
