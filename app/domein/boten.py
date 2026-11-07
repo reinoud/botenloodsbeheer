@@ -18,9 +18,13 @@ def _verwijzingen(boot):
     return [f"boot:{boot.id}", *([f"lid:{boot.lid_id}"] if boot.lid_id else [])]
 
 
-def boten():
+def boten(zoek="", bootsoort_id=None):
+    """Alle boten, of die waarvan boot of eigenaar de zoektekst bevat en die van de bootsoort zijn."""
+    q = select(Boot).outerjoin(Boot.lid).where(leden.boot_of_lid_bevat(zoek))
+    if bootsoort_id:
+        q = q.where(Boot.bootsoort_id == bootsoort_id)
     return db.session.scalars(
-        select(Boot).order_by(Boot.naam, Boot.id).options(
+        q.order_by(Boot.naam, Boot.id).options(
             selectinload(Boot.lid), selectinload(Boot.plaats), selectinload(Boot.bootsoort),
             selectinload(Boot.wachtlijst)
         )

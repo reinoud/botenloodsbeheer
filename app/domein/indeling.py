@@ -264,13 +264,13 @@ def vrije_plaatsen(bootsoort_id=None, clubplaats=False):
     return db.session.scalars(q).all()
 
 
-def plaatsen_van_oud_leden():
+def plaatsen_van_oud_leden(zoek=""):
     """Plaatsen met de boot van een oud-lid (BLB-018), als (datum, plaats) met de oudste datum
     eerst. De datum is de opzegdatum, of de dag waarop het lid uit de bron verdween als dat
-    eerder was."""
+    eerder was. Met zoek alleen de plaatsen waarvan boot of oud-lid de tekst bevat."""
     dag = vandaag()
     plaatsen = db.session.scalars(
-        select(Plaats).join(Plaats.boot).join(Boot.lid).options(
+        select(Plaats).join(Plaats.boot).join(Boot.lid).where(leden.boot_of_lid_bevat(zoek)).options(
             selectinload(Plaats.rek), selectinload(Plaats.boot).selectinload(Boot.lid))
     ).all()
     rijen = [(min(d for d in (p.boot.lid.opzegdatum, p.boot.lid.uit_bron_op) if d and d <= dag), p)
@@ -279,12 +279,13 @@ def plaatsen_van_oud_leden():
                                         r[1].vak))
 
 
-def plaatsen_van_opzeggende_leden():
+def plaatsen_van_opzeggende_leden(zoek=""):
     """Plaatsen met de boot van een lid met een opzegdatum in de toekomst (BLB-041), de vroegste
-    opzegdatum eerst. Na die datum staat de plaats bij de plaatsen van oud-leden (BLB-018)."""
+    opzegdatum eerst. Na die datum staat de plaats bij de plaatsen van oud-leden (BLB-018).
+    Met zoek alleen de plaatsen waarvan boot of lid de tekst bevat."""
     return db.session.scalars(
         select(Plaats).join(Plaats.boot).join(Boot.lid).join(Plaats.rek)
-        .where(Lid.opzegdatum > vandaag(), Lid.uit_bron_op.is_(None))
+        .where(Lid.opzegdatum > vandaag(), Lid.uit_bron_op.is_(None), leden.boot_of_lid_bevat(zoek))
         .order_by(Lid.opzegdatum, Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)
         .options(selectinload(Plaats.rek), selectinload(Plaats.boot).selectinload(Boot.lid))
     ).all()

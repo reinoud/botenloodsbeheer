@@ -166,7 +166,7 @@ def schermen(browser):
 
     # Plaatsen: een bezette en een vrije.
     page.goto("/opzeggend")
-    page.locator("tbody tr").first.get_by_role("link").last.click()
+    page.locator("main > ul.bl-lijst > li").first.get_by_role("link").last.click()
     o.maak("plaats-bezet", hoogte=1000)
     page.goto("/vrij")
     page.locator("tbody tr").first.get_by_role("link").click()
@@ -175,6 +175,7 @@ def schermen(browser):
 
     # Boten: nieuwe boot met foto, daarna toewijzen aan de vrije plaats.
     page.goto("/boten")
+    page.get_by_text("Nieuwe boot", exact=True).click()
     page.get_by_label("Naam van de boot").fill("Zwaluw 7")
     page.get_by_label("Bootsoort").select_option(label="Kajak")
     page.get_by_label("Eigenaar").select_option(index=3)
@@ -216,6 +217,7 @@ def schermen(browser):
 
     # Leden en import.
     page.goto("/leden")
+    page.get_by_text("Import", exact=True).click()
     page.get_by_role("button", name="Leden nu ophalen").click()
     expect(page.get_by_text("De import is aangevraagd.")).to_be_visible()
     o.maak("leden", hoogte=800)

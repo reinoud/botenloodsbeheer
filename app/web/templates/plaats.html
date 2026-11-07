@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% block titel %}Plaats {{ plaats.code }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Plaats {{ plaats.code }}</h1>
@@ -87,5 +87,5 @@
 </div>
 </div>
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

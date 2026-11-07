@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% block titel %}{{ 'Technisch log' if technisch else 'Log' }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 {% if technisch %}
-<h1>Technisch log</h1>
+<h1 id="log-kop">Technisch log</h1>
 <p>Per pagina 50 regels, de nieuwste eerst, over tokens, geweigerde API-aanroepen, beheerders, instellingen, importverzoeken en de indeling. De mutaties van boten staan in het <a href="{{ url_for('web.logboek') }}">log</a>.</p>
 {% else %}
-<h1>Mutatielog</h1>
+<h1 id="log-kop">Mutatielog</h1>
 <p>Per pagina 50 mutaties van boten en hun plaats, de nieuwste eerst. Tokens, beheerders, instellingen en de indeling staan in het <a href="{{ url_for('web.technisch_log') }}">technische log</a>.</p>
 {% endif %}
-{{ logtabel(regels, naar_log=false) }}
+{{ logblok(regels, op_logpagina=true) }}
 {% set eigen = 'web.technisch_log' if technisch else 'web.logboek' %}
 {% if pagina > 1 or ouder %}
 <nav aria-label="Pagina's van het log">

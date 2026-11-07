@@ -48,9 +48,9 @@ def test_bootaantallen_api_gelijk_aan_de_lijst_per_lid(page):
     regel = next(r for r in json.loads(tekst) if any(r["aantallen"].values()))
     wachtwoord_instellen(page, "bootaantallen")
     page.goto(f"/leden?zoek={regel['lidnummer']}")
-    lidnummer = page.locator("td[data-label='Lidnummer']",
+    lidnummer = page.locator("[data-label='Lidnummer']",
                              has_text=re.compile(f"^{re.escape(regel['lidnummer'])}$"))
-    page.locator("main > .ds-table-wrap > table tbody tr").filter(has=lidnummer).get_by_role("link").click()
+    page.locator("main > ul.bl-lijst > li").filter(has=lidnummer).get_by_role("link").click()
     tabel = page.locator("h2:has-text('Aantal boten per bootsoort') + p + .ds-table-wrap table")
     getoond = dict(zip(tabel.locator("td[data-label='Bootsoort']").all_inner_texts(),
                        map(int, tabel.locator("td[data-label='Aantal']").all_inner_texts()),

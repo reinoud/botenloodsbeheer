@@ -1,31 +1,31 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% from "_melding.html" import meldingblok %}
 {% block titel %}Boten van leden die gaan opzeggen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten van leden die gaan opzeggen</h1>
 <p>Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste opzegdatum bovenaan. Deze boten horen vóór die datum weg te zijn.</p>
 
+<form class="bl-filter" method="get" action="{{ url_for('web.opzeggend') }}" role="search" aria-label="Boten zoeken">
+  <div class="ds-field">
+    <label class="ds-field__label" for="opzeggen-zoek">Zoek op boot of lid</label>
+    <input class="ds-input" type="search" id="opzeggen-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+  </div>
+  <button type="submit" class="ds-btn ds-btn--primary">Toon boten</button>
+</form>
 {% if plaatsen %}
-<div class="ds-table-wrap tabel">
-<table class="ds-table dj-table--stack" role="table">
-  <thead role="rowgroup"><tr role="row"><th role="columnheader">Lid</th><th role="columnheader">Boot</th><th role="columnheader">Rek</th><th role="columnheader">Plaats</th><th role="columnheader">Opzegdatum</th></tr></thead>
-  <tbody role="rowgroup">
+<p class="bl-aantal">{{ plaatsen|length }} {{ 'boot' if plaatsen|length == 1 else 'boten' }}</p>
+<ul class="bl-lijst">
   {% for p in plaatsen %}
-    <tr role="row">
-      <td role="cell" data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a></td>
-      <td role="cell" data-label="Boot">{{ p.boot.naam }}</td>
-      <td role="cell" data-label="Rek">{{ p.rek.naam }}</td>
-      <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
-      <td role="cell" data-label="Opzegdatum">{{ p.boot.lid.opzegdatum.strftime('%d-%m-%Y') }}</td>
-    </tr>
+  <li class="bl-item bl-item--datum">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=p.boot.lid.id) }}">{{ p.boot.lid.naam }}</a> <span class="bl-item__sub"><span data-label="Boot">{{ p.boot.naam }}</span> · plaats <a data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></span></div>
+    <p class="bl-item__zijde">opzegdatum <time data-label="Opzegdatum">{{ p.boot.lid.opzegdatum.strftime('%d-%m-%Y') }}</time></p>
+  </li>
   {% endfor %}
-  </tbody>
-</table>
-</div>
+</ul>
 {% else %}
-{% call meldingblok() %}Er zijn geen boten van leden die gaan opzeggen.{% endcall %}
+{% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek else 'Er zijn geen boten van leden die gaan opzeggen.' }}{% endcall %}
 {% endif %}
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

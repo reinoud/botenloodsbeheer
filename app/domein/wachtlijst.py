@@ -14,12 +14,15 @@ def _verwijzingen(boot):
     return [f"boot:{boot.id}", f"lid:{boot.lid_id}"]
 
 
-def lijsten():
+def lijsten(zoek="", bootsoort_id=None):
     """Per bootsoort de boten op de lijst, de langst wachtende eerst. Een boot van een oud-lid
-    telt niet mee; de eerstvolgende import haalt hem eraf (BLB-008)."""
+    telt niet mee; de eerstvolgende import haalt hem eraf (BLB-008). Met zoek alleen boten
+    waarvan boot of lid de tekst bevat, met bootsoort_id alleen die soort."""
+    q = select(Wachtlijst).join(Wachtlijst.boot).join(Boot.lid).where(leden.boot_of_lid_bevat(zoek))
+    if bootsoort_id:
+        q = q.where(Boot.bootsoort_id == bootsoort_id)
     rijen = db.session.scalars(
-        select(Wachtlijst).join(Wachtlijst.boot)
-        .order_by(Wachtlijst.aangemeld_op, Boot.naam, Boot.id)
+        q.order_by(Wachtlijst.aangemeld_op, Boot.naam, Boot.id)
         .options(selectinload(Wachtlijst.boot).selectinload(Boot.lid),
                  selectinload(Wachtlijst.boot).selectinload(Boot.bootsoort))
     ).all()

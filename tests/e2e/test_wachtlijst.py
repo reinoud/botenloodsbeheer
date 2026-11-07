@@ -29,11 +29,11 @@ def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
     # De lijst van surfski's: langst wachtende bovenaan, met wachttijd.
     page.goto("/wachtlijst")
     surfski = page.locator("section.kaart", has=page.get_by_role("heading", name="Surfski", exact=True))
-    rij = surfski.locator("tbody tr", has_text=wachter)
+    rij = surfski.locator("li", has_text=wachter)
     expect(rij).to_contain_text("01-05-2019")
-    expect(rij.locator("td[data-label=Wachttijd]")).to_contain_text("jaar")
+    expect(rij.locator("[data-label=Wachttijd]")).to_contain_text("jaar")
     datums = [d.split("-")[::-1] for d in
-              surfski.locator("td[data-label='Aangemeld op']").all_inner_texts()]
+              surfski.locator("[data-label='Aangemeld op']").all_inner_texts()]
     assert datums == sorted(datums)  # langst wachtende bovenaan; eerdere runs staan er ook op
     expect(page.locator("section.log")).to_contain_text("wachtlijst.toegevoegd")
 
@@ -100,7 +100,7 @@ def test_wachtlijst_weigert_toekomst_en_clubboot_en_eraf_halen(page):
     page.get_by_role("button", name="Op de wachtlijst zetten").click()  # leeg: vandaag
     expect(page.get_by_text("De boot staat op de wachtlijst.")).to_be_visible()
     page.goto("/wachtlijst")
-    rij = page.locator("section.kaart tr", has_text=boot)
+    rij = page.locator("section.kaart li", has_text=boot)
     expect(rij).to_contain_text("0 dagen")
     rij.get_by_role("button", name=f"{boot} van de lijst halen").click()
     expect(page.get_by_text("De boot is van de wachtlijst gehaald.")).to_be_visible()

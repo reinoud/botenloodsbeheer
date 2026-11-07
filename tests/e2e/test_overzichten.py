@@ -62,8 +62,8 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     wachtwoord_instellen(page, "leden")
     page.goto("/leden")
     page.get_by_label("Zoek op naam of lidnummer").fill("1001")
-    page.get_by_role("button", name="Zoeken").click()
-    leden = page.locator("main > .ds-table-wrap > table tbody tr")
+    page.locator("main").get_by_role("button", name="Zoeken").click()
+    leden = page.locator("main > ul.bl-lijst > li")
     expect(leden).to_have_count(1)
     leden.get_by_role("link").click()
     expect(page.get_by_role("heading", name="Boten in de loods")).to_be_visible()
@@ -71,12 +71,12 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     assert "@example.org" not in page.content()
 
     page.goto("/opgezegd")
-    rijen = page.locator("main > .ds-table-wrap > table tbody tr")
+    rijen = page.locator("main > ul.bl-lijst > li")
     expect(rijen.first).to_be_visible()  # de seed heeft oud-leden met een plaats
     datums = [re.sub(r"(\d+)-(\d+)-(\d+)", r"\3\2\1", t)
-              for t in rijen.locator("td[data-label='Opgezegd op']").all_inner_texts()]
+              for t in rijen.locator("[data-label='Opgezegd op']").all_inner_texts()]
     assert datums == sorted(datums)
-    code = rijen.first.locator("td[data-label='Plaats']").inner_text()
+    code = rijen.first.locator("[data-label='Plaats']").inner_text()
     rijen.first.get_by_role("link", name=code, exact=True).click()
     expect(page.get_by_role("button", name=f"Plaats {code} vrijgeven")).to_be_visible()
 

@@ -330,10 +330,10 @@ def _bootmutaties(aantal):
 def test_log_bladert_per_50_regels(ingelogd):
     _bootmutaties(51)
     eerste = ingelogd.get("/log").text
-    assert eerste.count('<td role="cell" data-label="Actie">') == 50
+    assert eerste.count('<li class="bl-logregel">') == 50
     assert "pagina=2" in eerste and "Nieuwere regels" not in eerste
     tweede = ingelogd.get("/log?pagina=2").text
-    assert tweede.count('<td role="cell" data-label="Actie">') == 1
+    assert tweede.count('<li class="bl-logregel">') == 1
     assert "Nieuwere regels" in tweede and "Oudere regels" not in tweede
     assert "Meer in het log" not in eerste
     assert "Meer in het log" in ingelogd.get("/boten").text

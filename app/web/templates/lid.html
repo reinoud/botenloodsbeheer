@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% block titel %}{{ lid.naam }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>{{ lid.naam }}</h1>
@@ -39,5 +39,5 @@
 </table>
 </div>
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

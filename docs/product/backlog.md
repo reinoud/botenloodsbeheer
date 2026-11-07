@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.6
-**Datum:** 2026-11-06
+**Versie:** v0.6.7
+**Datum:** 2026-11-07
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -151,6 +151,7 @@ Als beheerder wil ik een boot met naam, bootsoort, eigenaar en eventueel een fot
 - Gegeven een boot met een toegewezen plaats, wanneer de beheerder de boot wil verwijderen, dan weigert de applicatie tot de plaats is vrijgegeven.
 - Gegeven een boot, wanneer de beheerder naam, bootsoort of eigenaar (een actief lid of de vereniging) wijzigt, dan staat de wijziging met oude en nieuwe waarde in het log van de bootmutaties (`boot.gewijzigd`), onder de boot en onder het oude en het nieuwe lid. Een wijziging zonder verschil geeft geen logregel (besluit stakeholder 2026-11-01, issue #39).
 - Gegeven een boot met een plaats, wanneer de nieuwe bootsoort niet bij de plaats past, of de boot van clubboot naar lid gaat of andersom, dan weigert de applicatie en zegt waarom. Een oud-lid kan geen nieuwe eigenaar worden.
+- Gegeven het overzicht van boten, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon boten** kiest, dan staan alleen de boten waarvan de boot of de eigenaar de tekst bevat en die van die soort zijn in de lijst, met het aantal erboven. De zoektekst telt letterlijk (ook `%` en `_`) en hoofdletters tellen niet mee. Geen enkel filter geeft alle boten. Een onbekende bootsoort geeft geen boten en geen foutmelding. Een keuzelijst verstuurt niet zelf (WCAG 3.2.2).
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
@@ -236,6 +237,7 @@ Als beheerder wil ik zien welke leden met een opzegdatum in de toekomst nog een 
 - Gegeven geen enkel lid met een opzegdatum in de toekomst en een boot met een plaats, wanneer de beheerder het overzicht opent, dan staat er dat er geen boten zijn.
 
 ### EP-03 Toewijzen en vrijgeven
+- Gegeven het overzicht van boten die gaan opzeggen, wanneer de beheerder in **Zoek op boot of lid** een tekst invult en **Toon boten** kiest, dan staan alleen de boten waarvan de boot of het lid de tekst bevat in de lijst, met het aantal erboven. Het overzicht toont geen rek.
 
 #### BLB-010 Plaats toewijzen
 
@@ -286,6 +288,7 @@ Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoo
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die van de lijst haalt, dan is de boot niet meer op de lijst en staat dat in het log.
 - Gegeven een boot die op de wachtlijst komt of eraf gaat, wanneer de beheerder het log van de bootmutaties of de pagina van de boot opent, dan staat die handeling daar en niet in het technische log (BLB-043, besluit 2026-11-01).
+- Gegeven de wachtlijst, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon wachtlijst** kiest, dan staan alleen de boten waarvan de boot of het lid de tekst bevat en die van die soort zijn op de lijst, met het aantal boten erboven. Zonder treffer staat er "Geen boten gevonden.".
 
 #### BLB-014 Vanaf de wachtlijst een plaats kiezen
 
@@ -338,6 +341,7 @@ Als beheerder wil ik een overzicht van toegewezen plaatsen van leden die hebben 
 
 - Gegeven oud-leden met een toegewezen plaats, wanneer de beheerder het overzicht opent, dan staan per plaats aanduiding, boot, naam van het oud-lid en opzegdatum in de lijst, met de oudste opzegging bovenaan. Voor een lid dat zonder opzegdatum uit de bron verdween, is de opzegdatum de datum waarop de import het lid niet meer vond (besluit vraag 13).
 - Gegeven een plaats in dit overzicht, wanneer de beheerder erop kiest, dan kan die de plaats vrijgeven (BLB-011).
+- Gegeven het overzicht van opgezegde leden, wanneer de beheerder in **Zoek op boot of oud-lid** een tekst invult en **Toon plaatsen** kiest, dan staan alleen de plaatsen waarvan de boot of het oud-lid de tekst bevat in de lijst, met het aantal erboven. Het overzicht toont geen rek.
 
 #### BLB-019 Lijst per lid
 
@@ -349,6 +353,7 @@ Als beheerder wil ik per lid een lijst van de boten in de loods en hun plaats zo
 - Gegeven 210 leden, wanneer de beheerder op naam of lidnummer zoekt, dan toont de applicatie de passende leden.
 
 ### EP-06 Openbare pagina en kaartjes
+- Gegeven de ledenlijst, dan staat boven de lijst het aantal leden en heeft de lijst per lid de naam, het lidnummer, de datum van lid sinds en de status lid of oud-lid. Het blok **Import** is dicht tot de beheerder het opent.
 
 #### BLB-020 Openbare plaatspagina
 
@@ -439,6 +444,7 @@ Als beheerder wil ik onder elk overzicht het log met de bijbehorende mutaties zi
 - Gegeven een overzicht of detailscherm voor beheerders, wanneer de beheerder het opent, dan staat onder het scherm het log met de mutaties die erbij horen, de nieuwste bovenaan. Regels uit het technische log staan alleen onder de eigen menuoptie (BLB-043, besluit 2026-11-01).
 - Gegeven een plaats waaraan een boot is toegewezen of waarvan een boot is vrijgegeven, wanneer de beheerder het detail van die plaats opent, dan staat die mutatie in het log onder het detail. Een wijziging van de plaats zelf (bootsoorten, clubplaats) of van de indeling staat in het technische log (BLB-043).
 - Gegeven de openbare pagina, wanneer een bezoeker die opent, dan staat daar geen log.
+- Gegeven een overzicht, wanneer de beheerder het opent, dan is het log een dicht uitklapblok **Log**. Binnen het blok staat een kop per dag met de weekdag, in de tijdzone van de installatie, en per mutatie een regel met de tijd. Op de pagina van het log zelf is er geen uitklapblok.
 
 #### BLB-045 Rekindeling exporteren en importeren als CSV
 
