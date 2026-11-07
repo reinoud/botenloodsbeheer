@@ -40,7 +40,12 @@ services:
     networks: [achterkant]
     volumes:
       - dbdata:/var/lib/postgresql/data
-      - ./docker/db-init.sh:/docker-entrypoint-initdb.d/rollen.sh:ro
+      # Lange syntaxis: ontbreekt het bestand, dan weigert compose te starten in plaats van een lege map te maken (#156).
+      - type: bind
+        source: ./docker/db-init.sh
+        target: /docker-entrypoint-initdb.d/rollen.sh
+        read_only: true
+        bind: {create_host_path: false}
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "botenloods", "-d", "botenloods"]
       interval: 5s
