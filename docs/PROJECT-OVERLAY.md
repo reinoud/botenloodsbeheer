@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.42
+**Versie overlay:** v0.5.43
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -214,6 +214,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Controleer bij een mutant via tekstvervanging met een telling dat de vervangen tekst precies één keer voorkomt; anders raakt de mutant ook andere functies.
 - Kies in een test op volgorde gegevens waarbij de bedoelde volgorde (zoals op id) afwijkt van de alfabetische.
 - Verplaats je de dekking van een criterium van E2E naar unittests, noem dan per gegeven uit het criterium (zoals tijdstip en aantallen) de assert die het dekt, en draai een mutant die dat gegeven weghaalt.
+- Zet een bouwopdracht een blok dicht in een `details`, zoek dan in `tests/e2e/` en `schermafbeeldingen.py` alle `to_be_visible`, `all_inner_texts`, `fill`, `click` en `select_option` op elementen in dat blok. `to_contain_text` en `all_text_contents` werken ook in een dicht blok, de andere niet; open het blok eerst met de summary.
+- Een test op een scherm met een eigen zoekveld zoekt de knop Zoeken binnen `main`; de kop heeft ook een knop Zoeken.
+- Een subagent wacht op een achtergrondrun met een `until grep -q`-lus op een eindregel in het uitvoerbestand, en telt het E2E-totaal met een script uit de losse `passed`-regels van `draai.sh`.
 
 #### Migratie en database
 
@@ -281,6 +284,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een controle in `draai.sh` die een tweede container start, eist dat die container gestart is en met 0 eindigt; een lege uitkomst van `docker wait` telt als fout. Proef dat met een docker-stub waarin `run -d` faalt. Een herstel van een controle komt met een stub die de oude en de nieuwe conditie draait, met per geval de verwachte uitkomst.
 - Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
 - Zet een wijziging meer in de applicatielog (zoals een traceback), dan toetst de test de JSON-logregel na een fout van de database zelf (NOT NULL of UNIQUE op `lid`) met de rol `api` en met een regelovergang in een veldwaarde, en met een fout die de oorspronkelijke tekst zonder keten overneemt (zoals `PendingRollbackError`); `hide_parameters` verbergt de DETAIL van PostgreSQL niet. Een foutmelding in de code bevat geen veldwaarden.
+- Bij een nieuwe GET-parameter: de toegangslog (`app/toegangslog.py`) laat de querystring weg en `app/__init__.py` weigert een NUL-teken centraal. De reviewer controleert alleen of de nieuwe route daar niet omheen gaat.
 
 #### Documentatie, backlog en ADR's
 
@@ -364,6 +368,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.43 | 2026-11-07 | Drie regels (E2E) en één regel (Security) uit de terugblikken van prism, sentinel en aegis bij blok 3 deel A van #150: dichte `details`, knop Zoeken in `main`, wachten op een achtergrondrun, GET-parameters en toegangslog | Lessen |
 | v0.5.42 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij het scherm vrije plaatsen van #150: commando voor de unitsuite en wisselvallige test #172, schermafbeeldingen terugzetten | Lessen |
 | v0.5.41 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij blok 2 van #150: baseline in een worktree of wachten, foto voor een visuele controle | Lessen |
 | v0.5.40 | 2026-11-07 | Vijf regels (Bouw) uit de terugblikken van prism en sentinel bij blok 1 van #150: `web` met `compose.dev.yml`, baseline vóór wijzigingen, selectors zoeken, test op CSS-afwijking, vervangen klassen | Lessen |
