@@ -261,12 +261,12 @@ def test_lid_met_opzegdatum_in_de_toekomst_krijgt_een_plaats(app):
 def test_openbaar_geeft_alleen_openbare_velden(app):
     p = plaats()
     assert indeling.openbaar(p.publieke_sleutel) == {
-        "code": "A/1/1", "omschrijving": "", "vrij": True, "clubboot": False, "boot": None, "foto": None,
+        "code": "A/1/1", "omschrijving": "", "vrij": True, "clubboot": False, "clubplaats": False, "boot": None, "foto": None,
         "eigenaar": None}
     b = boot(lid().id, foto=png())
     toewijzing.toewijzen(p.id, b.id, CLI)
     assert indeling.openbaar(p.publieke_sleutel) == {
-        "code": "A/1/1", "omschrijving": "", "vrij": False, "clubboot": False, "boot": "Zeemeeuw",
+        "code": "A/1/1", "omschrijving": "", "vrij": False, "clubboot": False, "clubplaats": False, "boot": "Zeemeeuw",
         "foto": b.afbeelding.sleutel, "eigenaar": "Anna de Vries"}
     assert indeling.openbaar("bestaatniet") is None
 

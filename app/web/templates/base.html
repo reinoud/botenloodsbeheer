@@ -13,11 +13,11 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='stijl.css') }}">
 </head>
 <body>
-  <a class="dj-skip sla-over" href="#inhoud">Naar de inhoud</a>
+  {% block skiplink %}<a class="dj-skip sla-over" href="#inhoud">Naar de inhoud</a>{% endblock %}
   <header class="dj-header bl-kop">
     <div class="dj-container dj-header__bar">
-      <a class="dj-logo" href="{{ url_for('web.start') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>
-      {% if g.beheerder %}
+      {% block logo %}<a class="dj-logo" href="{{ url_for('web.start') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
+      {% block menu %}{% if g.beheerder %}
       {# De groepen van BV-42; de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
       {% set menu = [
         ("Dagelijks", [("web.rekoverzicht", "Rekoverzicht"), ("web.indeling_overzicht", "Indeling"), ("web.vrije_plaatsen", "Vrije plaatsen"),
@@ -49,7 +49,7 @@
           {% endfor %}
         </nav>
       </details>
-      {% endif %}
+      {% endif %}{% endblock %}
     </div>
   </header>
   <main class="dj-container bl-main" id="inhoud">

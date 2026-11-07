@@ -212,7 +212,7 @@ De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naa
 
 ## De openbare pagina
 
-Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen en ziet de aanduiding van de plaats, de omschrijving van het rek en of de plaats vrij is, of anders de boot, de eigenaar (bij een clubboot de vereniging) en de foto. Er is geen zoekfunctie en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
+Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen. De pagina begint met de aanduiding van de plaats en een label: **Bezet**, **Clubplaats** of **Vrij**. Daaronder staat de zin "Hier hoort de boot van eigenaar", bij een clubboot met de vereniging als eigenaar, met de foto van de boot ernaast of eronder. Een vrije plaats zegt dat ze vrij is en wijst wie een plaats wil naar de beheerder. Een vrije clubplaats zegt dat ze voor een clubboot is. Onderaan staat de omschrijving van het rek, als die er is. Er is geen zoekfunctie, geen menu en geen link vanaf het logo, en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
 
 ![De openbare pagina van een plaats met boot, eigenaar en foto.](afbeeldingen/openbaar.png)
 

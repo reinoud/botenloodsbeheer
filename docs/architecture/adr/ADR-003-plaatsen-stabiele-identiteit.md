@@ -88,7 +88,7 @@ Migratie `0013` volgt op `0012` en is de enige head. Upgrade: trek DELETE op `ve
 - Het rekoverzicht (BLB-044) toont per rek zoveel kolommen als het hoogste vaknummer en zoveel verdiepingen als de hoogste verdieping met een plaats. De CSP staat geen inline `style` toe, dus het aantal kolommen is een CSS-klasse (`raster-rek-1` tot en met `raster-rek-12`).
 - Een bezoeker kan een plaats niet op aanduiding opzoeken. Dat is besloten: de openbare pagina is alleen via de QR-link te openen (intake, besluit stakeholder 2026-10-30).
 - Een publieke sleutel opnieuw genereren is bewust geen functie. Is een sleutel ooit ongewenst bekend, dan is dat geen probleem: de pagina is openbaar.
-- De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto-URL en naam van de eigenaar (of de naam van de vereniging bij een clubboot) ophaalt. De E2E-test controleert het volledige antwoord op afwezigheid van adres, telefoon, e-mail en lidnummer.
+- De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto-URL, naam van de eigenaar (of de naam van de vereniging bij een clubboot) en de vlag clubplaats ophaalt. De E2E-test controleert het volledige antwoord op afwezigheid van adres, telefoon, e-mail en lidnummer.
 - Foto's op de openbare pagina hebben een eigen willekeurige sleutel (ADR-008), zodat ze ook niet op te tellen zijn.
 
 ## Wijzigingslog
