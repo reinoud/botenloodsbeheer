@@ -6,7 +6,7 @@
 <h1>Vrije plaatsen</h1>
 <p>Plaatsen zonder boot, voor boten van leden. Clubplaatsen staan er niet in.</p>
 
-<form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="kaart">
+<form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="bl-filter">
   <div class="ds-field">
     <label class="ds-field__label" for="bootsoort">Geschikt voor</label>
     <select class="dj-select" id="bootsoort" name="bootsoort"{% if gekozen %} autofocus{% endif %}>
@@ -16,18 +16,19 @@
       {% endfor %}
     </select>
   </div>
-  <noscript><button type="submit" class="ds-btn ds-btn--primary">Filteren</button></noscript>
+  <button type="submit" class="ds-btn ds-btn--primary">Toon vrije plaatsen</button>
 </form>
 
 {% if plaatsen %}
-<div class="ds-table-wrap tabel">
-<table class="ds-table dj-table--stack" role="table">
+<p class="bl-aantal">{{ plaatsen|length }} {{ 'vrije plaats' if plaatsen|length == 1 else 'vrije plaatsen' }}{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}</p>
+<div class="ds-table-wrap">
+<table class="ds-table dj-table--stack bl-vrij" role="table">
   <thead role="rowgroup"><tr role="row"><th role="columnheader">Rek</th><th role="columnheader">Plaats</th><th role="columnheader">Geschikt voor</th></tr></thead>
   <tbody role="rowgroup">
   {% for p in plaatsen %}
     <tr role="row">
       <td role="cell" data-label="Rek">{{ p.rek.naam }}</td>
-      <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
+      <td role="cell" data-label="Plaats"><a class="bl-plaatslink" href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
       <td role="cell" data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
     </tr>
   {% endfor %}
@@ -40,4 +41,3 @@
 
 {{ logtabel(regels) }}
 {% endblock %}
-{% block scripts %}<script src="{{ url_for('static', filename='vrij.js') }}"></script>{% endblock %}

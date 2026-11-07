@@ -198,6 +198,7 @@ def schermen(browser):
     # Overzichten.
     page.goto("/vrij")
     page.get_by_label("Geschikt voor").select_option(label="Kajak")
+    page.get_by_role("button", name="Toon vrije plaatsen").click()
     page.wait_for_url(re.compile(r"/vrij\?bootsoort=\d+$"))
     o.maak("vrij", hoogte=700)
     page.goto("/wachtlijst")

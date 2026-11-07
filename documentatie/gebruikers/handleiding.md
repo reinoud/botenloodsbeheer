@@ -149,7 +149,7 @@ In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit 
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
-| Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet. Filter op bootsoort. |
+| Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort en kies **Toon vrije plaatsen**. |
 | Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. |
 | Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. |
 

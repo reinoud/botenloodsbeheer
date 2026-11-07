@@ -166,3 +166,15 @@ td form { gap: var(--space-2); }
   .blad { margin: 0; break-after: page; }
   .blad:last-child { break-after: auto; }
 }
+
+/* Vrije plaatsen (BV-44): keuzelijst en knop op een regel, aantal eronder; op een telefoon een kaart per plaats */
+.bl-filter { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); margin: 0; }
+.bl-filter .ds-field { flex: 1 1 16rem; max-width: 26rem; }
+.bl-filter .ds-btn { min-height: var(--control-height); }
+.bl-aantal { margin: 0; color: var(--ink); font: var(--type-label); }
+@media (width < 40rem) {
+  .bl-vrij tr { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-4); margin-bottom: var(--space-3); padding-block: var(--space-1); }
+  .bl-vrij td { gap: 0; padding-block: var(--space-1); }
+  .bl-vrij td:last-child { grid-column: 1 / -1; }
+  .bl-plaatslink { display: inline-flex; align-items: center; min-height: var(--control-height); font: var(--type-control); }
+}
