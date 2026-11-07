@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.36
+**Versie overlay:** v0.5.37
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-06
+**Bijgewerkt:** 2026-11-07
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -121,12 +121,17 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
 - Sluit een agentopdracht af met het eindrapport als laatste bericht; een terugblik in een bestand vervangt het rapport niet.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
-- Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand.
+- Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
 - Een import of export volgt de regels van de schermactie die dezelfde gegevens wijzigt. Noem in de opdracht die functie en haar test (bijvoorbeeld `_soorten` en `tests/unit/test_plaats_wijzigen_en_vrijgeven.py`), en laat het agent bij elke kolom beslissen wat een lege waarde betekent, voor een nieuw en een bestaand record.
 - Test een rondgang (export, ongewijzigd importeren) ook met elke toestand die het scherm toelaat, zoals een plaats zonder bootsoort, en niet alleen met de standaardwaarden van de testhulpfuncties.
 - Verandert een herstel een regel die ook in een gebruikerstekst staat (sjabloon, handleiding, ADR, schermuitleg), noem dan elke plek met bestand:regel en werk ze in dezelfde ronde bij.
+- Een opdracht met een nieuw scherm noemt ADR-002 (Styling) en de designsystem-repository op een genoemde commit. De regie laat de schermen vóór de review toetsen door de sessie Design System.
+- Noem bij een nieuw scherm of een nieuwe knop de linktekst. Die mag geen deel zijn van een bestaande link- of knoptekst op dezelfde pagina; Playwright `get_by_role(name=...)` zoekt op een deel van de tekst.
+- Een testhulp die de database als eigenaar wijzigt (`eigenaar()`), doet daarna `db.session.expire_all()`; anders ziet de test oude waarden.
+- Een test met de rol van de worker kan `beheerder` niet lezen. Zet testgegevens voor die rol met één SQL-regel als eigenaar (met een subselect), niet met een aparte leesactie.
+- Noem bij een reeks zoekstappen (zoals lidnummer, koppeling, naam) wat een onbekende waarde in een stap doet: doorvallen naar de volgende stap of een fout.
 
 #### Review
 
@@ -348,6 +353,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.37 | 2026-11-07 | Zes regels in de briefingchecklist (Algemeen, Bouw) uit de bouw van #158 en de toets van Design System | Lessen |
 | v0.5.36 | 2026-11-06 | Zeven regels in de briefingchecklist (Bouw, Review) uit de terugblikken van bedrock, sentinel en aegis bij #157 | Lessen |
 | v0.5.35 | 2026-11-06 | Regels uit de terugblikken van prism en sentinel bij #150 deel 1: afname controleren, structuurselectors, escapingtest, migratieheadtest, wachtlus | Lessen |
 | v0.5.34 | 2026-11-06 | §6: imports en exports met andere systemen in de integratiecontainer, CSV via de webinterface in `web` (ADR-014) | Besluit ADR-014 |

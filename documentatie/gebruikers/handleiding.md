@@ -177,6 +177,27 @@ Het bestand is UTF-8 met puntkomma's, zoals Excel in het Nederlands het opent en
 
 Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elke foute regel met het regelnummer en de reden. Fouten zijn bijvoorbeeld een onbekende bootsoort, een gat in een verdieping, een verkeerd scheidingsteken en een bezette plaats die ongeschikt wordt voor haar boot of van clubplaats verandert. Een export die je ongewijzigd importeert, verandert niets. Je vindt de wijziging terug in het technische log (`indeling.geimporteerd`, alleen aantallen) en in het rekoverzicht.
 
+## Bezetting als CSV exporteren en importeren
+
+Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft eigenaar en lidnummer leeg. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
+
+Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heeft een uitkomst:
+
+| Uitkomst | Betekenis |
+|---|---|
+| ongewijzigd | De boot ligt al op die plaats. |
+| toewijzen | De plaats is vrij. |
+| overschrijven | Er ligt een andere boot. Die gaat van de plaats en blijft bestaan. |
+| verplaatsen | De boot ligt elders en komt hierheen. |
+| nieuwe boot | De boot bestaat nog niet en wordt aangemaakt. |
+| te koppelen | Er is nog geen lid gekozen. |
+| fout | Bijvoorbeeld een onbekende plaats of bootsoort, een boot die niet past, een oud-lid of een dubbele regel. |
+| overgeslagen | Jij sloeg de regel over. |
+
+Het lidnummer gaat voor. Zonder lidnummer, of met een onbekend nummer, zoekt de import een onthouden koppeling of een lid met exact die naam. Past er niet precies één lid, dan kies je zelf een lid of de vereniging, of sla je de regel over, en kies je **Keuzes opslaan**. Die keuze wordt onthouden voor een volgende import. Op **Onthouden koppelingen** verwijder je ze weer. Een koppeling vervalt met het lid en vijf jaar na het laatste gebruik.
+
+**Bezetting importeren** kan pas als geen regel nog te koppelen is of een fout heeft. Het is alles of niets. Een oud-lid krijgt geen nieuwe plaats of boot, en een bestaande boot wijzigt de import niet. De import verloopt na twee uur. Er is één lopende import voor de hele vereniging: elke beheerder kan hem koppelen, bevestigen of annuleren. De bootmutaties staan in het mutatielog en de aantallen in het technische log (`bezetting.geimporteerd`).
+
 ## Kaartjes printen
 
 Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
@@ -245,7 +266,7 @@ Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel
 | Database | versie van PostgreSQL en van de migratie | de migratie niet de verwachte is (fout) |
 | Worker | laatste heartbeat | die ouder is dan 2 minuten |
 | Import van leden | laatste import met resultaat, aantallen en bij een fout de reden; laatste geslaagde import | de laatste import mislukte, of de laatste geslaagde is ouder dan 26 uur |
-| Opschoning | laatste opschoning met het aantal verwijderde logregels, leden, boten en foto's | de laatste opschoning mislukte; de worker probeert het de volgende nacht opnieuw |
+| Opschoning | laatste opschoning met het aantal verwijderde logregels, leden, boten, foto's, verlopen imports en koppelingen | de laatste opschoning mislukte; de worker probeert het de volgende nacht opnieuw |
 | API | aan of uit | |
 | Bootaantallen | wanneer de integratiecontainer ze voor het laatst ophaalde | |
 | Tokens die verlopen | tokens die binnen 31 dagen verlopen, met naam en vervaldatum | er zo'n token is |
@@ -333,6 +354,13 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/indeling` | Rekken, omschrijvingen en plaatsen |
 | `/indeling.xlsx` | Export naar Excel |
 | `/rekindeling.csv` | Export van de indeling als CSV, met `?leeg=1` het sjabloon |
+| `/bezetting.csv` | Export van de bezetting als CSV, met `?leeg=1` het sjabloon |
+| `/bezetting/import` | Overzicht en koppelscherm van de lopende bezettingsimport |
+| `/bezetting/import/koppelen` | Keuzes van de import opslaan |
+| `/bezetting/import/bevestigen` | De lopende import uitvoeren |
+| `/bezetting/import/annuleren` | De lopende import weghalen |
+| `/bezetting/koppelingen` | Onthouden koppelingen |
+| `/bezetting/koppelingen/{nummer}/verwijderen` | Een koppeling verwijderen |
 | `/rekoverzicht` | Plaatje per plaats, per rek |
 | `/kaartjes` | Plaatsen kiezen voor kaartjes |
 | `/kaartjes/print` | Kaartjes met QR-code om te printen |

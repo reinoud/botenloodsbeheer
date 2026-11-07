@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, afbeeldingen, leden, log, wachtlijst
+from app.domein import Regelfout, afbeeldingen, indeling, leden, log, wachtlijst
 from app.domein.toewijzing import controleer_past
 from app.models import Boot, Bootsoort, Lid, Plaats, Taakrun, db
 
@@ -47,11 +47,25 @@ def _soort(bootsoort_id):
                           populate_existing=True)
 
 
+def _bootnaam(naam):
+    """De naam van een boot; een stuurteken kan niet in een CSV-bestand (ADR-014 §1)."""
+    naam = (naam or "").strip()
+    if not 1 <= len(naam) <= 100 or indeling._stuurteken(naam):
+        raise Regelfout("Geef de boot een naam van 1 tot 100 tekens, zonder stuurtekens.")
+    return naam
+
+
 def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
     """lid_id None maakt een clubboot: de vereniging is eigenaar."""
-    naam = (naam or "").strip()
-    if not 1 <= len(naam) <= 100:
-        raise Regelfout("Geef de boot een naam van 1 tot 100 tekens.")
+    b = _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor)
+    db.session.commit()
+    return b
+
+
+def _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
+    """Kern van boot_aanmaken zonder commit; de bezettingsimport (ADR-014 §3) doet er meer in
+    één transactie."""
+    naam = _bootnaam(naam)
     soort = _soort(bootsoort_id)
     if soort is None:
         raise Regelfout("Kies een bootsoort.")
@@ -68,7 +82,6 @@ def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
     log.schrijf(actor, "boot.aangemaakt", _verwijzingen(b),
                 {"naam": naam, "bootsoort": soort.naam, "clubboot": lid_id is None,
                  "foto": b.afbeelding is not None})
-    db.session.commit()
     return b
 
 
@@ -78,10 +91,8 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
     eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
     toewijzing die vlak ervoor is gecommit (READ COMMITTED)."""
-    naam = (naam or "").strip()
     try:
-        if not 1 <= len(naam) <= 100:
-            raise Regelfout("Geef de boot een naam van 1 tot 100 tekens.")
+        naam = _bootnaam(naam)
         soort = _soort(bootsoort_id)
         if soort is None:
             raise Regelfout("Kies een bootsoort.")

@@ -1,7 +1,7 @@
 {# Melding uit de Dajaks-basis (ds-notice). De rol staat op de tekst, niet op het teken: een schermlezer leest alleen de tekst. #}
 {% macro meldingblok(soort='info') %}
 <div class="ds-notice ds-notice--{{ soort }} melding">
-  <span class="ds-notice__mark" aria-hidden="true">{{ '!' if soort == 'danger' else 'i' }}</span>
+  <span class="ds-notice__mark" aria-hidden="true">{{ '!' if soort in ('danger', 'warning') else 'i' }}</span>
   <div class="ds-notice__body" role="{{ 'alert' if soort == 'danger' else 'status' }}">{{ caller() }}</div>
 </div>
 {% endmacro %}

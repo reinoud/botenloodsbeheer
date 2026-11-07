@@ -61,7 +61,8 @@ links=()
 for soort in passkey wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
             methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen \
             wachtlijst wachtlijstfout kaartjes status bootaantallen tokens tokenscollega \
-            tokensintrekken bootsoorten indelingraster rekoverzicht bootplaats rekindelingcsv; do
+            tokensintrekken bootsoorten indelingraster rekoverzicht bootplaats rekindelingcsv \
+            bezettingcsv; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done

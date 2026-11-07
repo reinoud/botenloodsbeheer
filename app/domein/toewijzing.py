@@ -34,23 +34,29 @@ def toewijzen(plaats_id, boot_id, actor):
         p = db.session.get(Plaats, plaats_id, with_for_update=True)
         if p is None or b is None:
             raise Regelfout("Kies een bestaande plaats en boot.")
-        if p.boot_id is not None:
-            raise Regelfout(f"Plaats {p.code} is al bezet.")
-        andere = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id))
-        if andere is not None:
-            raise Regelfout(f"Boot {b.naam} heeft al een plaats: {andere.code}.")
-        controleer_past(p, b.naam, b.bootsoort, b.lid_id is not None)
-        if b.lid is not None and leden.is_oud_lid(b.lid):
-            raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats.")
+        _toewijzen(p, b, actor)
     except Regelfout:
         db.session.rollback()
         raise
+    db.session.commit()
+
+
+def _toewijzen(p, b, actor):
+    """Kern van toewijzen op een vergrendelde plaats en boot, zonder commit en rollback; de
+    bezettingsimport (ADR-014 §3) doet er meer in één transactie."""
+    if p.boot_id is not None:
+        raise Regelfout(f"Plaats {p.code} is al bezet.")
+    andere = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id))
+    if andere is not None:
+        raise Regelfout(f"Boot {b.naam} heeft al een plaats: {andere.code}.")
+    controleer_past(p, b.naam, b.bootsoort, b.lid_id is not None)
+    if b.lid is not None and leden.is_oud_lid(b.lid):
+        raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats.")
     p.boot = b
     log.schrijf(actor, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                              *([f"lid:{b.lid_id}"] if b.lid_id else [])],
                 {"plaats": p.code, "boot": b.naam})
     wachtlijst.na_toewijzen(b, actor)
-    db.session.commit()
 
 
 def vrijgeven(plaats_id, actor):
@@ -61,9 +67,14 @@ def vrijgeven(plaats_id, actor):
     if p is None or p.boot is None:
         db.session.rollback()
         raise Regelfout("Deze plaats is al vrij." if p else "Deze plaats bestaat niet.")
+    _vrijgeven(p, actor)
+    db.session.commit()
+
+
+def _vrijgeven(p, actor):
+    """Kern van vrijgeven op een vergrendelde plaats met een boot, zonder commit."""
     b = p.boot
     p.boot = None
     log.schrijf(actor, "plaats.vrijgegeven", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                               *([f"lid:{b.lid_id}"] if b.lid_id else [])],
                 {"plaats": p.code, "boot": b.naam})
-    db.session.commit()

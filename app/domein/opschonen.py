@@ -1,5 +1,6 @@
 """Bewaartermijn van 5 jaar (BLB-026, ADR-006): logregels, en oud-leden van wie geen boot een
-plaats heeft, met hun boten en foto's. Draait dagelijks in de worker als botenloods_taken, de
+plaats heeft, met hun boten en foto's. Ook verlopen bezettingsimports en naamkoppelingen die 5 jaar
+niet zijn gebruikt (ADR-014 §3); een koppeling aan een verwijderd lid gaat mee met het lid. Draait dagelijks in de worker als botenloods_taken, de
 enige rol die logregels mag verwijderen (ADR-007).
 
 Kopieën: een lid staat in het log alleen als `lid:<id>`, zonder naam; foto's staan in de database
@@ -16,7 +17,7 @@ from sqlalchemy import delete, func, select
 
 from app.domein import Actor, log, vandaag
 from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug
-from app.models import Afbeelding, Boot, Lid, Logregel, Taakrun, db
+from app.models import Afbeelding, Bezettingsimport, Boot, Lid, Logregel, Naamkoppeling, Taakrun, db
 
 TAAK = "opschoning"
 SLOT = 2  # sleutel van de advisory lock; 1 is de import
@@ -48,7 +49,12 @@ def opschonen(dag):
                        .execution_options(synchronize_session=False))
     db.session.execute(delete(Lid).where(Lid.id.in_(ids))
                        .execution_options(synchronize_session=False))
-    return {"logregels": logregels, "leden": len(ids), "boten": len(boten), "fotos": len(fotos)}
+    imports = db.session.execute(delete(Bezettingsimport).where(
+        Bezettingsimport.verloopt_op <= func.now())).rowcount
+    koppelingen = db.session.execute(delete(Naamkoppeling).where(
+        Naamkoppeling.gebruikt_op < jaren_terug(datetime.now(UTC), BEWAARJAREN))).rowcount
+    return {"logregels": logregels, "leden": len(ids), "boten": len(boten), "fotos": len(fotos),
+            "imports": imports, "koppelingen": koppelingen}
 
 
 def gedraaid_op(dag):

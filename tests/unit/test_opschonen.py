@@ -67,7 +67,8 @@ def test_oud_lid_weg_met_boten_fotos_en_wachtlijst(app):
     blijft = lid("1002", "Bert").id
     foto_erbij(boot(blijft, naam="Fuut").id, "foto-blijft")
 
-    assert opschonen.draai() == {"logregels": 0, "leden": 1, "boten": 2, "fotos": 1}
+    assert opschonen.draai() == {"logregels": 0, "leden": 1, "boten": 2, "fotos": 1, "imports": 0,
+                                 "koppelingen": 0}
     assert not bestaat(weg) and bestaat(blijft)
     assert db.session.get(Boot, eigen) is None and tel(Boot) == 1
     assert tel(Afbeelding) == 1 and tel(Wachtlijst) == 0
@@ -135,7 +136,8 @@ def test_uitkomst_in_taakrun_en_technisch_log_zonder_persoonsgegevens(app):
     opschonen.draai()
     [run] = db.session.scalars(select(Taakrun).where(Taakrun.taak == opschonen.TAAK)).all()
     assert (run.status, run.aantallen) == ("geslaagd",
-                                           {"logregels": 0, "leden": 1, "boten": 1, "fotos": 0})
+                                           {"logregels": 0, "leden": 1, "boten": 1, "fotos": 0,
+                                                "imports": 0, "koppelingen": 0})
     [r] = log.regels(technisch=True, acties=("opschoning.",))
     assert (r.actor_naam, r.verwijzingen, r.gegevens) == (
         "opschoning", [f"taakrun:{run.id}"], run.aantallen)

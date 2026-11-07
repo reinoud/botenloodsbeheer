@@ -46,6 +46,23 @@
 </section>
 
 <section class="kaart">
+  <h2>Bezetting als CSV</h2>
+  {% if lopende_import %}
+  {% call meldingblok('info') %}<p>Er loopt een bezettingsimport. <a href="{{ url_for('web.bezetting_import') }}">Bekijk het overzicht</a> om te koppelen, te bevestigen of te annuleren.</p>{% endcall %}
+  {% endif %}
+  <p><a href="{{ url_for('web.bezetting_export') }}" download>Bezetting exporteren als CSV</a> · <a href="{{ url_for('web.bezetting_export', leeg=1) }}" download>Leeg bezettingssjabloon met uitleg downloaden</a> · <a href="{{ url_for('web.bezetting_koppelingen') }}">Onthouden koppelingen</a></p>
+  <form method="post" action="{{ url_for('web.bezetting_uploaden') }}" enctype="multipart/form-data">
+    {% include "_csrf.html" %}
+    <div class="ds-field breed">
+      <label class="ds-field__label label-lang" for="bezetting-bestand">CSV-bestand met de bezetting uploaden (UTF-8, puntkomma, hooguit {{ csv_max }} kB)</label>
+      <input class="ds-input" id="bezetting-bestand" name="bestand" type="file" accept=".csv,text/csv" required>
+    </div>
+    <p class="uitleg">Je ziet eerst een overzicht. Er verandert niets tot je bevestigt.</p>
+    <button type="submit" class="ds-btn ds-btn--primary">Bezetting uploaden</button>
+  </form>
+</section>
+
+<section class="kaart">
   <h2>Nieuw rek</h2>
   <form method="post" action="{{ url_for('web.rek_aanmaken') }}">
     {% include "_csrf.html" %}

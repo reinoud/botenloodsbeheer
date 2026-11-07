@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.1
+**Versie:** v0.2.2
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting)
 
 ## Context
@@ -26,7 +26,7 @@ Het voorstel uit de issues blijft.
 | Codering | Export UTF-8 met BOM. Import leest UTF-8 met of zonder BOM, anders "sla op als CSV UTF-8". Geen gok naar Windows-1252 |
 | Commentaar | Een regel waarvan de eerste cel na inlezen met `#` begint; dat werkt ook als Excel de cel tussen aanhalingstekens zet. De lege export heeft uitleg, toegestane bootsoorten, een voorbeeldregel als commentaar en de kopregel |
 | Kolommen | Precies die van de kopregel, volgorde vrij |
-| Grenzen | Hooguit 256 kB (de route leest niet verder) en 2000 regels. Alleen `.csv`, gecontroleerd op inhoud. Veldlengtes als in het model. Een stuurteken of regeleinde in een veld is een fout; naam, omschrijving en bootsoort weigeren stuurtekens ook op het scherm, zodat een rondgang altijd slaagt |
+| Grenzen | Hooguit 256 kB (de route leest niet verder) en 2000 regels. Alleen `.csv`, gecontroleerd op inhoud. Veldlengtes als in het model. Een stuurteken of regeleinde in een veld is een fout; reknaam, omschrijving, bootsoort en bootnaam weigeren stuurtekens ook op het scherm, zodat een rondgang altijd slaagt |
 | Formules | Een exportcel die begint met `=`, `+`, `-`, `@`, tab of CR krijgt een `'` ervoor; de import haalt precies die `'` weg, zodat een rondgang niets verandert |
 
 Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bestaande soort met `/` moet eerst hernoemd worden voor de export. Een reknaam die met `#` begint, is commentaar en dus een fout.
@@ -43,9 +43,9 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 
 ### 3. Bezetting (#158)
 
-**Lopende import.** Na de upload staat de import in tabel `bezettingsimport`, niet in de cookie: ingelezen regels en keuzes als JSON, niet het ruwe bestand. Hooguit één voor de hele installatie (stakeholder 2026-11-06, open vraag 3): elke beheerder ziet de lopende import en kan koppelen, bevestigen of annuleren, dus de routes dragen geen id. De tabel bewaart wie uploadde (`beheerder_id`) en toont dat in het overzicht. Een nieuwe upload terwijl er een loopt, wordt geweigerd met een melding dat eerst de lopende import bevestigd of geannuleerd moet worden. Bevestigen vergrendelt de rij, zodat twee beheerders niet tegelijk bevestigen. Verlooptijd 2 uur. `web` verwijdert verlopen rijen bij elke upload en elk koppelscherm, de dagelijkse opschoning (ADR-006) ook.
+**Lopende import.** Na de upload staat de import in tabel `bezettingsimport`, niet in de cookie: ingelezen regels en keuzes als JSON, niet het ruwe bestand. Hooguit één voor de hele installatie (stakeholder 2026-11-06, open vraag 3), afgedwongen in de database met een unieke kolom `enige` die altijd waar is: elke beheerder ziet de lopende import en kan koppelen, bevestigen of annuleren, dus de routes dragen geen id. De tabel bewaart wie uploadde (`beheerder_id`) en toont dat in het overzicht. Een nieuwe upload terwijl er een loopt, wordt geweigerd met een melding dat eerst de lopende import bevestigd of geannuleerd moet worden. Bevestigen vergrendelt de rij, zodat twee beheerders niet tegelijk bevestigen. Verlooptijd 2 uur. `web` verwijdert verlopen rijen bij elke upload en elk koppelscherm, de dagelijkse opschoning (ADR-006) ook.
 
-**Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Eigenaar en lidnummer leeg is een clubboot. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
+**Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Een onbekend lidnummer valt door naar de volgende stap. Eigenaar en lidnummer leeg is een clubboot. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
 
 **Onthouden.** Tabel `naamkoppeling`: `naam` (uniek), `lid_id` (FK, `ON DELETE CASCADE`) of `clubboot`, `gebruikt_op`; een check eist precies één van beide. Overslaan wordt niet onthouden. De opschoning verwijdert koppelingen die 5 jaar niet zijn gebruikt (open vraag 4). Beheerders zien de lijst en verwijderen per koppeling.
 
@@ -78,7 +78,7 @@ Faalt een controle, dan volgt een rollback en een nieuw overzicht.
 
 **Oud-lid.** Ligt de boot van een oud-lid al op de plaats, dan is de regel `ongewijzigd`. Een nieuwe toewijzing of boot voor een oud-lid is een fout, zoals in `toewijzen` (open vraag 1).
 
-**Loggen.** De bootmutaties krijgen de bestaande regels van de hergebruikte kernen. Het technische log krijgt `bezetting.geimporteerd` met alleen aantallen en `naamkoppeling.verwijderd` met `lid:<id>` of `clubboot`. Geen naam of veld uit het bestand komt in het technische log of in stdout, hooguit regelnummer en foutcode. Beide acties komen in `TECHNISCH`.
+**Loggen.** De bootmutaties krijgen de bestaande regels van de hergebruikte kernen. Het technische log krijgt `bezetting.geimporteerd` met alleen aantallen (regels, nieuw, toegewezen, overschreven, verplaatst, ongewijzigd, overgeslagen, koppelingen) en `naamkoppeling.verwijderd` met `lid:<id>` of `clubboot`. Geen naam of veld uit het bestand komt in het technische log of in stdout, hooguit regelnummer en foutcode. Beide acties komen in `TECHNISCH`.
 
 ### 4. Rechten en migratie
 
@@ -138,6 +138,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.2 | 2026-11-07 | Kolom `enige` voor één lopende import; onbekend lidnummer valt door; aantallen in `bezetting.geimporteerd`; stuurtekens ook geweigerd in de bootnaam | Bouw #158 |
 | v0.2.1 | 2026-11-06 | Fouten in twee rondes; lege cel `bootsoorten`; stuurtekens ook op het scherm geweigerd | Bouw en review #157 |
 | v0.2.0 | 2026-11-06 | Open vragen besloten; één lopende bezettingsimport voor de installatie, zichtbaar voor elke beheerder | Besluiten stakeholder |
 | v0.1.0 | 2026-11-06 | Eerste versie | Issues #157 en #158 |

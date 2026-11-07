@@ -23,7 +23,8 @@ TECHNISCH = frozenset(
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
      "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
      "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld",
-     "opschoning.uitgevoerd", "indeling.geimporteerd"}
+     "opschoning.uitgevoerd", "indeling.geimporteerd", "bezetting.geimporteerd",
+     "naamkoppeling.verwijderd"}
 )
 
 
