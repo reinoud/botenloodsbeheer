@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.38
+**Versie overlay:** v0.5.39
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -135,6 +135,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
 - Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
 - Noem bij een logregel uit een ADR voor welke story hij geldt, en bij een nareview de regel in de ADR die de reviewer moet terugzien.
 - Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
@@ -355,6 +356,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.39 | 2026-11-07 | Regel (Review) uit de terugblik van sentinel bij #156: rechten van een opgehaald bestand, resultaat in de database | Lessen |
 | v0.5.38 | 2026-11-07 | Twee regels (Review, Migratie en database) uit de terugblikken van sentinel en aegis bij #158 | Lessen |
 | v0.5.37 | 2026-11-07 | Zes regels in de briefingchecklist (Algemeen, Bouw) uit de bouw van #158 en de toets van Design System | Lessen |
 | v0.5.36 | 2026-11-06 | Zeven regels in de briefingchecklist (Bouw, Review) uit de terugblikken van bedrock, sentinel en aegis bij #157 | Lessen |
