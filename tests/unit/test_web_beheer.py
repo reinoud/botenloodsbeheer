@@ -131,8 +131,8 @@ def test_indeling_zet_verdieping_1_onderaan(ingelogd):
     plaats("X/1/1")
     tekst = ingelogd.get("/indeling").text
     # Raster van nieuw rek en van rek X, daarna Bootsoort per verdieping: overal 5 boven 1.
-    blokken = {"raster nieuw rek": tekst.index('class="raster"'),
-               "raster rek X": tekst.rindex('class="raster"'),
+    blokken = {"raster nieuw rek": tekst.index('class="bl-rek"'),
+               "raster rek X": tekst.rindex('class="bl-rek"'),
                "bootsoort per verdieping": tekst.index("Bootsoort per verdieping")}
     for blok, begin in blokken.items():
         assert tekst.index("Verdieping 5", begin) < tekst.index("Verdieping 1", begin), blok

@@ -30,7 +30,7 @@ def kiezen(page, *labels):
 def past_op_a4(page):
     """In printweergave: geen kopbalk, en elk blad binnen A4 min 10 mm marge (190 x 277 mm)."""
     page.emulate_media(media="print")
-    expect(page.locator("header.kop")).to_be_hidden()
+    expect(page.locator("header.bl-kop")).to_be_hidden()
     for blad in page.locator(".blad").all():
         vak = blad.bounding_box()
         assert vak["width"] <= 190 * MM + 1 and vak["height"] <= 277 * MM + 1, vak
@@ -43,7 +43,7 @@ def past_op_a4(page):
 
 def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_url):
     wachtwoord_instellen(page, "kaartjes")
-    vereniging = page.locator(".kop-naam").inner_text()
+    vereniging = page.locator(".dj-logo").inner_text()
     rek, nieuw, bootnaam = reknaam("k"), reknaam("m"), f"Kaartboot {reknaam('k')}"
     omschrijving = "Proefstelling links bij de deur, tot 60 tekens lang gehouden"
     bezet, vrij, club = f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"

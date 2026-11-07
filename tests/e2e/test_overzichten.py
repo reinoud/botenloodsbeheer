@@ -106,8 +106,8 @@ def test_naam_instellen_en_terugzetten(page, browser, base_url):
 
         bezoeker = browser.new_page(base_url=base_url)
         bezoeker.goto(openbare_link)
-        expect(bezoeker.locator(".kop-naam")).to_have_text(naam)
-        logo = bezoeker.locator(".kop-naam img.logo")
+        expect(bezoeker.locator(".dj-logo")).to_have_text(naam)
+        logo = bezoeker.locator(".dj-logo img.bl-logo")
         expect(logo).to_be_visible()
         expect(logo).to_have_attribute("src", re.compile(r"^/logo/[0-9a-f]{16}$"))
         # Rubik en PT Sans komen als woff2 uit /static en laden onder de CSP (default-src 'self').
@@ -120,5 +120,5 @@ def test_naam_instellen_en_terugzetten(page, browser, base_url):
         page.goto("/instellingen")
         page.get_by_label("Naam van de vereniging").fill(oud)
         page.get_by_role("button", name="Opslaan", exact=True).click()
-        expect(page.locator(".kop-naam")).to_have_text(oud)
+        expect(page.locator(".dj-logo")).to_have_text(oud)
     uitloggen(page)

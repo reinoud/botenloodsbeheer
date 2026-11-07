@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -15,8 +15,8 @@ Het lastigste scherm is de indeling per rek (BLB-016): 160 plaatsen met status, 
 
 De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. Er is geen JavaScript-framework en geen build-stap.
 
-- **Styling:** de tokens en componenten komen uit de Dajaks-basis 0.3.0, afgenomen met `basis/afname.py` in `app/web/static/ds/` (met `ds-manifest.json`). De aanvulling `dj-components.css` staat niet in de afname en is gekopieerd naar `app/web/static/dj/`, zodat de conformiteitscontrole van de basis slaagt. Laadvolgorde: `ds/tokens/dajaks.css`, `ds/ds-components.css`, `dj/dj-components.css`, `stijl.css`. Templates gebruiken `ds-` en `dj-` klassen. `stijl.css` bevat alleen wat de basis niet kent (raster van indeling en rekoverzicht, printkaartjes, `.qr`, `.foto`, status en log) en gebruikt alleen `var(--token)`, geen `.ds-` of `.dj-` selector en geen vaste kleur. Rubik en PT Sans komen als woff2 uit `/static`, zonder externe bron. Alleen het lichte thema; de kaartjes blijven licht. De kleuren zijn niet instelbaar: `/huisstijl.css` en de kleurkiezers zijn vervallen. De naam van de vereniging staat als tekst in de template.
-- **Responsive:** mobile first met CSS grid en flexbox. Tabellen worden op smalle schermen kaarten per rij. De indeling per rek is een raster van plaatsen dat op een telefoon onder elkaar valt. Het Rekoverzicht (`/rekoverzicht`, alleen beheerders) toont dat raster met een plaatje per plaats uit `static/boten/`; een bootsoort zonder plaatje toont de naam als tekst, en de alt-tekst noemt plaatscode, bootsoort en status.
+- **Styling:** de tokens en componenten komen uit de Dajaks-basis 0.3.0, afgenomen met `basis/afname.py` in `app/web/static/ds/` (met `ds-manifest.json`). De aanvulling `dj-components.css` staat niet in de afname en is gekopieerd naar `app/web/static/dj/`, zodat de conformiteitscontrole van de basis slaagt. Laadvolgorde: `ds/tokens/dajaks.css`, `ds/ds-components.css`, `dj/dj-components.css`, `stijl.css`. Templates gebruiken `ds-` en `dj-` klassen. `stijl.css` bevat alleen wat de basis niet kent (de `bl-`klassen van blok 1: pagina, kop en menu, rekraster en indelingsformulier; printkaartjes, `.qr`, `.foto` en log) en gebruikt alleen `var(--token)` en geen vaste kleur. Een `.ds-` of `.dj-` klasse komt alleen voor onder een `bl-`klasse als producthaak, nooit als losse selector. Rubik en PT Sans komen als woff2 uit `/static`, zonder externe bron. Alleen het lichte thema; de kaartjes blijven licht. De kleuren zijn niet instelbaar: `/huisstijl.css` en de kleurkiezers zijn vervallen. De naam van de vereniging staat als tekst in de template.
+- **Responsive:** mobile first met CSS grid en flexbox. Tabellen worden op smalle schermen kaarten per rij. Het raster van een rek (indeling en rekoverzicht) schuift op een telefoon horizontaal, met een vaste kolom voor de verdieping. Het Rekoverzicht (`/rekoverzicht`, alleen beheerders) toont dat raster met een plaatje per plaats uit `static/boten/`; een bootsoort zonder plaatje toont de naam als tekst, en de alt-tekst noemt plaatscode, bootsoort en status.
 - **JavaScript:** alleen waar het niet anders kan: het passkeyscript (ADR-001) en een kleine bevestiging bij verwijderen. Het filter op `/vrij` (`vrij.js`) verstuurt het formulier bij een keuze; zonder script staat de knop in `<noscript>`. De keuzepagina voor kaartjes (`/kaartjes`) werkt zonder script: de selectievakjes **Alle plaatsen** en **Heel <rek>** laten de server de plaatsen bepalen (ADR-011). Gewone bestanden in `static/`, zonder bundler.
 - **Toegankelijkheid:** semantische HTML, labels bij elk veld, voldoende contrast. De kleurparen van de basis zijn getoetst door het design system; een waarschuwing bij slecht leesbare kleuren is niet meer nodig. Tabellen worden onder 40rem kaarten (`dj-table--stack`) met `data-label` op elke `td` en ARIA-rollen op tabel, rij en cel.
 - **Print:** de kaartjes zijn een HTML-pagina met print-CSS (`@page`, raster op A4). De beheerder print via de browser of slaat op als pdf (ADR-011).
@@ -42,6 +42,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-11-07 | Blok 1 van het nieuwe ontwerp: menu in drie groepen, `bl-`klassen voor het rekraster, het raster schuift op een telefoon; `ds-` en `dj-` klassen alleen onder een `bl-`klasse | Besluiten stakeholder 2026-11-06 (BV-42), issue #150 |
 | v1.2.0 | 2026-11-06 | Dajaks-basis 0.3.0 met `ds-` en `dj-` klassen en eigen woff2; alleen licht thema; instelbare kleuren en `/huisstijl.css` vervallen | Besluiten stakeholder 2026-11-06, issue #150 |
 | v1.1.5 | 2026-11-05 | JavaScript zoals gebouwd: alles selecteren op de kaartjespagina zonder script, filter op `/vrij` met script | Issue #47 (slice 8), issue #99 |
 | v1.1.4 | 2026-11-04 | Scherm Rekoverzicht met plaatjes per plaats | Besluiten stakeholder 2026-11-04, issue #87 |

@@ -24,14 +24,14 @@ def png(breedte=8, hoogte=6):
 
 
 def sectie_van(page, rek):
-    return page.locator("section.kaart", has=page.get_by_role("heading", name=rek, exact=True))
+    return page.locator("section.dj-panel", has=page.get_by_role("heading", name=rek, exact=True))
 
 
 def rek_aanmaken(page, rek, vakken=((1, 1),), omschrijving="", soorten=None):
     """Een rek met de vakken (verdieping, vak) aan in het raster van Nieuw rek, vanaf /indeling.
     soorten is {verdieping: bootsoortnaam}; zonder keuze krijgt een nieuwe plaats geen bootsoort."""
     page.goto("/indeling")
-    nieuw = page.locator("section.kaart", has=page.get_by_role("heading", name="Nieuw rek"))
+    nieuw = page.locator("section.dj-panel", has=page.get_by_role("heading", name="Nieuw rek"))
     nieuw.get_by_label("Naam van het rek").fill(rek)
     nieuw.get_by_label("Omschrijving").fill(omschrijving)
     for verdieping, vak in vakken:
