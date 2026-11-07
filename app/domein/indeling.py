@@ -544,6 +544,7 @@ def openbaar(publieke_sleutel):
     opgehaald, kan ook niet in de pagina terechtkomen. None als de plaats niet bestaat.
 
     eigenaar is None bij een vrije plaats en bij een clubboot (dan de naam van de vereniging).
+    clubplaats volgt Plaats.is_clubplaats, ook als de plaats vrij is.
     """
     p = db.session.scalar(select(Plaats).where(Plaats.publieke_sleutel == publieke_sleutel))
     if p is None:
@@ -554,6 +555,7 @@ def openbaar(publieke_sleutel):
         "omschrijving": p.rek.omschrijving,
         "vrij": boot is None,
         "clubboot": boot is not None and boot.lid_id is None,
+        "clubplaats": p.is_clubplaats,
         "boot": boot.naam if boot else None,
         "foto": boot.afbeelding.sleutel if boot and boot.afbeelding else None,
         "eigenaar": boot.lid.naam if boot and boot.lid else None,

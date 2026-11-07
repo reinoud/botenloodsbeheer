@@ -1,22 +1,29 @@
 {% extends "base.html" %}
-{# Openbaar: alleen plaatscode, omschrijving van het rek, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025). #}
+{# Openbaar: alleen plaatscode, omschrijving van het rek, boot, foto en naam van de eigenaar. Geen log (BLB-020, BLB-025).
+   Antwoord eerst (BV-45): de kop heeft geen link, skiplink of menu, want er is niets over te slaan. #}
 {% block csrf %}{% endblock %}
+{% block skiplink %}{% endblock %}
+{% block menu %}{% endblock %}
+{% block logo %}<span class="dj-logo">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</span>{% endblock %}
 {% block titel %}{{ 'Plaats ' ~ plaats.code if plaats else 'Niet gevonden' }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 {% if not plaats %}
+<div class="bl-plaats">
 <h1>Deze pagina bestaat niet</h1>
 <p>Controleer de link of scan de QR-code opnieuw.</p>
+</div>
 {% else %}
+<div class="bl-plaats{% if plaats.foto %} bl-plaats--foto{% endif %}">
 <h1>Plaats {{ plaats.code }}</h1>
-{% if plaats.omschrijving %}<p>{{ plaats.omschrijving }}</p>{% endif %}
-{% if plaats.vrij %}
-<p>Deze plaats is vrij.</p>
-{% else %}
-<dl class="dj-dl kaart">
-  <dt>Boot</dt><dd>{{ plaats.boot }}</dd>
-  <dt>Eigenaar</dt><dd>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</dd>
-</dl>
-{% if plaats.foto %}<img class="foto" src="{{ url_for('web.afbeelding', sleutel=plaats.foto) }}" alt="Foto van {{ plaats.boot }}">{% endif %}
-{% endif %}
+{% if plaats.clubboot or plaats.clubplaats %}<span class="ds-tag">Clubplaats</span>
+{% elif plaats.vrij %}<span class="ds-tag bl-tag--vrij">Vrij</span>
+{% else %}<span class="ds-tag">Bezet</span>{% endif %}
+{% if plaats.vrij and plaats.clubplaats %}<p class="bl-zin">Deze plaats is voor een clubboot.</p>
+{% elif plaats.vrij %}<p class="bl-zin">Deze plaats is vrij.</p>
+<p class="bl-vraag">Wil je een plaats in de loods? Vraag het de beheerder van de botenloods.</p>
+{% else %}<p class="bl-zin">Hier hoort de <strong>{{ plaats.boot }}</strong> van <strong>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</strong>.</p>{% endif %}
+{% if plaats.foto %}<img class="bl-plaatsfoto" src="{{ url_for('web.afbeelding', sleutel=plaats.foto) }}" alt="Foto van {{ plaats.boot }}">{% endif %}
+{% if plaats.omschrijving %}<p class="bl-rekregel">{{ plaats.omschrijving }}</p>{% endif %}
+</div>
 {% endif %}
 {% endblock %}

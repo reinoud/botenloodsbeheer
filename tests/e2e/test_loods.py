@@ -152,6 +152,9 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     expect(page.get_by_text(bootnaam)).to_be_visible()
     expect(page.get_by_text(prive["naam"], exact=True)).to_be_visible()
     expect(page.get_by_role("img", name=f"Foto van {bootnaam}")).to_be_visible()
+    expect(page.locator("span.ds-tag")).to_have_text("Bezet")
+    expect(page.locator("p.bl-zin")).to_have_text(f"Hier hoort de {bootnaam} van {prive['naam']}.")
+    expect(page.locator("header a, header details, header input, .dj-skip")).to_have_count(0)  # BV-45: logo zonder link
     expect(page.locator("section.log")).to_have_count(0)
     html = page.content()
     for veld in ("lidnummer", "adres", "telefoon", "email"):
@@ -159,6 +162,7 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
 
     page.goto("/p/bestaatniet")
     expect(page.get_by_role("heading", level=1)).to_have_text("Deze pagina bestaat niet")
+    expect(page.locator("header a, .dj-skip")).to_have_count(0)
     page.goto("/indeling")
     expect(page).to_have_url(re.compile(r"/inloggen$"))
 
@@ -217,6 +221,12 @@ def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):
     expect(page.get_by_text("De plaats is opgeslagen.")).to_be_visible()
     toewijzen_buiten_lijst(page, code, bootnaam)
     expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")
+
+    # De vrije clubplaats zegt dat ze voor een clubboot is, zonder de vraag voor wie een plaats wil.
+    page.goto(openbare_link)
+    expect(page.locator("span.ds-tag")).to_have_text("Clubplaats")
+    expect(page.locator("p.bl-zin")).to_have_text("Deze plaats is voor een clubboot.")
+    expect(page.locator("p.bl-vraag")).to_have_count(0)
 
 
 def test_boot_wijzigen_en_weigeren_met_log(page):

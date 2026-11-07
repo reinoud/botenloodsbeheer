@@ -241,7 +241,7 @@ def test_omschrijving_op_openbare_pagina_plaatsdetail_en_kaartje(ingelogd, clien
     p = bezette_plaats()
     ingelogd.post(f"/rekken/{p.rek_id}/naam", data={"naam": "A", "omschrijving": "Stelling <b>links</b>"})
     openbaar = client.get(f"/p/{p.publieke_sleutel}").text
-    assert "<p>Stelling &lt;b&gt;links&lt;/b&gt;</p>" in openbaar
+    assert '<p class="bl-rekregel">Stelling &lt;b&gt;links&lt;/b&gt;</p>' in openbaar
     assert "Stelling &lt;b&gt;links&lt;/b&gt;" in ingelogd.get(f"/plaatsen/{p.id}").text
     kaartje = ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
     assert "Stelling" not in kaartje
@@ -250,7 +250,7 @@ def test_omschrijving_op_openbare_pagina_plaatsdetail_en_kaartje(ingelogd, clien
 
 def test_zonder_omschrijving_geen_lege_regel(ingelogd, client):
     p = bezette_plaats()
-    assert "<p></p>" not in client.get(f"/p/{p.publieke_sleutel}").text
+    assert "bl-rekregel" not in client.get(f"/p/{p.publieke_sleutel}").text
 
 
 def test_openbare_pagina_zet_geen_sessiecookie(client):
