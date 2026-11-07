@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.5
+**Versie:** v0.6.6
 **Datum:** 2026-11-06
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -308,6 +308,7 @@ Als beheerder wil ik een overzicht van vrije plaatsen, te filteren op bootsoort,
 - Gegeven vrije en bezette plaatsen, wanneer de beheerder het overzicht opent, dan staan alleen vrije plaatsen in de lijst, met aanduiding en geschikte bootsoorten. Clubplaatsen staan er niet in.
 - Gegeven het filter surfski, wanneer de beheerder dat kiest, dan staan alleen vrije plaatsen die voor surfski geschikt zijn in de lijst.
 - Gegeven een filter waarvoor geen vrije plaats bestaat, wanneer de beheerder dat kiest, dan staat er dat er geen vrije plaatsen zijn.
+- Gegeven een keuze in de lijst Geschikt voor, wanneer de beheerder Toon vrije plaatsen kiest, dan staat boven de lijst het aantal, zoals "4 vrije plaatsen voor surfski" ("1 vrije plaats voor surfski" bij één; zonder gekozen soort zonder "voor …"). De keuzelijst verstuurt het formulier niet zelf (WCAG 3.2.2; BV-44, issue #150).
 
 #### BLB-016 Indeling van de loods op het scherm
 
@@ -771,6 +772,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.6 | 2026-11-07 | BLB-015: aantal boven de lijst en een knop Toon vrije plaatsen in plaats van versturen bij een keuze (BV-44, issue #150) |
 | v0.6.5 | 2026-11-06 | Issue #157: BLB-045, rekindeling als CSV exporteren en importeren (ADR-014) |
 | v0.6.4 | 2026-11-06 | Issue #150: BLB-027 zonder instelbare kleuren (besluit stakeholder 2026-11-06); het criterium over een waarschuwing bij slecht leesbare kleuren vervalt |
 | v0.6.3 | 2026-11-06 | Issue #143: het kaartje toont de bootsoorten van de plaats, geen omschrijving van het rek en geen eigenaar (BLB-021, BLB-001) |
