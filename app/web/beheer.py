@@ -306,8 +306,11 @@ def _foto():
 @bp.get("/boten")
 @inloggen_vereist
 def boten_overzicht():
-    return render_template("boten.html", boten=boten.boten(), bootsoorten=indeling.bootsoorten(),
-                           leden=leden.actieve_leden(), regels=log.regels(acties=("boot.",)))
+    zoek = request.args.get("zoek", "")
+    soort_id = request.args.get("bootsoort", type=getal)
+    return render_template("boten.html", boten=boten.boten(zoek, soort_id), zoek=zoek, soort_id=soort_id,
+                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
+                           regels=log.regels(acties=("boot.",)))
 
 
 @bp.post("/boten")
@@ -390,7 +393,10 @@ def boot_verwijderen(boot_id):
 @bp.get("/wachtlijst")
 @inloggen_vereist
 def wachtlijst_overzicht():
-    return render_template("wachtlijst.html", lijsten=wachtlijst.lijsten(),
+    zoek = request.args.get("zoek", "")
+    soort_id = request.args.get("bootsoort", type=getal)
+    return render_template("wachtlijst.html", lijsten=wachtlijst.lijsten(zoek, soort_id), zoek=zoek,
+                           soort_id=soort_id, bootsoorten=indeling.bootsoorten(),
                            wachttijd=wachtlijst.wachttijd, regels=log.regels(acties=("wachtlijst.",)))
 
 

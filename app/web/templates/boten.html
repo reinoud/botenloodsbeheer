@@ -1,12 +1,43 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
+{% from "_melding.html" import meldingblok %}
 {% block titel %}Boten · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten</h1>
 
-<section class="kaart">
-  <h2>Nieuwe boot</h2>
-  <form method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">
+<form class="bl-filter" method="get" action="{{ url_for('web.boten_overzicht') }}" role="search" aria-label="Boten zoeken en filteren">
+  <div class="ds-field">
+    <label class="ds-field__label" for="boten-zoek">Zoek op boot of lid</label>
+    <input class="ds-input" type="search" id="boten-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+  </div>
+  <div class="ds-field">
+    <label class="ds-field__label" for="boten-soort">Alleen soort</label>
+    <select class="dj-select" id="boten-soort" name="bootsoort">
+      <option value="">Alle bootsoorten</option>
+      {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == soort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="ds-btn ds-btn--primary">Toon boten</button>
+</form>
+{% if boten %}
+<p class="bl-aantal">{{ boten|length }} {{ 'boot' if boten|length == 1 else 'boten' }}</p>
+<ul class="bl-lijst">
+  {% for b in boten %}
+  <li class="bl-item">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span> · <span data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' }}</span></span></div>
+    <p class="bl-item__zijde">{% if b.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek or soort_id else 'Er zijn nog geen boten.' }}{% endcall %}
+{% endif %}
+
+<section aria-labelledby="nieuw-kop">
+<details class="dj-disclosure">
+  <summary id="nieuw-kop">Nieuwe boot</summary>
+  <div class="bl-uitklap__inhoud">
+  <form class="bl-formulier" method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
@@ -32,25 +63,10 @@
     </div>
     <button type="submit" class="ds-btn ds-btn--primary">Boot vastleggen</button>
   </form>
+  </div>
+</details>
 </section>
 
-<div class="ds-table-wrap tabel">
-<table class="ds-table dj-table--stack" role="table">
-  <thead role="rowgroup"><tr role="row"><th role="columnheader">Boot</th><th role="columnheader">Bootsoort</th><th role="columnheader">Eigenaar</th><th role="columnheader">Plaats</th></tr></thead>
-  <tbody role="rowgroup">
-  {% for b in boten %}
-    <tr role="row">
-      <td role="cell" data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a></td>
-      <td role="cell" data-label="Bootsoort">{{ b.bootsoort.naam }}</td>
-      <td role="cell" data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' }}</td>
-      <td role="cell" data-label="Plaats">{% if b.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}geen{% endif %}</td>
-    </tr>
-  {% else %}
-    <tr role="row"><td role="cell" colspan="4">Er zijn nog geen boten.</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

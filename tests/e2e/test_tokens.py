@@ -55,7 +55,7 @@ def test_persoonlijk_token_maken_wijzigen_en_intrekken(page):
     assert status == 200 and "adres" not in json.loads(tekst)[0]
 
     page.get_by_role("link", name="Technisch log").click()
-    expect(page.locator("tr", has_text="token.rechten_gewijzigd").first).to_contain_text(naam)
+    expect(page.locator("li", has_text="token.rechten_gewijzigd").first).to_contain_text(naam)
 
     page.get_by_role("link", name="Tokens").click()
     rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}").click()

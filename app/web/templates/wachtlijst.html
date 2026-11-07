@@ -1,41 +1,51 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% from "_melding.html" import meldingblok %}
 {% block titel %}Wachtlijst · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Wachtlijst</h1>
 <p>Boten van leden zonder plaats, per bootsoort, de langst wachtende bovenaan. De volgorde is informatie: jij kiest welke boot een vrije plaats krijgt. Een boot zet je op de lijst vanaf de pagina van de boot.</p>
 
+<form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Wachtlijst zoeken en filteren">
+  <div class="ds-field">
+    <label class="ds-field__label" for="wacht-zoek">Zoek op boot of lid</label>
+    <input class="ds-input" type="search" id="wacht-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+  </div>
+  <div class="ds-field">
+    <label class="ds-field__label" for="wacht-soort">Alleen soort</label>
+    <select class="dj-select" id="wacht-soort" name="bootsoort">
+      <option value="">Alle bootsoorten</option>
+      {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == soort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="ds-btn ds-btn--primary">Toon wachtlijst</button>
+</form>
+{% if lijsten %}
+{% set totaal = lijsten|sum(attribute=1, start=[])|length %}
+<p class="bl-aantal">{{ totaal }} {{ 'boot' if totaal == 1 else 'boten' }} op de wachtlijst</p>
+{% endif %}
 {% for soort, rij in lijsten %}
 <section class="kaart" aria-labelledby="soort-{{ soort.id }}">
   <h2 id="soort-{{ soort.id }}">{{ soort.naam }}</h2>
-  <div class="ds-table-wrap tabel">
-  <table class="ds-table dj-table--stack" role="table">
-    <thead role="rowgroup"><tr role="row"><th role="columnheader">Boot</th><th role="columnheader">Lid</th><th role="columnheader">Aangemeld op</th><th role="columnheader">Wachttijd</th><th role="columnheader">Actie</th></tr></thead>
-    <tbody role="rowgroup">
+  <ul class="bl-lijst">
     {% for w in rij %}
-      <tr role="row">
-        <td role="cell" data-label="Boot"><a href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a></td>
-        <td role="cell" data-label="Lid"><a href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a></td>
-        <td role="cell" data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</td>
-        <td role="cell" data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</td>
-        <td role="cell" data-label="Actie">
-          <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=w.boot.id) }}">
-            {% include "_csrf.html" %}
-            <input type="hidden" name="terug" value="wachtlijst">
-            <button type="submit" class="ds-btn ds-btn--primary">{{ w.boot.naam }} van de lijst halen</button>
-          </form>
-        </td>
-      </tr>
+    <li class="bl-item">
+      <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a> <span class="bl-item__sub"><a data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a></span> <span class="bl-item__sub">aangemeld op <time data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</time>, wachttijd <span data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</span></span></div>
+      <div class="bl-item__actie">
+        <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=w.boot.id) }}">
+          {% include "_csrf.html" %}
+          <input type="hidden" name="terug" value="wachtlijst">
+          <button type="submit" class="ds-btn">{{ w.boot.naam }} van de lijst halen</button>
+        </form>
+      </div>
+    </li>
     {% endfor %}
-    </tbody>
-  </table>
-  </div>
+  </ul>
   <p><a href="{{ url_for('web.vrije_plaatsen', bootsoort=soort.id) }}">Vrije plaatsen voor {{ soort.naam|lower }}</a></p>
 </section>
 {% else %}
-{% call meldingblok() %}Er staan geen boten op de wachtlijst.{% endcall %}
+{% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek or soort_id else 'Er staan geen boten op de wachtlijst.' }}{% endcall %}
 {% endfor %}
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

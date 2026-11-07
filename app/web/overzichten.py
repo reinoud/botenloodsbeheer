@@ -23,18 +23,20 @@ def vrije_plaatsen():
 @bp.get("/opgezegd")
 @inloggen_vereist
 def opgezegd():
-    rijen = indeling.plaatsen_van_oud_leden()
+    zoek = request.args.get("zoek", "")
+    rijen = indeling.plaatsen_van_oud_leden(zoek)
     return render_template(
-        "opgezegd.html", rijen=rijen,
+        "opgezegd.html", rijen=rijen, zoek=zoek,
         regels=log.regels([f"plaats:{p.id}" for _d, p in rijen]) if rijen else [])
 
 
 @bp.get("/opzeggend")
 @inloggen_vereist
 def opzeggend():
-    plaatsen = indeling.plaatsen_van_opzeggende_leden()
+    zoek = request.args.get("zoek", "")
+    plaatsen = indeling.plaatsen_van_opzeggende_leden(zoek)
     return render_template(
-        "opzeggend.html", plaatsen=plaatsen,
+        "opzeggend.html", plaatsen=plaatsen, zoek=zoek,
         regels=log.regels([f"plaats:{p.id}" for p in plaatsen]) if plaatsen else [])
 
 

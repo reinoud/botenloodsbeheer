@@ -178,3 +178,36 @@ td form { gap: var(--space-2); }
   .bl-vrij td:last-child { grid-column: 1 / -1; }
   .bl-plaatslink { display: inline-flex; align-items: center; min-height: var(--control-height); font: var(--type-control); }
 }
+
+/* Lijsten en log (blok 3, BV-46), uit blok-3/schermen.css van het designsystem (b66037b); de regels voor het detail van Boot en Lid volgen in deel B */
+/* Lijst (BV-46, 1B): een item is titel en subregel links en een zijkant rechts; een actie staat op een eigen regel eronder */
+.bl-lijst { margin: 0; padding: 0; list-style: none; border-top: var(--stroke-1) solid var(--line); }
+.bl-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 var(--space-4); padding-block: var(--space-2); border-bottom: var(--stroke-1) solid var(--line); }
+.bl-item__main { display: grid; min-width: 0; overflow-wrap: anywhere; }
+.bl-item__titel { display: inline-flex; align-items: center; justify-self: start; min-height: var(--control-height); font: var(--type-control); }
+.bl-item__sub { color: var(--ink-muted); font: var(--type-body-sm); }
+.bl-item__zijde { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); text-align: right; }
+.bl-item__actie { grid-column: 1 / -1; padding-block: var(--space-2); }
+.bl-item__actie .ds-btn, .bl-taak .ds-btn { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
+
+/* Plaatscode als losse link in de zijkant: aanraakdoel van een knop. Alleen in de zijkant: vrij/schermen.css heeft dezelfde klasse, alleen op een telefoon */
+.bl-item__zijde .bl-plaatslink { display: inline-flex; align-items: center; min-height: var(--control-height); font: var(--type-control); }
+
+/* Log (BV-46, 3B): een kop per dag, een regel per mutatie; tijd links, daarnaast wie, de actie en wat het betreft, gegevens eronder */
+.bl-log { display: grid; gap: var(--space-5); }
+.bl-logdag { min-width: 0; }
+.bl-logdag__kop { margin: 0 0 var(--space-1); padding-bottom: var(--space-1); border-bottom: var(--stroke-2) solid var(--line-strong); font: var(--type-subheading); }
+.bl-logregels { margin: 0; padding: 0; list-style: none; }
+.bl-logregel { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); gap: 0 var(--space-3); padding-block: var(--space-2); border-bottom: var(--stroke-1) solid var(--line); }
+.bl-logtijd { color: var(--ink-muted); font: var(--type-label); font-variant-numeric: tabular-nums; }
+.bl-logwat { display: flex; flex-wrap: wrap; column-gap: var(--space-2); margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.bl-logdoor { font-weight: 700; }
+.bl-logactie::before, .bl-logbetreft::before { content: "\00b7" / ""; margin-right: var(--space-2); }
+.bl-loggeg { flex-basis: 100%; color: var(--ink-muted); font: var(--type-caption); }
+
+@media (width < 40rem) {
+  .bl-item--datum { grid-template-columns: minmax(0, 1fr); }
+  .bl-item--datum .bl-item__zijde { padding-bottom: var(--space-2); text-align: left; }
+  .bl-logdoor, .bl-logactie, .bl-logbetreft { flex-basis: 100%; }
+  .bl-logactie::before, .bl-logbetreft::before { content: none; }
+}

@@ -73,6 +73,14 @@ def alle_leden(zoek=""):
     return db.session.scalars(q).all()
 
 
+def boot_of_lid_bevat(zoek):
+    """Voorwaarde voor een query met Boot en Lid: de naam van de boot of van het lid bevat de
+    zoektekst. Een lege zoektekst laat alles door."""
+    if not (zoek := (zoek or "").strip()):
+        return True
+    return or_(Boot.naam.icontains(zoek, autoescape=True), Lid.naam.icontains(zoek, autoescape=True))
+
+
 def lid(lid_id):
     gevonden = db.session.get(Lid, lid_id, options=[
         selectinload(Lid.boten).selectinload(Boot.plaats),

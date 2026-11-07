@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.2
+**Versie:** v1.2.3
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
@@ -16,8 +16,8 @@ Het lastigste scherm is de indeling per rek (BLB-016): 160 plaatsen met status, 
 De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. Er is geen JavaScript-framework en geen build-stap.
 
 - **Styling:** de tokens en componenten komen uit de Dajaks-basis 0.3.0, afgenomen met `basis/afname.py` in `app/web/static/ds/` (met `ds-manifest.json`). De aanvulling `dj-components.css` staat niet in de afname en is gekopieerd naar `app/web/static/dj/`, zodat de conformiteitscontrole van de basis slaagt. Laadvolgorde: `ds/tokens/dajaks.css`, `ds/ds-components.css`, `dj/dj-components.css`, `stijl.css`. Templates gebruiken `ds-` en `dj-` klassen. `stijl.css` bevat alleen wat de basis niet kent (de `bl-`klassen van blok 1: pagina, kop en menu, rekraster en indelingsformulier; printkaartjes, `.qr`, `.foto` en log) en gebruikt alleen `var(--token)` en geen vaste kleur. Een `.ds-` of `.dj-` klasse komt alleen voor onder een `bl-`klasse als producthaak, nooit als losse selector. Rubik en PT Sans komen als woff2 uit `/static`, zonder externe bron. Alleen het lichte thema; de kaartjes blijven licht. De kleuren zijn niet instelbaar: `/huisstijl.css` en de kleurkiezers zijn vervallen. De naam van de vereniging staat als tekst in de template.
-- **Responsive:** mobile first met CSS grid en flexbox. Tabellen worden op smalle schermen kaarten per rij. Het raster van een rek (indeling en rekoverzicht) schuift op een telefoon horizontaal, met een vaste kolom voor de verdieping. Het Rekoverzicht (`/rekoverzicht`, alleen beheerders) toont dat raster met een plaatje per plaats uit `static/boten/`; een bootsoort zonder plaatje toont de naam als tekst, en de alt-tekst noemt plaatscode, bootsoort en status.
-- **JavaScript:** alleen waar het niet anders kan: het passkeyscript (ADR-001) en een kleine bevestiging bij verwijderen. Het filter op `/vrij` werkt zonder script: de knop **Toon vrije plaatsen** is er altijd en de keuzelijst verstuurt niet zelf (WCAG 3.2.2). Dit vervangt issue #99 (filter zonder knop, gesloten). De keuzepagina voor kaartjes (`/kaartjes`) werkt zonder script: de selectievakjes **Alle plaatsen** en **Heel <rek>** laten de server de plaatsen bepalen (ADR-011). Gewone bestanden in `static/`, zonder bundler.
+- **Responsive:** mobile first met CSS grid en flexbox. Tabellen worden op smalle schermen kaarten per rij. De lijsten Boten, Leden, Opgezegd, Gaan opzeggen en Wachtlijst zijn geen tabel maar een `ul.bl-lijst` met per item titel, subregel en zijkant (lijstpatroon 1B, BV-46); alleen de importruns op Leden blijven een tabel. Elke lijst heeft een zoekveld met een zichtbare knop en het aantal erboven; Boten en Wachtlijst hebben daarnaast het soortfilter (`bootsoort`). Het raster van een rek (indeling en rekoverzicht) schuift op een telefoon horizontaal, met een vaste kolom voor de verdieping. Het Rekoverzicht (`/rekoverzicht`, alleen beheerders) toont dat raster met een plaatje per plaats uit `static/boten/`; een bootsoort zonder plaatje toont de naam als tekst, en de alt-tekst noemt plaatscode, bootsoort en status.
+- **JavaScript:** alleen waar het niet anders kan: het passkeyscript (ADR-001). Verwijderen vraagt geen bevestiging (BV-60). Het filter op `/vrij` werkt zonder script: de knop **Toon vrije plaatsen** is er altijd en de keuzelijst verstuurt niet zelf (WCAG 3.2.2). Dit vervangt issue #99 (filter zonder knop, gesloten). De keuzepagina voor kaartjes (`/kaartjes`) werkt zonder script: de selectievakjes **Alle plaatsen** en **Heel <rek>** laten de server de plaatsen bepalen (ADR-011). Gewone bestanden in `static/`, zonder bundler.
 - **Toegankelijkheid:** semantische HTML, labels bij elk veld, voldoende contrast. De kleurparen van de basis zijn getoetst door het design system; een waarschuwing bij slecht leesbare kleuren is niet meer nodig. Tabellen worden onder 40rem kaarten (`dj-table--stack`) met `data-label` op elke `td` en ARIA-rollen op tabel, rij en cel.
 - **Print:** de kaartjes zijn een HTML-pagina met print-CSS (`@page`, raster op A4). De beheerder print via de browser of slaat op als pdf (ADR-011).
 - **CSP:** Traefik stuurt (ADR-013) een strikte Content Security Policy zonder inline scripts. Inline styles zijn niet nodig: alle stijl staat in bestanden onder `/static`, zodat de CSP geen nonce of uitzondering nodig heeft.
@@ -34,7 +34,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 ## Gevolgen
 
 - Een beheeractie is een formulier met CSRF-token en een redirect na verwerking (post/redirect/get). Meldingen van de domeinlaag (`Regelfout`) verschijnen als flashbericht.
-- Het log onder een overzicht is een gedeelde template-macro (`_log.html`) die de regels voor het scherm toont. Overzichten tonen alleen bootmutaties; het technische log staat alleen op `/log/techniek`, onder een eigen menuoptie naast `/log`. Welk scherm welke regels toont en welke schermen geen log hebben (zoals `/indeling`), staat in ADR-006.
+- Het log onder een overzicht is een gedeelde template-macro (`_log.html`) die de regels voor het scherm toont. Overzichten tonen alleen bootmutaties; het technische log staat alleen op `/log/techniek`, onder een eigen menuoptie naast `/log`. Het log heeft de vorm 3B (BV-46): onder een overzicht een dicht uitklapblok **Log**, op de logpagina zelf zonder uitklapblok, met per dag een kop met de weekdag en per mutatie een regel. De dag volgt de tijdzone van de installatie, niet UTC. Welk scherm welke regels toont en welke schermen geen log hebben (zoals `/indeling`), staat in ADR-006.
 - Andere verenigingen kiezen naam en logobestand (ADR-008), niet de kleuren. Wie een andere uitstraling wil, neemt een andere basis af; de afname is een kopie met manifest en conformiteitstest.
 - Komt er later behoefte aan deelupdates, dan is htmx per scherm toe te voegen zonder de aanpak te wijzigen. Dat besluit kan forge nemen.
 
@@ -42,6 +42,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.3 | 2026-11-07 | Blok 3A: lijsten Boten, Leden, Opgezegd, Gaan opzeggen en Wachtlijst als `ul.bl-lijst` met zoeken en filters; log 3B (uitklapblok, kop per dag in de tijdzone van de installatie); de bevestiging bij verwijderen bestaat niet en is uit de tekst gehaald | Besluiten stakeholder BV-46, BV-47 en BV-60, issue #150 |
 | v1.2.2 | 2026-11-07 | Scherm Vrije plaatsen: zichtbare knop in plaats van een script bij de keuze, `vrij.js` vervalt, aantal boven het resultaat | Besluit stakeholder BV-44, issue #150 (vervangt issue #99) |
 | v1.2.1 | 2026-11-07 | Blok 1 van het nieuwe ontwerp: menu in drie groepen, `bl-`klassen voor het rekraster, het raster schuift op een telefoon; `ds-` en `dj-` klassen alleen onder een `bl-`klasse | Besluiten stakeholder 2026-11-06 (BV-42), issue #150 |
 | v1.2.0 | 2026-11-06 | Dajaks-basis 0.3.0 met `ds-` en `dj-` klassen en eigen woff2; alleen licht thema; instelbare kleuren en `/huisstijl.css` vervallen | Besluiten stakeholder 2026-11-06, issue #150 |

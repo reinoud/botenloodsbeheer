@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% block titel %}{{ boot.naam }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>{{ boot.naam }}</h1>
@@ -96,5 +96,5 @@
   {% include "_csrf.html" %}
   <button type="submit" class="ds-btn ds-btn--danger">Boot {{ boot.naam }} verwijderen</button>
 </form>
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

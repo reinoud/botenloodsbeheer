@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "_log.html" import logtabel %}
+{% from "_log.html" import logblok %}
 {% from "_melding.html" import meldingblok %}
 {% block titel %}Vrije plaatsen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
@@ -39,5 +39,5 @@
 {% call meldingblok() %}Er zijn geen vrije plaatsen{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}.{% endcall %}
 {% endif %}
 
-{{ logtabel(regels) }}
+{{ logblok(regels) }}
 {% endblock %}

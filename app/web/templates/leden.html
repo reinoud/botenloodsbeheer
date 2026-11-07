@@ -1,17 +1,41 @@
 {% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
 {% block titel %}Leden · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Leden</h1>
 <p>De ledenlijst komt uit de ledenbron. De integratiecontainer haalt haar dagelijks op en stuurt haar naar de applicatie. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
 
-<section class="kaart">
-  <h2>Import</h2>
+<form class="bl-filter" method="get" action="{{ url_for('web.leden_overzicht') }}" role="search" aria-label="Leden zoeken">
+  <div class="ds-field">
+    <label class="ds-field__label" for="zoek">Zoek op naam of lidnummer</label>
+    <input class="ds-input" id="zoek" name="zoek" type="search" value="{{ zoek }}" maxlength="100">
+  </div>
+  <button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>
+</form>
+{% if leden %}
+<p class="bl-aantal">{{ leden|length }} {{ 'lid' if leden|length == 1 else 'leden' }}</p>
+<ul class="bl-lijst">
+  {% for l in leden %}
+  <li class="bl-item">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Naam" href="{{ url_for('web.lid_detail', lid_id=l.id) }}">{{ l.naam }}</a> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ l.lidnummer }}</span>{% if l.lid_sinds %} · lid sinds <span data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') }}</span>{% endif %}</span></div>
+    <p class="bl-item__zijde"><span class="ds-tag" data-label="Status">{{ 'oud-lid' if is_oud_lid(l) else 'lid' }}</span></p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% call meldingblok() %}{{ 'Geen leden gevonden.' if zoek else 'Er zijn nog geen leden.' }}{% endcall %}
+{% endif %}
+
+<section class="kaart" aria-labelledby="import-kop">
+<details class="dj-disclosure">
+  <summary id="import-kop">Import</summary>
+  <div class="bl-uitklap__inhoud">
   <form method="post" action="{{ url_for('web.leden_ophalen') }}">
     {% include "_csrf.html" %}
     <button type="submit" class="ds-btn ds-btn--primary">Leden nu ophalen</button>
   </form>
   {% if runs %}
-  <div class="ds-table-wrap tabel">
+  <div class="ds-table-wrap">
   <table class="ds-table dj-table--stack" role="table">
     <thead role="rowgroup"><tr role="row"><th role="columnheader">Aangevraagd of gestart</th><th role="columnheader">Status</th><th role="columnheader">Resultaat</th></tr></thead>
     <tbody role="rowgroup">
@@ -28,32 +52,8 @@
   {% else %}
   <p>Er is nog geen import geweest.</p>
   {% endif %}
-</section>
-
-<form method="get" action="{{ url_for('web.leden_overzicht') }}" class="kaart" role="search">
-  <div class="ds-field">
-    <label class="ds-field__label" for="zoek">Zoek op naam of lidnummer</label>
-    <input class="ds-input" id="zoek" name="zoek" type="search" value="{{ zoek }}" maxlength="100">
   </div>
-  <button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>
-</form>
-
-<div class="ds-table-wrap tabel">
-<table class="ds-table dj-table--stack" role="table">
-  <thead role="rowgroup"><tr role="row"><th role="columnheader">Naam</th><th role="columnheader">Lidnummer</th><th role="columnheader">Lid sinds</th><th role="columnheader">Status</th></tr></thead>
-  <tbody role="rowgroup">
-  {% for l in leden %}
-    <tr role="row">
-      <td role="cell" data-label="Naam"><a href="{{ url_for('web.lid_detail', lid_id=l.id) }}">{{ l.naam }}</a></td>
-      <td role="cell" data-label="Lidnummer">{{ l.lidnummer }}</td>
-      <td role="cell" data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') if l.lid_sinds else '' }}</td>
-      <td role="cell" data-label="Status">{{ 'oud-lid' if is_oud_lid(l) else 'lid' }}</td>
-    </tr>
-  {% else %}
-    <tr role="row"><td role="cell" colspan="4">{{ 'Geen leden gevonden.' if zoek else 'Er zijn nog geen leden.' }}</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
+</details>
+</section>
 
 {% endblock %}

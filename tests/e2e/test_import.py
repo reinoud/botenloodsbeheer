@@ -77,8 +77,10 @@ def test_beheerder_vraagt_import_aan_en_ziet_de_uitkomst(page):
     """BLB-006 criterium 5: de integratiecontainer begint binnen een minuut."""
     wachtwoord_instellen(page, "import")
     page.goto("/leden")
+    page.get_by_text("Import", exact=True).click()
     page.get_by_role("button", name="Leden nu ophalen").click()
     expect(page.get_by_text("De import is aangevraagd.")).to_be_visible()
+    page.get_by_text("Import", exact=True).click()  # na het versturen staat het blok weer dicht
     nieuwste = page.locator("section.kaart table tbody tr").first
     expect(nieuwste.locator("td[data-label='Status']")).to_have_text("aangevraagd")
     assert roep("GET", "/leden/importverzoek") == (200, {"aangevraagd": True})
@@ -86,6 +88,7 @@ def test_beheerder_vraagt_import_aan_en_ziet_de_uitkomst(page):
     while datetime.now() < einde:
         page.wait_for_timeout(5000)
         page.reload()
+        page.get_by_text("Import", exact=True).click()
         if nieuwste.locator("td[data-label='Status']").inner_text() != "aangevraagd":
             break
     expect(nieuwste.locator("td[data-label='Status']")).to_have_text("geslaagd")
@@ -100,12 +103,13 @@ def test_boten_van_leden_die_gaan_opzeggen(page):
     try:
         assert roep("PUT", "/leden", {"leden": later})[0] == 200
         page.get_by_role("link", name="Gaan opzeggen").click()
-        rijen = page.locator("main > .ds-table-wrap > table tbody tr")
+        rijen = page.locator("main > ul.bl-lijst > li")
         expect(rijen.first).to_be_visible()
-        assert set(rijen.locator("td[data-label='Opzegdatum']").all_inner_texts()) == {"31-12-2099"}
-        eerste = rijen.first.locator("td").all_inner_texts()
-        assert len(eerste) == 5 and re.fullmatch(r"\w+", eerste[2]) \
-            and re.fullmatch(r"\w+/[1-5]/\d{1,2}", eerste[3])
+        assert set(rijen.locator("[data-label='Opzegdatum']").all_inner_texts()) == {"31-12-2099"}
+        eerste = rijen.first
+        expect(eerste.locator("[data-label='Rek']")).to_have_count(0)  # BV-47: geen kolom Rek
+        assert eerste.locator("[data-label='Boot']").inner_text().strip()
+        assert re.fullmatch(r"\w+/[1-5]/\d{1,2}", eerste.locator("[data-label='Plaats']").inner_text())
     finally:
         assert roep("PUT", "/leden", {"leden": FIXTURE})[0] == 200
     page.reload()

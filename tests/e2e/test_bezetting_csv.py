@@ -23,7 +23,7 @@ def uploaden(page, tekst):
 def leden_uit_de_lijst(page):
     """(naam, lidnummer) van de eerste twee leden in de keuzelijst van /boten."""
     page.goto("/boten")
-    teksten = page.locator("#eigenaar option").all_inner_texts()[2:4]  # na 'Kies' en de vereniging
+    teksten = page.locator("#eigenaar option").all_text_contents()[2:4]  # het blok Nieuwe boot is dicht; na 'Kies' en de vereniging
     return [re.fullmatch(r"(.+) \((\w+)\)", t).groups() for t in teksten]
 
 
@@ -89,10 +89,11 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     page.goto("/indeling")
     page.get_by_role("link", name=f"{rek}/1/3", exact=True).click()
     expect(page.get_by_text(f"Meeuw {rek}").first).to_be_visible()
+    page.locator("summary", has_text="Log").click()  # het log is een dicht uitklapblok
     expect(page.get_by_text("plaats.vrijgegeven").first).to_be_visible()
     page.goto("/boten")
-    kievit = page.get_by_role("row").filter(has=page.get_by_role("link", name=f"Kievit {rek}", exact=True))
-    expect(kievit).to_contain_text("geen")  # Kievit is overschreven en heeft geen plaats meer
+    kievit = page.locator("main > ul.bl-lijst > li").filter(has=page.get_by_role("link", name=f"Kievit {rek}", exact=True))
+    expect(kievit).to_contain_text("geen plaats")  # Kievit is overschreven en heeft geen plaats meer
 
     # Opnieuw importeren: de koppeling is onthouden, dus geen enkele regel is nog te koppelen.
     uploaden(page, bestand)

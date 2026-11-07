@@ -86,11 +86,11 @@ Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, logo en boot
 
 ## Boten
 
-Op `/boten` staan alle boten met bootsoort, eigenaar en plaats. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid of de vereniging zelf (clubboot).
+Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters tellen niet mee) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid of de vereniging zelf (clubboot).
 
-![De pagina Boten met het formulier voor een nieuwe boot en de lijst met boten.](afbeeldingen/boten.png)
+![De pagina Boten met de lijst met boten en het uitgeklapte formulier voor een nieuwe boot.](afbeeldingen/boten.png)
 
-1. Vul de naam in, kies de bootsoort en de eigenaar. Een oud-lid staat niet in de lijst.
+1. Open **Nieuwe boot**. Vul de naam in, kies de bootsoort en de eigenaar. Een oud-lid staat niet in de lijst.
 2. Voeg eventueel een foto toe (JPEG, PNG of WebP, hooguit 10 MB).
 3. Kies **Boot vastleggen**. Je ziet daarna de pagina van de boot.
 
@@ -102,7 +102,7 @@ Een nieuwe boot heeft nog geen plaats. Op de pagina van de boot wijzig je de naa
 
 ## De wachtlijst
 
-Een boot van een lid zonder plaats kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid, de aanmelddatum en de wachttijd. De langst wachtende staat bovenaan. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+Een boot van een lid zonder plaats kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid, de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
 
 ![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
 
@@ -145,13 +145,13 @@ Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, adres, tele
 
 ## Overzichten
 
-In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf.
+In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf. Opgezegd en Gaan opzeggen hebben een zoekveld met een eigen knop, en tonen het aantal erboven.
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
 | Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort en kies **Toon vrije plaatsen**. |
-| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. |
-| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. |
+| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid en kies **Toon plaatsen**. |
+| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid en kies **Toon boten**. |
 
 ![De vrije plaatsen voor kajaks, met rek, aanduiding en geschikte bootsoorten.](afbeeldingen/vrij.png)
 
@@ -220,7 +220,7 @@ Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleu
 
 De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applicatie. De integratiecontainer haalt de lijst dagelijks op en stuurt haar naar de applicatie.
 
-Op `/leden` zoek je op naam of lidnummer. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan.
+Op `/leden` staat per lid de naam, het lidnummer, de datum van lid sinds en of het een lid of oud-lid is, met het aantal leden erboven. Zoek op naam of lidnummer en kies **Zoeken**. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan.
 
 Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat uit.
 
@@ -251,7 +251,7 @@ Er zijn twee logs. Elke beheerder ziet ze allebei.
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet (`wachtlijst.toegevoegd`, met de aanmelddatum) of eraf gehaald (`wachtlijst.verwijderd`) |
 | Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
 
-Beide tonen per pagina 50 regels, de nieuwste bovenaan; met **Oudere regels** en **Nieuwere regels** blader je verder. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
+Beide tonen per pagina 50 regels, de nieuwste bovenaan, onder een kop per dag met de weekdag (in de tijdzone van de installatie, niet in UTC); met **Oudere regels** en **Nieuwere regels** blader je verder. Onder een overzicht staat het log in een uitklapblok **Log** dat dicht begint; open het met een klik. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen en vrijgaven op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen en vrijgaven op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
 ![Het mutatielog met tijdstip, wie, handeling, betreft en gegevens.](afbeeldingen/log.png)
 

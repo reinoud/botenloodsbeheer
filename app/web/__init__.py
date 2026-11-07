@@ -2,6 +2,7 @@
 
 import time
 from functools import wraps
+from itertools import groupby
 from zoneinfo import ZoneInfo
 
 from flask import (
@@ -120,9 +121,31 @@ def naam_en_logo():
     return {"vereniging": instellingen.huidig()["naam"], "logo": logo[0] if logo else None}
 
 
+DAGEN = ("maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag")
+MAANDEN = ("januari", "februari", "maart", "april", "mei", "juni", "juli", "augustus",
+           "september", "oktober", "november", "december")
+
+
+@bp.app_template_filter("lokaal")
+def lokaal(waarde):
+    """Het tijdstip in de tijdzone van de installatie (TZ), niet in UTC."""
+    return waarde.astimezone(ZoneInfo(current_app.config["TZ"]))
+
+
 @bp.app_template_filter("tijd")
 def tijd(waarde):
-    return waarde.astimezone(ZoneInfo(current_app.config["TZ"])).strftime("%d-%m-%Y %H:%M")
+    return lokaal(waarde).strftime("%d-%m-%Y %H:%M")
+
+
+@bp.app_template_filter("per_dag")
+def per_dag(regels):
+    """Regels die al op tijd gesorteerd zijn, als (lokale dag, regels) per dag."""
+    return [(dag, list(rij)) for dag, rij in groupby(regels, key=lambda r: lokaal(r.tijdstip).date())]
+
+
+@bp.app_template_filter("dagkop")
+def dagkop(dag):
+    return f"{DAGEN[dag.weekday()]} {dag.day} {MAANDEN[dag.month - 1]} {dag.year}"
 
 
 @bp.get("/")

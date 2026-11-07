@@ -76,6 +76,7 @@ def rek_hernoemen(page, rek, nieuw):
 def boot_vastleggen(page, naam, soort, eigenaar_index=None, foto=None):
     """eigenaar_index None is een clubboot; anders de positie in de ledenlijst."""
     page.goto("/boten")
+    page.get_by_text("Nieuwe boot", exact=True).click()
     page.get_by_label("Naam van de boot").fill(naam)
     page.get_by_label("Bootsoort").select_option(label=soort)
     eigenaar = page.get_by_label("Eigenaar")
