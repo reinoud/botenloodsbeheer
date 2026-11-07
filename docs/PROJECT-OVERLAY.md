@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.41
+**Versie overlay:** v0.5.42
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-07
@@ -123,6 +123,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
+- Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`; bekend wisselvallig is `test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt` (#172).
+- `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`.
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
 - Een import of export volgt de regels van de schermactie die dezelfde gegevens wijzigt. Noem in de opdracht die functie en haar test (bijvoorbeeld `_soorten` en `tests/unit/test_plaats_wijzigen_en_vrijgeven.py`), en laat het agent bij elke kolom beslissen wat een lege waarde betekent, voor een nieuw en een bestaand record.
 - Test een rondgang (export, ongewijzigd importeren) ook met elke toestand die het scherm toelaat, zoals een plaats zonder bootsoort, en niet alleen met de standaardwaarden van de testhulpfuncties.
@@ -362,6 +364,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.42 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij het scherm vrije plaatsen van #150: commando voor de unitsuite en wisselvallige test #172, schermafbeeldingen terugzetten | Lessen |
 | v0.5.41 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij blok 2 van #150: baseline in een worktree of wachten, foto voor een visuele controle | Lessen |
 | v0.5.40 | 2026-11-07 | Vijf regels (Bouw) uit de terugblikken van prism en sentinel bij blok 1 van #150: `web` met `compose.dev.yml`, baseline vóór wijzigingen, selectors zoeken, test op CSS-afwijking, vervangen klassen | Lessen |
 | v0.5.39 | 2026-11-07 | Regel (Review) uit de terugblik van sentinel bij #156: rechten van een opgehaald bestand, resultaat in de database | Lessen |
