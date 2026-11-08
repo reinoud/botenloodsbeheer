@@ -29,7 +29,7 @@ De import van de bestaande spreadsheet volgt later en hoort niet bij de eerste v
 
 - Leden worden niet in de applicatie bijgehouden, maar regelmatig opgehaald uit e-boekhouden. Elk lid heeft daar een lidnummer.
 - De koppeling met e-boekhouden is een aparte module, die makkelijk aan te passen is aan een andere externe bron.
-- Later wordt per lid teruggeschreven naar e-boekhouden hoeveel boten van elk type het lid in de loods heeft. Dit wordt voorbereid, maar nog niet geactiveerd.
+- Later wordt per lid teruggeschreven naar e-boekhouden hoeveel boten van elk type het lid in de loods heeft. Dit wordt voorbereid, maar nog niet geactiveerd. Het terugschrijven wordt nu gebouwd (besluit 2026-11-08, issue #178).
 
 ## Gebruikers, beveiliging en logging
 
@@ -96,7 +96,7 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - De ledensynchronisatie draait dagelijks en is handmatig te starten. Een lid dat uit de bron verdwijnt, wordt oud-lid en wordt niet verwijderd.
 - De bewaartermijn van 5 jaar begint voor een oud-lid op de opzegdatum, maar niet zolang het oud-lid nog een boot of plaats in de loods heeft. Voor het log begint de termijn bij de mutatie.
 - De Excel-export bevat rek, code, status, bootsoort, bootnaam, naam van de eigenaar en lidnummer. Geen adres, telefoonnummer, e-mailadres of foto. De kolommen kunnen later veranderen.
-- Er is toegang tot de API van e-boekhouden. Voor nu komt er een stub achter de koppelmodule; de echte koppeling volgt later.
+- Er is toegang tot de API van e-boekhouden. Voor nu komt er een stub achter de koppelmodule; de echte koppeling volgt later. De echte koppeling wordt nu gebouwd (besluit 2026-11-08, issue #178).
 - De link in de QR-code is niet voorspelbaar. Hij bevat geen plaatscode of volgnummer, maar een willekeurige sleutel per plaats, zodat niemand de links van andere plaatsen kan afleiden of doorlopen. De stakeholder vroeg om een "gehashte" URL; een willekeurige sleutel bereikt hetzelfde doel, en een hash van een volgnummer is wel te raden.
 - Back-ups vallen buiten de verantwoordelijkheid van de applicatie. Ze worden later bij de hosting geregeld.
 - De openbare pagina van een plaats is alleen via de QR-link te openen. Er is geen zoekfunctie op plaatscode, omdat iemand anders de namen van leden uit de applicatie kan halen.
@@ -187,3 +187,12 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Het kaartje toont geen omschrijving van het rek en geen naam van de eigenaar, ook geen "vrij" en geen naam van de vereniging bij een clubplaats. De naam van de vereniging staat al bij het logo. Wie op de plaats ligt, staat op de openbare pagina achter de QR-code.
 - Het kaartje krijgt de regel "Geschikt voor" met de namen van de bootsoorten van de plaats zoals ze in de applicatie staan, gescheiden door een schuine streep, in de volgorde van de bootsoorten (bijvoorbeeld "Geschikt voor Kajak/Canadese kano"). Heeft de plaats geen bootsoort, dan valt de regel weg.
 - De aanduiding van de plaats (zoals `A/1/1`) blijft op het kaartje.
+
+### Koppeling met e-boekhouden (2026-11-08, issue #178)
+
+- De integratiecontainer haalt uit e-boekhouden het lidnummer, de naam, de datum lid sinds en de opzegdatum. Adres, telefoon en e-mail komen niet mee. Het veld met de soort lidmaatschap gebruikt de container alleen om te bepalen wie lid is.
+- De container schrijft per lid in vrij veld 10 (`boten_in_loods`) het aantal plaatsen per bootsoort, als JSON-tekst zoals `{"Kajak": 1, "Canadese kano": 2, "Surfski": 0}`. Het schrijven heeft een eigen schakelaar en staat standaard uit.
+- Om alleen dat veld te wijzigen mag de container het volledige record lezen en ongewijzigd terugsturen. Het record blijft in de container.
+- De container gebruikt de bibliotheek `eboekhouden-python`. Code die alleen voor deze koppeling nodig is, staat alleen in de integratiecontainer.
+- Inloggen bij e-boekhouden gaat met omgevingsvariabelen voor gebruikersnaam, code 1 en code 2.
+- De bouw test met een nagebootste e-boekhouden. Een proef in de echte administratie, op een testrelatie, gebeurt pas na akkoord van de stakeholder.
