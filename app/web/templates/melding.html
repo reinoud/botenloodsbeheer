@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% from "_melding.html" import meldingblok %}
 {% block inhoud %}
-{% call meldingblok('danger') %}{{ melding }}{% endcall %}
+<h1 class="dj-sr-only">Melding</h1>
+<div class="bl-meldingen">
+  {% call meldingblok('danger') %}{{ melding }}{% endcall %}
+</div>
 <p><a href="{{ url_for('web.inloggen') }}">Naar inloggen</a></p>
 {% endblock %}

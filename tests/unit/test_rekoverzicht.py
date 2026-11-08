@@ -98,7 +98,7 @@ def test_pagina_vraagt_inloggen(client):
 
 
 def test_menu_item_rekoverzicht(ingelogd):
-    assert '<a class="dj-nav__link" href="/rekoverzicht">Rekoverzicht</a>' in ingelogd.get("/").text
+    assert '<a class="dj-nav__link" href="/rekoverzicht" aria-current="page">Rekoverzicht</a>' in ingelogd.get("/rekoverzicht").text
 
 
 def test_pagina_toont_per_plaats_een_plaatje_met_alt(ingelogd):

@@ -1,5 +1,0 @@
-{% extends "base.html" %}
-{% block inhoud %}
-<h1>Welkom, {{ g.beheerder.naam }}</h1>
-<p>Ga naar de <a href="{{ url_for('web.indeling_overzicht') }}">indeling</a>, de <a href="{{ url_for('web.boten_overzicht') }}">boten</a> of de <a href="{{ url_for('web.leden_overzicht') }}">leden</a>.</p>
-{% endblock %}

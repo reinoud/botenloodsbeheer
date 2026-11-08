@@ -47,16 +47,25 @@ def authenticator(page):
     return cdp
 
 
+def blok_openen(page, titel):
+    """Opent een uitklapblok met deze titel alleen als het dicht is: een klik op een open blok klapt
+    het dicht. Een `summary` telt in Playwright niet als knop, dus de titel mag gelijk zijn aan een knop."""
+    dicht = page.locator("details.dj-disclosure:not([open]) > summary", has_text=titel)
+    if dicht.count():
+        dicht.click()
+
+
 def wachtwoord_instellen(page, soort, url=None):
     """Stelt via de eigen uitnodiging van de test (of url) een wachtwoord met TOTP in; daarna
     ingelogd."""
     page.goto(url or link(soort))
+    blok_openen(page, "Wachtwoord en authenticator-app")  # het blok begint dicht (BV-64)
     totp = pyotp.TOTP(page.locator("#totp-geheim").inner_text())
     page.get_by_label("Wachtwoord (12 tot 128 tekens)").fill(WACHTWOORD)
     page.get_by_label("Wachtwoord nog een keer").fill(WACHTWOORD)
     page.get_by_label("Code van zes cijfers uit de app").fill(totp.now())
     page.get_by_role("button", name="Wachtwoord instellen").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
     return totp
 
 

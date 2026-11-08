@@ -320,7 +320,7 @@ def test_twee_logs_gescheiden(ingelogd):
     for pad in (f"/plaatsen/{p.id}", f"/boten/{boot}", f"/leden/{lid_id}"):
         tekst = ingelogd.get(pad).text
         assert "plaats.toegewezen" in tekst and "plaats.aangemaakt" not in tekst, pad
-    assert "beheerder." not in ingelogd.get("/").text
+    assert "beheerder." not in ingelogd.get("/rekoverzicht").text
 
 
 def _bootmutaties(aantal):

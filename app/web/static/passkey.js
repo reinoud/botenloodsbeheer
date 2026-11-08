@@ -28,6 +28,8 @@
     if (!window.PublicKeyCredential || !PublicKeyCredential.parseCreationOptionsFromJSON) {
       knop.disabled = true;
       toon("Deze browser ondersteunt geen passkeys. Gebruik wachtwoord en code.");
+      // Het blok met wachtwoord en code gaat dan meteen open (BV-66).
+      document.querySelectorAll("details[data-wachtwoord]").forEach((d) => { d.open = true; });
       return;
     }
     knop.addEventListener("click", async () => {

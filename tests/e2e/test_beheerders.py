@@ -3,13 +3,14 @@ Elke test heeft een eigen uitnodiging uit draai.sh en draait ook los."""
 
 import re
 
-from conftest import STEMPEL, WACHTWOORD, gebruikersnaam, uitloggen, wachtwoord_instellen
+from conftest import STEMPEL, WACHTWOORD, blok_openen, gebruikersnaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 
 MISLUKT = "Inloggen is mislukt"
 
 
 def wachtwoord_inloggen(page, naam):
+    blok_openen(page, "Met wachtwoord en code")  # na een mislukte poging staat het blok al open
     page.get_by_label("Gebruikersnaam").fill(naam)
     page.get_by_label("Wachtwoord").fill(WACHTWOORD)
     page.get_by_role("button", name="Verder").click()
@@ -17,6 +18,7 @@ def wachtwoord_inloggen(page, naam):
 
 def passkey_toevoegen(page):
     page.get_by_role("link", name="Profiel").click()
+    blok_openen(page, "passkey")  # "Passkey toevoegen" zonder passkey, "Nog een passkey" met een
     page.get_by_role("button", name="Passkey toevoegen").click()
     expect(page.get_by_text("De passkey is toegevoegd.")).to_be_visible()
 
@@ -29,6 +31,7 @@ def test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt(page, authenticato
     expect(page.locator("section.log")).to_contain_text("beheerder.methode_toegevoegd")
     uitloggen(page)
     for _ in range(5):
+        blok_openen(page, "Met wachtwoord en code")
         page.get_by_label("Gebruikersnaam").fill(gebruikersnaam("methodes"))
         page.get_by_label("Wachtwoord").fill("dit is niet het wachtwoord")
         page.get_by_role("button", name="Verder").click()
@@ -36,7 +39,7 @@ def test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt(page, authenticato
     wachtwoord_inloggen(page, gebruikersnaam("methodes"))
     expect(page.get_by_role("alert")).to_contain_text(MISLUKT)  # vergrendeld
     page.get_by_role("button", name="Inloggen met passkey").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
 
 def test_methode_intrekken_beeindigt_sessie_laatste_blijft(page, authenticator):
@@ -48,7 +51,7 @@ def test_methode_intrekken_beeindigt_sessie_laatste_blijft(page, authenticator):
     wachtwoord_inloggen(page, gebruikersnaam("intrekken"))
     expect(page.get_by_role("alert")).to_contain_text(MISLUKT)
     page.get_by_role("button", name="Inloggen met passkey").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
     page.get_by_role("link", name="Profiel").click()
     page.get_by_role("button", name="Passkey 1 intrekken").click()
     expect(page.get_by_role("alert")).to_contain_text("Dit is je enige inlogmethode")

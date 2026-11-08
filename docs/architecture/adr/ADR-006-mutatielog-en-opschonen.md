@@ -41,7 +41,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Vrije plaatsen | Toewijzen en vrijgeven (`plaats.`) |
 | Wachtlijst | Handelingen op de wachtlijst (`wachtlijst.`) |
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
-| `/indeling`, `/rekoverzicht`, beheerders, profiel, leden, instellingen, startpagina | Geen log |
+| `/indeling`, `/rekoverzicht`, beheerders, profiel, leden, instellingen | Geen log |
 
 Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen`, `oud-lid` of `andere eigenaar`). Beide verwijzen naar de boot en het lid. Krijgt een boot op de lijst een andere eigenaar, dan gaat hij van de lijst in dezelfde transactie als `boot.gewijzigd` (besluit stakeholder 2026-11-01). Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
 

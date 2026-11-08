@@ -309,7 +309,7 @@ def test_melding_en_schermen_escapen_invoer(app, ingelogd):  # noqa: F811
     assert GEESCAPET in html and X not in html
     with ingelogd.session_transaction() as s:  # een flashbericht, zoals base.html het toont
         s["_flashes"] = [("fout", X)]
-    tekst = ingelogd.get("/").text
+    tekst = ingelogd.get("/rekoverzicht").text
     assert GEESCAPET in tekst and X not in tekst
     p = plaats()
     b = boot(lid(naam=X).id, naam=X)

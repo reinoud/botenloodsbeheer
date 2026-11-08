@@ -76,7 +76,7 @@ def verberg_geheimen(page):
     """QR-code en sleutel zijn een TOTP-geheim; de uitnodigingslink bevat de eenmalige code; de
     tokenwaarde is een geheim."""
     page.evaluate("""() => {
-        const qr = document.querySelector('img.qr');
+        const qr = document.querySelector('img.bl-qr');
         if (qr) { const b = qr.getBoundingClientRect(); const vak = document.createElement('div');
           vak.style.cssText = `width:${b.width}px;height:${b.height}px;background:#ddd`; qr.replaceWith(vak); }
         const sleutel = document.querySelector('#totp-geheim');
@@ -103,6 +103,7 @@ def schermen(browser):
 
     # Account instellen met een wachtwoord en TOTP.
     page.goto(os.environ["DOC_LINK"])
+    page.locator("summary", has_text="Wachtwoord en authenticator-app").click()  # het blok begint dicht
     totp = pyotp.TOTP(page.locator("#totp-geheim").inner_text())
     eerste = totp.now()
     page.get_by_label("Wachtwoord (12 tot 128 tekens)").fill(WACHTWOORD)
@@ -112,7 +113,7 @@ def schermen(browser):
     Opnamen(page).maak("uitnodiging")
     page.get_by_label("Code van zes cijfers uit de app").fill(eerste)
     page.get_by_role("button", name="Wachtwoord instellen").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
     ctx.close()
 
     # Inloggen, zoals een beheerder het doet. Deze sessie blijft voor de rest.
@@ -122,20 +123,21 @@ def schermen(browser):
     o = Opnamen(page)
     page.goto("/inloggen")
     o.maak("inloggen")
+    page.locator("summary", has_text="Met wachtwoord en code").click()
     page.get_by_label("Gebruikersnaam").fill("beheerder.een")
     page.get_by_label("Wachtwoord", exact=True).fill(WACHTWOORD)
     page.get_by_role("button", name="Verder").click()
     o.maak("code")
     page.get_by_label("Code van zes cijfers").fill(nieuwe_code(totp, eerste))
     page.get_by_role("button", name="Inloggen").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
     # Beheerders.
     page.goto("/beheerders")
     page.get_by_label("Gebruikersnaam (a-z, cijfers, punt, - en _)").fill("beheerder.twee")
     page.get_by_role("button", name="Uitnodigen").click()
     verberg_geheimen(page)
-    o.maak("uitnodiging-link", hoogte=400)
+    o.maak("uitnodiging-link", hoogte=650)
     page.goto("/beheerders")
     o.maak("beheerders", hoogte=700)
     # Tokens: een persoonlijk token en een robottoken, binnen 10 minuten na het inloggen.
@@ -146,11 +148,12 @@ def schermen(browser):
     o.maak("token-nieuw", hoogte=900)
     page.get_by_role("button", name="Token maken").click()
     verberg_geheimen(page)
-    o.maak("token-waarde", hoogte=400)
+    o.maak("token-waarde", hoogte=650)
     page.goto("/tokens")
     o.maak("tokens", hoogte=900)
     page.locator("summary", has_text="laptop-penningmeester").click()
-    o.maak("token-rechten", element=page.locator("section.kaart").nth(1))
+    o.maak("token-rechten", element=page.locator(
+        "section.dj-panel", has=page.get_by_role("heading", name="Rechten wijzigen")))
     page.goto("/profiel")
     o.maak("profiel", hoogte=700)
 
@@ -227,7 +230,8 @@ def schermen(browser):
     page.goto("/log/techniek")
     o.maak("log-techniek", hoogte=700)
     page.goto("/instellingen")
-    o.maak("instellingen")  # hele pagina, met het blok Bootsoorten
+    page.locator("summary", has_text="Bootsoorten").click()
+    o.maak("instellingen")  # hele pagina, met het uitgeklapte blok Bootsoorten
     page.goto("/status")
     o.maak("status", hoogte=900)
 

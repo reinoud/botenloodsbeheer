@@ -43,7 +43,7 @@ def _challenge():
 @bp.get("/inloggen")
 def inloggen():
     if g.beheerder:
-        return redirect(url_for("web.start"))
+        return redirect(url_for("web.rekoverzicht"))
     return render_template("inloggen.html")
 
 
@@ -73,7 +73,7 @@ def inloggen_code():
         flash(MISLUKT, "fout")
         return redirect(url_for("web.inloggen_code"))
     start_sessie(b)
-    return redirect(url_for("web.start"))
+    return redirect(url_for("web.rekoverzicht"))
 
 
 @bp.post("/inloggen/passkey/opties")
@@ -89,7 +89,7 @@ def inloggen_passkey():
     if not b:
         return jsonify(fout=MISLUKT), 400
     start_sessie(b)
-    return jsonify(url=url_for("web.start"))
+    return jsonify(url=url_for("web.rekoverzicht"))
 
 
 @bp.post("/uitloggen")
@@ -144,7 +144,7 @@ def uitnodiging_wachtwoord(code):
         flash(str(fout), "fout")
         return redirect(url_for("web.uitnodiging", code=code))
     start_sessie(b)
-    return redirect(url_for("web.start"))
+    return redirect(url_for("web.rekoverzicht"))
 
 
 @bp.post("/uitnodiging/<code>/passkey/opties")
@@ -166,7 +166,7 @@ def uitnodiging_passkey(code):
     except Regelfout as fout:
         return jsonify(fout=str(fout)), 400
     start_sessie(b)
-    return jsonify(url=url_for("web.start"))
+    return jsonify(url=url_for("web.rekoverzicht"))
 
 
 # Profiel: eigen inlogmethodes toevoegen of intrekken (BLB-038). Toevoegen en intrekken vragen

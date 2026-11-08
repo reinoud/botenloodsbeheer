@@ -29,8 +29,8 @@ def test_account_instellen_via_uitnodiging(app, client):
         geheim = Fernet(app.config["TOTP_SLEUTEL"]).decrypt(s["totp_nieuw"].encode()).decode()
     r = client.post(f"/uitnodiging/{code}/wachtwoord", data={
         "wachtwoord": WACHTWOORD, "herhaling": WACHTWOORD, "code": code_bij(geheim)})
-    assert r.status_code == 302 and r.location == "/"
-    assert b"Welkom, anna" in client.get("/").data
+    assert r.status_code == 302 and r.location == "/rekoverzicht"
+    assert b"<h1>Rekoverzicht</h1>" in client.get("/rekoverzicht").data
     assert client.get(f"/uitnodiging/{code}").status_code == 404
 
 
@@ -42,16 +42,16 @@ def test_onbekende_uitnodiging(client):
 def test_inloggen_en_uitloggen(app, client):
     _b, geheim = beheerder_met_wachtwoord()
     r = inloggen(client, geheim)
-    assert r.location == "/"
+    assert r.location == "/rekoverzicht"
     assert client.get("/log").status_code == 200
     with client.session_transaction() as s:
         oude_sessie = dict(s)
     client.post("/uitloggen")
-    assert client.get("/").status_code == 302
+    assert client.get("/rekoverzicht").location.endswith("/inloggen")
     # Een bewaarde kopie van de oude sessie werkt niet meer: de sessieversie is opgehoogd.
     with client.session_transaction() as s:
         s.update(oude_sessie)
-    assert client.get("/").status_code == 302
+    assert client.get("/rekoverzicht").location.endswith("/inloggen")
 
 
 def test_fout_wachtwoord_en_foute_code_geven_dezelfde_melding(client):
@@ -76,7 +76,7 @@ def test_sessie_eindigt_bij_inactief_account(client):
     inloggen(client, geheim)
     db.session.get(Beheerder, b.id).actief = False
     db.session.commit()
-    assert client.get("/").status_code == 302
+    assert client.get("/rekoverzicht").location.endswith("/inloggen")
 
 
 def test_sessie_verloopt_na_12_uur(client):
@@ -84,7 +84,7 @@ def test_sessie_verloopt_na_12_uur(client):
     inloggen(client, geheim)
     with client.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 12 * 3600 - 1
-    assert client.get("/").status_code == 302
+    assert client.get("/rekoverzicht").location.endswith("/inloggen")
 
 
 def test_csrf_verplicht(database):

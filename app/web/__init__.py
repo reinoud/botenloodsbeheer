@@ -151,7 +151,8 @@ def dagkop(dag):
 @bp.get("/")
 @inloggen_vereist
 def start():
-    return render_template("start.html")
+    """Geen startpagina (BV-64): een beheerder komt op het rekoverzicht, een bezoeker op het inloggen."""
+    return redirect(url_for("web.rekoverzicht"))
 
 
 PER_PAGINA = 50

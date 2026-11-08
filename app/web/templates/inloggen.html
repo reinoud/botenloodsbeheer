@@ -1,31 +1,35 @@
 {% extends "base.html" %}
 {% block titel %}Inloggen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
+{# Na een mislukte poging staat het wachtwoordblok open (BV-64, 1B). #}
+{% set mislukt = get_flashed_messages(category_filter=['fout'])|length > 0 %}
 <h1>Inloggen</h1>
-<section class="kaart">
-  <h2>Met een passkey</h2>
+<section class="dj-panel bl-paneel" aria-labelledby="passkey-kop">
+  <h2 class="dj-panel__title" id="passkey-kop">Met een passkey</h2>
   <button type="button" class="ds-btn ds-btn--primary" id="passkey-inloggen"
           data-opties="{{ url_for('web.inloggen_passkey_opties') }}"
           data-verifieer="{{ url_for('web.inloggen_passkey') }}">Inloggen met passkey</button>
-  <div class="ds-notice ds-notice--danger melding" hidden>
+  <div class="ds-notice ds-notice--danger" hidden>
     <span class="ds-notice__mark" aria-hidden="true">!</span>
     <p class="ds-notice__body" id="passkey-fout" role="alert"></p>
   </div>
 </section>
-<section class="kaart">
-  <h2>Met wachtwoord en code</h2>
-  <form method="post" action="{{ url_for('web.inloggen_wachtwoord') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <div class="ds-field">
-      <label class="ds-field__label" for="gebruikersnaam">Gebruikersnaam</label>
-      <input class="ds-input" id="gebruikersnaam" name="gebruikersnaam" autocomplete="username" required>
-    </div>
-    <div class="ds-field">
-      <label class="ds-field__label" for="wachtwoord">Wachtwoord</label>
-      <input class="ds-input" id="wachtwoord" name="wachtwoord" type="password" autocomplete="current-password" required>
-    </div>
-    <button type="submit" class="ds-btn ds-btn--primary">Verder</button>
-  </form>
-</section>
+<details class="dj-disclosure" data-wachtwoord{% if mislukt %} open{% endif %}>
+  <summary>Met wachtwoord en code</summary>
+  <div class="bl-uitklap__inhoud">
+    <form class="bl-formulier" method="post" action="{{ url_for('web.inloggen_wachtwoord') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="ds-field">
+        <label class="ds-field__label" for="gebruikersnaam">Gebruikersnaam</label>
+        <input class="ds-input" id="gebruikersnaam" name="gebruikersnaam" type="text" autocomplete="username" required>
+      </div>
+      <div class="ds-field">
+        <label class="ds-field__label" for="wachtwoord">Wachtwoord</label>
+        <input class="ds-input" id="wachtwoord" name="wachtwoord" type="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">Verder</button>
+    </form>
+  </div>
+</details>
 {% endblock %}
 {% block scripts %}<script src="{{ url_for('static', filename='passkey.js') }}"></script>{% endblock %}

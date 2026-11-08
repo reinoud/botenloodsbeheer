@@ -90,7 +90,7 @@ def test_kop_zonder_link_skiplink_menu_en_zoekveld(client):
         assert "dj-skip" not in html and "<details" not in html and "<nav" not in html
         assert "<input" not in html and "<form" not in html
         assert 'id="inhoud"' in html
-    assert "dj-skip" in client.get("/").text and "<details" in client.get("/").text  # elders ongewijzigd
+    assert "dj-skip" in client.get("/rekoverzicht").text and "<details" in client.get("/rekoverzicht").text  # elders ongewijzigd
 
 
 @pytest.mark.parametrize("veld", ["boot", "eigenaar", "omschrijving"])

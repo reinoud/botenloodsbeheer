@@ -248,9 +248,9 @@ def test_geblokkeerde_beheerder_verliest_lopende_sessie(app, ingelogd):
     client, anna, bert = ingelogd
     andere = app.test_client()
     inloggen(andere, geheim_van(bert), gebruikersnaam="bert")
-    assert andere.get("/").status_code == 200
+    assert andere.get("/rekoverzicht").status_code == 200
     client.post(f"/beheerders/{bert.id}/blokkeren")
-    assert andere.get("/").status_code == 302
+    assert andere.get("/rekoverzicht").status_code == 302
     r = client.post(f"/beheerders/{anna.id}/blokkeren", follow_redirects=True)
     assert "altijd een actieve beheerder" in r.text
 
@@ -268,7 +268,7 @@ def test_recente_inlog_vereist(app, ingelogd):
     r = client.post("/profiel/intrekken", data={"methode": "wachtwoord"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.get(Beheerder, anna.id).wachtwoordhash is not None
-    assert client.get("/").status_code == 302  # opnieuw inloggen
+    assert client.get("/rekoverzicht").status_code == 302  # opnieuw inloggen
     r = client.post("/profiel/passkey/opties", json={})
     assert r.status_code == 302  # na het wissen van de sessie: niet ingelogd
 
@@ -323,8 +323,8 @@ def test_intrekken_beeindigt_alle_eigen_sessies_niet_die_van_anderen(app, ingelo
     inloggen(van_bert, geheim_van(bert), gebruikersnaam="bert")
     r = client.post("/profiel/intrekken", data={"methode": "wachtwoord"})
     assert r.location.endswith("/inloggen")
-    assert client.get("/").status_code == 302 and tweede.get("/").status_code == 302
-    assert van_bert.get("/").status_code == 200
+    assert client.get("/rekoverzicht").status_code == 302 and tweede.get("/rekoverzicht").status_code == 302
+    assert van_bert.get("/rekoverzicht").status_code == 200
 
 
 def test_profiel_toont_methodes_en_wachtwoord_toevoegen(app, client):
@@ -342,4 +342,4 @@ def test_profiel_toont_methodes_en_wachtwoord_toevoegen(app, client):
                                                  "code": code_bij(geheim)})
     assert r.location.endswith("/profiel")
     assert db.session.get(Beheerder, anna.id).wachtwoordhash is not None
-    assert client.get("/").status_code == 200  # toevoegen laat de sessie staan
+    assert client.get("/rekoverzicht").status_code == 200  # toevoegen laat de sessie staan
