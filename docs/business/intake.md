@@ -202,3 +202,10 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - Een beheerder uploadt, vervangt en verwijdert het logo van de vereniging op de pagina Instellingen. Het logo in de installatie (de map `huisstijl` en de variabele `LOGO_BESTAND`) vervalt.
 - Uploaden en verwijderen staan in het technische log, zoals andere instellingen.
 - Een logo dat nu in de installatie staat, wordt niet automatisch overgenomen; de beheerder uploadt het één keer.
+
+### Besluiten van de stakeholder (2026-11-08, middag)
+
+- De soorten relatie in e-boekhouden (`Def2`) zijn `actief_gewoon`, `actief_partner`, `actief_jeugdlid` en `opgezegd`. De opzegdatum staat in `Def7`. Een opzegdatum in de toekomst, meestal 31 december van het lopende jaar, hoort bij een lid dat heeft opgezegd maar tot en met die datum lid is (issue #178).
+- De live proef van het terugschrijven op een testrelatie mag (issue #178).
+- Adres, telefoon en e-mail van leden worden niet meer bewaard. De kolommen en het tokenrecht `persoonsgegevens` verdwijnen met een migratie (issue #180).
+- Boten van oud-leden gaan automatisch van de wachtlijst wanneer de integratiecontainer de leden doorgeeft. Er komt geen knop om ze met de hand eraf te halen (issue #176).
