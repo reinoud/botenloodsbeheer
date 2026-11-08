@@ -25,7 +25,9 @@ class Ledenbron:
         raise NotImplementedError
 
     def schrijf_bootaantallen(self, aantallen):
-        raise NietBeschikbaar("Terugschrijven is in deze versie niet beschikbaar.")
+        """aantallen: de lijst van GET /bootaantallen. Geeft de aantallen geschreven, ongewijzigd,
+        niet_gevonden en fout. Een bron die niet kan terugschrijven gooit NietBeschikbaar."""
+        raise NietBeschikbaar("Deze bron kan niet terugschrijven.")
 
 
 class StubBron(Ledenbron):
@@ -47,6 +49,9 @@ class StubBron(Ledenbron):
         return records
 
 
+EBOEKHOUDEN_INLOG = ("EBOEKHOUDEN_USERNAME", "EBOEKHOUDEN_CODE1", "EBOEKHOUDEN_CODE2")
+
+
 def kies(omgeving):
     """De bron uit LEDENBRON, of None zonder bron (BLB-007)."""
     naam = omgeving.get("LEDENBRON", "")
@@ -54,4 +59,12 @@ def kies(omgeving):
         return None
     if naam == "stub":
         return StubBron(omgeving.get("LEDENBRON_STUB_BESTAND", "/data/leden.json"))
-    raise ValueError("LEDENBRON moet leeg zijn of stub")
+    if naam == "eboekhouden":
+        from koppeling.eboekhouden import EboekhoudenBron  # zeep pas bij gebruik (ADR-012)
+
+        inlog = [omgeving.get(v, "").strip() for v in EBOEKHOUDEN_INLOG]
+        if not all(inlog):
+            raise ValueError(f"{', '.join(EBOEKHOUDEN_INLOG)} zijn verplicht bij "
+                             "LEDENBRON=eboekhouden")
+        return EboekhoudenBron(*inlog)
+    raise ValueError("LEDENBRON moet leeg zijn, stub of eboekhouden")

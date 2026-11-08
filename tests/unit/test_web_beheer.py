@@ -190,9 +190,11 @@ def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
 def test_plaatsdetail_met_eigenaar_en_log(ingelogd):
     p = bezette_plaats()
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
-    for waarde in ("Zeemeeuw", "Anna de Vries", "1001", "Proefweg 1", "06-00001234",
-                   "1001@example.org", "plaats.toegewezen", f"/p/{p.publieke_sleutel}"):
+    for waarde in ("Zeemeeuw", "Anna de Vries", "1001", "plaats.toegewezen", f"/p/{p.publieke_sleutel}"):
         assert waarde in tekst
+    # Adres, telefoon en e-mail staan niet op de plaats (#178), ook als het lid ze nog heeft.
+    for waarde in ("Proefweg 1", "06-00001234", "1001@example.org"):
+        assert waarde not in tekst
 
 
 def test_plaatsdetail_clubboot_zonder_persoonsgegevens(ingelogd):

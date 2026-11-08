@@ -26,7 +26,7 @@ De stack staat vast: Python, Flask, Gunicorn, Traefik en PostgreSQL. Binnen die 
 | QR-codes | segno | Pure Python zonder afhankelijkheden, levert SVG die scherp print en direct in HTML past |
 | Kaartjes printen | HTML met print-CSS, print via de browser | Geen pdf-bibliotheek nodig; de browser maakt een pdf als de beheerder dat wil |
 | OpenAPI | Handgeschreven `openapi.yaml`, gecontroleerd met openapi-spec-validator | Een dozijn endpoints, waarvan twee schrijvend; een generator kost meer dan hij scheelt |
-| Integratiecontainer | Alleen de standaardbibliotheek van Python (`urllib.request`, `json`) | Vijf JSON-aanroepen naar de API (ADR-012); een HTTP-bibliotheek komt pas met de echte e-boekhoudenkoppeling, via de notitie hieronder |
+| Integratiecontainer | Standaardbibliotheek van Python (`urllib.request`, `json`) voor de API; `zeep` voor de bron e-boekhouden, vastgepind met hashes | Vijf JSON-aanroepen naar de API (ADR-012); SOAP naar e-boekhouden vraagt zeep (issue #178, ADR-012 v1.8.0); alleen in het image van de integratiecontainer |
 | Tests | pytest, Playwright voor Python | Unit, integratie en E2E in één taal |
 | Lint en opmaak | ruff | Eén snelle tool |
 | Pakketbeheer | uv met lockbestand | Vaste versies en reproduceerbare builds |

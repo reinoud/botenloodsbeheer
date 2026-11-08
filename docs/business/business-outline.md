@@ -55,11 +55,10 @@ In de eerste versie:
 - Printbare kaartjes met logo, plaatscode, eigenaarsnaam en QR-code, met een openbare pagina per plaats.
 - Lokaal gebruikersbeheer met een veilige inlogmethode, en een log van elke mutatie onder het bijbehorende overzicht.
 - Instelbare naam, stijl en logo per vereniging.
-- Voorbereiding van het terugschrijven naar e-boekhouden, zonder het te activeren.
+- Terugschrijven naar e-boekhouden van het aantal plaatsen per bootsoort per lid, achter een schakelaar (besluit stakeholder 2026-11-08, #178).
 
 Buiten de eerste versie:
 - Import van de bestaande spreadsheet.
-- Het daadwerkelijk terugschrijven van het aantal boten per type naar e-boekhouden.
 - Het bijhouden van leden in de applicatie zelf.
 
 Open besluiten van de stakeholder die de scope raken: tenancy, huisstijl en hosting. Dit document kiest daarin niet.

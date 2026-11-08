@@ -5,6 +5,7 @@ import ast
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -34,6 +35,7 @@ class NepApi(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", 0), Handler)
         self.aanroepen, self.verzoek, self.status, self.fout = [], False, {}, "Geen toegang."
         self.groot, self.vrij, self.klaar = False, threading.Event(), False
+        self.bootaantallen = [{"lidnummer": "1001", "aantallen": {"Kajak": 1, "Surfski": 0}}]
         threading.Thread(target=self.serve_forever, daemon=True).start()
 
     @property
@@ -51,8 +53,9 @@ class Handler(BaseHTTPRequestHandler):
         pad = self.path.removeprefix("/api/v1")
         self.server.aanroepen.append((self.command, pad, self.headers["Authorization"], lichaam))
         status = self.server.status.get(pad, 201 if self.command == "POST" else 200)
-        antwoord = {"aangevraagd": self.server.verzoek} if pad == "/leden/importverzoek" else (
-            {"ontvangen": len(lichaam["leden"]), "nieuw": 1} if pad == "/leden" else {})
+        antwoord = {"/leden/importverzoek": {"aangevraagd": self.server.verzoek},
+                    "/leden": {"ontvangen": len(lichaam["leden"]), "nieuw": 1} if pad == "/leden" else {},
+                    "/bootaantallen": self.server.bootaantallen}.get(pad, {})
         tekst = json.dumps(antwoord if status < 400 else {"fout": self.server.fout}).encode()
         self.send_response(status)
         if self.server.groot:  # #109: te groot antwoord zonder lengte; de verbinding blijft open
@@ -254,11 +257,37 @@ def test_te_grote_lijst_gemeld_als_onleesbaar_zonder_put(api, koppeling, tmp_pat
     assert api.aanroepen[1][3] == {"reden": "bron_onleesbaar"}
 
 
-@pytest.mark.parametrize("omgeving,melding", [({"SYNC_TIJDSTIP": "drie uur"}, "SYNC_TIJDSTIP"),
-                                              ({"LEDENBRON": "eboekhouden"}, "LEDENBRON")])
+INLOG = {"EBOEKHOUDEN_USERNAME": "gebruiker-x", "EBOEKHOUDEN_CODE1": "code1-x",
+         "EBOEKHOUDEN_CODE2": "code2-x"}
+EB = {"LEDENBRON": "eboekhouden", **INLOG}
+
+
+@pytest.mark.parametrize("omgeving,melding", [
+    ({"SYNC_TIJDSTIP": "drie uur"}, "SYNC_TIJDSTIP"),
+    ({"LEDENBRON": "onbekend"}, "LEDENBRON"),
+    ({"LEDENBRON": "eboekhouden"}, "EBOEKHOUDEN_USERNAME"),
+    ({**EB, "EBOEKHOUDEN_USERNAME": ""}, "EBOEKHOUDEN_USERNAME"),
+    ({**EB, "EBOEKHOUDEN_CODE1": "  "}, "EBOEKHOUDEN_CODE1"),
+    ({k: v for k, v in EB.items() if k != "EBOEKHOUDEN_CODE2"}, "EBOEKHOUDEN_CODE2"),
+    ({**EB, "BOOTAANTALLEN_SCHRIJVEN": "ja"}, "BOOTAANTALLEN_SCHRIJVEN moet aan of uit"),
+    ({**EB, "BOOTAANTALLEN_SCHRIJVEN": ""}, "BOOTAANTALLEN_SCHRIJVEN moet aan of uit"),
+    ({"BOOTAANTALLEN_SCHRIJVEN": "aan"}, "LEDENBRON=eboekhouden"),
+    ({"LEDENBRON": "stub", "BOOTAANTALLEN_SCHRIJVEN": "aan"}, "LEDENBRON=eboekhouden"),
+])
 def test_ongeldige_instelling(omgeving, melding):
-    with pytest.raises(ValueError, match=melding):
+    with pytest.raises(ValueError, match=melding) as fout:
         instellingen(omgeving)
+    for waarde in INLOG.values():  # de melding noemt de variabelen, nooit de waarden
+        assert waarde not in str(fout.value)
+
+
+@pytest.mark.parametrize("schakelaar,verwacht", [(None, False), ("uit", False), ("aan", True),
+                                                 (" AAN ", True)])
+def test_eboekhouden_met_inloggegevens_en_de_schakelaar_voor_terugschrijven(schakelaar, verwacht):
+    omgeving = EB | ({} if schakelaar is None else {"BOOTAANTALLEN_SCHRIJVEN": schakelaar})
+    cfg = instellingen(omgeving)
+    assert type(cfg["bron"]).__name__ == "EboekhoudenBron" and cfg["bron"].kan_terugschrijven
+    assert cfg["schrijven"] is verwacht
 
 
 def test_instellingen_uit_de_omgeving_met_standaarden():
@@ -271,15 +300,89 @@ def test_instellingen_uit_de_omgeving_met_standaarden():
         "http://x/api/v1", "05:30:00", "UTC", "/data/x.json")
 
 
-def test_terugschrijven_niet_beschikbaar():
-    """BLB-009 criterium 1, deel container: ook geen taak die terugschrijft of de bootaantallen
-    ophaalt (slice 9)."""
+def test_stub_kan_niet_terugschrijven():
+    """BLB-009 criterium 1: de stub schrijft nergens heen."""
     bron = bronnen.StubBron("x")
     assert not bron.kan_terugschrijven
     with pytest.raises(bronnen.NietBeschikbaar):
-        bron.schrijf_bootaantallen({})
-    lus = (ROOT / "integratie/koppeling/__main__.py").read_text()
-    assert "schrijf_bootaantallen" not in lus and "bootaantallen" not in lus
+        bron.schrijf_bootaantallen([])
+
+
+class SchrijfBron:
+    """Een bron die kan terugschrijven en vastlegt wat hij kreeg (de SOAP-kant staat in
+    tests/integratie)."""
+
+    kan_terugschrijven = True
+
+    def __init__(self, fout=None):
+        self.ontvangen, self.fout = [], fout
+
+    def haal_leden(self):
+        return json.loads(FIXTURE.read_text())
+
+    def schrijf_bootaantallen(self, aantallen):
+        self.ontvangen.append(aantallen)
+        if self.fout:
+            raise self.fout
+        return {"geschreven": 1, "ongewijzigd": 2, "niet_gevonden": 3, "fout": 4}
+
+
+def met_bron(koppeling, bron, schrijven=True):
+    koppeling.cfg["bron"], koppeling.cfg["schrijven"] = bron, schrijven
+    return bron
+
+
+def test_na_een_geslaagde_import_gaan_de_bootaantallen_naar_de_bron(api, koppeling, caplog):
+    """#178 besluit 4: alleen met de schakelaar aan, na de import, en één logregel met getallen."""
+    bron = met_bron(koppeling, SchrijfBron())
+    api.verzoek = True
+    with caplog.at_level(logging.INFO):
+        koppeling.ronde(OCHTEND)
+    assert paden(api) == [("GET", "/leden/importverzoek"), ("PUT", "/leden"),
+                          ("GET", "/bootaantallen")]
+    assert bron.ontvangen == [api.bootaantallen]  # ongewijzigd doorgegeven
+    regel = [r for r in caplog.messages if r.startswith("Terugschrijven")]
+    assert regel == [
+        "Terugschrijven: {'geschreven': 1, 'ongewijzigd': 2, 'niet_gevonden': 3, 'fout': 4}"]
+    for sleutel in ("code", "adres", "telefoon", "email", "lidnummer", "Kajak"):
+        assert sleutel not in regel[0]
+
+
+def test_schakelaar_uit_schrijft_niets_en_vraagt_niets_op(api, koppeling):
+    bron = met_bron(koppeling, SchrijfBron(), schrijven=False)
+    api.verzoek = True
+    koppeling.ronde(OCHTEND)
+    assert paden(api) == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+    assert bron.ontvangen == []
+
+
+def test_mislukte_import_schrijft_niet_terug(api, koppeling):
+    bron = met_bron(koppeling, SchrijfBron())
+    api.verzoek, api.status["/leden"] = True, 500
+    koppeling.ronde(OCHTEND)
+    assert ("GET", "/bootaantallen") not in paden(api) and bron.ontvangen == []
+
+
+@pytest.mark.parametrize("opstelling,melding", [
+    ("api", "Terugschrijven mislukt (HTTP 500)."),
+    (bronnen.LedenbronFout("bron_geweigerd"), "Terugschrijven mislukt (bron_geweigerd)."),
+    (RuntimeError("geheime tekst"), "Terugschrijven mislukt (RuntimeError)."),
+], ids=["api", "bron", "onverwacht"])
+def test_fout_bij_terugschrijven_maakt_de_import_niet_mislukt_en_wordt_niet_herhaald(
+        api, koppeling, caplog, opstelling, melding):
+    bron = met_bron(koppeling, SchrijfBron(None if opstelling == "api" else opstelling))
+    if opstelling == "api":
+        api.status["/bootaantallen"] = 500
+    api.verzoek = True
+    with caplog.at_level(logging.INFO):
+        koppeling.ronde(OCHTEND)
+    assert melding in caplog.messages and "geheime tekst" not in caplog.text
+    assert koppeling.geslaagd_op == OCHTEND.date() and koppeling.fout_op is None
+    assert "POST" not in [m for m, _ in paden(api)]  # geen import-mislukt
+    api.verzoek = False
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))  # geen extra herhaling
+    assert paden(api)[-1] == ("GET", "/leden/importverzoek")
+    assert len(bron.ontvangen) == (0 if opstelling == "api" else 1)
 
 
 def lus(api, tmp_path, **omgeving):
@@ -316,18 +419,58 @@ def test_ongeldige_instelling_stopt_de_container(api, tmp_path):
     assert code == 1 and "LEDENBRON" in log
 
 
-def test_container_gebruikt_alleen_de_standaardbibliotheek():
-    """ADR-012: eigen image zonder applicatiecode en zonder afhankelijkheden."""
+def _top_imports(bestand):
+    """De modules die bovenaan het bestand geïmporteerd worden (niet in een functie)."""
+    for knoop in ast.parse(bestand.read_text()).body:
+        yield from ([a.name for a in knoop.names] if isinstance(knoop, ast.Import) else (
+            [knoop.module] if isinstance(knoop, ast.ImportFrom) else []))
+
+
+def test_container_gebruikt_buiten_de_bron_alleen_de_standaardbibliotheek():
+    """ADR-012 v1.8.0: alleen koppeling/eboekhouden.py gebruikt zeep en requests, en laadt ze pas
+    bij gebruik, dus niet bij het starten met de stub of zonder bron."""
     for bestand in (ROOT / "integratie/koppeling").glob("*.py"):
-        for knoop in ast.walk(ast.parse(bestand.read_text())):
-            namen = [a.name for a in knoop.names] if isinstance(knoop, ast.Import) else (
-                [knoop.module] if isinstance(knoop, ast.ImportFrom) else [])
-            for naam in namen:
-                top = naam.split(".")[0]
-                assert top == "koppeling" or top in sys.stdlib_module_names, (bestand, naam)
+        for naam in _top_imports(bestand):
+            top = naam.split(".")[0]
+            assert top == "koppeling" or top in sys.stdlib_module_names, (bestand, naam)
+    assert not [n for b in (ROOT / "integratie/koppeling").glob("*.py") if b.name != "eboekhouden.py"
+                for n in ast.walk(ast.parse(b.read_text()))
+                if isinstance(n, ast.Import | ast.ImportFrom)
+                and getattr(n, "module", None) in ("zeep", "requests")]
+
+
+def test_zeep_alleen_in_het_image_van_de_integratie():
+    """#178 besluit 6: geen zeep en geen e-boekhoudencode in het applicatie-image."""
+    for pad in ("pyproject.toml", "uv.lock", "docker/Dockerfile"):
+        assert "zeep" not in (ROOT / pad).read_text().lower(), pad
+    for bestand in (ROOT / "app").rglob("*.py"):
+        tekst = bestand.read_text().lower()
+        assert "zeep" not in tekst and "import eboekhouden" not in tekst, bestand
+
+
+def test_afhankelijkheden_van_de_integratie_zijn_vastgepind_met_hashes():
+    """Elk pakket in requirements*.txt staat op een versie met een hash voor elk bestand."""
+    for naam in ("requirements.txt", "requirements-test.txt"):
+        blokken = re.split(r"\n(?=\S)", (ROOT / "integratie" / naam).read_text().strip())
+        assert blokken
+        for blok in blokken:
+            assert re.match(r"[\w.-]+==[\w.]+ \\\n", blok), blok
+            assert len(re.findall(r"--hash=sha256:[0-9a-f]{64}", blok)) >= 1, blok
+    assert "zeep" in (ROOT / "integratie/requirements.txt").read_text()
+
+
+def test_image_van_de_integratie_zonder_pip_en_zonder_root():
     dockerfile = (ROOT / "integratie/Dockerfile").read_text()
-    assert "COPY koppeling koppeling" in dockerfile and "app" not in dockerfile.split("COPY")[1]
-    assert "USER 10001" in dockerfile
+    eind = dockerfile.split("\nFROM ")[-1]
+    assert "pip install" not in eind and "pip uninstall" in eind
+    assert "COPY --from=bouw /pakketten /pakketten" in eind and "USER 10001" in eind
+    assert "--require-hashes" in dockerfile.split("\nFROM ")[1]
+    assert "app" not in eind.split("COPY koppeling")[0].split("COPY --from=bouw")[0]
+
+
+def test_dependabot_volgt_de_afhankelijkheden_van_de_integratie():
+    regels = yaml.safe_load((ROOT / ".github/dependabot.yml").read_text())["updates"]
+    assert [r for r in regels if r["package-ecosystem"] == "pip" and r["directory"] == "/integratie"]
 
 
 # docker-compose.yml (ADR-012)
@@ -372,6 +515,21 @@ def test_elke_router_zonder_toegangslog_van_traefik():
             sleutel = f"traefik.http.routers.{router}.observability.accesslogs"
             assert labels[sleutel] == "false", sleutel
             assert f"traefik.http.routers.{router}.entrypoints" in labels
+
+
+def test_inloggegevens_en_schakelaar_alleen_in_de_omgeving_van_integratie():
+    """#178 besluit 5: de drie waarden komen uit .env en staan in geen andere dienst; zonder
+    waarde start de container niet (de controle staat in instellingen)."""
+    omgeving = DIENSTEN["integratie"]["environment"]
+    for naam in ("EBOEKHOUDEN_USERNAME", "EBOEKHOUDEN_CODE1", "EBOEKHOUDEN_CODE2"):
+        assert omgeving[naam] == f"${{{naam}:-}}"
+        assert f"{naam}=" in (ROOT / ".env.example").read_text()
+    assert omgeving["BOOTAANTALLEN_SCHRIJVEN"] == "${BOOTAANTALLEN_SCHRIJVEN:-uit}"
+    assert "BOOTAANTALLEN_SCHRIJVEN=uit" in (ROOT / ".env.example").read_text()
+    for naam, dienst in DIENSTEN.items():
+        if naam != "integratie":
+            assert not [k for k in dienst.get("environment", {}) if k.startswith(
+                ("EBOEKHOUDEN", "BOOTAANTALLEN"))], naam
 
 
 def test_integratie_zonder_root_en_alleen_lezen():

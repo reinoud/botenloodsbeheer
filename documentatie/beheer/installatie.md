@@ -73,7 +73,7 @@ Wachtwoorden en sleutels bevatten alleen letters en cijfers, want ze komen in ee
 | `DB_WEB_WACHTWOORD`, `DB_TAKEN_WACHTWOORD`, `DB_API_WACHTWOORD` | databaserollen van `web`, `worker` en `api` |
 | `API_INGESCHAKELD` | `true` of `false`; uit weigert elke aanroep; `web` toont de stand op de statuspagina |
 | `KOPPELNET` | subnet van `koppeling`, ook de standaardwhitelist van een robottoken |
-| `LEDENBRON`, `LEDENBRON_STUB_BESTAND`, `SYNC_TIJDSTIP`, `API_URL` | integratiecontainer, zie [integratiecontainer](integratiecontainer.md) |
+| `LEDENBRON`, `LEDENBRON_STUB_BESTAND`, `SYNC_TIJDSTIP`, `API_URL`, `EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1`, `EBOEKHOUDEN_CODE2`, `BOOTAANTALLEN_SCHRIJVEN` | integratiecontainer, zie [integratiecontainer](integratiecontainer.md) |
 | `LOGO_BESTAND` | logo in `huisstijl/`, JPEG, PNG of WebP |
 | `PROXY_HOPS` | aantal vertrouwde proxy's, achter Traefik 1 |
 | `OPSCHOON_TIJDSTIP` | dagelijkse opschoning na 5 jaar in `worker`, standaard `04:00`, in de tijdzone `TZ` |

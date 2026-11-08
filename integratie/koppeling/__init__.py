@@ -1,6 +1,7 @@
 """Integratiecontainer (ADR-012): haalt de leden uit de bron en stuurt ze naar de API.
 
-Alleen de standaardbibliotheek en alleen de aanroepen uit documentatie/beheer/integratiecontainer.md.
+Naar de API alleen met de standaardbibliotheek en alleen de aanroepen uit
+documentatie/beheer/integratiecontainer.md; zeep is alleen voor de bron e-boekhouden.
 Elke ronde: is er een importverzoek, of is SYNC_TIJDSTIP gepasseerd zonder geslaagde import die
 dag, dan importeert hij. Na een fout hooguit één geplande poging per uur; een verzoek van een
 beheerder wacht niet (#28). De log bevat nooit het token,
@@ -21,7 +22,7 @@ NIEUWE_POGING = timedelta(hours=1)
 MAX_RECORDS = 5000
 MAX_BYTES = 2 * 1024 * 1024
 # De antwoorden van de API zijn kleine JSON-objecten; meer leest de container niet (#109).
-ANTWOORD_MAX = 64 * 1024
+ANTWOORD_MAX = 256 * 1024  # ruim genoeg voor GET /bootaantallen met veel bootsoorten
 IMPORT_LOOPT = b"Er loopt al een import."  # de tekst van de 409 bij een vastgehouden importslot
 
 log = logging.getLogger("koppeling")
@@ -46,12 +47,19 @@ def instellingen(omgeving):
         tijdstip = time.fromisoformat(omgeving.get("SYNC_TIJDSTIP", "03:00"))
     except ValueError:
         raise ValueError("SYNC_TIJDSTIP moet een tijd zijn als 03:00") from None
+    bron = bronnen.kies(omgeving)
+    schakelaar = omgeving.get("BOOTAANTALLEN_SCHRIJVEN", "uit").strip().lower()
+    if schakelaar not in ("aan", "uit"):
+        raise ValueError("BOOTAANTALLEN_SCHRIJVEN moet aan of uit zijn")
+    if schakelaar == "aan" and not (bron and bron.kan_terugschrijven):
+        raise ValueError("BOOTAANTALLEN_SCHRIJVEN=aan vraagt LEDENBRON=eboekhouden")
     return {
         "api_url": omgeving.get("API_URL", "http://traefik:8081/api/v1").rstrip("/"),
         "token_bestand": omgeving.get("API_TOKEN_FILE", "/run/secrets/api_token"),
         "tijdstip": tijdstip,
         "tz": ZoneInfo(omgeving.get("TZ", "Europe/Amsterdam")),
-        "bron": bronnen.kies(omgeving),
+        "bron": bron,
+        "schrijven": schakelaar == "aan",
     }
 
 
@@ -105,6 +113,21 @@ class Koppeling:
         self.geslaagd_op, self.fout_op = nu.date(), None
         # Alleen getallen; nooit gegevens van leden.
         log.info("Import geslaagd: %s", {k: v for k, v in aantallen.items() if type(v) is int})
+        if self.cfg["schrijven"]:
+            self.terugschrijven(token)
+
+    def terugschrijven(self, token):
+        """Na een geslaagde import: de bootaantallen naar de bron (ADR-004). Een fout maakt de
+        import niet mislukt en wordt niet herhaald; de volgende poging is de volgende import."""
+        try:
+            uitkomst = self.cfg["bron"].schrijf_bootaantallen(
+                self.roep(token, "GET", "/bootaantallen"))
+        except (ApiFout, bronnen.LedenbronFout) as fout:
+            log.warning("Terugschrijven mislukt (%s).", fout)
+        except Exception as fout:  # noqa: BLE001  de import is al geslaagd; alleen het soort fout
+            log.warning("Terugschrijven mislukt (%s).", type(fout).__name__)
+        else:
+            log.info("Terugschrijven: %s", uitkomst)
 
     def ronde(self, nu=None):
         nu = nu or datetime.now(self.cfg["tz"])

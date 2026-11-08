@@ -23,9 +23,6 @@
   <dl class="dj-dl">
     <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
     <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
-    <dt>Adres</dt><dd data-veld="adres">{{ boot.lid.adres or '' }}</dd>
-    <dt>Telefoon</dt><dd data-veld="telefoon">{{ boot.lid.telefoon or '' }}</dd>
-    <dt>E-mail</dt><dd data-veld="email">{{ boot.lid.email or '' }}</dd>
   </dl>
   {% else %}
   <p>{{ vereniging }} (clubboot)</p>

@@ -124,7 +124,7 @@ Op de pagina van een lid staat een boot op de wachtlijst met de regel **Wachtlij
 
 De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
-![De pagina van een bezette plaats met boot, eigenaar, adresgegevens en de knop Vrijgeven.](afbeeldingen/plaats-bezet.png)
+![De pagina van een bezette plaats met boot, eigenaar en de knop Vrijgeven.](afbeeldingen/plaats-bezet.png)
 
 **Toewijzen:** open een vrije plaats (via `/indeling` of `/vrij`), kies onder **Boot zonder plaats** de boot en kies **Plaats toewijzen**. Bovenaan de keuzelijst staan, bij een gewone plaats, de boten op de wachtlijst van een bootsoort die op de plaats past, de langst wachtende eerst. Daaronder staan de andere boten zonder plaats. De applicatie weigert in deze gevallen en zegt waarom:
 
@@ -139,7 +139,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 **Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. De plaats blijft vrij tot jij een boot kiest, ook als er een wachtlijst is. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
 
-Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, adres, telefoon en e-mail, en de link naar de openbare pagina. Die gegevens zijn alleen voor beheerders.
+Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link naar de openbare pagina. Het lidnummer is alleen voor beheerders. Adres, telefoon en e-mail haalt de applicatie niet op uit de ledenadministratie.
 
 ![Een plaats direct na het toewijzen, met de melding dat de boot de plaats heeft gekregen.](afbeeldingen/plaats-toegewezen.png)
 
@@ -222,7 +222,7 @@ De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applic
 
 Op `/leden` staat per lid de naam, het lidnummer, de datum van lid sinds en of het een lid of oud-lid is, met het aantal leden erboven. Zoek op naam of lidnummer en kies **Zoeken**. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan.
 
-Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat uit.
+Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat standaard uit; de beheerder kan het aanzetten.
 
 **Bewaartermijn.** Elke nacht om 04:00 verwijdert de applicatie gegevens die ouder zijn dan 5 jaar. Een oud-lid verdwijnt 5 jaar na de opzegdatum, met zijn boten en foto's. Heeft een boot van het oud-lid nog een plaats, dan blijft alles staan tot je de plaats vrijgeeft. Een regel in een log verdwijnt 5 jaar na de wijziging. Een verwijderd oud-lid komt niet terug met de volgende import. In de logs blijft een verwijderd lid staan als `lid:` met een nummer, zonder naam.
 

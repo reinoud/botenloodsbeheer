@@ -1,8 +1,8 @@
 # Integratiecontainer
 
-**Versie:** v2.3.0
-**Datum:** 2026-11-05
-**Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`
+**Versie:** v2.4.0
+**Datum:** 2026-11-08
+**Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`; de globale werking staat in [integratie-werking](integratie-werking.md)
 
 De integratiecontainer haalt de leden uit de ledenbron en stuurt ze naar de API, via het entrypoint `intern` van Traefik over het netwerk `koppeling`. De database en de dienst `api` bereikt hij niet. De inloggegevens van de bron staan alleen in zijn omgeving.
 
@@ -12,8 +12,10 @@ Elke minuut vraagt de container of een beheerder een import heeft aangevraagd ("
 
 | Variabele | Standaard | Betekenis |
 |-----------|-----------|-----------|
-| `LEDENBRON` | leeg | `stub` of leeg; leeg roept de API niet aan |
+| `LEDENBRON` | leeg | `stub`, `eboekhouden` of leeg; leeg roept de API niet aan |
 | `LEDENBRON_STUB_BESTAND` | `/data/leden.json` | JSON-bestand van de stub, alleen voor ontwikkeling |
+| `EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1`, `EBOEKHOUDEN_CODE2` | leeg | inloggegevens van e-boekhouden; alle drie verplicht bij `LEDENBRON=eboekhouden`, anders start de container niet |
+| `BOOTAANTALLEN_SCHRIJVEN` | `uit` | `aan` of `uit`; aan schrijft na elke geslaagde import de bootaantallen in vrij veld 10 van het lid in e-boekhouden, alleen met `LEDENBRON=eboekhouden` |
 | `SYNC_TIJDSTIP` | `03:00` | dagelijkse import, in de tijdzone `TZ` |
 | `API_URL` | `http://traefik:8081/api/v1` | adres van de API |
 | `API_TOKEN_FILE` | `/run/secrets/api_token` | het token, uit `secrets/api_token` |
@@ -79,7 +81,7 @@ Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API we
 
 `GET /bootaantallen` levert voor elk lid elke bootsoort met het aantal boten, ook 0, op lidnummer gesorteerd. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst en een clubboot tellen niet (besluit 2026-10-31). De beheerder ziet dezelfde aantallen bij elk lid op `/leden/`, en op de statuspagina wanneer ze voor het laatst zijn opgehaald.
 
-Terugschrijven naar de bron staat uit. De meegeleverde container roept `GET /bootaantallen` niet aan, en `schrijf_bootaantallen` geeft `NietBeschikbaar`. Een eigen container mag de aanroep gebruiken om de aantallen in de eigen ledenadministratie te zetten.
+Terugschrijven naar e-boekhouden staat standaard uit. Met `BOOTAANTALLEN_SCHRIJVEN=aan` roept de meegeleverde container `GET /bootaantallen` aan na elke geslaagde import en zet hij per lid de aantallen als JSON-tekst in vrij veld 10, zoals beschreven in [integratie-werking](integratie-werking.md). Zet de schakelaar pas aan na een proef op een testrelatie. Een eigen container mag de aanroep gebruiken om de aantallen in de eigen ledenadministratie te zetten.
 
 ## Een eigen container bouwen
 
@@ -99,6 +101,7 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.4.0 | 2026-11-08 | Bron `eboekhouden`, inloggegevens en schakelaar voor terugschrijven | Issue #178 |
 | v2.3.0 | 2026-11-05 | Na een 409 door een lopende import een uur stil | Issue #31 |
 | v2.2.0 | 2026-11-03 | 409 ook tijdens de opschoning | Restpunt review #49, issue #51 |
 | v2.1.0 | 2026-11-02 | `GET /bootaantallen` gebouwd, met voorbeeldcode | BLB-009, BLB-040, slice 9 |

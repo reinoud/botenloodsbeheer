@@ -210,6 +210,11 @@ services:
       LEDENBRON: ${LEDENBRON:-}
       LEDENBRON_STUB_BESTAND: ${LEDENBRON_STUB_BESTAND:-/data/leden.json}
       SYNC_TIJDSTIP: ${SYNC_TIJDSTIP:-03:00}
+      # Alleen bij LEDENBRON=eboekhouden; zonder alle drie start de container niet (#178).
+      EBOEKHOUDEN_USERNAME: ${EBOEKHOUDEN_USERNAME:-}
+      EBOEKHOUDEN_CODE1: ${EBOEKHOUDEN_CODE1:-}
+      EBOEKHOUDEN_CODE2: ${EBOEKHOUDEN_CODE2:-}
+      BOOTAANTALLEN_SCHRIJVEN: ${BOOTAANTALLEN_SCHRIJVEN:-uit}
     # Het bestand moet bestaan, ook leeg: zonder token wacht de container (beheerdocumentatie).
     secrets: [api_token]
     networks: [koppeling, buiten]

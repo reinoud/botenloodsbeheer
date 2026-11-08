@@ -37,9 +37,11 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     toewijzen(page, code, bootnaam)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
     expect(page.locator("main")).to_contain_text(omschrijving)
-    prive = {veld: page.locator(f"[data-veld={veld}]").inner_text()
-             for veld in ("naam", "lidnummer", "adres", "telefoon", "email")}
+    prive = {veld: page.locator(f"[data-veld={veld}]").inner_text() for veld in ("naam", "lidnummer")}
     assert all(prive.values())
+    # Adres, telefoon en e-mail staan niet op de plaats (#178); de stub levert ze nog wel.
+    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
+        expect(page.locator("main")).not_to_contain_text(stukje)
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 
     # Een vak met een boot kan niet uit en een gat in een verdieping is niet toegestaan; er
@@ -85,8 +87,10 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     expect(kaartje.locator(".kaartje-code")).to_have_text(code)
     expect(kaartje.locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak")
     html = page.content()
-    for veld in ("naam", "lidnummer", "adres", "telefoon", "email"):
+    for veld in ("naam", "lidnummer"):
         assert prive[veld] not in html, veld
+    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
+        assert stukje not in html, stukje
     assert bootnaam not in html and omschrijving not in html
 
     # De link uit de QR-code, als bezoeker zonder inloggen: aanduiding en omschrijving, en in de
@@ -100,8 +104,9 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     expect(bezoeker.get_by_text(bootnaam)).to_be_visible()
     expect(bezoeker.get_by_text(prive["naam"], exact=True)).to_be_visible()
     respons = antwoord.text()
-    for veld in ("lidnummer", "adres", "telefoon", "email"):
-        assert prive[veld] not in respons, veld
+    assert prive["lidnummer"] not in respons
+    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
+        assert stukje not in respons, stukje
     bezoeker.close()
     page.goto("/indeling")
     expect(page).to_have_url(re.compile(r"/inloggen$"))

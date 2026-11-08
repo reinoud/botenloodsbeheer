@@ -197,13 +197,13 @@ Gebouwd in slice 2. Alle criteria worden in slice 6 opnieuw getoetst via `PUT /a
 - Gegeven een record met een opzegdatum van meer dan 5 jaar geleden van een lid dat niet in de applicatie staat, wanneer de import draait, dan maakt de applicatie dat lid niet aan. Zo komt een opgeschoond oud-lid niet terug. (slice 6)
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder een plaats wil toewijzen, dan weigert de applicatie.
 
-#### BLB-009 Terugschrijven voorbereiden, uitgeschakeld
+#### BLB-009 Terugschrijven naar e-boekhouden
 
 Prioriteit: Should. Bron: intake (leden en e-boekhouden, besluiten 2026-10-31), overlay §5, ADR-004, ADR-012. Afhankelijk van: BLB-005, BLB-031, BLB-039.
 
 Als beheerder wil ik dat het aantal boten per bootsoort per lid klaarstaat voor terugschrijven naar e-boekhouden, zodat de vereniging dit later kan inschakelen zonder nieuwbouw.
 
-- Gegeven een standaardinstallatie, wanneer de integratiecontainer draait, dan stuurt hij niets naar de bron: terugschrijven is in de container niet beschikbaar en er draait geen taak die terugschrijft.
+- Gegeven een standaardinstallatie, wanneer de integratiecontainer draait, dan stuurt hij niets naar de bron: terugschrijven staat uit tot `BOOTAANTALLEN_SCHRIJVEN=aan` (besluit stakeholder 2026-11-08, #178). Staat het aan, dan schrijft de bron e-boekhouden na een geslaagde import per lid de aantallen als JSON-tekst in vrij veld 10 (`boten_in_loods`); de stub kan niet terugschrijven.
 - Gegeven een lid met boten, wanneer de beheerder de lijst per lid opent (BLB-019), dan staat daar het aantal boten per bootsoort: de gegevens die later worden teruggeschreven.
 - Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0, en dezelfde aantallen als de lijst per lid. Er tellen alleen boten met een toegewezen plaats; clubboten tellen niet mee (besluit 2026-10-31).
 - Gegeven een lid met één boot op een plaats en één boot op de wachtlijst, wanneer de API de bootaantallen levert, dan telt alleen de boot op de plaats.
@@ -692,7 +692,6 @@ Het log uit slice 1 bevat vanaf het begin de datum van elke mutatie, zodat opsch
 | Onderwerp | Reden |
 |-----------|-------|
 | Import van de bestaande spreadsheet | Besluit stakeholder: volgt later |
-| Daadwerkelijk terugschrijven naar e-boekhouden | Alleen voorbereid (BLB-009) |
 | Leden aanmaken of wijzigen in de webinterface | De ledenbron is leidend; alleen de import via de API werkt leden bij |
 | Logo uploaden of verwijderen in de applicatie | Besluit stakeholder 2026-10-31: het logo staat in de installatie |
 | Meerdere verenigingen in één installatie | Besluit stakeholder: één vereniging per installatie |

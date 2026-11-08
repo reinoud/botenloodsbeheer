@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.1
-**Datum:** 2026-11-06
+**Versie:** v0.8.2
+**Datum:** 2026-11-08
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -24,7 +24,7 @@ De installatie bestaat uit zes containers in één `docker-compose.yml`, verdeel
 | `web` | Applicatie-image, Gunicorn met Flask | Webinterface, openbare pagina, health endpoints | Nee, alleen via Traefik (labels: TLS, headers, rate limits, uploadgrootte) |
 | `api` | Hetzelfde applicatie-image, `DIENST=api` | API `/api/v1`, import van leden, health endpoints | Nee, alleen via het entrypoint `intern` van Traefik (8081) |
 | `worker` | Hetzelfde applicatie-image, ander startcommando | Heartbeat, dagelijkse opschoning | Nee |
-| `integratie` | Eigen klein image uit `integratie/`, vervangbaar | Leden ophalen uit de bron en importeren via de API; terugschrijven voorbereid, uit | Nee; alleen uitgaand naar de bron |
+| `integratie` | Eigen klein image uit `integratie/`, vervangbaar | Leden ophalen uit de bron en importeren via de API; terugschrijven van de bootaantallen naar e-boekhouden achter een schakelaar, standaard uit | Nee; alleen uitgaand naar de bron |
 | `db` | PostgreSQL 17 | Alle gegevens, ook foto's | Nee, alleen intern netwerk |
 
 Er is één applicatie-image. `web`, `api` en `worker` verschillen alleen in startcommando, `DIENST` en databaserol. Zo gebruiken ze dezelfde domeinlaag en hetzelfde mutatielog. `integratie` is bewust een eigen image zonder applicatiecode, zodat een andere vereniging het kan vervangen.
@@ -92,7 +92,7 @@ botenloods/
     api/                 blueprint /api/v1 en openapi.yaml
     taken/               worker-lus, heartbeat, opschoning
     cli.py               beheerder uitnodigen, robottoken maken, seed
-  integratie/            eigen image: bron (stub, later e-boekhouden), lus, aanroepen naar de API (ADR-012)
+  integratie/            eigen image: bron (stub en e-boekhouden), lus, aanroepen naar de API (ADR-012)
   migrations/            Alembic
   tests/
     unit/                domeinregels zonder HTTP
@@ -222,7 +222,7 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 |----------|--------|-------------|
 | Minimale rechten | Compliant | Containers zonder root; database-accounts zonder superuser, per dienst een rol, alleen `api` schrijft leden; `integratie` zonder databasetoegang; tokens met losse rechten; persoonsgegevens alleen met apart recht |
 | Gelaagde verdediging | Compliant | Traefik (rate limits, headers, CSP) voor Flask; constraints in de database onder de domeinregels |
-| Veilig falen | Compliant | Import breekt af zonder wijziging; de API staat standaard aan maar alleen op het interne netwerk (`API_INGESCHAKELD=true`, whitelist `KOPPELNET`); terugschrijven staat uit; een ongeldig logo wordt niet getoond |
+| Veilig falen | Compliant | Import breekt af zonder wijziging; de API staat standaard aan maar alleen op het interne netwerk (`API_INGESCHAKELD=true`, whitelist `KOPPELNET`); terugschrijven staat standaard uit; een ongeldig logo wordt niet getoond |
 | Scheiding | Compliant | Eén plek voor regels; de enige externe koppeling zit in een eigen container die alleen de API kent |
 
 ### 8.3 Bekende restrisico's
@@ -262,7 +262,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | # | Vraag | Voor | Prioriteit | Blokkerend |
 |---|-------|------|------------|------------|
 | 1 | Wie maakt back-ups, en hoe lang worden die bewaard ten opzichte van de termijn van 5 jaar? | Stakeholder | Besloten | Besluit stakeholder 2026-10-30: back-ups vallen buiten de applicatie en volgen later bij de hosting |
-| 2 | Welke API-velden levert e-boekhouden precies voor leden (adres als één veld of in delen, opzegdatum)? | Oracle of forge, bij de echte koppeling | L | Nee, de stub gebruikt het eigen formaat |
+| 2 | Welke API-velden levert e-boekhouden precies voor leden (adres als één veld of in delen, opzegdatum)? | Oracle of forge, bij de echte koppeling | L | Nee; opgelost in issue #178: lidnummer, naam, lid_sinds en opzegdatum, zonder adres, telefoon en e-mail |
 | 3 | Moet de openbare pagina ook via de plaatscode op te zoeken zijn ("code of link" in BLB-020)? Het ontwerp kent alleen de link. | Apex | Besloten | Besluit stakeholder 2026-10-30: alleen via de QR-link, geen zoeken op plaatscode |
 | 4 | Botst het standaardsubnet `10.203.0.0/24` van `KOPPELNET` met een netwerk op de host van een vereniging? | Forge, bij de installatiebeschrijving | L | Nee, `KOPPELNET` is in te stellen |
 | 5 | Vervallen persoonlijke tokens nu de API niet vanaf internet bereikbaar is? | Stakeholder | H | Besloten 2026-10-31: de keuze per installatie blijft open (`compose.api-extern.yml`, ADR-012), persoonlijke tokens blijven mogelijk |
@@ -285,6 +285,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.2 | 2026-11-08 | Issue #178: bron e-boekhouden en terugschrijven achter een schakelaar (ADR-004 v2.4.0, ADR-012 v1.8.0, ADR-009, ADR-011) |
 | v0.8.1 | 2026-11-06 | Issue #150: kleuren niet meer instelbaar, alleen de naam in `instelling` (ADR-002 v1.2.0, ADR-009 v1.4.0) |
 | v0.8.0 | 2026-11-06 | Verwijzing naar ADR-014 v0.1.0, CSV-import en -export van rekindeling en bezetting (§1), issues #157 en #158 |
 | v0.7.1 | 2026-11-05 | Geen gaten in een verdieping, seed met 229 plaatsen (§3, §4, §6.3), rekoverzicht zonder lege kolommen; ADR-003 v2.3.0, issue #94 |
