@@ -108,6 +108,8 @@ paths:
         sleutel. Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
         Een nieuw record met een opzegdatum van meer dan 5 jaar geleden wordt overgeslagen.
         De uitkomst sluit een open importverzoek af. Wijzigingen in leden komen niet in het log.
+        Een veld dat in het record ontbreekt, geldt als leeg en overschrijft de bewaarde waarde:
+        de bron e-boekhouden stuurt geen adres, telefoon of e-mail, dus die zijn dan leeg.
       requestBody:
         required: true
         content:
@@ -291,8 +293,10 @@ paths:
         Recht: `bootaantallen:lezen`. Argumenten: geen. Voor elk lid elke bootsoort met het
         aantal, ook 0. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst
         zonder plaats en een clubboot tellen niet. Dezelfde aantallen staan in de lijst per lid.
-        Terugschrijven naar de bron staat in deze versie uit; de aanroep zet alleen het tijdstip
-        van ophalen op de statuspagina.
+        De meegeleverde integratiecontainer roept dit op na elke geslaagde import en schrijft de
+        aantallen als JSON-tekst in vrij veld 10 van het lid in e-boekhouden, maar alleen met
+        `BOOTAANTALLEN_SCHRIJVEN=aan`; die schakelaar staat standaard uit. De aanroep zelf zet
+        alleen het tijdstip van ophalen op de statuspagina.
       responses:
         "200":
           description: Eén regel per lid, op lidnummer gesorteerd

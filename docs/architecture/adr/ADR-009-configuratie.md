@@ -26,7 +26,7 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `DIENST` | Omgeving | `web` | `worker` of `api` in die containers; die hebben dan geen `SECRET_KEY` en `TOTP_SLEUTEL` nodig (slice 1b, ADR-012) |
 | `APP_OMGEVING` | Omgeving | `productie` | Seed en debug alleen buiten productie |
 | `PROXY_HOPS` | Omgeving | 1 | Bepaalt het vertrouwde clientadres (ADR-005) |
-| `LEDENBRON`, `LEDENBRON_STUB_BESTAND` en inloggegevens van de bron | Omgeving van `integratie` | Leeg | Techniek en geheim (ADR-004); de applicatie kent ze niet |
+| `LEDENBRON`, `LEDENBRON_STUB_BESTAND`, `EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1`, `EBOEKHOUDEN_CODE2` en `BOOTAANTALLEN_SCHRIJVEN` (`aan` of `uit`, standaard `uit`) | Omgeving van `integratie` | Leeg | Techniek en geheim (ADR-004); de applicatie kent ze niet |
 | `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://traefik:8081/api/v1` (instelbaar), `/run/secrets/api_token`, 03:00 | ADR-012, ADR-013 |
 | `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving (`OPSCHOON_TIJDSTIP` alleen `worker`) | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
 | `APP_VERSIE` | Buildargument van het image | `ontwikkeling` | Versie op de statuspagina (ADR-010) |

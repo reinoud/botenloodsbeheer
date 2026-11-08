@@ -53,8 +53,7 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     plaats_instellen(page, club, ["Kajak"], club=True)
     boot_vastleggen(page, bootnaam, "Kajak", eigenaar_index=2)
     toewijzen(page, bezet, bootnaam)
-    prive = {veld: page.locator(f"[data-veld={veld}]").inner_text()
-             for veld in ("naam", "lidnummer", "adres", "telefoon", "email")}
+    prive = {veld: page.locator(f"[data-veld={veld}]").inner_text() for veld in ("naam", "lidnummer")}
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 
     # Zonder keuze: terug met een melding.
@@ -71,8 +70,10 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     expect(een.locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak/Canadese kano")
     expect(een.get_by_role("img", name=f"QR-code naar de openbare pagina van {bezet}")).to_be_visible()
     html = page.content()
-    for veld in ("naam", "lidnummer", "adres", "telefoon", "email"):
+    for veld in ("naam", "lidnummer"):
         assert prive[veld] not in html, veld
+    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
+        assert stukje not in html, stukje
     assert bootnaam not in html and omschrijving not in html
     qr = een.locator("svg.qr-kaartje path").get_attribute("d")
 

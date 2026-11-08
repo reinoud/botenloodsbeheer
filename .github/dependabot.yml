@@ -15,6 +15,14 @@ updates:
       interval: weekly
     cooldown:
       default-days: 14
+  # De afhankelijkheden van de integratiecontainer (zeep en wat daarbij hoort, vastgepind met hashes
+  # in integratie/requirements.txt, uit requirements.in) staan buiten het uv-project (#178).
+  - package-ecosystem: pip
+    directory: /integratie
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
   # Basisimages staan op een digest (#25); Dependabot stelt een nieuwe digest voor als de tag wordt
   # herbouwd, zodat beveiligingsupdates van Debian binnenkomen.
   - package-ecosystem: docker
