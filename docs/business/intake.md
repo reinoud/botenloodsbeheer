@@ -117,7 +117,7 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 ### Na slice 3 (issue #17)
 
-- Het logo staat in de installatie (docker-compose), niet in de applicatie. Het wijzigen van het logo is daardoor geen mutatie en hoeft niet gelogd te worden. De naam blijft de beheerder in de applicatie instellen; de kleuren zijn vast (besluit 2026-11-06).
+- Het logo staat in de installatie (docker-compose), niet in de applicatie. Het wijzigen van het logo is daardoor geen mutatie en hoeft niet gelogd te worden. Vervangen op 2026-11-08 (issue #186): het logo wordt in de applicatie geüpload. De naam blijft de beheerder in de applicatie instellen; de kleuren zijn vast (besluit 2026-11-06).
 - In de Excel-export staat bij een vrije plaats in de kolom Bootsoort "(geschikt voor …)", met de bootsoorten die op die plaats mogen.
 - De kolom "Opgezegd op" volgt het besluit van 2026-10-30: verdwijnt een lid zonder opzegdatum uit de ledenbron, dan telt de datum waarop de synchronisatie het lid niet meer vond.
 
@@ -196,3 +196,9 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De container praat met e-boekhouden via de SOAP-bibliotheek `zeep`, met eigen aanroepen (OpenSession, GetRelaties, UpdateRelatie). `eboekhouden-python` valt af, omdat die een bestaande relatie niet kan bijwerken (besluit stakeholder 2026-11-08). Code die alleen voor deze koppeling nodig is, staat alleen in de integratiecontainer.
 - Inloggen bij e-boekhouden gaat met omgevingsvariabelen voor gebruikersnaam, code 1 en code 2.
 - De bouw test met een nagebootste e-boekhouden. Een proef in de echte administratie, op een testrelatie, gebeurt pas na akkoord van de stakeholder.
+
+### Logo uploaden (2026-11-08, issue #186)
+
+- Een beheerder uploadt, vervangt en verwijdert het logo van de vereniging op de pagina Instellingen. Het logo in de installatie (de map `huisstijl` en de variabele `LOGO_BESTAND`) vervalt.
+- Uploaden en verwijderen staan in het technische log, zoals andere instellingen.
+- Een logo dat nu in de installatie staat, wordt niet automatisch overgenomen; de beheerder uploadt het één keer.
