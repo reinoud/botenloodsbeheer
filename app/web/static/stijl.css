@@ -179,7 +179,7 @@ td form { gap: var(--space-2); }
   .bl-plaatslink { display: inline-flex; align-items: center; min-height: var(--control-height); font: var(--type-control); }
 }
 
-/* Lijsten en log (blok 3, BV-46), uit blok-3/schermen.css van het designsystem (b66037b); de regels voor het detail van Boot en Lid volgen in deel B */
+/* Lijsten en log (blok 3, BV-46), uit blok-3/schermen.css van het designsystem (b66037b); het detail van Boot en Lid (2B) staat onderaan */
 /* Lijst (BV-46, 1B): een item is titel en subregel links en een zijkant rechts; een actie staat op een eigen regel eronder */
 .bl-lijst { margin: 0; padding: 0; list-style: none; border-top: var(--stroke-1) solid var(--line); }
 .bl-item { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 var(--space-4); padding-block: var(--space-2); border-bottom: var(--stroke-1) solid var(--line); }
@@ -210,4 +210,22 @@ td form { gap: var(--space-2); }
   .bl-item--datum .bl-item__zijde { padding-bottom: var(--space-2); text-align: left; }
   .bl-logdoor, .bl-logactie, .bl-logbetreft { flex-basis: 100%; }
   .bl-logactie::before, .bl-logbetreft::before { content: none; }
+}
+
+/* Detail (BV-46, 2B), uit blok-3/schermen.css (71f54f1): feiten op een regel met een kleine foto, daaronder alleen de taak die nu past; de rest staat in uitklapblokken */
+.bl-kopfeiten { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
+.bl-kopfeiten__tekst { display: grid; gap: var(--space-2); min-width: 0; overflow-wrap: anywhere; }
+.bl-kopfoto { display: block; flex: none; width: 6rem; height: 4.5rem; object-fit: cover; border: var(--stroke-1) solid var(--line-strong); }
+.bl-feiten { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); margin: 0; }
+.bl-feiten > div { display: flex; align-items: baseline; gap: 0 var(--space-2); }
+.bl-feiten dt { flex: none; color: var(--ink-muted); font: var(--type-body-sm); }
+.bl-feiten dd { min-width: 0; margin: 0; font: var(--type-body); }
+.bl-taak { display: grid; gap: var(--space-4); padding: var(--space-5); border: var(--stroke-2) solid var(--brand-mid); background: var(--accent-tint); color: var(--ink); }
+.bl-taak > * { margin-block: 0; }
+.bl-taak__kop { font: var(--type-heading); }
+.bl-taak__regel { display: grid; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--stroke-1) solid var(--line-strong); }
+.bl-taak__regel > * { margin-block: 0; }
+.bl-subkop { margin: 0; font: var(--type-subheading); }
+@media (width < 40rem) {
+  .bl-taak { padding: var(--space-4); }
 }

@@ -51,9 +51,9 @@ def test_bootaantallen_api_gelijk_aan_de_lijst_per_lid(page):
     lidnummer = page.locator("[data-label='Lidnummer']",
                              has_text=re.compile(f"^{re.escape(regel['lidnummer'])}$"))
     page.locator("main > ul.bl-lijst > li").filter(has=lidnummer).get_by_role("link").click()
-    tabel = page.locator("h2:has-text('Aantal boten per bootsoort') + p + .ds-table-wrap table")
-    getoond = dict(zip(tabel.locator("td[data-label='Bootsoort']").all_inner_texts(),
-                       map(int, tabel.locator("td[data-label='Aantal']").all_inner_texts()),
+    tabel = page.locator("h2:has-text('Aantal boten per bootsoort') + p + ul")
+    getoond = dict(zip(tabel.locator("[data-label='Bootsoort']").all_inner_texts(),
+                       map(int, tabel.locator("[data-label='Aantal']").all_inner_texts()),
                        strict=True))
     assert getoond == regel["aantallen"]
 

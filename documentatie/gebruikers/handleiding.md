@@ -94,11 +94,11 @@ Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal b
 2. Voeg eventueel een foto toe (JPEG, PNG of WebP, hooguit 10 MB).
 3. Kies **Boot vastleggen**. Je ziet daarna de pagina van de boot.
 
-Een nieuwe boot heeft nog geen plaats. Op de pagina van de boot wijzig je de naam, de bootsoort en de eigenaar, vervang je de foto of verwijder je de boot. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij.
+Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de bootsoort, de eigenaar (een link naar het lid; bij een clubboot staat er geen link), de plaats en, bij een boot zonder plaats, of de boot op de wachtlijst staat. Is er een foto, dan staat die klein rechts. Daaronder staat één blok met de taak die nu past. Heeft de boot een plaats, dan zegt het blok dat je vrijgeven en verplaatsen op de plaats doet, met een link naar de plaats. Heeft de boot geen plaats, dan staan er **Plaats toewijzen** en **Wachtlijst**. Is de eigenaar oud-lid, dan is de taak **Boot verwijderen**. De blokken **Boot wijzigen of verwijderen**, **Foto vervangen** en **Log** zijn dicht; open ze met een klik. Onder **Foto vervangen** kies je een andere foto. Bij een boot van een oud-lid heet het eerste blok **Boot wijzigen**, omdat de knop om te verwijderen dan in het taakblok staat. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij. Verwijderen vraagt niet om een bevestiging.
 
-**Boot wijzigen:** open de boot en pas onder **Boot wijzigen** de naam, de bootsoort of de eigenaar aan (een actief lid of de vereniging) en kies **Boot opslaan**. Een oud-lid kan geen nieuwe eigenaar worden; een boot die al van een oud-lid is, kan wel zo blijven. Heeft de boot een plaats, dan weigert de applicatie een bootsoort die niet bij de plaats past en een wissel tussen een boot van een lid en een clubboot, en zegt ze waarom. Geef de plaats dan eerst vrij. Elke wijziging komt als `boot.gewijzigd` in het log onder de boot, onder het oude en het nieuwe lid en in het log van de bootmutaties. Naam, bootsoort en eigenaar staan er met de oude en de nieuwe waarde. De eigenaar staat er als lidverwijzing (zoals `lid:7`) of als `vereniging`, zonder naam. Wie opslaat zonder iets te veranderen, geeft geen logregel.
+**Boot wijzigen:** open de boot, open het blok **Boot wijzigen of verwijderen** en pas onder **Boot wijzigen** de naam, de bootsoort of de eigenaar aan (een actief lid of de vereniging) en kies **Boot opslaan**. Een oud-lid kan geen nieuwe eigenaar worden; een boot die al van een oud-lid is, kan wel zo blijven. Heeft de boot een plaats, dan weigert de applicatie een bootsoort die niet bij de plaats past en een wissel tussen een boot van een lid en een clubboot, en zegt ze waarom. Geef de plaats dan eerst vrij. Elke wijziging komt als `boot.gewijzigd` in het log onder de boot, onder het oude en het nieuwe lid en in het log van de bootmutaties. Naam, bootsoort en eigenaar staan er met de oude en de nieuwe waarde. De eigenaar staat er als lidverwijzing (zoals `lid:7`) of als `vereniging`, zonder naam. Wie opslaat zonder iets te veranderen, geeft geen logregel.
 
-![De pagina van een boot met bootsoort, eigenaar, plaats en foto.](afbeeldingen/boot.png)
+![De pagina van een boot zonder plaats, met bootsoort, eigenaar, foto en de taak Plaats toewijzen.](afbeeldingen/boot.png)
 
 ## De wachtlijst
 
@@ -118,7 +118,7 @@ De applicatie weigert een clubboot, een boot van een oud-lid, een boot met een p
 - krijgt de boot een andere eigenaar (een ander lid), dan gaat hij van de lijst. De applicatie meldt dat en het log noemt de reden `andere eigenaar`. Zet de boot er daarna zo nodig opnieuw op;
 - wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder.
 
-Op de pagina van een lid staat per boot of die op de wachtlijst staat en sinds wanneer.
+Op de pagina van een lid staat een boot op de wachtlijst met de regel **Wachtlijst: Sinds** en de aanmelddatum; een boot die niet op de lijst staat, heeft die regel niet.
 
 ## Een plaats toewijzen of vrijgeven
 
@@ -222,7 +222,7 @@ De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applic
 
 Op `/leden` staat per lid de naam, het lidnummer, de datum van lid sinds en of het een lid of oud-lid is, met het aantal leden erboven. Zoek op naam of lidnummer en kies **Zoeken**. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan.
 
-Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat uit.
+Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. Onder **Aantal boten per bootsoort** staat bij elk lid per bootsoort hoeveel boten een plaats hebben. Een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet. Dit zijn de aantallen die de ledenadministratie later kan overnemen; de integratiecontainer haalt dezelfde aantallen op. Terugschrijven naar de ledenbron staat uit.
 
 **Bewaartermijn.** Elke nacht om 04:00 verwijdert de applicatie gegevens die ouder zijn dan 5 jaar. Een oud-lid verdwijnt 5 jaar na de opzegdatum, met zijn boten en foto's. Heeft een boot van het oud-lid nog een plaats, dan blijft alles staan tot je de plaats vrijgeeft. Een regel in een log verdwijnt 5 jaar na de wijziging. Een verwijderd oud-lid komt niet terug met de volgende import. In de logs blijft een verwijderd lid staan als `lid:` met een nummer, zonder naam.
 

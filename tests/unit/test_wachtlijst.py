@@ -325,7 +325,7 @@ def test_schermen_wachtlijst_boot_en_lid(ingelogd):  # noqa: F811
     assert "Zeemeeuw" in r and "Anna de Vries" in r and "01-03-2024" in r
     assert "wachtlijst.toegevoegd" in r  # bootmutaties onder de wachtlijst
     lidpagina = ingelogd.get(f"/leden/{anna.id}").text  # BLB-019 criterium 1
-    assert "Sinds 01-03-2024" in lidpagina and ">Nee<" in lidpagina
+    assert "Sinds 01-03-2024" in lidpagina and lidpagina.count("Wachtlijst: ") == 1  # alleen bij de boot op de lijst
     r = ingelogd.post(f"/boten/{b.id}/wachtlijst/verwijderen", data={"terug": "wachtlijst"})
     assert r.location.endswith("/wachtlijst") and op_lijst(b) is None
 
@@ -460,7 +460,7 @@ def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid(
     db.session.commit()
     oudje = db.session.scalar(select(Boot).where(Boot.naam == "Oudje"))
     r = ingelogd.get(f"/boten/{oudje.id}").text
-    assert 'name="plaats_id"' not in r and "De eigenaar is oud-lid. De boot krijgt geen plaats." in r
+    assert 'name="plaats_id"' not in r and "De eigenaar is oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst." in r
 
 
 def test_bootpagina_zonder_plaats_geeft_200(ingelogd):  # noqa: F811
