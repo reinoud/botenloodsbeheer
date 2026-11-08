@@ -47,7 +47,7 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 | EP-06 | Openbare pagina en kaartjes | Bezoekers beperkte gegevens tonen en kaartjes met QR-code printen |
 | EP-07 | Inloggen en beheerders | Toegang tot alles wat niet openbaar is |
 | EP-08 | Mutatielog en bewaartermijn | Elke wijziging terug kunnen vinden en gegevens na 5 jaar opruimen |
-| EP-09 | Configuratie | Naam in de applicatie, het logo uit de installatie, en de lijst met bootsoorten per vereniging |
+| EP-09 | Configuratie | Naam en logo in de applicatie, en de lijst met bootsoorten per vereniging |
 | EP-10 | API | Gecontroleerde toegang over het interne netwerk voor de integratiecontainer en andere koppelingen, met robottokens en persoonlijke tokens |
 | EP-11 | Bewaking van de installatie | Zien of de applicatie gezond is |
 
@@ -493,19 +493,18 @@ Als beheerder wil ik dat gegevens van oud-leden en het mutatielog na 5 jaar word
 
 ### EP-09 Configuratie
 
-#### BLB-027 Naam instellen, logo uit de installatie
+#### BLB-027 Naam en logo instellen
 
 Prioriteit: Must. Bron: intake (aanleiding, techniek), besluit inrichting, besluit 2026-10-31 (issue #17), ADR-008, ADR-009. Afhankelijk van: BLB-022. Besluit: vraag 12.
 
-Als beheerder wil ik de naam van de vereniging instellen en het logo uit de installatie zien, zodat de applicatie eruitziet als die van onze vereniging.
+Als beheerder wil ik de naam en het logo van de vereniging instellen, zodat de applicatie eruitziet als die van onze vereniging.
 
-Naam en kleuren zijn gebouwd in slice 3. De kleuren vervallen sinds 2026-11-06 (issue #150): de app volgt de Dajaks-huisstijl en de kleuren zijn niet instelbaar. Het logo komt sinds 2026-10-31 uit de installatie; die criteria horen bij slice 4.
+Naam en kleuren zijn gebouwd in slice 3. De kleuren vervallen sinds 2026-11-06 (issue #150): de app volgt de Dajaks-huisstijl en de kleuren zijn niet instelbaar. Het logo kwam van 2026-10-31 tot 2026-11-08 uit de installatie (slice 4); sinds issue #186 uploadt de beheerder het op Instellingen.
 
 - Gegeven een ingelogde beheerder, wanneer die de naam opslaat, dan tonen alle pagina's, ook de openbare pagina en de kaartjes, de nieuwe naam. (deel kaartjes: slice 8, met BLB-021)
-- Gegeven een geldig logobestand (JPEG, PNG of WebP) op de plek die de installatie aanwijst, wanneer `web` start, dan tonen alle pagina's en de kaartjes dat logo, zonder metadata uit het bestand. Een nieuw logo verschijnt na een herstart van `web`, en er komt geen logregel. (slice 4; deel kaartjes: slice 8, met BLB-021)
-- Gegeven een ontbrekend of ongeldig logobestand, wanneer `web` start, dan tonen de pagina's alleen de naam en staat de melding in de containerlog. (slice 4)
-- Gegeven een ingelogde beheerder, wanneer die de instellingen opent, dan is er geen mogelijkheid om een logo te uploaden of te verwijderen. (slice 4)
-- Gegeven een installatie met een logo dat in slice 3 is geüpload, wanneer de migratie van slice 4 draait, dan is dat logo uit de applicatie verwijderd en geldt alleen het logo uit de installatie. (slice 4)
+- Gegeven een recent ingelogde beheerder en een geldig logobestand (JPEG, PNG of WebP, tot 10 MB), wanneer die het op Instellingen uploadt, dan tonen alle pagina's, de openbare pagina en de kaartjes dat logo zonder herstart en zonder metadata uit het bestand, en staat de upload in het technische log. (issue #186)
+- Gegeven een ongeldig bestand, wanneer de beheerder het uploadt, dan ziet die één melding en blijft het vorige logo staan. (issue #186)
+- Gegeven een installatie met een logo, wanneer de beheerder het verwijdert, dan tonen de pagina's alleen de naam en staat het verwijderen in het technische log. (issue #186)
 - Gegeven een ingelogde beheerder, wanneer die de instellingen opent, dan zijn er geen kleurkiezers, en de kleuren van alle pagina's komen uit de Dajaks-huisstijl. (vervangt het criterium over een waarschuwing bij slecht leesbare kleuren; issue #150)
 - Gegeven een installatie zonder instellingen en zonder logobestand, wanneer iemand de applicatie opent, dan staat er een neutrale standaardnaam en een neutrale stijl.
 
@@ -693,7 +692,6 @@ Het log uit slice 1 bevat vanaf het begin de datum van elke mutatie, zodat opsch
 |-----------|-------|
 | Import van de bestaande spreadsheet | Besluit stakeholder: volgt later |
 | Leden aanmaken of wijzigen in de webinterface | De ledenbron is leidend; alleen de import via de API werkt leden bij |
-| Logo uploaden of verwijderen in de applicatie | Besluit stakeholder 2026-10-31: het logo staat in de installatie |
 | Meerdere verenigingen in één installatie | Besluit stakeholder: één vereniging per installatie |
 | Automatische toewijzing van plaatsen | Besluit stakeholder: de beheerder kiest zelf |
 | Aparte rol voor systeembeheer | Besluit stakeholder: drie gelijke beheerders |
@@ -729,7 +727,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 | Nr | Vraag | Besluit | Raakt |
 |----|-------|---------|-------|
 | 11 | Wat staat in de kolom Bootsoort van de export bij een vrije plaats? | "(geschikt voor …)", met de bootsoorten die op die plaats mogen. | BLB-017 |
-| 12 | Moet een logo te verwijderen zijn? | Nee. Het logo staat in de installatie, niet in de applicatie; wijzigen wordt niet gelogd. De naam stelt de beheerder in de applicatie in; de kleuren zijn vast. | BLB-027, BLB-021 |
+| 12 | Moet een logo te verwijderen zijn? | Ja, sinds 2026-11-08 (issue #186): de beheerder uploadt, vervangt en verwijdert het logo in de applicatie; dat staat in het technische log. Tot dan: nee, het logo stond in de installatie. De naam stelt de beheerder in de applicatie in; de kleuren zijn vast. | BLB-027, BLB-021 |
 | 13 | Klopt de datum "Opgezegd op" voor een lid dat zonder opzegdatum uit de bron verdween? | Ja. De datum waarop de import het lid niet meer vond, telt als opzegdatum (besluit 2026-10-30). | BLB-018, BLB-008 |
 | 14 | Hoe lopen imports en exports? | Een aparte, vervangbare container doet ze, alleen via de API over het interne netwerk. De API staat standaard aan, met het interne netwerk als whitelist, en is niet meer alleen-lezen. De beheerdocumentatie beschrijft het aanmelden met voorbeeldcode. Dit vervangt vraag 2 en de standaard "uit" van de API. | BLB-006 tot en met 009, 024, 029 tot en met 034, 037, 039, 040 |
 | 15 | Vervallen persoonlijke tokens nu de API niet vanaf internet bereikbaar is? (architectuur §10.2, vraag 5) | Nee. Een installatie mag de API bewust van buiten bereikbaar maken; persoonlijke tokens blijven daarom mogelijk. | BLB-030 tot en met 035, 042 |

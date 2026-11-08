@@ -6,9 +6,9 @@ import pytest
 import segno
 
 from app.domein import CLI, indeling, instellingen, toewijzing
-from tests.unit.hulp import png
+from tests.unit.hulp import logo_zetten
 from tests.unit.test_indeling_en_toewijzing import boot, plaats
-from tests.unit.test_overzichten_en_instellingen import logo_uit_installatie, loods
+from tests.unit.test_overzichten_en_instellingen import loods
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
 
@@ -27,8 +27,8 @@ def qr_van(url):
     return qr_pad(segno.make(url, error="m").svg_inline(svgclass="qr-kaartje"))
 
 
-def test_kaartje_met_logo_code_bootsoort_en_qr_naar_openbare_pagina(app, ingelogd, tmp_path):  # noqa: F811
-    kenmerk, _ = logo_uit_installatie(app, tmp_path, png())
+def test_kaartje_met_logo_code_bootsoort_en_qr_naar_openbare_pagina(app, ingelogd):  # noqa: F811
+    kenmerk = logo_zetten()
     _vrij, bezet, _club, _c11, _anna = loods()
     indeling.rek_wijzigen(bezet.rek_id, "A", "Grote botenloods stelling links", CLI)
     r = ingelogd.get(f"/kaartjes/print?plaats={bezet.id}")

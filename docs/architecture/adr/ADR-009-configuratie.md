@@ -2,12 +2,12 @@
 
 **Status:** Aanvaard, 2026-10-30 (API-schakelaar: besluit van de stakeholder, architectuur §9, besluit 5); herzien 2026-10-31 (logo en integratiecontainer)
 **Datum:** 2026-10-30
-**Versie:** v1.3.1
+**Versie:** v1.5.0
 **Stories:** BLB-007, BLB-009, BLB-027, BLB-028, BLB-029
 
 ## Context
 
-Elke vereniging draait een eigen installatie met eigen naam en logo (intake). Het logo staat sinds 2026-10-31 in de installatie; de naam stelt de beheerder in de applicatie in. De kleuren zijn vast sinds 2026-11-06 (ADR-002). De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
+Elke vereniging draait een eigen installatie met eigen naam en logo (intake). Naam en logo stelt de beheerder in de applicatie in (het logo stond van 2026-10-31 tot 2026-11-08 in de installatie). De kleuren zijn vast sinds 2026-11-06 (ADR-002). De 12-factor-basis geldt: configuratie en geheimen uit de omgeving (overlay §6). Er zijn drie gelijke beheerders en geen systeembeheerrol. Wie de installatie neerzet, is dus vaak niet wie dagelijks beheert. De overlay (§4) legt per instelling de keuze bij foundation.
 
 De vuistregel: wat de installatie technisch laat werken of een geheim is, staat in de omgeving. Wat een beheerder in het dagelijks werk wil aanpassen, staat in de applicatie, in de tabel `instelling`, en wijzigen geeft een logregel.
 
@@ -30,10 +30,10 @@ De vuistregel: wat de installatie technisch laat werken of een geheim is, staat 
 | `API_URL`, `API_TOKEN_FILE`, `SYNC_TIJDSTIP` | Omgeving van `integratie` | `http://traefik:8081/api/v1` (instelbaar), `/run/secrets/api_token`, 03:00 | ADR-012, ADR-013 |
 | `OPSCHOON_TIJDSTIP`, `TZ` | Omgeving (`OPSCHOON_TIJDSTIP` alleen `worker`) | 04:00, Europe/Amsterdam | Bedrijfsvoering van de installatie |
 | `APP_VERSIE` | Buildargument van het image | `ontwikkeling` | Versie op de statuspagina (ADR-010) |
-| `LOGO_BESTAND` | Omgeving (`web`), bestand in `./huisstijl` | `/huisstijl/logo.png`; zonder bestand alleen de naam | Besluit stakeholder 2026-10-31: logo in de installatie, wijzigen wordt niet gelogd (ADR-008) |
 | `LOG_NIVEAU` | Omgeving | `INFO` | Techniek |
 | `DOMEIN`, `INSTALLATIE`, `TRAEFIK_CERTRESOLVER` | Omgeving (compose-labels en netwerknamen) | Geen, `botenloods`, geen | `DOMEIN` gelijk aan de host uit `BASIS_URL`; `INSTALLATIE` uniek per host (ADR-013) |
 | Naam van de vereniging | Applicatie | "Botenloods" | BLB-027 |
+| Logo | Applicatie (tabel `afbeelding`, verwijzing in `instelling`) | Geen; alleen de naam | Besluit stakeholder 2026-11-08, issue #186 (ADR-008) |
 | Bootsoorten | Applicatie (tabel `bootsoort`, blok Bootsoorten op `/instellingen`) | Kajak, Canadese kano, surfski, C11, supboard | BLB-028 |
 
 Vaste waarden in code, niet instelbaar: de bewaartermijn van 5 jaar, de maximale tokenduur van 3 jaar, de waarschuwing 31 dagen voor verlopen, de rechtenlijst van tokens, de uploadgrens. Dit zijn besluiten van de stakeholder of beveiligingsgrenzen, geen voorkeuren per vereniging. Wijzigen gaat via een release.
@@ -46,21 +46,22 @@ Instellingen in de applicatie leest de basistemplate per verzoek uit de database
 
 | Optie | Waarom niet |
 |-------|-------------|
-| Alles in de omgeving | Naam of kleur wijzigen vraagt servertoegang en een herstart; er is geen systeembeheerrol. Voor het logo koos de stakeholder dit wel |
+| Alles in de omgeving | Naam of kleur wijzigen vraagt servertoegang en een herstart; er is geen systeembeheerrol. Het logo stond hier van 2026-10-31 tot 2026-11-08 |
 | Alles in de applicatie | Geheimen in de database en een bootstrapprobleem voor `SECRET_KEY` en de database zelf |
 | API-schakelaar in de applicatie | Foundation raadde dit aan; de stakeholder koos de installatie |
 | Configuratiebestand (YAML) in een volume | Derde plek naast omgeving en database |
 
 ## Gevolgen
 
-- Een nieuwe installatie start met een neutrale naam (BLB-027). De naam is na de eerste inlog in te stellen; het logo zet wie de installatie draait in `./huisstijl`.
-- Er komt geen scherm om de API aan of uit te zetten. Een wijziging van de schakelaar staat niet in het mutatielog; `api` meldt de stand bij het opstarten in de containerlog. Hetzelfde geldt voor het logo.
+- Een nieuwe installatie start met een neutrale naam (BLB-027). Naam en logo zijn na de eerste inlog in te stellen.
+- Er komt geen scherm om de API aan of uit te zetten. Een wijziging van de schakelaar staat niet in het mutatielog; `api` meldt de stand bij het opstarten in de containerlog.
 - De statuspagina toont of de API aan staat, de laatste import en wanneer de bootaantallen voor het laatst zijn opgehaald, nooit de waarden van geheimen (BLB-037, ADR-010). Welke bron de integratiecontainer gebruikt, weet de applicatie niet.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.0 | 2026-11-08 | `LOGO_BESTAND` vervalt; het logo staat in de applicatie (tabel `afbeelding`) en wijzigen geeft een logregel | Besluit stakeholder 2026-11-08, issue #186 (ADR-008) |
 | v1.4.0 | 2026-11-06 | Primaire en secundaire kleur vervallen; migratie 0015 verwijdert de rijen `kleur_primair` en `kleur_secundair` uit `instelling` | Besluit stakeholder 2026-11-06, issue #150 |
 | v1.3.1 | 2026-11-03 | Bootsoorten beheerd op `/instellingen` | Bouw slice 11, issue #56 |
 | v1.3.0 | 2026-11-02 | `APP_VERSIE`; `OPSCHOON_TIJDSTIP` alleen bij `worker`; `API_INGESCHAKELD` ook bij `web` | Bouw slice 9, issue #48 |

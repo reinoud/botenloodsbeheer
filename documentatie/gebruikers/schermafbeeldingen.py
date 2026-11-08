@@ -132,6 +132,13 @@ def schermen(browser):
     page.get_by_role("button", name="Inloggen").click()
     expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
+    # Het testlogo staat in de kopbalk van alle schermen hierna; het komt via een upload (#186).
+    page.goto("/instellingen")
+    page.locator("summary", has_text="Logo").click()
+    page.get_by_label("Nieuw logo").set_input_files("/fixtures/logo.png")
+    page.get_by_role("button", name="Logo opslaan").click()
+    expect(page.get_by_text("Het logo is opgeslagen.")).to_be_visible()
+
     # Beheerders.
     page.goto("/beheerders")
     page.get_by_label("Gebruikersnaam (a-z, cijfers, punt, - en _)").fill("beheerder.twee")
@@ -230,8 +237,9 @@ def schermen(browser):
     page.goto("/log/techniek")
     o.maak("log-techniek", hoogte=700)
     page.goto("/instellingen")
+    page.locator("summary", has_text="Logo").click()
     page.locator("summary", has_text="Bootsoorten").click()
-    o.maak("instellingen")  # hele pagina, met het uitgeklapte blok Bootsoorten
+    o.maak("instellingen")  # hele pagina, met de uitgeklapte blokken Logo en Bootsoorten
     page.goto("/status")
     o.maak("status", hoogte=900)
 

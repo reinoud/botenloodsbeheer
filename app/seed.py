@@ -4,8 +4,8 @@ Vaste random seed, dus elke run levert hetzelfde op. Alle gegevens zijn verzonne
 Afwijkingen van §6.3: de indeling komt uit de CSV-bestanden naast dit bestand (issue #80), seed
 draait in de worker en importeert geen leden. De leden komen uit tests/fixtures/leden.json via de
 integratiecontainer met de stub en PUT /api/v1/leden, de enige route die leden schrijft (ADR-012);
-seed weigert zonder leden. Kleuren volgen met hun slice. Het testlogo komt niet uit seed maar uit
-compose.dev.yml (ADR-008).
+seed weigert zonder leden. Kleuren volgen met hun slice. Het testlogo komt niet uit seed maar wordt
+in de tests en in schermafbeeldingen.py geüpload (issue #186).
 """
 
 import csv

@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.2
+**Versie:** v0.8.3
 **Datum:** 2026-11-08
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -101,7 +101,6 @@ botenloods/
     fixtures/            synthetische leden voor de stub
   docker/
     Dockerfile
-  huisstijl/             logo van de installatie, niet in git (ADR-008)
   secrets/               api_token van de integratiecontainer, niet in git (ADR-012)
   docker-compose.yml     productie-opbouw
   compose.dev.yml        aanvulling voor lokaal: eigen Traefik, poorten, herladen, testdatabase
@@ -205,7 +204,7 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 | Persoonsgegevens op de openbare pagina | `/p/<sleutel>` | M | H | Eigen leesfunctie met vijf velden, E2E-test op het antwoord | 003 |
 | Lijst van alle eigenaren ophalen door plaatsnummers op te tellen | `/p/<sleutel>` | M | M | Willekeurige publieke sleutel in plaats van een volgnummer | 003 |
 | Gestolen of uitgelekt API-token | API | L | H | Hash in de database, IP-whitelist, korte geldigheid mogelijk, intrekken | 005 |
-| Kwaadaardig bestand als foto of logo (XSS via SVG, verborgen locatiegegevens) | Upload van een foto; logobestand in de installatie | M | M | Alleen JPEG, PNG en WebP, opnieuw coderen met Pillow, EXIF verwijderen; een ongeldig logo wordt niet getoond | 008 |
+| Kwaadaardig bestand als foto of logo (XSS via SVG, verborgen locatiegegevens) | Upload van een foto of het logo | M | M | Alleen JPEG, PNG en WebP, opnieuw coderen met Pillow, EXIF verwijderen; een ongeldig bestand wordt geweigerd en het vorige blijft | 008 |
 | Formule in de Excel-export via een naam uit de ledenbron (bijvoorbeeld `=HYPERLINK(...)`) | Export | L | M | Tekst met `=` vooraan blijft tekst in het bestand; stuurtekens vallen weg | 011 |
 | Ongeldige of gemanipuleerde gegevens uit de ledenbron, of een halve lijst van een vervangende container | `PUT /api/v1/leden` | L | M | Validatie per record in de domeinlaag, grens op grootte en aantal, afbreken bij een verdachte afname | 004, 012 |
 | Overgenomen integratiecontainer of gelekt robottoken | API | L | H | Token met alleen `leden:importeren` en `bootaantallen:lezen`, whitelist `KOPPELNET`, geen toegang tot `db` of `api` buiten Traefik; het ergste gevolg is een import van gemanipuleerde leden, die de veiligheidsgrens en het log beperken | 005, 012 |
@@ -240,7 +239,7 @@ De stakeholder besloot over de eerste vijf keuzes op 2026-10-30 (bron: `docs/bus
 | 3 | Wat "een boot in de loods" is voor de bewaartermijn | Besloten zoals aanbevolen: een oud-lid valt onder de opschoning zodra 5 jaar na de opzegdatum geen boot van het oud-lid nog een plaats heeft. Bij het opschonen worden ook de boten en foto's van het oud-lid verwijderd (ADR-006). | Een boot zonder plaats houdt het opschonen niet tegen. Wil de vereniging boten zonder plaats als "in de loods" tellen, dan blijven gegevens langer staan. |
 | 4 | Begin van de termijn voor een lid dat uit de bron verdwijnt zonder opzegdatum | Besloten zoals aanbevolen: de datum waarop de synchronisatie het lid niet meer vond, telt als opzegdatum (ADR-004, ADR-006). | Zonder deze regel begint de termijn van zo'n oud-lid nooit en blijven de gegevens onbeperkt staan. |
 | 5 | Wie de API aan- en uitzet (ADR-009) | De API gaat aan en uit in de installatie, via de omgevingsvariabele `API_INGESCHAKELD`, niet door de beheerder in de applicatie. Afwijking van de aanbeveling. De standaard is sinds besluit 7 `true`. | Er komt geen scherm voor de schakelaar. Wijzigen vraagt iemand met servertoegang en een herstart van `api`. |
-| 6 | Waar het logo staat (ADR-008, ADR-009) | In de installatie (docker-compose), niet in de applicatie; wijzigen wordt niet gelogd. De naam blijft in de applicatie; de kleuren zijn vast (ADR-002). | Geen uploadscherm meer; het logo staat in `./huisstijl` en een nieuw logo vraagt een herstart van `web`. |
+| 6 | Waar het logo staat (ADR-008, ADR-009) | In de applicatie (database), sinds 2026-11-08 (issue #186); eerder in de installatie. Uploaden en verwijderen staan in het technische log. De kleuren zijn vast (ADR-002). | De beheerder wijzigt het logo op Instellingen zonder herstart; een logo uit de installatie wordt niet overgenomen. |
 | 7 | Imports en exports (ADR-004, ADR-012) | Een aparte, vervangbare container doet alle imports en exports, alleen via de API over het interne netwerk. De API staat standaard aan met als whitelist het interne netwerk en is niet meer alleen-lezen. | Dienst `api` met eigen databaserol, interne server op 8081, robottoken via de CLI; de synchronisatie verdwijnt uit de worker. |
 | 8 | Proxy vóór de containers (ADR-013, issue #29) | Traefik vervangt Nginx en neemt de controles over. | Gedeelde Traefik op de host via extern aangemaakte netwerken en labels; toegangslog in de applicatie; 429 als tekst. |
 
@@ -285,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.3 | 2026-11-08 | Issue #186: het logo staat weer in de database en is te uploaden op Instellingen; `./huisstijl` en `LOGO_BESTAND` vervallen (§8.1, §9 besluit 6; ADR-008 v1.3.0, ADR-009 v1.5.0) |
 | v0.8.2 | 2026-11-08 | Issue #178: bron e-boekhouden en terugschrijven achter een schakelaar (ADR-004 v2.4.0, ADR-012 v1.8.0, ADR-009, ADR-011) |
 | v0.8.1 | 2026-11-06 | Issue #150: kleuren niet meer instelbaar, alleen de naam in `instelling` (ADR-002 v1.2.0, ADR-009 v1.4.0) |
 | v0.8.0 | 2026-11-06 | Verwijzing naar ADR-014 v0.1.0, CSV-import en -export van rekindeling en bezetting (§1), issues #157 en #158 |

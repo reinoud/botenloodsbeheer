@@ -8,24 +8,23 @@ services:
     ports: !override ["127.0.0.1:5432:5432"]
     networks: [achterkant, lokaal]
 
-  # Lokaal het testlogo uit tests/fixtures.
   # Lokaal zonder TLS: de routers op het entrypoint web, de doorverwijzing naar https uit.
   web:
     environment:
       GUNICORN_CMD_ARGS: --reload
       TEMPLATES_AUTO_RELOAD: "true"
-      LOGO_BESTAND: /app/tests/fixtures/logo.png
     labels:
       - traefik.http.routers.${INSTALLATIE:-botenloods}-web.entrypoints=web
       - traefik.http.routers.${INSTALLATIE:-botenloods}-web.tls=false
       - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.entrypoints=web
       - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.tls=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.tls=false
       - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.entrypoints=web
       - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.tls=false
       - traefik.http.routers.${INSTALLATIE:-botenloods}-http.entrypoints=websecure
     volumes:
       - ./app:/app/app:ro
-      - ./tests/fixtures:/app/tests/fixtures:ro
 
   api:
     environment:
@@ -126,6 +125,7 @@ services:
     volumes:
       - ./tests/e2e:/e2e
       - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
+      - ./tests/fixtures/logo.png:/fixtures/logo.png:ro  # het testlogo, dat de tests uploaden
     working_dir: /e2e
     command: ["pytest", "-p", "no:cacheprovider"]
 

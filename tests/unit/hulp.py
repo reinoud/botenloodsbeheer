@@ -95,6 +95,13 @@ def plaats(code="A/1/1", soort_ids=(1,), club=False):
     return indeling.plaats_wijzigen(p.id, list(soort_ids), club, CLI)
 
 
+def logo_zetten(inhoud=None):
+    """Zoals de beheerder op Instellingen; geeft het kenmerk van het logo."""
+    from app.domein import instellingen
+    instellingen.logo_vervangen(inhoud or png(), CLI)
+    return instellingen.logo()
+
+
 def race(app, sql, params, actie):
     """Twee databasesessies. De eerste vergrendelt een rij en wijzigt die met de SQL-regels in
     sql (de eerste regel is de SELECT ... FOR UPDATE). Intussen draait actie in een tweede sessie

@@ -7,7 +7,7 @@ Eigen rek en plaatsen met de stempel van de run; het lid komt uit de import (dra
 import math
 import re
 
-from conftest import reknaam, uitloggen, wachtwoord_instellen
+from conftest import afbeelding_geladen, logo_uploaden, reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, rek_hernoemen, toewijzen
 
@@ -44,6 +44,7 @@ def past_op_a4(page):
 def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_url):
     wachtwoord_instellen(page, "kaartjes")
     vereniging = page.locator(".dj-logo").inner_text()
+    logo_uploaden(page)  # het logo komt uit de database, niet meer uit de installatie (#186)
     rek, nieuw, bootnaam = reknaam("k"), reknaam("m"), f"Kaartboot {reknaam('k')}"
     omschrijving = "Proefstelling links bij de deur, tot 60 tekens lang gehouden"
     bezet, vrij, club = f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"
@@ -67,6 +68,7 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     expect(page.locator("section.kaartje")).to_have_count(1)
     een = kaartje(page, bezet)
     expect(een.locator("img.kaartje-logo")).to_be_visible()
+    afbeelding_geladen(een.locator("img.kaartje-logo"))  # mutant: logo_uploaden weglaten of /logo/ niet laten leveren
     expect(een.locator(".kaartje-soorten")).to_have_text("Geschikt voor Kajak/Canadese kano")
     expect(een.get_by_role("img", name=f"QR-code naar de openbare pagina van {bezet}")).to_be_visible()
     html = page.content()

@@ -194,7 +194,7 @@ def test_geweigerde_actie_op_bootsoorten_toont_de_melding_in_een_open_blok(ingel
 def test_instellingen_toont_logo_en_bootsoorten_als_blokken_en_de_naam_in_een_paneel(ingelogd):
     tekst = main(ingelogd.get("/instellingen").text)
     assert re.search(r'<details class="dj-disclosure">\s*<summary>Logo</summary>', tekst)
-    assert "Er is geen logo" in tekst and "<code>huisstijl</code>" in tekst
+    assert "Er is geen logo" in tekst and "huisstijl</code>" not in tekst
     assert '<section class="dj-panel" aria-labelledby="naam-kop">' in tekst
     assert tekst.count('data-label="Bootsoort"') == len(indeling.bootsoorten()) and "<table" not in tekst
     assert 'name="soort-nieuw"' not in tekst and 'id="soort-nieuw" name="naam"' in tekst

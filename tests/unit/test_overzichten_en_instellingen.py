@@ -8,17 +8,13 @@ from datetime import date, timedelta
 
 import pytest
 from openpyxl import load_workbook
-from PIL import Image
 from sqlalchemy import create_engine, func, select, update
 
-from app import config
-from app.config import UPLOAD_MAX
 from app.domein import CLI, Regelfout, instellingen, toewijzing
 from app.domein import vandaag as domein_vandaag
-from app.models import Afbeelding, Instelling, Lid, Logregel, db
-from app.web import huisstijl
+from app.models import Instelling, Lid, Logregel, db
 from tests.unit.conftest import API
-from tests.unit.hulp import lid, png
+from tests.unit.hulp import lid
 from tests.unit.test_indeling_en_toewijzing import boot, plaats, soort
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
@@ -255,8 +251,7 @@ def test_export_vraagt_inloggen(client):
 
 
 def test_neutrale_standaard_zonder_instellingen_en_zonder_logo(app, client):
-    assert app.config["LOGO_BESTAND"] == "/huisstijl/logo.png"  # bestaat niet in de testcontainer
-    assert app.extensions["logo"] is None
+    assert instellingen.logo() is None
     assert instellingen.huidig() == instellingen.STANDAARD
     tekst = client.get("/inloggen").text
     assert "Inloggen · Botenloods</title>" in tekst and 'class="bl-logo"' not in tekst
@@ -317,75 +312,6 @@ def test_melding_en_schermen_escapen_invoer(app, ingelogd):  # noqa: F811
         tekst = ingelogd.get(pad).text
         assert X not in tekst, pad
     assert GEESCAPET in ingelogd.get(f"/boten/{b.id}").text
-
-
-def logo_uit_installatie(app, tmp_path, inhoud):
-    """Zoals web bij het starten, met LOGO_BESTAND naar een bestand in de installatie."""
-    pad = tmp_path / "logo.png"
-    pad.write_bytes(inhoud)
-    app.config["LOGO_BESTAND"] = str(pad)
-    huisstijl.logo_laden(app)
-    return app.extensions["logo"]
-
-
-def test_logo_uit_installatie_op_alle_paginas_zonder_metadata(app, client, tmp_path, caplog):
-    exif = Image.Exif()
-    exif[0x8825] = {2: (52.0, 22.0, 1.0)}  # GPS-gegevens
-    kenmerk, _ = logo_uit_installatie(app, tmp_path, png(1200, 300, exif=exif.tobytes(), icc=b"bron-kleurprofiel"))
-    assert "Logo geladen" in caplog.text
-    p = plaats()
-    for pad in ("/inloggen", f"/p/{p.publieke_sleutel}"):
-        assert f'class="bl-logo" src="/logo/{kenmerk}"' in client.get(pad).text
-    r = client.get(f"/logo/{kenmerk}")
-    assert r.status_code == 200 and r.mimetype == "image/png"
-    assert r.headers["Cache-Control"] == "public, max-age=31536000, immutable"
-    assert r.headers["X-Content-Type-Options"] == "nosniff" and "Set-Cookie" not in r.headers
-    with Image.open(io.BytesIO(r.data)) as img:
-        assert img.format == "PNG" and img.size == (800, 200)
-        assert not img.getexif() and "exif" not in img.info and "icc_profile" not in img.info
-    assert client.get("/logo/0123456789abcdef").status_code == 404
-    # Geen mutatie: geen logregel over de huisstijl en niets in de database.
-    acties = db.session.scalars(select(Logregel.actie)).all()
-    assert acties and not [a for a in acties if a.startswith("instelling")]
-    assert db.session.scalar(select(func.count()).select_from(Afbeelding)) == 0
-
-
-def test_nieuw_logo_na_herstart_krijgt_nieuwe_url(app, tmp_path):
-    eerste, _ = logo_uit_installatie(app, tmp_path, png())
-    tweede, _ = logo_uit_installatie(app, tmp_path, png(20, 20))
-    assert eerste != tweede
-
-
-@pytest.mark.parametrize("inhoud", [
-    None,  # bestand ontbreekt
-    b"geen afbeelding",
-    b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
-    png(formaat="GIF"),
-    png() + b"0" * UPLOAD_MAX],  # geldige PNG, maar groter dan 10 MB
-    ids=["ontbreekt", "tekst", "svg", "gif", "te-groot"])
-def test_ontbrekend_of_ongeldig_logo_toont_alleen_de_naam(app, client, tmp_path, caplog, inhoud):
-    if inhoud is None:
-        app.config["LOGO_BESTAND"] = str(tmp_path / "bestaat-niet.png")
-        huisstijl.logo_laden(app)
-    else:
-        logo_uit_installatie(app, tmp_path, inhoud)
-    assert app.extensions["logo"] is None
-    assert "alleen de naam" in caplog.text and caplog.records[-1].levelname == "WARNING"
-    tekst = client.get("/inloggen").text
-    assert 'class="bl-logo"' not in tekst and "/logo/" not in tekst
-
-
-def test_worker_leest_geen_logo(monkeypatch):
-    monkeypatch.setenv("DIENST", "worker")
-    assert config.laad()["LOGO_BESTAND"] is None
-
-
-def test_geen_logo_uploaden_of_verwijderen(ingelogd):  # noqa: F811
-    tekst = ingelogd.get("/instellingen").text
-    assert 'type="file"' not in tekst and "Logo opslaan" not in tekst
-    assert "staat in de installatie" in tekst
-    assert ingelogd.post("/instellingen/logo", data={"logo": (io.BytesIO(png()), "l.png")}
-                         ).status_code == 404
 
 
 def test_recente_inlog_vereist(ingelogd):  # noqa: F811

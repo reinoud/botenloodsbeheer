@@ -19,7 +19,9 @@ Migratie 0013 trekt een ongebruikt recht van de webapplicatie op die tabel in. E
 
 Migratie 0015 (versie 0.3.0) haalt de instelbare kleuren weg: de app volgt vast de Dajaks-huisstijl. De downgrade zet de oude kleuren niet terug. Naam en logo blijven instelbaar. Migratie 0016 voegt de tabellen voor de bezettingsimport en de onthouden naamkoppelingen toe; bestaande gegevens veranderen niet. `docker-compose.yml` is in 0.3.0 gewijzigd: haal hem opnieuw op bij de tag. Compose start daarna niet als `docker/db-init.sh` ontbreekt (`installatie.md`).
 
-Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400. Een nieuw logo: vervang `huisstijl/logo.png` en draai `docker compose restart web`.
+Een herstart van Traefik is na een update niet nodig: hij volgt de containers via de labels. Wel aanbevolen na deze versie: de opties tegen gecodeerde tekens op de entrypoints (zie `installatie.md`); de applicatie weigert zo'n pad ook zelf met 400.
+
+Migratie 0017 zet het logo in de database. Het logo in `huisstijl/logo.png` en de variabele `LOGO_BESTAND` doen niets meer; een bestaand logo moet één keer worden geüpload op Instellingen (blok Logo). Haal `docker-compose.yml` opnieuw op bij de tag: de koppeling van `./huisstijl` is eruit en er is een router voor `/instellingen/logo` bij. Daarna is een nieuw logo uploaden of verwijderen zonder herstart. De downgrade verwijdert een geüpload logo.
 
 ## Tokens
 

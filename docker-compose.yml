@@ -72,13 +72,11 @@ services:
       WEBAUTHN_RP_ID: ${WEBAUTHN_RP_ID:-}
       PROXY_HOPS: ${PROXY_HOPS:-1}
       DATABASE_URL: postgresql+psycopg://botenloods_web:${DB_WEB_WACHTWOORD}@db/botenloods
-      LOGO_BESTAND: ${LOGO_BESTAND:-/huisstijl/logo.png}
       # Standaardwhitelist van een robottoken uit de CLI (ADR-012).
       KOPPELNET: ${KOPPELNET:-10.203.0.0/24}
       # Alleen gecontroleerd: in productie verplicht (ADR-013).
       TRAEFIK_CERTRESOLVER: ${TRAEFIK_CERTRESOLVER:-}
     networks: [achterkant, voorkant]
-    # Het logo van de vereniging, gelezen bij het starten (ADR-008). Zonder bestand alleen de naam.
     # ADR-013: routers en middlewares voor de gedeelde Traefik. Elke router noemt zijn entrypoint.
     labels:
       - traefik.enable=true
@@ -90,7 +88,7 @@ services:
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.permissionsPolicy=camera=(), microphone=(), geolocation=()
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.stsSeconds=31536000
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-kop.headers.customResponseHeaders.Server=
-      # Grenzen op de grootte, in het geheugen: 1 MB algemeen, 10 MB voor foto's (ADR-008).
+      # Grenzen op de grootte, in het geheugen: 1 MB algemeen, 10 MB voor foto's en het logo (ADR-008).
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-1mb.buffering.maxRequestBodyBytes=1048576
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-1mb.buffering.memRequestBodyBytes=1048576
       - traefik.http.middlewares.${INSTALLATIE:-botenloods}-10mb.buffering.maxRequestBodyBytes=10485760
@@ -116,6 +114,13 @@ services:
       - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
       - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.middlewares=${INSTALLATIE:-botenloods}-kop,${INSTALLATIE:-botenloods}-10mb
       - traefik.http.routers.${INSTALLATIE:-botenloods}-boten.observability.accesslogs=false
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.rule=Host(`${DOMEIN}`) && PathPrefix(`/instellingen/logo`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.priority=500
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.middlewares=${INSTALLATIE:-botenloods}-kop,${INSTALLATIE:-botenloods}-10mb
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-logo.observability.accesslogs=false
       - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.rule=Host(`${DOMEIN}`) && Method(`POST`) && (PathPrefix(`/inloggen`) || PathPrefix(`/uitnodiging`))
       - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.priority=1000
       - traefik.http.routers.${INSTALLATIE:-botenloods}-inloggen.entrypoints=websecure
@@ -127,8 +132,6 @@ services:
       - traefik.http.routers.${INSTALLATIE:-botenloods}-http.entrypoints=web
       - traefik.http.routers.${INSTALLATIE:-botenloods}-http.middlewares=${INSTALLATIE:-botenloods}-naar-https
       - traefik.http.routers.${INSTALLATIE:-botenloods}-http.observability.accesslogs=false
-    volumes:
-      - ./huisstijl:/huisstijl:ro
     depends_on:
       migrate: {condition: service_completed_successfully}
     healthcheck:
