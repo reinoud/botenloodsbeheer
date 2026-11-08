@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.47
+**Versie overlay:** v0.5.48
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-08
@@ -144,6 +144,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten bij voorkeur op een kopie die over het testimage gemount is.
 - Noem bij elke toestand die zonder JavaScript open moet staan (zoals een blok na een actie) het mechanisme: querystring, sessie of flash.
 - Een schermafbeelding met `hoogte=` moet de nieuwe inhoud halen; bekijk elke nieuwe afbeelding.
+- Noem bij een upload de router in Traefik met de grens op de grootte; een route buiten `/boten` valt onder de 1 MB van de algemene router. Test via Traefik met een geldig bestand boven 1 MB.
+- Een E2E-test die globale staat zet (logo, naam), herstelt die in `finally`; vóór een mutantrun van zo'n test controleert de bouwer de beginstand.
+- Een racetest voor `FOR UPDATE` laat de eerste sessie dezelfde wijziging doen als de functie; een lege `UPDATE` laat de mutant zonder `FOR UPDATE` slagen.
+- Noem bij een nieuwe soort in een gedeelde tabel (zoals `afbeelding`) welke bestaande routes en taken die tabel lezen of opschonen.
 - Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
@@ -155,6 +159,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Wacht op `draai.sh` met `pgrep -f '[d]raai.sh'` of op het uitvoerbestand, niet met `pgrep -f tests/e2e/draai.sh`: die vindt de eigen wachtlus.
+- Draai een mutant op een gedeelde set of functie tegen de hele unitsuite, of noem de test die de set bewaakt (zoals `test_log.py` voor `log.TECHNISCH`).
 - Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
 - Zeg in een reviewbrief of de unitsuite en de E2E-suite tegelijk mogen draaien. `draai.sh` duurt meer dan tien minuten: start hem in de achtergrond en tel de uitkomst over alle sessies op.
@@ -384,6 +390,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.48 | 2026-11-09 | Twee regels (Review) en vier regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #186 | Lessen |
 | v0.5.47 | 2026-11-08 | Twee regels (Review) en twee regels (Bouw) uit de terugblikken van prism, sentinel en aegis bij blok 4 van #150 | Lessen |
 | v0.5.46 | 2026-11-08 | Twee regels (Algemeen) en drie regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #178, en één regel (Review): waarden van een extern filter, WSDL vooraf, zoeken in heel `tests/` bij een weggehaald veld, tests met zeep, mutantrun; §5 terugschrijven achter een schakelaar | Lessen, #178 |
 | v0.5.45 | 2026-11-08 | Eén regel (Algemeen) uit de terugblik van bedrock bij #178: aanroepen van een gekozen bibliotheek vooraf controleren | Lessen |
