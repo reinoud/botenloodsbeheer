@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.46
+**Versie overlay:** v0.5.47
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-08
@@ -142,6 +142,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Haalt een wijziging een veld of element uit een sjabloon, zoek dan in heel `tests/` naar de naam (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten bij voorkeur op een kopie die over het testimage gemount is.
+- Noem bij elke toestand die zonder JavaScript open moet staan (zoals een blok na een actie) het mechanisme: querystring, sessie of flash.
+- Een schermafbeelding met `hoogte=` moet de nieuwe inhoud halen; bekijk elke nieuwe afbeelding.
 - Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
@@ -153,6 +155,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
+- Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
 - Zeg in een reviewbrief of de unitsuite en de E2E-suite tegelijk mogen draaien. `draai.sh` duurt meer dan tien minuten: start hem in de achtergrond en tel de uitkomst over alle sessies op.
 - Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
 - Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
@@ -380,6 +384,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.47 | 2026-11-08 | Twee regels (Review) en twee regels (Bouw) uit de terugblikken van prism, sentinel en aegis bij blok 4 van #150 | Lessen |
 | v0.5.46 | 2026-11-08 | Twee regels (Algemeen) en drie regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #178, en één regel (Review): waarden van een extern filter, WSDL vooraf, zoeken in heel `tests/` bij een weggehaald veld, tests met zeep, mutantrun; §5 terugschrijven achter een schakelaar | Lessen, #178 |
 | v0.5.45 | 2026-11-08 | Eén regel (Algemeen) uit de terugblik van bedrock bij #178: aanroepen van een gekozen bibliotheek vooraf controleren | Lessen |
 | v0.5.44 | 2026-11-08 | Vier regels (Bouw) en één regel (Review) uit de terugblikken van prism en sentinel bij blok 3 deel B van #150: toetsantwoorden testen, `|safe` per tak, `commando.txt` en mutantlus, basislijn meten, valpunt van een mutant | Lessen |
