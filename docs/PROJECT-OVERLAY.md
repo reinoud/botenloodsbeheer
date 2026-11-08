@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.44
+**Versie overlay:** v0.5.45
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-08
@@ -74,6 +74,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
 - Noem in een reviewbrief de niet-gestagede bestanden in de werkmap (`git status --short`, tweede kolom) en of de review ze negeert.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
+- Kiest een besluit een bibliotheek, controleer dan vóór het besluit in de broncode van de vastgepinde versie dat elke nodige aanroep bestaat, voor lezen én schrijven, en noem die aanroepen in de opdracht.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
 
 #### Bouw
@@ -373,6 +374,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.45 | 2026-11-08 | Eén regel (Algemeen) uit de terugblik van bedrock bij #178: aanroepen van een gekozen bibliotheek vooraf controleren | Lessen |
 | v0.5.44 | 2026-11-08 | Vier regels (Bouw) en één regel (Review) uit de terugblikken van prism en sentinel bij blok 3 deel B van #150: toetsantwoorden testen, `|safe` per tak, `commando.txt` en mutantlus, basislijn meten, valpunt van een mutant | Lessen |
 | v0.5.43 | 2026-11-07 | Drie regels (E2E) en één regel (Security) uit de terugblikken van prism, sentinel en aegis bij blok 3 deel A van #150: dichte `details`, knop Zoeken in `main`, wachten op een achtergrondrun, GET-parameters en toegangslog | Lessen |
 | v0.5.42 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij het scherm vrije plaatsen van #150: commando voor de unitsuite en wisselvallige test #172, schermafbeeldingen terugzetten | Lessen |

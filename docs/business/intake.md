@@ -193,6 +193,6 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De integratiecontainer haalt uit e-boekhouden het lidnummer, de naam, de datum lid sinds en de opzegdatum. Adres, telefoon en e-mail komen niet mee. Het veld met de soort lidmaatschap gebruikt de container alleen om te bepalen wie lid is.
 - De container schrijft per lid in vrij veld 10 (`boten_in_loods`) het aantal plaatsen per bootsoort, als JSON-tekst zoals `{"Kajak": 1, "Canadese kano": 2, "Surfski": 0}`. Het schrijven heeft een eigen schakelaar en staat standaard uit.
 - Om alleen dat veld te wijzigen mag de container het volledige record lezen en ongewijzigd terugsturen. Het record blijft in de container.
-- De container gebruikt de bibliotheek `eboekhouden-python`. Code die alleen voor deze koppeling nodig is, staat alleen in de integratiecontainer.
+- De container praat met e-boekhouden via de SOAP-bibliotheek `zeep`, met eigen aanroepen (OpenSession, GetRelaties, UpdateRelatie). `eboekhouden-python` valt af, omdat die een bestaande relatie niet kan bijwerken (besluit stakeholder 2026-11-08). Code die alleen voor deze koppeling nodig is, staat alleen in de integratiecontainer.
 - Inloggen bij e-boekhouden gaat met omgevingsvariabelen voor gebruikersnaam, code 1 en code 2.
 - De bouw test met een nagebootste e-boekhouden. Een proef in de echte administratie, op een testrelatie, gebeurt pas na akkoord van de stakeholder.
