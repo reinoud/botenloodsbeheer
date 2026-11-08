@@ -2,14 +2,16 @@
 een boot, hernoemen, verwijderen geweigerd, en na opruimen verwijderen. De soort heeft de stempel
 van de run en wordt ook bij een fout opgeruimd, zodat de lijst van de gedeelde stack gelijk blijft."""
 
-from conftest import STEMPEL, reknaam, wachtwoord_instellen
+import re
+
+from conftest import STEMPEL, blok_openen, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, rek_met_plaats
 
 
 def rij(page, naam):
-    return page.locator("section.kaart", has=page.get_by_role("heading", name="Bootsoorten")) \
-        .locator("tbody tr", has=page.get_by_role("cell", name=naam, exact=True))
+    return page.locator("details#bootsoorten li", has=page.locator(
+        "[data-label=Bootsoort]", has_text=re.compile(f"^{re.escape(naam)}$")))
 
 
 def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
@@ -18,9 +20,11 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
     rek, bootnaam = reknaam("s"), f"Trapper {STEMPEL}"
     boot = None
     page.goto("/instellingen")
+    blok_openen(page, "Bootsoorten")
     page.get_by_label("Nieuwe bootsoort").fill(nieuw)
     page.get_by_role("button", name="Bootsoort toevoegen").click()
     expect(page.get_by_text("De bootsoort is toegevoegd.")).to_be_visible()
+    expect(page.locator("details#bootsoorten")).to_have_attribute("open", "")  # open na een actie (BV-64)
     try:
         # Criterium 1: te kiezen bij plaatsen en boten.
         code = rek_met_plaats(page, rek, [nieuw])
@@ -29,6 +33,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
 
         # Criterium 3: hernoemen; boot en plaats tonen de nieuwe naam en blijven gelijk.
         page.goto("/instellingen")
+        blok_openen(page, "Bootsoorten")
         page.get_by_label(f"Nieuwe naam voor {nieuw}").fill(ander)
         rij(page, nieuw).get_by_role("button", name="Naam opslaan").click()
         expect(page.get_by_text("De naam van de bootsoort is opgeslagen.")).to_be_visible()
@@ -42,6 +47,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
 
         # Criterium 2: in gebruik, dus geweigerd.
         page.goto("/instellingen")
+        blok_openen(page, "Bootsoorten")
         rij(page, ander).get_by_role("button", name=f"{ander} verwijderen").click()
         expect(page.get_by_role("alert")).to_contain_text("in gebruik bij 1 boot en 1 plaats")
         expect(rij(page, ander)).to_have_count(1)
@@ -56,6 +62,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
             sectie.get_by_text("Rek wijzigen of verwijderen").click()
             sectie.get_by_role("button", name=f"Rek {rek} verwijderen").click()
         page.goto("/instellingen")
+        blok_openen(page, "Bootsoorten")
         for naam in (nieuw, ander):
             if rij(page, naam).count():
                 rij(page, naam).get_by_role("button", name=f"{naam} verwijderen").click()

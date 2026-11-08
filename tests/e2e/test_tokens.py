@@ -42,6 +42,12 @@ def test_persoonlijk_token_maken_wijzigen_en_intrekken(page):
 
     page.get_by_role("link", name="Terug naar tokens").click()
     expect(page.get_by_text(waarde)).to_have_count(0)
+    # #181: een knop die een link is, houdt de kleur van de knop (niet brand-mid, blauw op blauw).
+    page.mouse.move(0, 0)
+    kleuren = page.get_by_role("link", name="Token maken").evaluate("""el => {
+        const m = document.createElement('span'); m.style.color = 'var(--on-accent)'; document.body.append(m);
+        const knop = getComputedStyle(m).color; m.remove(); return [getComputedStyle(el).color, knop]; }""")
+    assert kleuren[0] == kleuren[1]
     regel = rij(page, naam)
     expect(regel.locator('td[data-label="Soort"]')).to_have_text("persoonlijk")
     expect(regel.locator('td[data-label="Eigenaar of maker"]')).to_have_text(

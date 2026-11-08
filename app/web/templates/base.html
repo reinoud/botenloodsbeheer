@@ -16,7 +16,7 @@
   {% block skiplink %}<a class="dj-skip sla-over" href="#inhoud">Naar de inhoud</a>{% endblock %}
   <header class="dj-header bl-kop">
     <div class="dj-container dj-header__bar">
-      {% block logo %}<a class="dj-logo" href="{{ url_for('web.start') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
+      {% block logo %}<a class="dj-logo" href="{{ url_for('web.rekoverzicht') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
       {% block menu %}{% if g.beheerder %}
       {# De groepen van BV-42; de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}

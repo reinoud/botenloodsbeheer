@@ -4,39 +4,40 @@
 <h1>Instellingen</h1>
 <p>Naam en logo staan op elke pagina, ook op de openbare pagina van een plaats. De kleuren volgen de huisstijl en zijn niet in te stellen. Opslaan van de naam en elke wijziging in de bootsoorten vraagt een inlog van hooguit 10 minuten oud.</p>
 
-<section class="kaart">
-  <h2>Naam</h2>
-  <form method="post" action="{{ url_for('web.instellingen_opslaan') }}">
+<section class="dj-panel" aria-labelledby="naam-kop">
+  <h2 class="dj-panel__title" id="naam-kop">Naam</h2>
+  <form class="bl-formulier" method="post" action="{{ url_for('web.instellingen_opslaan') }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="naam">Naam van de vereniging</label>
-      <input class="ds-input" id="naam" name="naam" value="{{ stijl.naam }}" maxlength="100" required>
+      <input class="ds-input" id="naam" name="naam" type="text" value="{{ stijl.naam }}" maxlength="100" required>
     </div>
     <button type="submit" class="ds-btn ds-btn--primary">Opslaan</button>
   </form>
 </section>
 
-<section class="kaart">
-  <h2>Logo</h2>
-  {% if logo %}
-  <img class="foto" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="Huidig logo">
-  {% else %}
-  <p>Er is geen logo; de kopbalk toont alleen de naam.</p>
-  {% endif %}
-  <p>Het logo staat in de installatie, niet in de applicatie. Wie de installatie beheert, zet het in de map <code>huisstijl</code> en herstart de applicatie.</p>
-</section>
+<details class="dj-disclosure">
+  <summary>Logo</summary>
+  <div class="bl-uitklap__inhoud">
+    {% if logo %}
+    <img class="bl-foto" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="Huidig logo">
+    {% else %}
+    <p>Er is geen logo; de kopbalk toont alleen de naam.</p>
+    {% endif %}
+    <p>Het logo staat in de installatie, niet in de applicatie. Wie de installatie beheert, zet het in de map <code>huisstijl</code> en herstart de applicatie.</p>
+  </div>
+</details>
 
-<section class="kaart" aria-labelledby="bootsoorten">
-  <h2 id="bootsoorten">Bootsoorten</h2>
-  <p>Een bootsoort is te kiezen bij boten en plaatsen en heeft een eigen wachtlijst. Een nieuwe naam staat direct overal; boten, plaatsen en wachtlijst blijven gelijk. Een bootsoort die een boot of plaats gebruikt, kun je niet verwijderen.</p>
-  <div class="ds-table-wrap tabel">
-  <table class="ds-table dj-table--stack" role="table">
-    <thead role="rowgroup"><tr role="row"><th role="columnheader">Bootsoort</th><th role="columnheader">Naam wijzigen</th><th role="columnheader">Verwijderen</th></tr></thead>
-    <tbody role="rowgroup">
-    {% for s in bootsoorten %}
-      <tr role="row">
-        <td role="cell" data-label="Bootsoort">{{ s.naam }}</td>
-        <td role="cell" data-label="Naam wijzigen">
+{# Na een actie op bootsoorten staat het blok open (BV-64, Eis 5). #}
+<details class="dj-disclosure" id="bootsoorten"{% if bootsoorten_open %} open{% endif %}>
+  <summary>Bootsoorten</summary>
+  <div class="bl-uitklap__inhoud">
+    <p>Een bootsoort is te kiezen bij boten en plaatsen en heeft een eigen wachtlijst. Een nieuwe naam staat direct overal; boten, plaatsen en wachtlijst blijven gelijk. Een bootsoort die een boot of plaats gebruikt, kun je niet verwijderen.</p>
+    <ul class="bl-lijst">
+      {% for s in bootsoorten %}
+      <li class="bl-item">
+        <div class="bl-item__main"><span class="bl-item__titel" data-label="Bootsoort">{{ s.naam }}</span></div>
+        <div class="bl-item__actie bl-acties">
           <form method="post" action="{{ url_for('web.bootsoort_hernoemen', bootsoort_id=s.id) }}">
             {% include "_csrf.html" %}
             <div class="ds-field">
@@ -45,26 +46,22 @@
             </div>
             <button type="submit" class="ds-btn ds-btn--primary">Naam opslaan</button>
           </form>
-        </td>
-        <td role="cell" data-label="Verwijderen">
           <form method="post" action="{{ url_for('web.bootsoort_verwijderen', bootsoort_id=s.id) }}">
             {% include "_csrf.html" %}
             <button type="submit" class="ds-btn ds-btn--danger">{{ s.naam }} verwijderen</button>
           </form>
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    <form class="bl-formulier" method="post" action="{{ url_for('web.bootsoort_toevoegen') }}">
+      {% include "_csrf.html" %}
+      <div class="ds-field">
+        <label class="ds-field__label" for="soort-nieuw">Nieuwe bootsoort</label>
+        <input class="ds-input" id="soort-nieuw" name="naam" type="text" maxlength="50" required>
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">Bootsoort toevoegen</button>
+    </form>
   </div>
-  <form method="post" action="{{ url_for('web.bootsoort_toevoegen') }}">
-    {% include "_csrf.html" %}
-    <div class="ds-field">
-      <label class="ds-field__label" for="soort-nieuw">Nieuwe bootsoort</label>
-      <input class="ds-input" id="soort-nieuw" name="naam" maxlength="50" required>
-    </div>
-    <button type="submit" class="ds-btn ds-btn--primary">Bootsoort toevoegen</button>
-  </form>
-</section>
-
+</details>
 {% endblock %}

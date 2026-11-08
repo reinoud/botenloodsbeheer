@@ -347,7 +347,7 @@ def test_formulieren_tonen_leden_importeren_niet(app, scherm):
 
 def test_formulier_vult_koppelnet_voor(app, scherm):
     html = scherm.get("/tokens/nieuw").text
-    assert 'name="whitelist" value="10.203.0.0/24"' in html and 'value="365"' in html
+    assert 'name="whitelist" type="text" value="10.203.0.0/24"' in html and 'value="365"' in html
 
 
 @pytest.mark.parametrize("methode,pad", [
@@ -385,7 +385,7 @@ def test_rechten_wijzigen_via_het_scherm(app, twee, scherm):
 
 
 def test_menu_item_tokens(app, scherm):
-    assert '<a class="dj-nav__link" href="/tokens">Tokens</a>' in scherm.get("/").text
+    assert '<a class="dj-nav__link" href="/tokens">Tokens</a>' in scherm.get("/rekoverzicht").text
 
 
 def test_bezoeker_gaat_naar_inloggen(client):

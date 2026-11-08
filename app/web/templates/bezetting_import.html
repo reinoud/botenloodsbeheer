@@ -23,9 +23,9 @@
 {% call meldingblok('warning') %}<p>Bevestigen kan pas als geen regel nog te koppelen is of een fout heeft. Kies bij een regel een lid of de vereniging, of sla de regel over.</p>{% endcall %}
 {% endif %}
 
-<form method="post" action="{{ url_for('web.bezetting_koppelen') }}">
+<form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_koppelen') }}">
   {% include "_csrf.html" %}
-  <div class="ds-table-wrap tabel">
+  <div class="ds-table-wrap bl-tabel">
   <table class="ds-table dj-table--stack" role="table">
     <thead role="rowgroup"><tr role="row"><th role="columnheader">Regel</th><th role="columnheader">Plaats</th><th role="columnheader">Boot (bootsoort)</th><th role="columnheader">Eigenaar (lidnummer)</th><th role="columnheader">Uitkomst</th><th role="columnheader">Keuze</th></tr></thead>
     <tbody role="rowgroup">
@@ -45,13 +45,13 @@
   <button type="submit" class="ds-btn">Keuzes opslaan</button>
 </form>
 
-<section class="kaart">
-  <form method="post" action="{{ url_for('web.bezetting_bevestigen') }}">
+<section class="dj-panel bl-paneel">
+  <form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_bevestigen') }}">
     {% include "_csrf.html" %}
     <button type="submit" class="ds-btn ds-btn--primary"{% if not kan_bevestigen %} disabled{% endif %}>Bezetting importeren</button>
-    <p class="uitleg">Alles of niets: faalt één regel, dan verandert er niets. Sla eerst je keuzes op.</p>
+    <p class="bl-hint">Alles of niets: faalt één regel, dan verandert er niets. Sla eerst je keuzes op.</p>
   </form>
-  <form method="post" action="{{ url_for('web.bezetting_annuleren') }}">
+  <form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_annuleren') }}">
     {% include "_csrf.html" %}
     <button type="submit" class="ds-btn">Import annuleren</button>
   </form>

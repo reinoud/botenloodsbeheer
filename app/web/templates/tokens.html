@@ -5,10 +5,10 @@
 <p>Met een token gebruikt een koppeling of een beheerder de API. Elke beheerder ziet en beheert alle tokens. De waarde van een token is alleen direct na het maken te zien. Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud.</p>
 <p><a class="ds-btn ds-btn--primary" href="{{ url_for('web.token_nieuw') }}">Token maken</a></p>
 
-<section class="kaart">
-  <h2>Alle tokens</h2>
+<section class="dj-panel" aria-labelledby="alle-kop">
+  <h2 class="dj-panel__title" id="alle-kop">Alle tokens</h2>
   {% if tokens %}
-  <div class="ds-table-wrap tabel">
+  <div class="ds-table-wrap bl-tabel">
   <table class="ds-table dj-table--stack" role="table">
     <thead role="rowgroup"><tr role="row"><th role="columnheader">Naam</th><th role="columnheader">Soort</th><th role="columnheader">Eigenaar of maker</th><th role="columnheader">Rechten</th><th role="columnheader">Whitelist</th><th role="columnheader">Verloopt op</th><th role="columnheader">Laatst gebruikt</th><th role="columnheader">Intrekken</th></tr></thead>
     <tbody role="rowgroup">
@@ -43,13 +43,14 @@
 
 {% set actief = tokens|rejectattr('ingetrokken_op')|list %}
 {% if actief %}
-<section class="kaart">
-  <h2>Rechten wijzigen</h2>
+<section class="dj-panel" aria-labelledby="rechten-kop">
+  <h2 class="dj-panel__title" id="rechten-kop">Rechten wijzigen</h2>
   <p>Nieuwe rechten gelden vanaf de volgende aanroep. Naam, whitelist en vervaldatum zijn niet te wijzigen; maak daarvoor een nieuw token.</p>
+  <div class="bl-stapel">
   {% for t in actief %}
   <details class="dj-disclosure">
     <summary>{{ t.naam }}</summary>
-    <form method="post" action="{{ url_for('web.token_rechten', token_id=t.id) }}">
+    <form class="bl-formulier" method="post" action="{{ url_for('web.token_rechten', token_id=t.id) }}">
       {% include "_csrf.html" %}
       <fieldset class="dj-choices dj-choices--columns">
         <legend>Rechten van {{ t.naam }}</legend>
@@ -62,6 +63,7 @@
     </form>
   </details>
   {% endfor %}
+  </div>
 </section>
 {% endif %}
 {% endblock %}

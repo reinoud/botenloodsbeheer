@@ -3,19 +3,25 @@
 {% block inhoud %}
 <h1>Kaartjes</h1>
 <p>Kies de plaatsen, een heel rek of alle plaatsen. Je krijgt een pagina met acht kaartjes per A4, die je print via de browser.</p>
-<form method="get" action="{{ url_for('web.kaartjes_print') }}">
+<form class="bl-formulier" method="get" action="{{ url_for('web.kaartjes_print') }}">
   <div class="ds-check"><input type="checkbox" id="alle" name="alle" value="1"><label for="alle">Alle plaatsen</label></div>
-  {% for rek in rekken if rek.plaatsen %}
-  <fieldset class="dj-choices dj-choices--columns">
-    <legend>{{ rek.naam }}</legend>
-    <div class="ds-check"><input type="checkbox" id="rek-{{ rek.id }}" name="rek" value="{{ rek.id }}"><label for="rek-{{ rek.id }}">Heel {{ rek.naam }}</label></div>
-    {% for p in rek.plaatsen %}
-    <div class="ds-check"><input type="checkbox" id="plaats-{{ p.id }}" name="plaats" value="{{ p.id }}"><label for="plaats-{{ p.id }}">{{ p.code }}</label></div>
+  {% set gevuld = rekken|selectattr('plaatsen')|list %}
+  {% if gevuld %}
+  {# De rekken staan altijd open (BV-64, 5B): een vak per rek, geen uitklapblok. #}
+  <div class="bl-stapel">
+    {% for rek in gevuld %}
+    <fieldset class="dj-choices dj-choices--columns bl-rekkeuze">
+      <legend>{{ rek.naam }}</legend>
+      <div class="ds-check bl-rekheel"><input type="checkbox" id="rek-{{ rek.id }}" name="rek" value="{{ rek.id }}"><label for="rek-{{ rek.id }}">Heel {{ rek.naam }}</label></div>
+      {% for p in rek.plaatsen %}
+      <div class="ds-check"><input type="checkbox" id="plaats-{{ p.id }}" name="plaats" value="{{ p.id }}"><label for="plaats-{{ p.id }}">{{ p.code }}</label></div>
+      {% endfor %}
+    </fieldset>
     {% endfor %}
-  </fieldset>
+  </div>
   {% else %}
   <p>Er zijn nog geen plaatsen.</p>
-  {% endfor %}
-  <button type="submit" class="ds-btn ds-btn--primary">Kaartjes maken</button>
+  {% endif %}
+  <div class="bl-vast"><button type="submit" class="ds-btn ds-btn--primary">Kaartjes maken</button></div>
 </form>
 {% endblock %}

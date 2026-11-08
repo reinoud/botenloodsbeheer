@@ -26,7 +26,7 @@ def ingelogd(client):
 
 def test_menu_heeft_drie_groepen_met_elk_hun_items_in_de_volgorde_van_het_ontwerp(ingelogd):
     # Mutant: een item in een andere groep of een andere volgorde valt hier.
-    tekst = ingelogd.get("/").text
+    tekst = ingelogd.get("/rekoverzicht").text
     blokken = re.findall(r'<p class="bl-nav__groep" id="menu-\d">(\w+)</p>\s*<ul[^>]*>(.*?)</ul>', tekst, re.DOTALL)
     assert {g: re.findall(r">([^<>]+)</(?:a|button)>", rest) for g, rest in blokken} == GROEPEN
     assert [g for g, _ in blokken] == list(GROEPEN)
@@ -37,7 +37,7 @@ def test_menu_markeert_de_huidige_pagina_en_alleen_die(ingelogd):
     # Mutant: aria-current altijd zetten of nooit zetten valt hier.
     assert tekst_met_current(ingelogd, "/rekoverzicht") == ["Rekoverzicht"]
     assert tekst_met_current(ingelogd, "/indeling") == ["Indeling"]
-    assert tekst_met_current(ingelogd, "/") == []
+    assert tekst_met_current(ingelogd, "/tokens/nieuw") == []
 
 
 def tekst_met_current(client, pad):

@@ -54,7 +54,8 @@ def logo(kenmerk):
 @inloggen_vereist
 def instellingen_scherm():
     return render_template("instellingen.html", stijl=instellingen.huidig(),
-                           bootsoorten=indeling.bootsoorten())
+                           bootsoorten=indeling.bootsoorten(),
+                           bootsoorten_open=request.args.get("open") == "bootsoorten")
 
 
 @bp.post("/instellingen")
@@ -66,6 +67,10 @@ def instellingen_opslaan():
     return redirect(url_for("web.instellingen_scherm"))
 
 
+def _naar_bootsoorten():
+    """Na een actie op bootsoorten staat het blok Bootsoorten open (BV-64)."""
+    return redirect(url_for("web.instellingen_scherm", open="bootsoorten", _anchor="bootsoorten"))
+
 
 @bp.post("/bootsoorten")
 @inloggen_vereist
@@ -73,7 +78,7 @@ def instellingen_opslaan():
 def bootsoort_toevoegen():
     uitvoeren(indeling.bootsoort_toevoegen, request.form.get("naam"),
               gelukt="De bootsoort is toegevoegd.")
-    return redirect(url_for("web.instellingen_scherm"))
+    return _naar_bootsoorten()
 
 
 @bp.post("/bootsoorten/<int:bootsoort_id>/naam")
@@ -82,7 +87,7 @@ def bootsoort_toevoegen():
 def bootsoort_hernoemen(bootsoort_id):
     uitvoeren(indeling.bootsoort_hernoemen, bootsoort_id, request.form.get("naam"),
               gelukt="De naam van de bootsoort is opgeslagen.")
-    return redirect(url_for("web.instellingen_scherm"))
+    return _naar_bootsoorten()
 
 
 @bp.post("/bootsoorten/<int:bootsoort_id>/verwijderen")
@@ -90,4 +95,4 @@ def bootsoort_hernoemen(bootsoort_id):
 @recent_ingelogd
 def bootsoort_verwijderen(bootsoort_id):
     uitvoeren(indeling.bootsoort_verwijderen, bootsoort_id, gelukt="De bootsoort is verwijderd.")
-    return redirect(url_for("web.instellingen_scherm"))
+    return _naar_bootsoorten()

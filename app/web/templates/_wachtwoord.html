@@ -1,0 +1,33 @@
+{# Wachtwoord, authenticator-app en code in drie stappen (BV-64, 2B); gedeeld door Uitnodiging en Profiel. #}
+{% macro wachtwoordformulier(actie, knop, qr, geheim) %}
+<form class="bl-formulier" method="post" action="{{ actie }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="bl-stappen">
+    <div class="bl-stap">
+      <h3 class="bl-subkop">Wachtwoord</h3>
+      <div class="ds-field">
+        <label class="ds-field__label" for="wachtwoord">Wachtwoord (12 tot 128 tekens)</label>
+        <input class="ds-input" id="wachtwoord" name="wachtwoord" type="password" autocomplete="new-password" minlength="12" maxlength="128" required>
+      </div>
+      <div class="ds-field">
+        <label class="ds-field__label" for="herhaling">Wachtwoord nog een keer</label>
+        <input class="ds-input" id="herhaling" name="herhaling" type="password" autocomplete="new-password" required>
+      </div>
+    </div>
+    <div class="bl-stap">
+      <h3 class="bl-subkop">Authenticator-app</h3>
+      <p>Scan de QR-code met je authenticator-app, of voer de sleutel met de hand in.</p>
+      <img class="bl-qr" src="{{ qr }}" alt="QR-code voor de authenticator-app">
+      <p>Sleutel: <code id="totp-geheim">{{ geheim }}</code></p>
+    </div>
+    <div class="bl-stap bl-stap--breed">
+      <h3 class="bl-subkop">Code</h3>
+      <div class="ds-field">
+        <label class="ds-field__label" for="code">Code van zes cijfers uit de app</label>
+        <input class="ds-input" id="code" name="code" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" required>
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">{{ knop }}</button>
+    </div>
+  </div>
+</form>
+{% endmacro %}

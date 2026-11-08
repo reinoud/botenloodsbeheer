@@ -8,7 +8,7 @@ import io
 import re
 import zipfile
 
-from conftest import STEMPEL, reknaam, uitloggen, wachtwoord_instellen
+from conftest import STEMPEL, blok_openen, reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import rek_met_plaats
 
@@ -105,6 +105,7 @@ def test_naam_instellen_en_terugzetten(page, browser, base_url):
         expect(page.locator("link[href*='huisstijl.css']")).to_have_count(0)
         # Het logo komt uit de installatie: geen upload in de applicatie (BLB-027 criterium 4).
         expect(page.locator("input[type=file]")).to_have_count(0)
+        blok_openen(page, "Logo")  # het logo staat in een dicht blok (BV-64)
         expect(page.get_by_text("Het logo staat in de installatie")).to_be_visible()
 
         bezoeker = browser.new_page(base_url=base_url)

@@ -6,13 +6,15 @@ Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over b
 
 ## Inloggen
 
-Je logt in met een passkey (telefoon, vingerafdruk of beveiligingssleutel) of met een wachtwoord plus een code uit een authenticator-app. Een passkey is het eenvoudigst en niet te phishen.
+Je logt in met een passkey (telefoon, vingerafdruk of beveiligingssleutel) of met een wachtwoord plus een code uit een authenticator-app. Een passkey is het eenvoudigst en niet te phishen, daarom staat hij bovenaan.
 
 1. Open `/inloggen`.
-2. Kies **Inloggen met passkey** en volg de vraag van je apparaat. Of vul je gebruikersnaam en wachtwoord in en kies **Verder**.
+2. Kies **Inloggen met passkey** en volg de vraag van je apparaat. Of klap **Met wachtwoord en code** uit, vul je gebruikersnaam en wachtwoord in en kies **Verder**.
 3. Bij een wachtwoord vraagt de applicatie daarna de code van zes cijfers uit je authenticator-app.
 
-![Het inlogscherm met een knop voor de passkey en een formulier voor gebruikersnaam en wachtwoord.](afbeeldingen/inloggen.png)
+Na het inloggen sta je op het rekoverzicht. Een mislukte poging met je wachtwoord laat het blok **Met wachtwoord en code** open staan, zodat je het direct opnieuw kunt proberen.
+
+![Het inlogscherm met een knop voor de passkey en een dicht blok voor gebruikersnaam en wachtwoord.](afbeeldingen/inloggen.png)
 
 ![Het scherm waar je de code van zes cijfers uit je authenticator-app invult.](afbeeldingen/code.png)
 
@@ -30,11 +32,11 @@ Het scherm `/beheerders` toont alle accounts met hun status en inlogmethodes. De
 
 1. Vul onder **Beheerder uitnodigen** een gebruikersnaam in (2 tot 50 tekens: a-z, cijfers, punt, streepje en onderstreping) en kies **Uitnodigen**.
 2. Geef de link die verschijnt aan de nieuwe beheerder. De link werkt één keer en is 24 uur geldig. Hij staat alleen op dit scherm.
-3. De nieuwe beheerder opent de link en kiest een passkey, of een wachtwoord van 12 tot 128 tekens met de QR-code of sleutel voor de authenticator-app en een eerste code.
+3. De nieuwe beheerder opent de link en kiest een passkey, of klapt **Wachtwoord en authenticator-app** uit voor een wachtwoord van 12 tot 128 tekens met de QR-code of sleutel voor de authenticator-app en een eerste code. De link zelf staat in een kader; selecteer hem met één tik.
 
 ![Het scherm Beheerder uitgenodigd met de uitnodigingslink, hier onherkenbaar gemaakt.](afbeeldingen/uitnodiging-link.png)
 
-![Het scherm Account instellen met keuze tussen passkey en wachtwoord met authenticator-app.](afbeeldingen/uitnodiging.png)
+![Het scherm Account instellen met de passkey bovenaan en het uitgeklapte blok voor wachtwoord met authenticator-app.](afbeeldingen/uitnodiging.png)
 
 ### Een collega blokkeren, herstellen of verwijderen
 
@@ -48,9 +50,9 @@ Achter elk ander account staan drie knoppen. Je eigen account kun je hier niet w
 
 ### Je eigen inlogmethodes
 
-Op `/profiel` voeg je een passkey of (als je er nog geen hebt) een wachtwoord met authenticator-app toe, of trek je een methode in. Intrekken beëindigt al je sessies. Je houdt altijd minstens één methode.
+Op `/profiel` staan je inlogmethodes met een knop **Intrekken** per methode. Daaronder voeg je een passkey toe (het blok heet **Passkey toevoegen**, en **Nog een passkey** als je er al een hebt) of, als je er nog geen hebt, een wachtwoord met authenticator-app. Intrekken beëindigt al je sessies. Je houdt altijd minstens één methode.
 
-![Het profiel met de lijst van inlogmethodes en de knop om een passkey toe te voegen.](afbeeldingen/profiel.png)
+![Het profiel met de lijst van inlogmethodes en het blok om nog een passkey toe te voegen.](afbeeldingen/profiel.png)
 
 ## Rekken en plaatsen
 
@@ -200,7 +202,7 @@ Het lidnummer gaat voor. Zonder lidnummer, of met een onbekend nummer, zoekt de 
 
 ## Kaartjes printen
 
-Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Vink losse plaatsen aan, een heel rek of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
+Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Elk rek heeft een eigen vak dat altijd open staat. Vink losse plaatsen aan, een heel rek (**Heel** en de naam van het rek) of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
 
 Elk kaartje toont het logo (zonder logo de naam van de vereniging), de aanduiding van de plaats, de bootsoorten waarvoor de plaats geschikt is (bijvoorbeeld "Geschikt voor Kajak/Canadese kano") en een QR-code. Heeft de plaats geen bootsoort, dan valt die regel weg. De omschrijving van het rek en de naam van de eigenaar staan er niet op, zodat je geen nieuw kaartje hoeft te printen als een plaats een andere boot krijgt. Wie op de plaats ligt, staat op de openbare pagina achter de QR-code. Adres, telefoon, e-mail en lidnummer staan nooit op een kaartje.
 
@@ -293,10 +295,10 @@ Er zijn twee soorten tokens:
 ### Een token maken
 
 1. Kies **Token maken** (`/tokens/nieuw`).
-2. Kies de soort, een naam (a-z, cijfers, punt, - en _) en hoeveel dagen het geldig is: standaard 365, hooguit 1095 (3 jaar).
-3. Vink minstens één recht aan. `leden:importeren` staat er niet bij: dat recht geeft wie de installatie beheert met de CLI, aan het robottoken van de integratiecontainer.
+2. Kies onder **Wie en hoe lang** de soort, een naam (a-z, cijfers, punt, - en _) en hoeveel dagen het geldig is: standaard 365, hooguit 1095 (3 jaar).
+3. Vink onder **Wat mag het token** minstens één recht aan. `leden:importeren` staat er niet bij: dat recht geeft wie de installatie beheert met de CLI, aan het robottoken van de integratiecontainer.
 4. Vul de IP-whitelist in: adressen of reeksen, gescheiden door komma's. Het formulier vult het netwerk van de integratiecontainer voor. Een robottoken heeft altijd een whitelist; een persoonlijk token zonder whitelist werkt vanaf elk adres dat de installatie doorlaat.
-5. Kopieer de waarde die verschijnt. Hij is daarna niet meer te zien; ben je hem kwijt, maak dan een nieuw token en trek het oude in.
+5. Kopieer de waarde die verschijnt. Ze staat onder een waarschuwing in een kader; met één tik selecteer je haar helemaal. Er is geen kopieerknop. De waarde is daarna niet meer te zien; ben je haar kwijt, maak dan een nieuw token en trek het oude in.
 
 ![Het formulier Token maken met soort, naam, geldigheid, rechten en whitelist.](afbeeldingen/token-nieuw.png)
 
@@ -325,9 +327,9 @@ Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud
 
 ## Naam, logo en bootsoorten
 
-Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het hier alleen.
+Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het in het blok **Logo**.
 
-Onder **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Ook elke wijziging hier vraagt een inlog van hooguit 10 minuten oud.
+In het blok **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Het blok staat dicht, en na elke handeling hier open. Ook elke wijziging vraagt een inlog van hooguit 10 minuten oud.
 
 - **Toevoegen:** vul onder **Nieuwe bootsoort** een naam in van 1 tot 50 tekens en kies **Bootsoort toevoegen**. De soort staat daarna in de keuzelijsten voor boten, plaatsen en vrije plaatsen. Zodra een boot van die soort op de wachtlijst staat, heeft de soort een eigen lijst op `/wachtlijst`.
 - **Hernoemen:** pas de naam aan en kies **Naam opslaan**. Boten, plaatsen, wachtlijst, export en API tonen direct de nieuwe naam. Toewijzingen en aanmelddata blijven gelijk.
@@ -335,7 +337,7 @@ Onder **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Ook e
 
 Twee soorten met dezelfde naam kunnen niet, ook niet als ze alleen in hoofdletters verschillen. Toevoegen, hernoemen (met de oude en de nieuwe naam) en verwijderen staan in het technische log.
 
-![De instellingen met de naam, het huidige logo en de bootsoorten.](afbeeldingen/instellingen.png)
+![De instellingen met de naam, het blok Logo en het uitgeklapte blok Bootsoorten.](afbeeldingen/instellingen.png)
 
 ## Alle adressen
 
@@ -343,7 +345,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 
 | Adres | Pagina |
 |---|---|
-| `/` | Startpagina |
+| `/` | Stuurt een beheerder naar het rekoverzicht en een bezoeker naar het inloggen |
 | `/inloggen` | Inloggen |
 | `/inloggen/code` | Code uit de authenticator-app |
 | `/uitnodiging/{code}` | Account instellen met een uitnodigingslink |

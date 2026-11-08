@@ -3,13 +3,14 @@
 import re
 import time
 
-from conftest import WACHTWOORD, gebruikersnaam, link, uitloggen, wachtwoord_instellen
+from conftest import WACHTWOORD, blok_openen, gebruikersnaam, link, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 
 MISLUKT = "Inloggen is mislukt"
 
 
 def wachtwoord_stap(page, soort):
+    blok_openen(page, "Met wachtwoord en code")  # na een mislukte poging staat het blok al open
     page.get_by_label("Gebruikersnaam").fill(gebruikersnaam(soort))
     page.get_by_label("Wachtwoord").fill(WACHTWOORD)
     page.get_by_role("button", name="Verder").click()
@@ -18,10 +19,10 @@ def wachtwoord_stap(page, soort):
 def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
     page.goto(link("passkey"))
     page.get_by_role("button", name="Passkey instellen").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
     uitloggen(page)
     page.get_by_role("button", name="Inloggen met passkey").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
     # Het technische log toont de uitnodiging en de passkey, zonder de code uit de link.
     page.get_by_role("link", name="Technisch log").click()
@@ -29,6 +30,14 @@ def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
     expect(log).to_contain_text("beheerder.uitgenodigd")
     expect(log).to_contain_text("methode: passkey")
     assert link("passkey").rsplit("/", 1)[1] not in page.content()
+
+
+def test_zonder_passkeys_staat_het_wachtwoordblok_open(page):
+    """BV-66: kent de browser geen passkeys, dan opent het blok met wachtwoord en code vanzelf."""
+    page.add_init_script("delete window.PublicKeyCredential")
+    page.goto("/inloggen")
+    expect(page.get_by_role("alert")).to_have_text("Deze browser ondersteunt geen passkeys. Gebruik wachtwoord en code.")
+    expect(page.get_by_label("Gebruikersnaam")).to_be_visible()
 
 
 def test_wachtwoord_en_totp_foute_code_geweigerd_juiste_code_werkt(page):
@@ -41,13 +50,14 @@ def test_wachtwoord_en_totp_foute_code_geweigerd_juiste_code_werkt(page):
     expect(page.get_by_role("alert")).to_contain_text(MISLUKT)
     page.get_by_label("Code van zes cijfers").fill(goed)
     page.get_by_role("button", name="Inloggen").click()
-    expect(page.get_by_role("heading", level=1)).to_contain_text("Welkom")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
 
 def test_vergrendeling_na_vijf_foute_wachtwoorden(page):
     wachtwoord_instellen(page, "vergrendel")
     uitloggen(page)
     for _ in range(5):
+        blok_openen(page, "Met wachtwoord en code")
         page.get_by_label("Gebruikersnaam").fill(gebruikersnaam("vergrendel"))
         page.get_by_label("Wachtwoord").fill("dit is niet het wachtwoord")
         page.get_by_role("button", name="Verder").click()

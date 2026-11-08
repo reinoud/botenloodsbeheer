@@ -27,24 +27,16 @@ form > *, fieldset > * { min-width: 0; margin-block: 0; }
 form > button, form > a { justify-self: start; }
 fieldset { display: grid; gap: var(--space-3); min-width: 0; margin: 0; padding: var(--space-4); border: var(--stroke-1) solid var(--line-strong); }
 legend { padding-inline: var(--space-2); color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
-input.radio { border-radius: var(--radius-round); } /* de basis tekent elk keuzeteken vierkant; een radio is rond */
-.breed { max-width: 40rem; }
 .label-lang { font: var(--type-body-sm); letter-spacing: normal; text-transform: none; }
-.uitleg { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); }
 details { margin-top: var(--space-4); }
-.tabel { margin-block: var(--space-4); }
-.tabel button { height: 2.75rem; padding: 0 var(--space-3); }
-.tabel td { padding-block: var(--space-3); padding-right: var(--space-3); }
-.tabel th { padding-right: var(--space-3); }
 td form { gap: var(--space-2); }
 
 /* Meldingen */
 .melding { margin-bottom: var(--space-4); }
+.bl-meldingen .melding { margin-bottom: 0; }
 .melding p { margin: 0 0 var(--space-2); }
 .melding p:last-child, .melding ul { margin-bottom: 0; }
 
-.qr { display: block; max-width: 12rem; background: var(--surface-raised); }
-.foto { display: block; max-width: 100%; height: auto; margin-top: var(--space-4); }
 .log { margin-top: var(--space-6); }
 
 /* Schermen van blok 1 (issue #150, designsystem fbd54dd, schermen.css): pagina, kop, menu, paneel, plaatsscherm, rekraster en indelingsformulier.
@@ -53,7 +45,7 @@ td form { gap: var(--space-2); }
 .bl-main { display: grid; gap: var(--space-5); padding-block: var(--space-5) var(--space-8); }
 .bl-main > * { min-width: 0; margin-block: 0; }
 .bl-main h1 { margin: 0; font: var(--type-headline-narrow); }
-.bl-main :where(a) { color: var(--brand-mid); text-underline-offset: 3px; }
+.bl-main :where(a:not(.ds-btn)) { color: var(--brand-mid); text-underline-offset: 3px; }
 .bl-main a:hover { text-decoration-thickness: 2px; }
 .bl-main a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 .bl-main .ds-btn { justify-self: start; }
@@ -228,4 +220,52 @@ td form { gap: var(--space-2); }
 .bl-subkop { margin: 0; font: var(--type-subheading); }
 @media (width < 40rem) {
   .bl-taak { padding: var(--space-4); }
+}
+
+/* Toegang en beheer (blok 4, BV-64), uit blok-4/schermen.css van het designsystem (38d6463).
+   Niet overgenomen: [hidden] en .bl-main code (staan al hierboven) en .bl-main a.ds-btn: sinds #181 slaat .bl-main :where(a:not(.ds-btn)) knoppen over. */
+/* Paneel met meerdere onderdelen: een kolom met ruimte ertussen; de titel zet zelf geen marge */
+.bl-paneel { display: grid; gap: var(--space-4); }
+.bl-paneel > * { min-width: 0; margin-block: 0; }
+.bl-paneel > .dj-panel__title { margin: 0; }
+
+/* Uitklapblokken en andere blokken onder elkaar */
+.bl-stapel { display: grid; gap: var(--space-3); }
+.bl-stapel > * { min-width: 0; margin-block: 0; }
+
+/* Acties op een regel (1B, 2B, 5B): formulieren naast elkaar, breken af op een telefoon */
+.bl-acties { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.bl-acties form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); margin: 0; }
+.bl-acties .ds-field__label { letter-spacing: normal; text-transform: none; }
+
+/* Tabel als kaart (3A, 6A, 7A): meerdere knoppen in een cel naast elkaar, een knop breekt af bij een lange naam */
+.bl-tabel td > form { display: inline-block; margin: 0 var(--space-2) var(--space-2) 0; }
+.bl-tabel .ds-btn { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
+
+/* Wachtwoord in drie delen (2B): op een laptop twee kolommen, de code eronder over de volle breedte; de nummers staan alleen in CSS */
+.bl-stappen { display: grid; gap: var(--space-5); counter-reset: bl-stap; }
+.bl-stap { display: grid; gap: var(--space-3); align-content: start; counter-increment: bl-stap; }
+.bl-stap > * { min-width: 0; margin-block: 0; }
+.bl-stap > .bl-subkop::before { content: counter(bl-stap) ". " / ""; color: var(--brand-mid); }
+.bl-qr { display: block; width: 8.75rem; height: 8.75rem; border: var(--stroke-1) solid var(--ink); }
+
+/* Eenmalige waarde (4B): een kader dat met één tik te selecteren is, geen kopieerknop */
+.bl-waarde { padding: var(--space-4); border: var(--stroke-2) solid var(--line-strong); background: var(--surface); color: var(--ink); user-select: all; overflow-wrap: anywhere; }
+.bl-waarde code { word-break: break-all; }
+
+/* Token maken (5B): twee panelen naast elkaar vanaf 60rem, de knop blijft onderaan in beeld; een keuzerondje is rond */
+.bl-paar { display: grid; gap: var(--space-5); align-items: start; }
+.bl-paar > * { min-width: 0; margin-block: 0; }
+.bl-vast { position: sticky; bottom: 0; z-index: 1; padding-block: var(--space-3); border-top: var(--stroke-1) solid var(--line); background: var(--page); }
+.bl-radio { border-radius: var(--radius-round); }
+
+/* Kaartjes (5B): elk rek een vak dat altijd open staat; "Heel rek" eerst over de volle breedte */
+.bl-rekkeuze { padding: var(--space-4); border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); background: var(--surface); }
+.bl-rekkeuze.dj-choices--columns { grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr)); }
+.bl-rekkeuze > .bl-rekheel { grid-column: 1 / -1; padding-bottom: var(--space-2); border-bottom: var(--stroke-1) solid var(--line); }
+
+@media (width >= 60rem) {
+  .bl-stappen { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--space-6); }
+  .bl-stap--breed { grid-column: 1 / -1; }
+  .bl-paar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
