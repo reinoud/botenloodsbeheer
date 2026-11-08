@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.45
+**Versie overlay:** v0.5.46
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-08
@@ -74,6 +74,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
 - Noem in een reviewbrief de niet-gestagede bestanden in de werkmap (`git status --short`, tweede kolom) en of de review ze negeert.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
+- Noem bij een filter op tekst uit een externe bron de waarden die in de praktijk voorkomen, of zeg dat ze onbekend zijn, zodat bouwer en reviewer weten of "begint met", "bevat" of "is gelijk aan" bedoeld is.
+- Geef bij een externe SOAP-dienst de WSDL vooraf mee in de scratchpad, en noem het adresschema (http of https) dat de dienst gebruikt.
 - Kiest een besluit een bibliotheek, controleer dan vóór het besluit in de broncode van de vastgepinde versie dat elke nodige aanroep bestaat, voor lezen én schrijven, en noem die aanroepen in de opdracht.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
 
@@ -137,6 +139,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De werkmap is gemount in `web`: een sjabloonwijziging werkt direct door in een lopende E2E-run. Draai de baseline op `main` vóór je iets wijzigt, of in een aparte worktree.
 - Zeg in de opdracht of de baseline op `main` in een aparte worktree draait of dat de bouwer de ongeveer 15 minuten wacht; tot de baseline klaar is, ligt de werkmap vast.
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
+- Haalt een wijziging een veld of element uit een sjabloon, zoek dan in heel `tests/` naar de naam (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
+- Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
+- Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten bij voorkeur op een kopie die over het testimage gemount is.
 - Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
@@ -148,6 +153,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Zeg in een reviewbrief of de unitsuite en de E2E-suite tegelijk mogen draaien. `draai.sh` duurt meer dan tien minuten: start hem in de achtergrond en tel de uitkomst over alle sessies op.
 - Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
 - Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
 - Noem bij een logregel uit een ADR voor welke story hij geldt, en bij een nareview de regel in de ADR die de reviewer moet terugzien.
@@ -321,7 +327,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 | Wachtlijst | Per bootsoort, met zichtbare wachttijd. De beheerder kiest de toewijzing; de applicatie wijst niet automatisch toe. | apex | E2E-test |
 | Clubplaatsen | Gereserveerde plaatsen voor clubboten zijn niet aan leden toe te wijzen. | apex | Unhappy-flow-test |
 | Plaatsnamen | De naam van een plaats is te wijzigen zonder dat toewijzingen of QR-codes breken. | foundation | Test |
-| Koppeling ledenbron | De koppeling met e-boekhouden draait in een aparte container die alleen via de API werkt, zodat een andere vereniging de container kan vervangen. Terugschrijven van het aantal boten per type wordt voorbereid maar staat uit. | foundation | Test met nepbron |
+| Koppeling ledenbron | De koppeling met e-boekhouden draait in een aparte container die alleen via de API werkt, zodat een andere vereniging de container kan vervangen. Terugschrijven van het aantal boten per type staat achter `BOOTAANTALLEN_SCHRIJVEN`, standaard uit (#178). | foundation | Test met nepbron |
 
 ## 6. Architectuur- en beveiligingskaders
 
@@ -374,6 +380,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.46 | 2026-11-08 | Twee regels (Algemeen) en drie regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #178, en één regel (Review): waarden van een extern filter, WSDL vooraf, zoeken in heel `tests/` bij een weggehaald veld, tests met zeep, mutantrun; §5 terugschrijven achter een schakelaar | Lessen, #178 |
 | v0.5.45 | 2026-11-08 | Eén regel (Algemeen) uit de terugblik van bedrock bij #178: aanroepen van een gekozen bibliotheek vooraf controleren | Lessen |
 | v0.5.44 | 2026-11-08 | Vier regels (Bouw) en één regel (Review) uit de terugblikken van prism en sentinel bij blok 3 deel B van #150: toetsantwoorden testen, `|safe` per tak, `commando.txt` en mutantlus, basislijn meten, valpunt van een mutant | Lessen |
 | v0.5.43 | 2026-11-07 | Drie regels (E2E) en één regel (Security) uit de terugblikken van prism, sentinel en aegis bij blok 3 deel A van #150: dichte `details`, knop Zoeken in `main`, wachten op een achtergrondrun, GET-parameters en toegangslog | Lessen |
