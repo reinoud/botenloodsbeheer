@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.43
+**Versie overlay:** v0.5.44
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-07
+**Bijgewerkt:** 2026-11-08
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -140,6 +140,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
 - Noem bij een reeks zoekstappen (zoals lidnummer, koppeling, naam) wat een onbekende waarde in een stap doet: doorvallen naar de volgende stap of een fout.
+- Elk antwoord uit een toets van Design System krijgt een eigen unittest en een mutant, ook zonder preview. Noem in de opdracht welke ontwerpkeuze geldt voor een toestand die de README niet noemt, en welke toestanden uit eerdere issues (zoals #137) een nieuwe tak in een sjabloon anders toont.
+- Een `|safe`-mutant krijgt een testgeval per tak van het sjabloon die het veld toont, ook in een attribuut als `alt` (dan met een foto in de test).
+- Een bouwer met mutanten controleert vóór de oplevering met `ls` dat `commando.txt` naast de mutanten staat. Draai een reeks mutanten met `docker compose run --rm -T` en `</dev/null` in een `while read`-lus.
+- Meet een basislijn of uitlijning aan het begin van de eerste regel van elk element, niet aan het einde van de tekst.
 
 #### Review
 
@@ -195,6 +199,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Loopt een filter meer wegen af naar dezelfde gegevens (zoals `__cause__` en `.orig`), maak dan per weg een mutant en noem welke test die weg dekt.
 - Noemt een regel in de overlay een tabel, kolom of constraint, toets die dan tegen `app/models.py`.
 - Noem een mutant alleen met een code die in de specificatiebestanden van de bouwer staat; staat hij er niet in, noem dan de vervangtekst.
+- Noem bij een mutant de nieuwe assert die hem moet vangen (bestand:regel), en zeg erbij als een bredere assert hem eerder vangt.
 
 #### E2E
 
@@ -368,6 +373,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.44 | 2026-11-08 | Vier regels (Bouw) en één regel (Review) uit de terugblikken van prism en sentinel bij blok 3 deel B van #150: toetsantwoorden testen, `|safe` per tak, `commando.txt` en mutantlus, basislijn meten, valpunt van een mutant | Lessen |
 | v0.5.43 | 2026-11-07 | Drie regels (E2E) en één regel (Security) uit de terugblikken van prism, sentinel en aegis bij blok 3 deel A van #150: dichte `details`, knop Zoeken in `main`, wachten op een achtergrondrun, GET-parameters en toegangslog | Lessen |
 | v0.5.42 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij het scherm vrije plaatsen van #150: commando voor de unitsuite en wisselvallige test #172, schermafbeeldingen terugzetten | Lessen |
 | v0.5.41 | 2026-11-07 | Twee regels (Bouw) uit de terugblik van prism bij blok 2 van #150: baseline in een worktree of wachten, foto voor een visuele controle | Lessen |
