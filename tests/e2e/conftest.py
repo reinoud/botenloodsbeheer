@@ -55,6 +55,25 @@ def blok_openen(page, titel):
         dicht.click()
 
 
+LOGO = "/fixtures/logo.png"  # het testlogo uit tests/fixtures, gemount in compose.dev.yml
+
+
+def logo_uploaden(page, bestand=LOGO):
+    """Uploadt het logo op Instellingen, zoals een beheerder (issue #186); een bestaand logo wordt
+    vervangen. Het logo is van de hele installatie, dus tests die het nodig hebben zetten het zelf."""
+    page.goto("/instellingen")
+    blok_openen(page, "Logo")  # het blok begint dicht
+    page.get_by_label("Nieuw logo").set_input_files(bestand)
+    page.get_by_role("button", name="Logo opslaan").click()
+    expect(page.get_by_text("Het logo is opgeslagen.")).to_be_visible()
+
+
+def afbeelding_geladen(img):
+    """Het beeld is echt geladen: een 404 op de URL geeft naturalWidth 0."""
+    expect(img).to_have_js_property("complete", True)
+    assert img.evaluate("e => e.naturalWidth") > 0
+
+
 def wachtwoord_instellen(page, soort, url=None):
     """Stelt via de eigen uitnodiging van de test (of url) een wachtwoord met TOTP in; daarna
     ingelogd."""

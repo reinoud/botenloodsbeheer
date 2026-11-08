@@ -97,9 +97,9 @@ def test_migratie_0011_verwijdert_plaatsen_en_downgrade_behoudt_ze_met_aanduidin
     engine.dispose()
 
 
-def test_migratie_verwijdert_geupload_logo(database):
+def test_migratie_0004_verwijdert_geupload_logo(database):
     """BLB-027 criterium 5: een logo uit slice 3 verdwijnt; alleen het logo uit de installatie
-    geldt nog. Foto's blijven staan."""
+    gold toen nog (sinds 0017 staat het logo weer in de database). Foto's blijven staan."""
     cfg = nieuwe_database("botenloods_migratie")
     command.upgrade(cfg, "0003")
     engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
@@ -110,7 +110,7 @@ def test_migratie_verwijdert_geupload_logo(database):
         c.execute(text(rij), {"s": "foto"})
         c.execute(text("INSERT INTO instelling (sleutel, waarde) VALUES ('logo', :id), "
                        "('naam', 'KV')"), {"id": str(logo)})
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0004")
     with engine.connect() as c:
         assert c.execute(text("SELECT soort FROM afbeelding")).scalars().all() == ["foto"]
         assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0016"]
+    assert scripts.get_heads() == ["0017"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -253,3 +253,27 @@ def test_worker_heeft_geen_rechten_buiten_taken_en_seed(app, sql):
     with pytest.raises(ProgrammingError, match="permission denied"):
         db.session.execute(text(sql))
     db.session.rollback()
+
+
+def test_migratie_0017_laat_het_logo_toe_en_de_downgrade_verwijdert_het(database):
+    """Issue #186: afbeelding laat weer soort logo toe. De downgrade verwijdert een geüpload logo
+    (anders faalt de oude controle) en laat de foto's en de naam staan."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0016")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    rij = ("INSERT INTO afbeelding (soort, mime_type, inhoud, breedte, hoogte, sleutel) "
+           "VALUES (:s, 'image/png', '\\x00', 1, 1, :s) RETURNING id")
+    with engine.connect() as c, pytest.raises(IntegrityError):
+        c.execute(text(rij), {"s": "logo"})  # vóór 0017 geweigerd
+    command.upgrade(cfg, "0017")
+    with engine.begin() as c:
+        logo = c.execute(text(rij), {"s": "logo"}).scalar()
+        c.execute(text(rij), {"s": "foto"})
+        c.execute(text("INSERT INTO instelling (sleutel, waarde) VALUES ('logo', :id), "
+                       "('naam', 'KV')"), {"id": str(logo)})
+    command.downgrade(cfg, "0016")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT soort FROM afbeelding")).scalars().all() == ["foto"]
+        assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
+    command.upgrade(cfg, "head")
+    engine.dispose()

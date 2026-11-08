@@ -1,49 +1,21 @@
 """Instellingen: naam en logo van de vereniging (BLB-027, ADR-008, ADR-009) en de
 bootsoorten (BLB-028)."""
 
-import hashlib
+from flask import flash, redirect, render_template, request, url_for
 
-from flask import current_app, redirect, render_template, request, url_for
-
-from app.config import UPLOAD_MAX
-from app.domein import Regelfout, afbeeldingen, indeling, instellingen
+from app.domein import indeling, instellingen
 from app.web import bp, inloggen_vereist, recent_ingelogd, uitvoeren
-
-
-def logo_laden(app):
-    """Leest het logo uit de installatie één keer bij het starten, met dezelfde controle als een
-    upload (ADR-008). Ontbreekt het of is het ongeldig, dan toont de kopbalk alleen de naam en
-    staat de reden in de containerlog. Een nieuw logo vraagt een herstart van web."""
-    app.extensions["logo"] = None
-    pad = app.config["LOGO_BESTAND"]
-    if not pad:
-        return
-    try:
-        with open(pad, "rb") as f:
-            inhoud = f.read(UPLOAD_MAX + 1)
-        if len(inhoud) > UPLOAD_MAX:
-            raise Regelfout("groter dan 10 MB")
-        png = afbeeldingen.verwerk(inhoud, "logo").inhoud
-    except FileNotFoundError:
-        app.logger.warning("Geen logo in %s; de kopbalk toont alleen de naam.", pad)
-        return
-    except (OSError, Regelfout):
-        app.logger.warning("Het logo in %s is geen JPEG, PNG of WebP tot 10 MB; de kopbalk toont "
-                           "alleen de naam.", pad)
-        return
-    app.extensions["logo"] = (hashlib.sha256(png).hexdigest()[:16], png)
-    app.logger.info("Logo geladen uit %s.", pad)
 
 
 @bp.get("/logo/<kenmerk>")
 def logo(kenmerk):
-    # Openbaar, zoals de openbare pagina. Het kenmerk is een hash van de inhoud, dus de inhoud
+    # Openbaar, zoals de openbare pagina. Het kenmerk wijzigt met elk nieuw logo, dus de inhoud
     # achter een URL wijzigt nooit en mag lang in de cache.
-    logo = current_app.extensions["logo"]
-    if logo is None or kenmerk != logo[0]:
+    afbeelding = instellingen.logo_op_kenmerk(kenmerk)
+    if afbeelding is None:
         return "Niet gevonden", 404, {"Content-Type": "text/plain; charset=utf-8"}
-    return logo[1], {
-        "Content-Type": "image/png",
+    return afbeelding.inhoud, {
+        "Content-Type": afbeelding.mime_type,
         "Content-Disposition": "inline",
         "X-Content-Type-Options": "nosniff",
         "Cache-Control": "public, max-age=31536000, immutable",
@@ -55,7 +27,8 @@ def logo(kenmerk):
 def instellingen_scherm():
     return render_template("instellingen.html", stijl=instellingen.huidig(),
                            bootsoorten=indeling.bootsoorten(),
-                           bootsoorten_open=request.args.get("open") == "bootsoorten")
+                           bootsoorten_open=request.args.get("open") == "bootsoorten",
+                           logo_open=request.args.get("open") == "logo")
 
 
 @bp.post("/instellingen")
@@ -65,6 +38,32 @@ def instellingen_opslaan():
     uitvoeren(instellingen.opslaan, request.form.get("naam"),
               gelukt="De instellingen zijn opgeslagen.")
     return redirect(url_for("web.instellingen_scherm"))
+
+
+@bp.post("/instellingen/logo")
+@inloggen_vereist
+@recent_ingelogd
+def logo_opslaan():
+    bestand = request.files.get("logo")
+    if not bestand or not bestand.filename:
+        flash("Kies een logo.", "fout")
+        gelukt = False
+    else:
+        gelukt = uitvoeren(instellingen.logo_vervangen, bestand.read(), gelukt="Het logo is opgeslagen.")
+    return _naar_logo(gelukt)
+
+
+@bp.post("/instellingen/logo/verwijderen")
+@inloggen_vereist
+@recent_ingelogd
+def logo_verwijderen():
+    gelukt = uitvoeren(instellingen.logo_verwijderen, gelukt="Het logo is verwijderd.")
+    return _naar_logo(gelukt)
+
+
+def _naar_logo(gelukt):
+    """Na een geweigerde actie staat het blok Logo open, met de melding erboven."""
+    return redirect(url_for("web.instellingen_scherm", **({} if gelukt else {"open": "logo"})))
 
 
 def _naar_bootsoorten():

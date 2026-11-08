@@ -2,7 +2,7 @@
 {% block titel %}Instellingen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Instellingen</h1>
-<p>Naam en logo staan op elke pagina, ook op de openbare pagina van een plaats. De kleuren volgen de huisstijl en zijn niet in te stellen. Opslaan van de naam en elke wijziging in de bootsoorten vraagt een inlog van hooguit 10 minuten oud.</p>
+<p>De naam en, als die er is, het logo staan op elke pagina, ook op de openbare pagina van een plaats. De kleuren volgen de huisstijl en zijn niet in te stellen. Opslaan van de naam, elke wijziging in de bootsoorten en het opslaan of verwijderen van het logo vraagt een inlog van hooguit 10 minuten oud.</p>
 
 <section class="dj-panel" aria-labelledby="naam-kop">
   <h2 class="dj-panel__title" id="naam-kop">Naam</h2>
@@ -16,15 +16,30 @@
   </form>
 </section>
 
-<details class="dj-disclosure">
+{# Na een geweigerd bestand staat het blok open (gh#35). #}
+<details class="dj-disclosure"{% if logo_open %} open{% endif %}>
   <summary>Logo</summary>
   <div class="bl-uitklap__inhoud">
     {% if logo %}
     <img class="bl-foto" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="Huidig logo">
     {% else %}
-    <p>Er is geen logo; de kopbalk toont alleen de naam.</p>
+    <p>Er is geen logo. De kopbalk toont alleen de naam van de vereniging.</p>
     {% endif %}
-    <p>Het logo staat in de installatie, niet in de applicatie. Wie de installatie beheert, zet het in de map <code>huisstijl</code> en herstart de applicatie.</p>
+    <form class="bl-formulier" method="post" action="{{ url_for('web.logo_opslaan') }}" enctype="multipart/form-data">
+      {% include "_csrf.html" %}
+      <div class="ds-field">
+        <label class="ds-field__label" for="logo">Nieuw logo (JPEG, PNG of WebP, tot 10 MB)</label>
+        <input class="ds-input" id="logo" name="logo" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="logo-eisen" required>
+        <p class="ds-field__hint" id="logo-eisen">Het logo wordt verkleind tot 800 pixels.</p>
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">Logo opslaan</button>
+    </form>
+    {% if logo %}
+    <form method="post" action="{{ url_for('web.logo_verwijderen') }}">
+      {% include "_csrf.html" %}
+      <button type="submit" class="ds-btn ds-btn--danger">Logo verwijderen</button>
+    </form>
+    {% endif %}
   </div>
 </details>
 

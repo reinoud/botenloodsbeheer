@@ -1,10 +1,6 @@
 # Aanvulling voor schermafbeeldingen.sh: een eigen, wegwerpbare stack naast de lokale (project
 # botenloods-doc). Geen poorten naar de host, zodat de lokale stack ongemoeid blijft.
 services:
-  # Altijd het testlogo, los van lokale wijzigingen in compose.dev.yml.
-  web:
-    environment:
-      LOGO_BESTAND: /app/tests/fixtures/logo.png
   db:
     ports: !override []
   traefik:

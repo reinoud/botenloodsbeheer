@@ -327,7 +327,9 @@ Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud
 
 ## Naam, logo en bootsoorten
 
-Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud. Het logo zet wie de installatie beheert in de installatie; je ziet het in het blok **Logo**.
+Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud.
+
+In het blok **Logo** upload je het logo van de vereniging: kies een bestand in JPEG, PNG of WebP tot 10 MB en kies **Logo opslaan**. De applicatie verkleint het tot 800 pixels en haalt de gegevens uit het bestand weg, zoals de locatie. Het logo staat direct in de kopbalk, op de openbare pagina's en op de kaartjes, en een nieuw logo vervangt het vorige. **Logo verwijderen** haalt het weg; dan toont de kopbalk alleen de naam. Beide vragen een inlog van hooguit 10 minuten oud. Is het bestand geen geldige afbeelding, dan blijft het vorige logo staan en staat het blok open met de melding.
 
 In het blok **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest. Het blok staat dicht, en na elke handeling hier open. Ook elke wijziging vraagt een inlog van hooguit 10 minuten oud.
 
@@ -337,7 +339,7 @@ In het blok **Bootsoorten** staan de soorten die je bij boten en plaatsen kiest.
 
 Twee soorten met dezelfde naam kunnen niet, ook niet als ze alleen in hoofdletters verschillen. Toevoegen, hernoemen (met de oude en de nieuwe naam) en verwijderen staan in het technische log.
 
-![De instellingen met de naam, het blok Logo en het uitgeklapte blok Bootsoorten.](afbeeldingen/instellingen.png)
+![De instellingen met de naam en de uitgeklapte blokken Logo en Bootsoorten.](afbeeldingen/instellingen.png)
 
 ## Alle adressen
 

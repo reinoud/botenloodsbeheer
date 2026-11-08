@@ -1,5 +1,5 @@
-"""Foto's en logo (ADR-008): controleren, verkleinen en zonder metadata opslaan. Alleen foto's
-komen in de database; het logo uit de installatie houdt web in het geheugen."""
+"""Foto's en logo (ADR-008): controleren, verkleinen en zonder metadata opslaan, beide in de
+database."""
 
 import io
 import secrets

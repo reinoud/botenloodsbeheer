@@ -47,4 +47,4 @@ Een update met een nieuwe databaserol (zoals `botenloods_api` in slice 5): zet h
 
 ## Productie
 
-Zie [installatie achter een gedeelde Traefik](documentatie/beheer/installatie.md). Het logo van de vereniging staat in `huisstijl/logo.png` (JPEG, PNG of WebP); na het vervangen `docker compose restart web`. Ontbreekt het of is het ongeldig, dan staat dat in `docker compose logs web` en toont de kopbalk alleen de naam.
+Zie [installatie achter een gedeelde Traefik](documentatie/beheer/installatie.md). Het logo van de vereniging upload je als beheerder op Instellingen (JPEG, PNG of WebP); zonder logo toont de kopbalk alleen de naam.

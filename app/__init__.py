@@ -91,7 +91,6 @@ def create_app(overrides=None):
                         "aan" if app.config["API_INGESCHAKELD"] else "uit")
     else:
         app.register_blueprint(web.bp)
-        web.huisstijl.logo_laden(app)
     app.register_blueprint(web.health)
     cli.registreer(app)
     return app

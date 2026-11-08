@@ -104,8 +104,6 @@ def laad():
         "LOG_NIVEAU": _lees("LOG_NIVEAU", "INFO"),
         # Alleen de dev-stack zet dit aan: Gunicorn --reload herlaadt geen templates (#114).
         "TEMPLATES_AUTO_RELOAD": _schakelaar("TEMPLATES_AUTO_RELOAD", "false"),
-        # Alleen web toont het logo; de worker leest het niet (ADR-008).
-        "LOGO_BESTAND": _lees("LOGO_BESTAND", "/huisstijl/logo.png") if dienst == "web" else None,
         "MAX_CONTENT_LENGTH": IMPORT_MAX if dienst == "api" else UPLOAD_MAX,
         "SESSION_COOKIE_SECURE": basis_url.startswith("https://"),
         "SESSION_COOKIE_HTTPONLY": True,

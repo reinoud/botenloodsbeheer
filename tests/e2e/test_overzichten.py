@@ -1,5 +1,5 @@
-"""Overzichten, Excel-export en huisstijl (BLB-015 tot en met 019, BLB-027). Het testlogo komt
-uit compose.dev.yml (ADR-008).
+"""Overzichten, Excel-export en huisstijl (BLB-015 tot en met 019, BLB-027). Het testlogo wordt
+geüpload op Instellingen (issue #186, ADR-008).
 
 Elke test gebruikt een eigen uitnodiging en eigen plaatsen met de stempel van de run. De leden en
 de oud-leden met een plaats komen uit flask seed (draai.sh)."""
@@ -7,8 +7,18 @@ de oud-leden met een plaats komen uit flask seed (draai.sh)."""
 import io
 import re
 import zipfile
+from pathlib import Path
 
-from conftest import STEMPEL, blok_openen, reknaam, uitloggen, wachtwoord_instellen
+from conftest import (
+    LOGO,
+    STEMPEL,
+    afbeelding_geladen,
+    blok_openen,
+    logo_uploaden,
+    reknaam,
+    uitloggen,
+    wachtwoord_instellen,
+)
 from playwright.sync_api import expect
 from test_loods import rek_met_plaats
 
@@ -103,22 +113,76 @@ def test_naam_instellen_en_terugzetten(page, browser, base_url):
         # De kleuren staan vast in de huisstijl (#150): geen kleurkiezer en geen stylesheet van de beheerder.
         expect(page.locator("input[type=color]")).to_have_count(0)
         expect(page.locator("link[href*='huisstijl.css']")).to_have_count(0)
-        # Het logo komt uit de installatie: geen upload in de applicatie (BLB-027 criterium 4).
-        expect(page.locator("input[type=file]")).to_have_count(0)
-        blok_openen(page, "Logo")  # het logo staat in een dicht blok (BV-64)
-        expect(page.get_by_text("Het logo staat in de installatie")).to_be_visible()
+        # Het logo: uploaden, ongeldig bestand, vervangen, verwijderen (issue #186). Het begin is
+        # schoon, ook als een eerdere test een logo achterliet.
+        koplogo = "header .dj-logo img.bl-logo"
+        blok_openen(page, "Logo")
+        if page.get_by_role("button", name="Logo verwijderen").count():
+            page.get_by_role("button", name="Logo verwijderen").click()
+            expect(page.get_by_text("Het logo is verwijderd.")).to_be_visible()
+            blok_openen(page, "Logo")
+        expect(page.get_by_text("Er is geen logo.")).to_be_visible()
+        expect(page.get_by_role("button", name="Logo verwijderen")).to_have_count(0)
+        expect(page.locator(koplogo)).to_have_count(0)  # zonder logo alleen de naam
+        expect(page.locator("header .dj-logo")).to_have_text(naam)
 
+        logo_uploaden(page)  # mutant: de route /logo/ geeft 404 -> afbeelding_geladen faalt
+        expect(page.locator(koplogo)).to_have_attribute("src", re.compile(r"^/logo/[\w-]{16}$"))
+        afbeelding_geladen(page.locator(koplogo))
+        eerste = page.locator(koplogo).get_attribute("src")
+        blok_openen(page, "Logo")
+        expect(page.get_by_role("button", name="Logo verwijderen")).to_be_visible()
+        expect(page.get_by_alt_text("Huidig logo")).to_have_attribute("src", eerste)
+
+        # Een ongeldig bestand: één melding, het blok staat open en het vorige logo blijft.
+        page.get_by_label("Nieuw logo").set_input_files(
+            {"name": "geheim.png", "mimeType": "image/png", "buffer": b"geen afbeelding"})
+        page.get_by_role("button", name="Logo opslaan").click()
+        expect(page.get_by_role("alert")).to_have_count(1)
+        expect(page.get_by_role("alert")).to_have_text(
+            "Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP. De vorige blijft staan.")
+        assert "geheim" not in page.content()  # de bestandsnaam komt nergens terug
+        expect(page.locator("details.dj-disclosure[open] > summary", has_text="Logo")).to_be_visible()
+        expect(page.locator(koplogo)).to_have_attribute("src", eerste)
+
+        # Vervangen door een bestand van 1,5 MB: boven de 1 MB van de algemene router, dus alleen
+        # de router van /instellingen/logo (10 MB) laat het door. Een nieuw logo geeft een nieuwe URL.
+        # mutant: het label van router -logo weghalen -> Traefik geeft 413.
+        groot = Path(LOGO).read_bytes() + b"\0" * 1_500_000
+        page.get_by_label("Nieuw logo").set_input_files(
+            {"name": "logo.png", "mimeType": "image/png", "buffer": groot})
+        page.get_by_role("button", name="Logo opslaan").click()
+        expect(page.get_by_text("Het logo is opgeslagen.")).to_be_visible()
+        tweede = page.locator(koplogo).get_attribute("src")
+        assert tweede != eerste
+        afbeelding_geladen(page.locator(koplogo))
+
+        # Elke bezoeker ziet het nieuwe logo direct, zonder inloggen.
         bezoeker = browser.new_page(base_url=base_url)
         bezoeker.goto(openbare_link)
         expect(bezoeker.locator(".dj-logo")).to_have_text(naam)
         logo = bezoeker.locator(".dj-logo img.bl-logo")
         expect(logo).to_be_visible()
-        expect(logo).to_have_attribute("src", re.compile(r"^/logo/[0-9a-f]{16}$"))
+        expect(logo).to_have_attribute("src", tweede)
+        afbeelding_geladen(logo)
         # Rubik en PT Sans komen als woff2 uit /static en laden onder de CSP (default-src 'self').
         geladen = bezoeker.evaluate("document.fonts.ready.then(() => [...document.fonts]"
                                     ".filter(f => f.status === 'loaded').map(f => f.family + ' ' + f.weight))")
         assert {"Rubik 700", "PT Sans 400"} <= {f.replace('"', '') for f in geladen}  # kop en lopende tekst
+
+        # Verwijderen: de kopbalk en de openbare pagina tonen alleen de naam.
+        page.goto("/instellingen")
+        blok_openen(page, "Logo")
+        page.get_by_role("button", name="Logo verwijderen").click()
+        expect(page.get_by_text("Het logo is verwijderd.")).to_be_visible()
+        expect(page.locator(koplogo)).to_have_count(0)
+        bezoeker.reload()
+        expect(bezoeker.locator(".dj-logo")).to_have_text(naam)
+        expect(bezoeker.locator(".dj-logo img")).to_have_count(0)
         bezoeker.close()
+        page.goto("/log/techniek")
+        for actie in ("instelling.logo_toegevoegd", "instelling.logo_vervangen", "instelling.logo_verwijderd"):
+            expect(page.locator("section.log")).to_contain_text(actie)
     finally:
         # Ook na een fout terugzetten, zodat andere tests en de handmatige route de oude naam zien.
         page.goto("/instellingen")
