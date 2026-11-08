@@ -19,6 +19,8 @@
       {% block logo %}<a class="dj-logo" href="{{ url_for('web.start') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
       {% block menu %}{% if g.beheerder %}
       {# De groepen van BV-42; de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
+      {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}
+      {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail"} %}
       {% set menu = [
         ("Dagelijks", [("web.rekoverzicht", "Rekoverzicht"), ("web.indeling_overzicht", "Indeling"), ("web.vrije_plaatsen", "Vrije plaatsen"),
                        ("web.wachtlijst_overzicht", "Wachtlijst"), ("web.opzeggend", "Gaan opzeggen"), ("web.kaartjes_kiezen", "Kaartjes")]),
@@ -34,7 +36,7 @@
             <p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>
             <ul class="dj-nav__list" aria-labelledby="menu-{{ loop.index0 }}">
               {% for endpoint, naam in items %}
-              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% endif %}>{{ naam }}</a></li>
+              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}</a></li>
               {% endfor %}
               {% if loop.last %}
               <li>

@@ -48,6 +48,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
     finally:
         if boot:
             page.goto(boot)
+            page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
             page.get_by_role("button", name=f"Boot {bootnaam} verwijderen").click()
         page.goto("/indeling")
         sectie = page.locator("section.dj-panel", has=page.get_by_role("heading", name=rek, exact=True))

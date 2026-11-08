@@ -39,7 +39,7 @@ def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
 
     # BLB-019: de lijst per lid zegt dat de boot op de wachtlijst staat.
     page.get_by_role("link", name=eigenaar).first.click()
-    expect(page.locator("tr", has=page.get_by_role("link", name=wachter))).to_contain_text(
+    expect(page.locator("li", has=page.get_by_role("link", name=wachter))).to_contain_text(
         "Sinds 01-05-2019")
 
     # BLB-011 criterium 3: vrijgeven wijst niet zelf toe.

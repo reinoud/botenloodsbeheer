@@ -243,10 +243,12 @@ def test_boot_wijzigen_en_weigeren_met_log(page):
     page.get_by_role("link", name=bootnaam).click()
 
     formulier = page.locator("section.kaart", has=page.get_by_role("heading", name="Boot wijzigen"))
+    page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
     formulier.get_by_label("Bootsoort").select_option(label="C11")
     formulier.get_by_role("button", name="Boot opslaan").click()
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een c11")
     expect(page.locator("section.log")).not_to_contain_text("boot.gewijzigd")
+    page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()  # na het herladen is het blok weer dicht
 
     formulier.get_by_label("Naam van de boot").fill(nieuw)
     formulier.get_by_role("button", name="Boot opslaan").click()
