@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.50
+**Versie overlay:** v0.5.51
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-09
+**Bijgewerkt:** 2026-11-10
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -291,6 +291,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
+- Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
+- Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
+- Controleer bij elke Dependabot-PR de publicatiedatum van de doelversie tegen de cooldown van 14 dagen, en lees de PR-tekst op "Cooldown could not be applied". Voor images uit ghcr.io (zoals uv) werkt de cooldown niet vanzelf.
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
@@ -394,6 +397,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.51 | 2026-11-10 | Drie regels (Security en proxy) uit release 0.4.0/0.4.1 en de terugblikken van sentinel bij #199 en de Dependabot-PR's: lokaal scannen vóór het taggen, zlib-fix via apt met alle CVE's, cooldown per Dependabot-PR controleren | Lessen |
 | v0.5.50 | 2026-11-09 | Twee regels (Bouw) aangevuld en één nieuw (Bouw), één regel (Review) uit de terugblikken van prism en sentinel bij #179: zoeken in `tests/unit/` naar een weggehaalde tekst, mutant bij een E2E-vergelijking, bestaande schermafbeelding, E2E-mutant of bewijs uit de seed | Lessen |
 | v0.5.49 | 2026-11-09 | §3 gevoeligheid van gegevens zonder adres, telefoon en e-mail (#180); twee regels (Review) en één regel (Bouw) uit de terugblikken van bedrock en sentinel bij #180 | Besluit stakeholder, lessen |
 | v0.5.48 | 2026-11-09 | Twee regels (Review) en vier regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #186 | Lessen |
