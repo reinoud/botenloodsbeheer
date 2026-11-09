@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.48
+**Versie overlay:** v0.5.49
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-08
@@ -28,7 +28,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
 | Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
 | Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013). |
-| Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (naam, adres, telefoon, e-mail, lidmaatschapsdata). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
+| Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (lidnummer, naam, lidmaatschapsdata). Adres, telefoon en e-mail worden niet bewaard (#180). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
 | Uitrol | Eigen docker-compose per vereniging. |
 | Stand | Slice 1 tot en met 12 gebouwd; de indeling volgt rek, verdieping en vak (#80). Traefik vervangt Nginx (#29). Gebruikers- en beheerdocumentatie in `documentatie/` (#30). |
@@ -148,6 +148,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een E2E-test die globale staat zet (logo, naam), herstelt die in `finally`; vóór een mutantrun van zo'n test controleert de bouwer de beginstand.
 - Een racetest voor `FOR UPDATE` laat de eerste sessie dezelfde wijziging doen als de functie; een lege `UPDATE` laat de mutant zonder `FOR UPDATE` slagen.
 - Noem bij een nieuwe soort in een gedeelde tabel (zoals `afbeelding`) welke bestaande routes en taken die tabel lezen of opschonen.
+- Noem bij het verwijderen van een recht of kolom welke databasecontroles (zoals `minstens_een_recht`) de migratie kunnen blokkeren en wat er gebeurt met rijen die ze raken; zoek ook tests met een aantal in de naam of `len(`-asserties op de lijst.
 - Zoek E2E-selectors in alle bestanden van `tests/e2e/` en in `documentatie/gebruikers/schermafbeeldingen.py`, zonder bestanden uit te sluiten.
 - Een CSS-regel die de bouwer met een reden afwijkend van het ontwerp toevoegt, krijgt een test die zonder die regel faalt, of de melding dat de seed het geval niet bevat (dan een issue). Meld de afwijking aan Design System.
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
@@ -159,7 +160,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
-- Wacht op `draai.sh` met `pgrep -f '[d]raai.sh'` of op het uitvoerbestand, niet met `pgrep -f tests/e2e/draai.sh`: die vindt de eigen wachtlus.
+- Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
+- Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
 - Draai een mutant op een gedeelde set of functie tegen de hele unitsuite, of noem de test die de set bewaakt (zoals `test_log.py` voor `log.TECHNISCH`).
 - Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
@@ -390,6 +392,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.49 | 2026-11-09 | §3 gevoeligheid van gegevens zonder adres, telefoon en e-mail (#180); twee regels (Review) en één regel (Bouw) uit de terugblikken van bedrock en sentinel bij #180 | Besluit stakeholder, lessen |
 | v0.5.48 | 2026-11-09 | Twee regels (Review) en vier regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #186 | Lessen |
 | v0.5.47 | 2026-11-08 | Twee regels (Review) en twee regels (Bouw) uit de terugblikken van prism, sentinel en aegis bij blok 4 van #150 | Lessen |
 | v0.5.46 | 2026-11-08 | Twee regels (Algemeen) en drie regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #178, en één regel (Review): waarden van een extern filter, WSDL vooraf, zoeken in heel `tests/` bij een weggehaald veld, tests met zeep, mutantrun; §5 terugschrijven achter een schakelaar | Lessen, #178 |
