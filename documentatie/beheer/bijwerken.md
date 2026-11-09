@@ -23,6 +23,8 @@ Een herstart van Traefik is na een update niet nodig: hij volgt de containers vi
 
 Migratie 0017 zet het logo in de database. Het logo in `huisstijl/logo.png` en de variabele `LOGO_BESTAND` doen niets meer; een bestaand logo moet één keer worden geüpload op Instellingen (blok Logo). Haal `docker-compose.yml` opnieuw op bij de tag: de koppeling van `./huisstijl` is eruit en er is een router voor `/instellingen/logo` bij. Daarna is een nieuw logo uploaden of verwijderen zonder herstart. De downgrade verwijdert een geüpload logo.
 
+Versie 0.4.0 bevat migratie 0017 hierboven en migratie 0018. Migratie 0018 haalt adres, telefoon en e-mail van leden weg en het tokenrecht `persoonsgegevens`. Een actief token met alleen dat recht wordt ingetrokken, met een regel in het technische log; andere tokens verliezen alleen dat recht. De downgrade zet de kolommen leeg terug; de gegevens en het recht komen niet terug. `.env` kent nieuwe variabelen voor de koppeling met e-boekhouden (`EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1`, `EBOEKHOUDEN_CODE2`, `BOOTAANTALLEN_SCHRIJVEN`), alleen nodig bij `LEDENBRON=eboekhouden` (`integratiecontainer.md`). `LOGO_BESTAND` kan uit `.env` weg.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding.
