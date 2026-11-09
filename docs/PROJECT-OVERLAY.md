@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.49
+**Versie overlay:** v0.5.50
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-08
+**Bijgewerkt:** 2026-11-09
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -102,7 +102,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen. Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
-- Draai na het toevoegen van een test eerst de mutant die hij moet vangen.
+- Draai na het toevoegen van een test eerst de mutant die hij moet vangen, ook bij een nieuwe E2E-vergelijking, en meld pas daarna groen.
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
@@ -127,6 +127,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
 - Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`; bekend wisselvallig is `test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt` (#172).
+- Controleer of een schermafbeelding van het scherm bestaat voordat de opdracht haar opnieuw laat maken.
 - `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`.
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
 - Een import of export volgt de regels van de schermactie die dezelfde gegevens wijzigt. Noem in de opdracht die functie en haar test (bijvoorbeeld `_soorten` en `tests/unit/test_plaats_wijzigen_en_vrijgeven.py`), en laat het agent bij elke kolom beslissen wat een lege waarde betekent, voor een nieuw en een bestaand record.
@@ -139,7 +140,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De werkmap is gemount in `web`: een sjabloonwijziging werkt direct door in een lopende E2E-run. Draai de baseline op `main` vóór je iets wijzigt, of in een aparte worktree.
 - Zeg in de opdracht of de baseline op `main` in een aparte worktree draait of dat de bouwer de ongeveer 15 minuten wacht; tot de baseline klaar is, ligt de werkmap vast.
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
-- Haalt een wijziging een veld of element uit een sjabloon, zoek dan in heel `tests/` naar de naam (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
+- Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten bij voorkeur op een kopie die over het testimage gemount is.
 - Noem bij elke toestand die zonder JavaScript open moet staan (zoals een blok na een actie) het mechanisme: querystring, sessie of flash.
@@ -219,6 +220,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noemt een regel in de overlay een tabel, kolom of constraint, toets die dan tegen `app/models.py`.
 - Noem een mutant alleen met een code die in de specificatiebestanden van de bouwer staat; staat hij er niet in, noem dan de vervangtekst.
 - Noem bij een mutant de nieuwe assert die hem moet vangen (bestand:regel), en zeg erbij als een bredere assert hem eerder vangt.
+- Moet de reviewer een mutant tegen de E2E-stack draaien, zeg dan of `web` daarvoor even met een kopie mag draaien. Anders volstaat bewijs uit de data van de seed, zoals een leesquery die laat zien dat de seed het geval bevat.
 
 #### E2E
 
@@ -392,6 +394,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.50 | 2026-11-09 | Twee regels (Bouw) aangevuld en één nieuw (Bouw), één regel (Review) uit de terugblikken van prism en sentinel bij #179: zoeken in `tests/unit/` naar een weggehaalde tekst, mutant bij een E2E-vergelijking, bestaande schermafbeelding, E2E-mutant of bewijs uit de seed | Lessen |
 | v0.5.49 | 2026-11-09 | §3 gevoeligheid van gegevens zonder adres, telefoon en e-mail (#180); twee regels (Review) en één regel (Bouw) uit de terugblikken van bedrock en sentinel bij #180 | Besluit stakeholder, lessen |
 | v0.5.48 | 2026-11-09 | Twee regels (Review) en vier regels (Bouw) uit de terugblikken van bedrock, sentinel en aegis bij #186 | Lessen |
 | v0.5.47 | 2026-11-08 | Twee regels (Review) en twee regels (Bouw) uit de terugblikken van prism, sentinel en aegis bij blok 4 van #150 | Lessen |
