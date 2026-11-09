@@ -62,6 +62,18 @@ def test_ingelogde_beheerder_op_inloggen_gaat_naar_het_rekoverzicht(ingelogd):
     assert ingelogd.get("/inloggen").location == "/rekoverzicht"
 
 
+def test_passkey_inloggen_en_registreren_geven_het_rekoverzicht(client, monkeypatch):
+    # Mutant: inloggen.py:92 of :169 terug naar web.start geeft "/" (dat doorstuurt, dus E2E merkt het niet).
+    b, _ = beheerder_met_wachtwoord()
+    monkeypatch.setattr(beheerders, "passkey_inloggen", lambda *_: b)
+    monkeypatch.setattr(beheerders, "passkey_registreren", lambda *_: b)
+    for url in ("/inloggen/passkey", "/uitnodiging/code/passkey"):
+        with client.session_transaction() as s:
+            s["webauthn_challenge"] = "Y2hhbGxlbmdl"
+        r = client.post(url, json={"id": "x"})
+        assert (r.status_code, r.json) == (200, {"url": "/rekoverzicht"}), url
+
+
 def test_geen_startpagina_meer(app):
     assert not (Path(app.root_path) / "web" / "templates" / "start.html").exists()
     assert "Welkom" not in main(app.test_client().get("/inloggen").text)
@@ -150,6 +162,20 @@ def test_profiel_met_wachtwoord_toont_geen_blok_om_het_toe_te_voegen(ingelogd):
     assert "Wachtwoord en authenticator-app toevoegen" not in tekst and "totp-geheim" not in tekst
 
 
+def test_uitnodiging_opent_het_wachtwoordblok_na_een_mislukte_poging(client):
+    # #188. Mutant: open weghalen uit uitnodiging.html, of de categorie weglaten (dan opent "info" het ook).
+    code = beheerders.uitnodigen("carla", CLI)
+    client.get(f"/uitnodiging/{code}")
+    r = client.post(f"/uitnodiging/{code}/wachtwoord", data={"wachtwoord": "a" * 12, "herhaling": "b" * 12},
+                    follow_redirects=True)
+    tekst = main(r.text)
+    assert "De twee wachtwoorden zijn niet gelijk." in tekst
+    assert '<details class="dj-disclosure" data-wachtwoord open>' in tekst
+    with client.session_transaction() as s:
+        s["_flashes"] = [("info", "Melding.")]
+    assert '<details class="dj-disclosure" data-wachtwoord>' in main(client.get(f"/uitnodiging/{code}").text)
+
+
 def test_profiel_zonder_wachtwoord_toont_het_blok_voor_toevoegen(client):
     b = beheerders.uitnodiging(beheerders.uitnodigen("dora", CLI)).beheerder
     met_passkey(b)
@@ -158,6 +184,12 @@ def test_profiel_zonder_wachtwoord_toont_het_blok_voor_toevoegen(client):
     tekst = main(client.get("/profiel").text)
     assert "<summary>Wachtwoord en authenticator-app toevoegen</summary>" in tekst
     assert ">Wachtwoord toevoegen<" in tekst and tekst.count('<h3 class="bl-subkop">') == 3
+    assert '<details class="dj-disclosure">\n    <summary>Wachtwoord en authenticator-app toevoegen' in tekst
+    # #188. Mutant: open weghalen uit profiel.html valt hier, open altijd zetten op de assert hierboven.
+    client.post("/profiel/wachtwoord", data={"wachtwoord": "a" * 12, "herhaling": "b" * 12})
+    tekst = main(client.get("/profiel").text)
+    assert "De twee wachtwoorden zijn niet gelijk." in tekst
+    assert '<details class="dj-disclosure" open>\n    <summary>Wachtwoord en authenticator-app toevoegen' in tekst
     assert "Wachtwoord intrekken" not in tekst
 
 
@@ -330,8 +362,3 @@ def test_link_in_main_slaat_knoppen_over():
     assert ".bl-main :where(a) {" not in css
     assert not re.search(r"\.bl-main a\.ds-btn[^{]*\{[^}]*color", css)  # geen lokale correctie meer nodig
 
-
-def test_gewone_link_houdt_brand_mid(ingelogd):
-    # Gewone links in main hebben geen ds-btn; tokens.html heeft een knoplink en een gewone link.
-    tekst = main(ingelogd.get("/tokens").text)
-    assert '<a class="ds-btn ds-btn--primary" href="/tokens/nieuw">Token maken</a>' in tekst

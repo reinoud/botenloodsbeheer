@@ -2,6 +2,8 @@
 {% from "_wachtwoord.html" import wachtwoordformulier %}
 {% block titel %}Account instellen · {{ vereniging }}{% endblock %}
 {% block inhoud %}
+{# Na een mislukte poging staat het wachtwoordblok open, zoals op Inloggen (#188). #}
+{% set mislukt = get_flashed_messages(category_filter=['fout'])|length > 0 %}
 <h1>Account instellen voor {{ beheerder.gebruikersnaam }}</h1>
 <p>Kies hoe je wilt inloggen. Deze link werkt één keer.</p>
 <section class="dj-panel bl-paneel" aria-labelledby="passkey-kop">
@@ -15,7 +17,7 @@
     <p class="ds-notice__body" id="passkey-fout" role="alert"></p>
   </div>
 </section>
-<details class="dj-disclosure" data-wachtwoord>
+<details class="dj-disclosure" data-wachtwoord{% if mislukt %} open{% endif %}>
   <summary>Wachtwoord en authenticator-app</summary>
   <div class="bl-uitklap__inhoud">
     {{ wachtwoordformulier(url_for('web.uitnodiging_wachtwoord', code=code), 'Wachtwoord instellen', qr, geheim) }}
