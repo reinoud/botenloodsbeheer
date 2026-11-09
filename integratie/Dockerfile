@@ -23,6 +23,9 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /integratie
 COPY --from=bouw /pakketten /pakketten
 COPY koppeling koppeling
+# shortcut: zlib1g uit Debian bijwerken (CVE-2026-85091), weg zodra het basisimage deb13u1 heeft.
+RUN apt-get update && apt-get install --yes --no-install-recommends zlib1g \
+    && rm -rf /var/lib/apt/lists/*
 # Zonder pip: niet nodig en het brengt eigen kopieën van urllib3 en msgpack mee (#59).
 RUN pip uninstall --yes --no-cache-dir pip && useradd --system --uid 10001 koppeling
 USER 10001
