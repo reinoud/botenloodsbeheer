@@ -20,16 +20,5 @@
 {% call meldingblok() %}Dit lid heeft geen boten in de loods.{% endcall %}
 {% endif %}
 
-<h2>Aantal boten per bootsoort</h2>
-<p>Alleen boten met een plaats tellen. Dit zijn de aantallen voor de ledenadministratie.</p>
-<ul class="bl-lijst">
-  {% for soort, aantal in aantallen.items() %}
-  <li class="bl-item">
-    <div class="bl-item__main"><span class="bl-item__titel" data-label="Bootsoort">{{ soort }}</span></div>
-    <p class="bl-item__zijde"><span data-label="Aantal">{{ aantal }}</span></p>
-  </li>
-  {% endfor %}
-</ul>
-
 {{ logblok(regels) }}
 {% endblock %}
