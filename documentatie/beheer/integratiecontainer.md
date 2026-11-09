@@ -64,8 +64,7 @@ def roep(methode, pad, gegevens=None):
         return fout.code, fout.read()
 
 roep("GET", "/leden/importverzoek")  # (200, {"aangevraagd": False})
-leden = [{"lidnummer": "1001", "naam": "Anna Voorbeeld", "adres": "Proefweg 1, 1234 AB Voorbeelddorp",
-          "telefoon": "06-00000000", "email": "anna@example.org", "lid_sinds": "2020-04-01",
+leden = [{"lidnummer": "1001", "naam": "Anna Voorbeeld", "lid_sinds": "2020-04-01",
           "opzegdatum": None}]
 roep("PUT", "/leden", {"leden": leden})
 # (200, {"ontvangen": 1, "nieuw": 1, "bijgewerkt": 0, "uit_bron": 0, "ongeldig": 0, "overgeslagen": 0})

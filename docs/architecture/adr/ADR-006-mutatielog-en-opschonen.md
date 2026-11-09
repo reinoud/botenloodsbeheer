@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.4.1
+**Versie:** v1.4.2
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -22,7 +22,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | verwijzingen | Array van tekst als `plaats:12`, `rek:3`, `boot:40`, `lid:7` |
 | gegevens | JSON met oud en nieuw, alleen voor velden die er mogen staan |
 
-**Schrijven.** Alleen `domein/log` schrijft, aangeroepen vanuit elke wijzigende domeinfunctie in dezelfde transactie. Een lijst met verboden velden (adres, telefoon, e-mail, tokenwaarde) wordt bij schrijven gecontroleerd; bij die velden komt alleen "gewijzigd" in het log. Een lid staat in het log als verwijzing (`lid:7`), niet met naam. Het log toont die verwijzing zoals ze is, ook na het opschonen van het lid; een naam wordt niet opgehaald (bouw slice 9). Zo blijft na opschonen geen naam achter in logregels die nog niet 5 jaar oud zijn. De naam van een boot kan in jongere regels blijven staan; die is openbaar op de plaatspagina.
+**Schrijven.** Alleen `domein/log` schrijft, aangeroepen vanuit elke wijzigende domeinfunctie in dezelfde transactie. Een lijst met verboden velden (adres, telefoon, e-mail, tokenwaarde; de sleutels blijven als vangnet, ook nu `lid` geen adres, telefoon of e-mail meer heeft) wordt bij schrijven gecontroleerd; bij die velden komt alleen "gewijzigd" in het log. Een lid staat in het log als verwijzing (`lid:7`), niet met naam. Het log toont die verwijzing zoals ze is, ook na het opschonen van het lid; een naam wordt niet opgehaald (bouw slice 9). Zo blijft na opschonen geen naam achter in logregels die nog niet 5 jaar oud zijn. De naam van een boot kan in jongere regels blijven staan; die is openbaar op de plaatspagina.
 
 **Afscherming.** De applicatie heeft geen functie om logregels te wijzigen of te verwijderen. De database-gebruiker van de applicatie heeft op `logregel` alleen `INSERT` en `SELECT`. De opschoning draait in de worker met een aparte database-gebruiker die ook `DELETE` mag. Een fout in de webcode kan het log zo niet aantasten.
 
@@ -76,6 +76,7 @@ De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een start
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.2 | 2026-11-09 | De opschoning kent de kolommen `adres`, `telefoon` en `email` niet meer; migratie 0018 schrijft een regel `token.ingetrokken` met actor systeem/migratie | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.4.1 | 2026-11-04 | Rekoverzicht toont geen log | Besluiten stakeholder 2026-11-04, issue #87 |
 | v1.4.0 | 2026-11-03 | Acties van de bootsoorten in het technische log | Bouw slice 11, issue #56 |
 | v1.3.1 | 2026-11-03 | De opschoning neemt het importslot: de import kan een oud-lid weer actief maken | Issue #49 |

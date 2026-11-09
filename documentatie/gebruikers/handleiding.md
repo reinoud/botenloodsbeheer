@@ -310,9 +310,8 @@ Een persoonlijk token werkt alleen als wie de installatie beheert de API van bui
 |---|---|
 | `plaatsen:lezen` | alle plaatsen met rek, clubplaats, bootsoorten en boot |
 | `boten:lezen` | alle boten met bootsoort, plaats en naam en lidnummer van de eigenaar |
-| `leden:lezen` | alle leden met naam, lidnummer en of het een oud-lid is |
+| `leden:lezen` | alle leden met naam, lidnummer, of het een oud-lid is, en de datums van lidmaatschap en opzegging |
 | `wachtlijst:lezen` | de wachtlijst per bootsoort met aanmelddatum |
-| `persoonsgegevens` | bij boten, leden en wachtlijst ook adres, telefoon en e-mail, en bij leden de datums van lidmaatschap en opzegging |
 | `leden:importeren` | de import van leden, alleen voor de integratiecontainer en alleen met de CLI te geven |
 | `bootaantallen:lezen` | het aantal boten per bootsoort per lid |
 

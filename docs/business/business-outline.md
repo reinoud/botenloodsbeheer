@@ -66,7 +66,7 @@ Open besluiten van de stakeholder die de scope raken: tenancy, huisstijl en host
 ## 6. Risico's en aannames
 
 Risico's:
-- Privacy. De applicatie bevat naam, adres, telefoonnummer en e-mailadres van leden en voormalige leden, dus persoonsgegevens onder de AVG. De openbare pagina mag geen adresgegevens tonen. Bewaartermijnen en de grondslag voor het tonen van de eigenaarsnaam zijn nog niet vastgesteld.
+- Privacy. De applicatie bevat lidnummer, naam en lidmaatschapsdata van leden en voormalige leden, dus persoonsgegevens onder de AVG. Adres, telefoon en e-mail worden sinds 2026-11-09 niet meer bewaard (#180). De openbare pagina mag geen adresgegevens tonen. Bewaartermijnen en de grondslag voor het tonen van de eigenaarsnaam zijn nog niet vastgesteld.
 - Afhankelijkheid van de e-boekhouden-API. Een wijziging of storing aan die kant raakt de ledenlijst. De aparte koppelmodule beperkt de schade, maar haalt het risico niet weg.
 - Beschikbaarheid van vrijwilligers. Beheer en onderhoud hangen aan een of twee personen. Vertrekt de beheerder, dan staat de applicatie stil.
 - Datakwaliteit. De spreadsheet wordt later geïmporteerd. Tot die tijd moet de beheerder de indeling handmatig opnieuw invoeren, met kans op fouten.

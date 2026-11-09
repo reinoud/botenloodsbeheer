@@ -256,6 +256,7 @@ def test_rechten_gelden_vanaf_de_volgende_aanroep_met_logregel(app, api, twee):
 
 @pytest.mark.parametrize("rechten,melding", [
     ([], "minstens één recht"), (["leden:schrijven"], "Onbekend recht"),
+    (["boten:lezen", "persoonsgegevens"], "Onbekend recht: persoonsgegevens"),
     (["leden:importeren"], "alleen met de CLI")])
 def test_ongeldige_rechten_wijzigen_niets(app, twee, rechten, melding):
     anna, _, _ = twee
@@ -296,12 +297,12 @@ def test_token_van_een_ander_intrekken(app, api, twee, scherm):
 def test_overzicht_toont_alles_behalve_waarde_en_hash(app, twee, scherm):
     """BLB-035 criterium 1."""
     anna, _, _ = twee
-    waarde = persoonlijk(anna, rechten=("boten:lezen", "persoonsgegevens"))
+    waarde = persoonlijk(anna, rechten=("boten:lezen", "leden:lezen"))
     t = db.session.scalar(select(Token))
     html = scherm.get("/tokens").get_data(as_text=True)
     for tekst in ('<td role="cell" data-label="Naam">anna-laptop</td>', '<td role="cell" data-label="Soort">persoonlijk</td>',
                   '<td role="cell" data-label="Eigenaar of maker">anna</td>',
-                  '<td role="cell" data-label="Rechten">boten:lezen, persoonsgegevens</td>',
+                  '<td role="cell" data-label="Rechten">boten:lezen, leden:lezen</td>',
                   '<td role="cell" data-label="Whitelist">elk adres</td>',
                   '<td role="cell" data-label="Laatst gebruikt">nooit</td>', 'data-label="Verloopt op"'):
         assert tekst in html, tekst

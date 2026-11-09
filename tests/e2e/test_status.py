@@ -32,7 +32,7 @@ def test_statuspagina_html_en_json_met_tokenwaarschuwing(page):
     assert f"e2e-kort-{STEMPEL}" in [t["naam"] for t in s["tokens_verlopen"]["tokens"]]
     assert s["import"]["laatst_geslaagd"] is not None
     for tekst in (antwoord.text(), page.content()):
-        assert token("lezen") not in tekst and "blb_" not in tekst and "@example.org" not in tekst
+        assert token("lezen") not in tekst and "blb_" not in tekst
 
 
 def test_status_zonder_inloggen_naar_inloggen(page):

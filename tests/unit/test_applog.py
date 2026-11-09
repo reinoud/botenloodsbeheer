@@ -40,11 +40,10 @@ def test_databasefout_zonder_persoonsgegevens_in_de_log(database, monkeypatch, c
     from app.models import Lid, db
 
     def kapot():
-        db.session.add(Lid(lidnummer="9999", naam=None, adres="Dorpsstraat 1\nGeheimstad",
-                           telefoon="0612345678", email="geheim@example.org"))
+        db.session.add(Lid(lidnummer="GEHEIM-9999", naam=None))
         db.session.commit()
 
     fout, _ = foutregel(capsys, monkeypatch, "api", kapot)
     assert "NotNullViolation" in fout["traceback"] and "DETAIL:  [weggelaten]" in fout["traceback"]
-    for waarde in ("geheim@example.org", "Dorpsstraat", "Geheimstad", "0612345678"):
+    for waarde in ("GEHEIM-9999",):
         assert waarde not in json.dumps(fout)

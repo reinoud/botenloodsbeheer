@@ -18,7 +18,7 @@ from app.models import Beheerder, Token, db
 
 # Vaste lijst in code (ADR-005, ADR-009).
 RECHTEN = ("plaatsen:lezen", "boten:lezen", "leden:lezen", "wachtlijst:lezen",
-           "persoonsgegevens", "leden:importeren", "bootaantallen:lezen")
+           "leden:importeren", "bootaantallen:lezen")
 CLI_RECHT = "leden:importeren"  # alleen met de CLI te geven (besluit stakeholder 2026-11-03, #52)
 WEBRECHTEN = tuple(r for r in RECHTEN if r != CLI_RECHT)
 MAX_DAGEN = 3 * 365  # hooguit 3 jaar (besluit stakeholder, vraag 1)

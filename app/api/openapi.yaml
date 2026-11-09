@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.8.2
+  version: 0.9.0
   description: >
     Standaard alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van
     Traefik op poort 8081. Met compose.api-extern.yml ook via https://DOMEIN/api/v1, alleen vanaf
@@ -70,9 +70,8 @@ paths:
     get:
       summary: Alle leden en oud-leden, op lidnummer
       description: >
-        Recht: `leden:lezen`. Argumenten: geen. De hele lijst. Adres, telefoon, e-mail, lid sinds
-        en opzegdatum alleen met het recht `persoonsgegevens`; zonder dat recht ontbreken die
-        velden. Een veld zonder waarde is `null`.
+        Recht: `leden:lezen`. Argumenten: geen. De hele lijst, met lid sinds en opzegdatum.
+        Een veld zonder waarde is `null`.
       responses:
         "200":
           description: Eén element per lid
@@ -80,20 +79,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Leden"
-              examples:
-                zonder_persoonsgegevens:
-                  value:
-                    - {lidnummer: "1001", naam: Anna Voorbeeld, oud_lid: false}
-                met_persoonsgegevens:
-                  value:
-                    - lidnummer: "1001"
-                      naam: Anna Voorbeeld
-                      oud_lid: false
-                      adres: Proefweg 1, 1234 AB Voorbeelddorp
-                      telefoon: 06-00000000
-                      email: anna@example.org
-                      lid_sinds: "2020-04-01"
-                      opzegdatum: null
+              example:
+                - lidnummer: "1001"
+                  naam: Anna Voorbeeld
+                  oud_lid: false
+                  lid_sinds: "2020-04-01"
+                  opzegdatum: null
         "401":
           $ref: "#/components/responses/GeenToegang"
         "403":
@@ -108,8 +99,9 @@ paths:
         sleutel. Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
         Een nieuw record met een opzegdatum van meer dan 5 jaar geleden wordt overgeslagen.
         De uitkomst sluit een open importverzoek af. Wijzigingen in leden komen niet in het log.
-        Een veld dat in het record ontbreekt, geldt als leeg en overschrijft de bewaarde waarde:
-        de bron e-boekhouden stuurt geen adres, telefoon of e-mail, dus die zijn dan leeg.
+        Een veld dat in het record ontbreekt, geldt als leeg en overschrijft de bewaarde waarde.
+        Velden die dit contract niet kent, zoals adres, telefoon of e-mail, worden genegeerd en
+        niet bewaard.
       requestBody:
         required: true
         content:
@@ -120,9 +112,6 @@ paths:
               leden:
                 - lidnummer: "1001"
                   naam: Anna Voorbeeld
-                  adres: Proefweg 1, 1234 AB Voorbeelddorp
-                  telefoon: 06-00000000
-                  email: anna@example.org
                   lid_sinds: "2020-04-01"
                   opzegdatum: null
       responses:
@@ -230,8 +219,8 @@ paths:
       summary: Alle boten, op naam
       description: >
         Recht: `boten:lezen`. Argumenten: geen. De hele lijst. `plaats` is de plaatscode of
-        `null`; `eigenaar` is `null` bij een clubboot. Adres, telefoon en e-mail van de eigenaar
-        staan er alleen in met het recht `persoonsgegevens`; zonder dat recht ontbreken die velden.
+        `null`; `eigenaar` is `null` bij een clubboot. De eigenaar heeft alleen
+        `lidnummer` en `naam`.
       responses:
         "200":
           description: Eén element per boot
@@ -239,23 +228,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Boten"
-              examples:
-                zonder_persoonsgegevens:
-                  value:
-                    - id: 7
-                      naam: Zeemeeuw
-                      bootsoort: Kajak
-                      plaats: A/1/1
-                      eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld}
-                met_persoonsgegevens:
-                  value:
-                    - id: 7
-                      naam: Zeemeeuw
-                      bootsoort: Kajak
-                      plaats: A/1/1
-                      eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld,
-                                 adres: "Proefweg 1, 1234 AB Voorbeelddorp",
-                                 telefoon: 06-00000000, email: anna@example.org}
+              example:
+                - id: 7
+                  naam: Zeemeeuw
+                  bootsoort: Kajak
+                  plaats: A/1/1
+                  eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld}
         "401":
           $ref: "#/components/responses/GeenToegang"
         "403":
@@ -267,7 +245,7 @@ paths:
       summary: De wachtlijst, per bootsoort de langst wachtende eerst
       description: >
         Recht: `wachtlijst:lezen`. Argumenten: geen. Boten van oud-leden staan er niet in, net als
-        op het scherm. Adres, telefoon en e-mail van de eigenaar alleen met `persoonsgegevens`.
+        op het scherm. De eigenaar heeft alleen `lidnummer` en `naam`.
       responses:
         "200":
           description: Eén element per boot op de wachtlijst
@@ -334,7 +312,7 @@ components:
           minItems: 1
           items:
             type: string
-            enum: [plaatsen:lezen, boten:lezen, leden:lezen, wachtlijst:lezen, persoonsgegevens,
+            enum: [plaatsen:lezen, boten:lezen, leden:lezen, wachtlijst:lezen,
                    leden:importeren, bootaantallen:lezen]
         verloopt_op:
           type: string
@@ -351,7 +329,7 @@ components:
           type: string
     Eigenaar:
       type: [object, "null"]
-      description: "`null` bij een clubboot. Adres, telefoon en e-mail alleen met `persoonsgegevens`."
+      description: "`null` bij een clubboot."
       required: [lidnummer, naam]
       additionalProperties: false
       properties:
@@ -359,12 +337,6 @@ components:
           type: string
         naam:
           type: string
-        adres:
-          type: [string, "null"]
-        telefoon:
-          type: [string, "null"]
-        email:
-          type: [string, "null"]
     Plaatsen:
       type: array
       items:
@@ -405,7 +377,7 @@ components:
       type: array
       items:
         type: object
-        required: [lidnummer, naam, oud_lid]
+        required: [lidnummer, naam, oud_lid, lid_sinds, opzegdatum]
         additionalProperties: false
         properties:
           lidnummer:
@@ -414,12 +386,6 @@ components:
             type: string
           oud_lid:
             type: boolean
-          adres:
-            type: [string, "null"]
-          telefoon:
-            type: [string, "null"]
-          email:
-            type: [string, "null"]
           lid_sinds:
             type: [string, "null"]
             format: date
@@ -477,7 +443,7 @@ components:
       type: object
       description: >
         Een record zonder geldig lidnummer (1 tot 20 tekens, letters, cijfers en -), zonder naam,
-        met een ongeldige datum of e-mail telt als ongeldig. Langere tekst wordt ingekort.
+        of met een ongeldige datum telt als ongeldig. Langere tekst wordt ingekort.
       required: [lidnummer, naam]
       properties:
         lidnummer:
@@ -485,15 +451,6 @@ components:
         naam:
           type: string
           maxLength: 100
-        adres:
-          type: [string, "null"]
-          maxLength: 200
-        telefoon:
-          type: [string, "null"]
-          maxLength: 30
-        email:
-          type: [string, "null"]
-          maxLength: 254
         lid_sinds:
           type: [string, "null"]
           format: date

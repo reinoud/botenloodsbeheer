@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.4.2
+**Versie:** v1.5.0
 **Stories:** BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -13,7 +13,7 @@ De externe API `/api/v1` is aan en uit te zetten en staat standaard aan. Ze leve
 
 **Vorm en opslag.** Een token is `blb_` gevolgd door een prefix van 8 tekens en een geheim van 32 bytes uit `secrets`, base32. De database bewaart de prefix (voor weergave en opzoeken) en een SHA-256-hash van het hele token. Een trage hash zoals bcrypt is niet nodig: het geheim heeft 256 bits entropie. De applicatie toont de waarde één keer na aanmaken. Vergelijken gebeurt met `hmac.compare_digest`.
 
-**Rechten.** Een vaste lijst in code: `plaatsen:lezen`, `boten:lezen`, `leden:lezen`, `wachtlijst:lezen`, `persoonsgegevens`, `leden:importeren` en `bootaantallen:lezen`. Een token heeft minstens één recht. Zonder `persoonsgegevens` geeft de domeinlaag naam en lidnummer, maar geen adres, telefoon of e-mail (BLB-032). `leden:importeren` is het enige schrijfrecht en hoort alleen bij het robottoken van de integratiecontainer (ADR-012). Het is alleen met de CLI te geven, niet in de tokenschermen (besluit stakeholder 2026-11-03, #52).
+**Rechten.** Een vaste lijst in code: `plaatsen:lezen`, `boten:lezen`, `leden:lezen`, `wachtlijst:lezen`, `leden:importeren` en `bootaantallen:lezen`. Een token heeft minstens één recht. De domeinlaag geeft naam en lidnummer, geen adres, telefoon of e-mail: de applicatie bewaart die niet meer (BLB-032, issue #180). Het recht `persoonsgegevens` is vervallen; een aanvraag ermee geeft de melding voor een onbekend recht. Migratie 0018 haalt het recht uit elk token; een actief token dat alleen dat recht had, is ingetrokken, met een regel `token.ingetrokken` (actor systeem/migratie) in het technische log. De downgrade herstelt het recht en de intrekking niet. `leden:importeren` is het enige schrijfrecht en hoort alleen bij het robottoken van de integratiecontainer (ADR-012). Het is alleen met de CLI te geven, niet in de tokenschermen (besluit stakeholder 2026-11-03, #52).
 
 **Geldigheid.** `verloopt_op` is verplicht en ligt hooguit 3 jaar na aanmaken. Een persoonlijk token werkt niet meer zodra de beheerder geblokkeerd of verwijderd is. Een robottoken onthoudt wie het maakte, maar blijft werken als die beheerder vertrekt (BLB-031).
 
@@ -65,6 +65,7 @@ Naam, whitelist en vervaldatum zijn niet te wijzigen: daarvoor maakt de beheerde
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.0 | 2026-11-09 | Recht `persoonsgegevens` vervalt; migratie 0018 trekt tokens in die alleen dat recht hadden | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.4.2 | 2026-11-05 | Load balancer via het PROXY protocol; geen twee hops meer | ADR-013 v1.4.0, issue #54 |
 | v1.4.1 | 2026-11-03 | `leden:importeren` alleen met de CLI | Besluit stakeholder 2026-11-03, issue #52 |
 | v1.4.0 | 2026-11-03 | Persoonlijke tokens, tokenschermen, log en migratie 0009 | Ontwerp slice 10, issue #51 |

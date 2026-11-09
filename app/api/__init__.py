@@ -122,11 +122,7 @@ def bootaantallen(_token):
     return boten.bootaantallen_ophalen()
 
 
-# Leesaanroepen (ADR-012 v1.6.0): de hele lijst, zonder filters. persoonsgegevens voegt velden toe.
-
-
-def _met_persoonsgegevens(token):
-    return "persoonsgegevens" in token.rechten
+# Leesaanroepen (ADR-012 v1.6.0): de hele lijst, zonder filters.
 
 
 @bp.get("/plaatsen")
@@ -137,17 +133,17 @@ def plaatsen(_token):
 
 @bp.get("/boten")
 @aanroep("boten:lezen")
-def boten_lezen(token):
-    return uitlezen.boten(_met_persoonsgegevens(token))
+def boten_lezen(_token):
+    return uitlezen.boten()
 
 
 @bp.get("/leden")
 @aanroep("leden:lezen")
-def leden_lezen(token):
-    return uitlezen.leden(_met_persoonsgegevens(token))
+def leden_lezen(_token):
+    return uitlezen.leden()
 
 
 @bp.get("/wachtlijst")
 @aanroep("wachtlijst:lezen")
-def wachtlijst(token):
-    return uitlezen.wachtlijst(_met_persoonsgegevens(token))
+def wachtlijst(_token):
+    return uitlezen.wachtlijst()

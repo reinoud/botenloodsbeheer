@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0017"]
+    assert scripts.get_heads() == ["0018"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -199,7 +199,6 @@ def test_seed_maakt_de_synthetische_loods(app):
     oud_met_plaats = [p for p in db.session.scalars(select(Plaats).where(Plaats.boot_id.isnot(None)))
                       if p.boot.lid and leden.is_oud_lid(p.boot.lid)]
     assert len(oud_met_plaats) == 4
-    assert all(lid.email.endswith("@example.org") for lid in db.session.scalars(select(Lid)))
     # #10: elke boot en elke toewijzing staat in het log, ook die van oud-leden.
     assert tel(Logregel, Logregel.actie == "boot.aangemaakt") == 180
     assert tel(Logregel, Logregel.actie == "plaats.toegewezen") == 150
@@ -275,5 +274,47 @@ def test_migratie_0017_laat_het_logo_toe_en_de_downgrade_verwijdert_het(database
     with engine.connect() as c:
         assert c.execute(text("SELECT soort FROM afbeelding")).scalars().all() == ["foto"]
         assert c.execute(text("SELECT sleutel FROM instelling")).scalars().all() == ["naam"]
+    command.upgrade(cfg, "head")
+    engine.dispose()
+
+
+def test_migratie_0018_haalt_contactgegevens_en_het_recht_weg_en_trekt_tokens_in(database):
+    """Issue #180: de kolommen vervallen. Een actief token met alleen persoonsgegevens wordt
+    ingetrokken, met een logregel; een token met meer rechten verliest alleen dat recht; een
+    ingetrokken token blijft zoals het was (de check eist één recht). De downgrade zet de
+    kolommen leeg terug en haalt niets van de rest terug."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0017")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    token = ("INSERT INTO token (naam, soort, prefix, hash, rechten, ip_whitelist, verloopt_op, "
+             "ingetrokken_op, gemaakt_door) VALUES (:n, 'robot', :n, 'x', CAST(:r AS text[]), '{10.0.0.0/8}', now(), "
+             "CASE WHEN :i THEN now() END, 'cli')")
+    with engine.begin() as c:
+        c.execute(text("INSERT INTO lid (lidnummer, naam, adres, telefoon, email) "
+                       "VALUES ('1', 'Anna', 'Proefweg 1', '06-1', 'a@b.nl')"))
+        for naam, rechten, ingetrokken in [("alleen", "{persoonsgegevens}", False),
+                                           ("meer", "{persoonsgegevens,leden:lezen}", False),
+                                           ("oud", "{persoonsgegevens}", True),
+                                           ("andere", "{boten:lezen}", False)]:
+            c.execute(text(token), {"n": naam, "r": rechten, "i": ingetrokken})
+    command.upgrade(cfg, "0018")
+    with engine.connect() as c:
+        kolommen = c.execute(text("SELECT column_name FROM information_schema.columns "
+                                  "WHERE table_name = 'lid'")).scalars().all()
+        assert not {"adres", "telefoon", "email"} & set(kolommen) and "lid_sinds" in kolommen
+        rijen = {n: (r, i) for n, r, i in c.execute(text(
+            "SELECT naam, rechten, ingetrokken_op IS NOT NULL FROM token"))}
+        assert rijen == {"alleen": (["persoonsgegevens"], True), "meer": (["leden:lezen"], False),
+                         "oud": (["persoonsgegevens"], True), "andere": (["boten:lezen"], False)}
+        [regel] = c.execute(text("SELECT soort, actor_soort, actor_naam, actie, verwijzingen, gegevens "
+                                 "FROM logregel")).all()
+        alleen = c.execute(text("SELECT id FROM token WHERE naam = 'alleen'")).scalar()
+        assert regel == ("mutatie", "systeem", "migratie", "token.ingetrokken", [f"token:{alleen}"],
+                         {"naam": "alleen", "reden": "recht persoonsgegevens vervallen (#180)"})
+    command.downgrade(cfg, "0017")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT adres, telefoon, email, naam FROM lid")).all() == [
+            (None, None, None, "Anna")]
+        assert c.execute(text("SELECT count(*) FROM token WHERE ingetrokken_op IS NOT NULL")).scalar() == 2
     command.upgrade(cfg, "head")
     engine.dispose()

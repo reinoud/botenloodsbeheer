@@ -88,8 +88,8 @@ def test_hernoemen_overal_nieuwe_naam_en_alles_blijft_gelijk(app):
     assert [(k.naam, [w.boot.naam for w in rij]) for k, rij in wachtlijst.lijsten()] == [
         ("Zeekajak", ["Fuut"])]
     assert uitlezen.plaatsen()[0]["bootsoorten"] == ["Zeekajak"]
-    assert {x["bootsoort"] for x in uitlezen.boten(False)} == {"Zeekajak"}
-    assert uitlezen.wachtlijst(False)[0]["bootsoort"] == "Zeekajak"
+    assert {x["bootsoort"] for x in uitlezen.boten()} == {"Zeekajak"}
+    assert uitlezen.wachtlijst()[0]["bootsoort"] == "Zeekajak"
     assert "Zeekajak" in boten.bootaantallen()[0]["aantallen"]
     [r] = regels("bootsoort.hernoemd")
     assert r.gegevens == {"naam": ["Kajak", "Zeekajak"]} and r.verwijzingen == [f"bootsoort:{kajak.id}"]

@@ -192,15 +192,12 @@ def test_plaatsdetail_met_eigenaar_en_log(ingelogd):
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
     for waarde in ("Zeemeeuw", "Anna de Vries", "1001", "plaats.toegewezen", f"/p/{p.publieke_sleutel}"):
         assert waarde in tekst
-    # Adres, telefoon en e-mail staan niet op de plaats (#178), ook als het lid ze nog heeft.
-    for waarde in ("Proefweg 1", "06-00001234", "1001@example.org"):
-        assert waarde not in tekst
 
 
-def test_plaatsdetail_clubboot_zonder_persoonsgegevens(ingelogd):
+def test_plaatsdetail_clubboot_zonder_eigenaar(ingelogd):
     p = bezette_plaats(club=True)
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
-    assert "(clubboot)" in tekst and "Lidnummer" not in tekst and "@example.org" not in tekst
+    assert "(clubboot)" in tekst and "Lidnummer" not in tekst
 
 
 def test_plaatsdetail_vrij_met_geschikte_soorten(ingelogd):
@@ -233,7 +230,7 @@ def test_openbare_pagina_alleen_openbare_gegevens(client):
     assert r.status_code == 200
     assert "A/1/1" in r.text and "Zeemeeuw" in r.text and "Anna de Vries" in r.text
     assert "/afbeelding/" in r.text
-    for verboden in ("Proefweg", "06-0000", "@example.org", "1001", "Log", "plaats.toegewezen"):
+    for verboden in ("1001", "Log", "plaats.toegewezen"):
         assert verboden not in r.text
 
 
@@ -247,7 +244,7 @@ def test_omschrijving_op_openbare_pagina_plaatsdetail_en_kaartje(ingelogd, clien
     assert "Stelling &lt;b&gt;links&lt;/b&gt;" in ingelogd.get(f"/plaatsen/{p.id}").text
     kaartje = ingelogd.get(f"/kaartjes/print?plaats={p.id}").text
     assert "Stelling" not in kaartje
-    assert "Proefweg" not in kaartje and "Zeemeeuw" not in kaartje  # verder alleen wat mag
+    assert "Zeemeeuw" not in kaartje  # verder alleen wat mag
 
 
 def test_zonder_omschrijving_geen_lege_regel(ingelogd, client):
@@ -368,7 +365,6 @@ def test_boot_wijzigen_via_het_formulier_en_log_op_alle_plaatsen(ingelogd):
     for pad in (f"/boten/{b.id}", f"/leden/{anna.id}", f"/leden/{bert.id}", "/boten", "/log"):
         assert "boot.gewijzigd" in ingelogd.get(pad).text, pad
     assert "boot.gewijzigd" not in ingelogd.get("/log/techniek").text
-    assert anna.email not in r.text
 
 
 def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):

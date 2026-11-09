@@ -74,8 +74,6 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     html = page.content()
     for veld in ("naam", "lidnummer"):
         assert prive[veld] not in html, veld
-    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
-        assert stukje not in html, stukje
     assert bootnaam not in html and omschrijving not in html
     qr = een.locator("svg.qr-kaartje path").get_attribute("d")
 

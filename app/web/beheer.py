@@ -431,7 +431,7 @@ def leden_overzicht():
 @bp.get("/leden/<int:lid_id>")
 @inloggen_vereist
 def lid_detail(lid_id):
-    # BLB-019: boten met plaats. Adres, telefoon en e-mail staan alleen op het plaatsdetail.
+    # BLB-019: boten met plaats.
     lid = _of_404(leden.lid, lid_id)
     return render_template("lid.html", lid=lid, oud_lid=leden.is_oud_lid(lid),
                            aantallen=boten.bootaantallen(lid.id)[0]["aantallen"],

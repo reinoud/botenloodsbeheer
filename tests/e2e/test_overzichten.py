@@ -65,7 +65,6 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     assert ski in teksten and "Lidnummer" in teksten
     # Vrije plaats en clubplaats zonder boot (BLB-017 criterium 3).
     assert "(geschikt voor Surfski)" in teksten
-    assert "@example.org" not in teksten and "Peddelpad" not in teksten and "06-0000" not in teksten
 
 
 def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
@@ -78,7 +77,6 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     leden.get_by_role("link").click()
     expect(page.get_by_role("heading", name="Boten in de loods")).to_be_visible()
     expect(page.locator("main")).to_contain_text("Lidnummer 1001")
-    assert "@example.org" not in page.content()
 
     page.goto("/opgezegd")
     rijen = page.locator("main > ul.bl-lijst > li")

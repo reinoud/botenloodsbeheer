@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.3
-**Datum:** 2026-11-08
+**Versie:** v0.8.4
+**Datum:** 2026-11-09
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -45,7 +45,7 @@ De applicatie heeft drie lagen. De regel is eenvoudig: alleen de domeinlaag wijz
 
 Elke domeinfunctie die iets wijzigt, krijgt de handelende partij mee: een beheerder, een token of een taak. De functie controleert de regel, wijzigt, en schrijft de logregel in dezelfde transactie. Een wijziging zonder logregel kan daardoor niet bestaan. Een geweigerde wijziging levert een `Regelfout` met een vaste reden op. De webinterface toont die reden als melding; de API geeft dezelfde reden terug met status 409 of 422. Zo geldt BLB-034 vanzelf: er is geen tweede codepad.
 
-De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: zonder het recht persoonsgegevens geeft de domeinlaag geen adres, telefoonnummer en e-mailadres terug. De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
+De API leest, en schrijft alleen voor de import van leden door de integratiecontainer (intake, besluiten 2026-10-31; ADR-012). De leesfuncties in de domeinlaag bepalen ook welke velden zichtbaar zijn: de applicatie bewaart geen adres, telefoonnummer en e-mailadres van leden (issue #180), dus de domeinlaag kan ze niet teruggeven. De openbare pagina gebruikt een eigen leesfunctie die alleen de aanduiding, de omschrijving van het rek, bootnaam, foto en naam van de eigenaar oplevert. Wat niet wordt opgehaald, kan ook niet per ongeluk in een template of JSON-antwoord terechtkomen.
 
 De applicatie praat met geen enkel extern systeem. De integratiecontainer haalt de leden uit de bron en stuurt ruwe records naar `PUT /api/v1/leden`; `domein/leden` valideert en slaat op (ADR-004, ADR-012).
 
@@ -62,7 +62,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 | `bootsoort` | naam | Startlijst van vijf soorten. Een tabel, geen vaste lijst in code, zodat BLB-028 later geen migratie vraagt. |
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
 | `verdieping_bootsoort` | rek, verdieping, bootsoort | Hooguit één bootsoort per verdieping van een rek. Een nieuwe plaats op die verdieping krijgt die bootsoort; bestaande plaatsen veranderen niet (ADR-003). |
-| `lid` | lidnummer (uniek), naam, adres, telefoon, e-mail, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
+| `lid` | lidnummer (uniek), naam, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
 | `boot` | naam, bootsoort, `lid_id` (leeg voor een clubboot), `afbeelding_id` | Een clubboot heeft geen lid. Een clubboot mag alleen op een clubplaats, een boot van een lid nooit. |
 | `wachtlijst` | boot (uniek), aangemeld_op | De bootsoort volgt uit de boot, dus er is per bootsoort vanzelf een eigen lijst. |
 | `afbeelding` | soort (foto), mime-type, inhoud (bytea), breedte, hoogte, `sleutel` (willekeurig, voor de URL) | ADR-008. |
@@ -144,7 +144,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
-Alle namen, adressen en nummers zijn verzonnen; e-mailadressen eindigen op `@example.org` (overlay §8). `flask seed` weigert te draaien als `APP_OMGEVING=productie`.
+Alle namen en nummers zijn verzonnen (overlay §8). `flask seed` weigert te draaien als `APP_OMGEVING=productie`.
 
 ### 6.4 Testaccounts voor E2E
 
@@ -219,7 +219,7 @@ A staat los van de API en sluit issue #17. B gaat vóór C, omdat C het contract
 
 | Principe | Status | Toelichting |
 |----------|--------|-------------|
-| Minimale rechten | Compliant | Containers zonder root; database-accounts zonder superuser, per dienst een rol, alleen `api` schrijft leden; `integratie` zonder databasetoegang; tokens met losse rechten; persoonsgegevens alleen met apart recht |
+| Minimale rechten | Compliant | Containers zonder root; database-accounts zonder superuser, per dienst een rol, alleen `api` schrijft leden; `integratie` zonder databasetoegang; tokens met losse rechten; geen adres, telefoon of e-mail van leden in de database (#180) |
 | Gelaagde verdediging | Compliant | Traefik (rate limits, headers, CSP) voor Flask; constraints in de database onder de domeinregels |
 | Veilig falen | Compliant | Import breekt af zonder wijziging; de API staat standaard aan maar alleen op het interne netwerk (`API_INGESCHAKELD=true`, whitelist `KOPPELNET`); terugschrijven staat standaard uit; een ongeldig logo wordt niet getoond |
 | Scheiding | Compliant | Eén plek voor regels; de enige externe koppeling zit in een eigen container die alleen de API kent |
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.4 | 2026-11-09 | Issue #180: kolommen `adres`, `telefoon` en `email` van `lid` en het tokenrecht `persoonsgegevens` vervallen (§3, §4, §6, §8; ADR-004 v2.5.0, ADR-005 v1.5.0, ADR-006, ADR-012 v1.9.0); lid sinds en opzegdatum komen mee met `leden:lezen` |
 | v0.8.3 | 2026-11-08 | Issue #186: het logo staat weer in de database en is te uploaden op Instellingen; `./huisstijl` en `LOGO_BESTAND` vervallen (§8.1, §9 besluit 6; ADR-008 v1.3.0, ADR-009 v1.5.0) |
 | v0.8.2 | 2026-11-08 | Issue #178: bron e-boekhouden en terugschrijven achter een schakelaar (ADR-004 v2.4.0, ADR-012 v1.8.0, ADR-009, ADR-011) |
 | v0.8.1 | 2026-11-06 | Issue #150: kleuren niet meer instelbaar, alleen de naam in `instelling` (ADR-002 v1.2.0, ADR-009 v1.4.0) |

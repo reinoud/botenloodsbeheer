@@ -48,13 +48,13 @@ Van buiten gelden dezelfde grenzen als intern: 60 aanroepen per minuut per token
 
 ## De leesaanroepen
 
-Elke aanroep geeft de hele lijst, zonder filters of paginering. Het recht `persoonsgegevens` voegt velden toe: zonder dat recht ontbreken adres, telefoon en e-mail, en bij leden ook `lid_sinds` en `opzegdatum`. Een veld zonder waarde is `null`. De volledige beschrijving met voorbeelden staat in `app/api/openapi.yaml`.
+Elke aanroep geeft de hele lijst, zonder filters of paginering. De applicatie bewaart geen adres, telefoon of e-mail van leden en levert ze dus niet. Een veld zonder waarde is `null`. De volledige beschrijving met voorbeelden staat in `app/api/openapi.yaml`.
 
 | Aanroep | Recht | Velden |
 |---------|-------|--------|
 | `GET /api/v1/plaatsen` | `plaatsen:lezen` | `code` (de aanduiding, zoals `A/1/1`), `rek`, `clubplaats`, `bootsoorten`, `boot` (`id`, `naam`) |
 | `GET /api/v1/boten` | `boten:lezen` | `id`, `naam`, `bootsoort`, `plaats`, `eigenaar` (`lidnummer`, `naam`; `null` bij een clubboot) |
-| `GET /api/v1/leden` | `leden:lezen` | `lidnummer`, `naam`, `oud_lid` |
+| `GET /api/v1/leden` | `leden:lezen` | `lidnummer`, `naam`, `oud_lid`, `lid_sinds`, `opzegdatum` |
 | `GET /api/v1/wachtlijst` | `wachtlijst:lezen` | `bootsoort`, `boot`, `eigenaar`, `aangemeld_op`; zonder boten van oud-leden |
 
 Een voorbeeld met een nep-token:
