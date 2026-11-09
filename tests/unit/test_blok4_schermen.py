@@ -1,6 +1,6 @@
 """Blok 4 van het nieuwe ontwerp (issue #150, BV-64, designsystem 38d6463): toegang en beheer.
 Geen startpagina (Eis 1), passkey eerst (1B, 2B), de antwoorden op de open vragen 1, 3, 4 en 6,
-de bootsoorten die na een actie open staan (Eis 5), de zes webrechten (Eis 6), de rekken die op het
+de bootsoorten die na een actie open staan (Eis 5), de vijf webrechten (Eis 6), de rekken die op het
 kaartjesscherm altijd open staan (5B) en de knoppen die als link kleur houden (#181)."""
 
 import re
@@ -209,13 +209,13 @@ def test_instellingen_escapet_de_naam_van_een_bootsoort(ingelogd):
     assert f"Nieuwe naam voor {GEESCAPET}" in tekst and f"{GEESCAPET} verwijderen" in tekst
 
 
-# Eis 6: de zes webrechten
+# Eis 6: de vijf webrechten
 
 
-def test_token_maken_toont_de_zes_webrechten_en_niet_leden_importeren(ingelogd):
+def test_token_maken_toont_de_vijf_webrechten_en_niet_leden_importeren(ingelogd):
     # Mutant: de rechten uit RECHTEN in plaats van WEBRECHTEN laat leden:importeren verschijnen.
     tekst = main(ingelogd.get("/tokens/nieuw").text)
-    assert re.findall(r'name="recht" value="([^"]+)"', tekst) == list(tokens.WEBRECHTEN) and len(tokens.WEBRECHTEN) == 6
+    assert re.findall(r'name="recht" value="([^"]+)"', tekst) == list(tokens.WEBRECHTEN) and len(tokens.WEBRECHTEN) == 5
     assert "leden:importeren" not in tekst
     assert "Wie en hoe lang" in tekst and "Wat mag het token" in tekst
     assert tekst.count('class="bl-radio"') == 2 and tekst.count("bl-vast") == 1

@@ -22,8 +22,7 @@ FIXTURE = json.loads((Path(__file__).parents[1] / "fixtures/leden.json").read_te
 
 
 def record(nummer, **velden):
-    return {"lidnummer": nummer, "naam": f"Lid {nummer}", "adres": "Proefweg 1",
-            "telefoon": "06-00000000", "email": f"{nummer}@example.org",
+    return {"lidnummer": nummer, "naam": f"Lid {nummer}",
             "lid_sinds": "2020-01-01", "opzegdatum": None} | velden
 
 
@@ -64,21 +63,30 @@ def test_fixture_importeren_met_aantallen_volgens_het_contract(importeer):
 
 def test_nieuwe_en_gewijzigde_leden_op_lidnummer_met_alle_velden(importeer):
     importeer([record("1"), record("2")])
-    r = importeer([record("1", adres="Nieuweweg 2", opzegdatum="2099-01-01"), record("2"),
+    r = importeer([record("1", naam="Nieuwe naam", opzegdatum="2099-01-01"), record("2"),
                    record("3")])
     assert r.json | {"ontvangen": 0} == {"ontvangen": 0, "nieuw": 1, "bijgewerkt": 1,
                                          "uit_bron": 0, "ongeldig": 0, "overgeslagen": 0}
     lid = alle()["1"]
-    assert (lid.naam, lid.adres, lid.telefoon, lid.email, str(lid.lid_sinds),
-            str(lid.opzegdatum)) == ("Lid 1", "Nieuweweg 2", "06-00000000", "1@example.org",
-                                     "2020-01-01", "2099-01-01")
+    assert (lid.naam, str(lid.lid_sinds), str(lid.opzegdatum)) == (
+        "Nieuwe naam", "2020-01-01", "2099-01-01")
+
+
+def test_contactgegevens_in_een_record_worden_genegeerd_en_niet_bewaard(importeer):
+    """#180: adres, telefoon en e-mail bestaan niet meer. Een record dat ze nog stuurt, blijft
+    geldig (ook met een ongeldig e-mailadres) en de waarden worden nergens bewaard."""
+    r = importeer([record("1", adres="Proefweg 1", telefoon="06-00000000", email="geen-adres")])
+    assert (r.status_code, r.json["nieuw"], r.json["ongeldig"]) == (200, 1, 0)
+    lid = alle()["1"]
+    assert not {"adres", "telefoon", "email"} & set(Lid.__table__.columns.keys())
+    assert not any(hasattr(lid, v) for v in ("adres", "telefoon", "email"))
 
 
 def test_geen_logregel_per_lid_of_per_import(importeer):
     """BLB-024 criterium 2 en issue #21: een import die leden aanmaakt, wijzigt en oud-lid maakt,
     schrijft geen logregel. Mutaties aan boten door de import wel: zie de volgende test (#27)."""
     importeer([record("1"), record("2")])
-    importeer([record("1", adres="Geheimstraat 9"), record("3")])
+    importeer([record("1", naam="Geheimnaam"), record("3")])
     assert db.session.scalars(select(Logregel.actie)).all() == ["token.gemaakt"]
 
 
@@ -86,21 +94,21 @@ def test_ongeldige_records_overgeslagen_rest_verwerkt(importeer):
     """BLB-006 criterium 4: ongeldig telt, zonder de inhoud te loggen."""
     importeer([record("1"), record("2")])
     r = importeer([
-        record("1", email="geen-adres"),  # bestaand lid met tikfout: blijft lid, ongewijzigd
+        record("1", lid_sinds="31-12-2020"),  # bestaand lid met tikfout: blijft lid, ongewijzigd
         record("2"), record(None), {"naam": "Zonder nummer"}, record(""), record("4", naam=" "),
         record("5", lid_sinds="31-12-2020"), record("6", naam=7), "geen record", record("2"),
         record("7", naam="x" * 300),
     ])
     assert (r.json["ongeldig"], r.json["nieuw"], r.json["uit_bron"]) == (9, 1, 0)
     lid = alle()
-    assert lid["1"].email == "1@example.org" and lid["1"].uit_bron_op is None
+    assert str(lid["1"].lid_sinds) == "2020-01-01" and lid["1"].uit_bron_op is None
     assert set(lid) == {"1", "2", "7"} and len(lid["7"].naam) == 100
     assert "Zonder nummer" not in json.dumps([r.aantallen for r in runs()])
 
 
 def test_nul_teken_maakt_het_record_ongeldig(importeer):
     """#74: PostgreSQL weigert NUL in tekst; het record telt als ongeldig, de rest gaat door."""
-    r = importeer([record("1", adres="Proef\x00weg 1"), record("2")])
+    r = importeer([record("1", naam="Proef\x00naam"), record("2")])
     assert r.status_code == 200 and (r.json["ongeldig"], r.json["nieuw"]) == (1, 1)
     assert set(alle()) == {"2"}
 
@@ -110,7 +118,7 @@ def test_ontbrekend_lid_wordt_oud_lid_met_importdatum_en_komt_terug(importeer):
     importeer([record("1"), record("2")])
     assert importeer([record("1"), record("3")]).json["uit_bron"] == 1
     twee = alle()["2"]
-    assert twee.uit_bron_op == vandaag() and leden.is_oud_lid(twee) and twee.email
+    assert twee.uit_bron_op == vandaag() and leden.is_oud_lid(twee) and twee.naam
     importeer([record("1"), record("2"), record("3")])
     assert alle()["2"].uit_bron_op is None
 
@@ -144,7 +152,7 @@ def test_5000_records_mag(importeer):
 
 def test_boven_2_mb_413_zonder_wijziging(importeer):
     """BLB-007 criterium 3; boven 3 MB weigert Traefik al (E2E)."""
-    groot = [record(str(n), adres="x" * 500) for n in range(4000)]
+    groot = [record(str(n), naam="x" * 500) for n in range(4000)]
     assert len(json.dumps({"leden": groot})) > 2 * 1024 * 1024  # zonder de grens geldig
     r = importeer(groot)
     assert r.status_code == 413 and r.json == {"fout": "Het verzoek is groter dan 2 MB."}
@@ -180,7 +188,7 @@ def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
     gisteren = (vandaag() - timedelta(days=1)).isoformat()
     importeer([record("1", opzegdatum=gisteren)])
     lid = alle()["1"]
-    assert leden.is_oud_lid(lid) and lid.email == "1@example.org" and lid.adres
+    assert leden.is_oud_lid(lid) and lid.naam == "Lid 1"
     assert als_web(lambda: db.session.get(Plaats, p1).boot_id) == b1
     with pytest.raises(Regelfout, match="is oud-lid"):
         als_web(lambda: toewijzing.toewijzen(p2, b2, CLI))

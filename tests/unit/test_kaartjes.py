@@ -37,10 +37,9 @@ def test_kaartje_met_logo_code_bootsoort_en_qr_naar_openbare_pagina(app, ingelog
     assert f'src="/logo/{kenmerk}"' in kaart and ">A/1/2<" in kaart
     assert '<p class="kaartje-soorten">Geschikt voor Kajak</p>' in kaart
     assert qr_pad(kaart) == qr_van(f"http://localhost:8080/p/{bezet.publieke_sleutel}")
-    # Geen eigenaar en geen omschrijving van het rek (issue #143); geen adres, telefoon, e-mail,
-    # lidnummer of boot (overlay §8); de QR-code zelf zonder tekst.
-    for verboden in ("Anna de Vries", "Grote botenloods", "Proefweg", "06-0000", "@example.org",
-                     "1001", "Zeemeeuw"):
+    # Geen eigenaar en geen omschrijving van het rek (issue #143); geen lidnummer of boot
+    # (overlay §8); de QR-code zelf zonder tekst.
+    for verboden in ("Anna de Vries", "Grote botenloods", "1001", "Zeemeeuw"):
         assert verboden not in r.text
     assert "<title" not in kaart.split("<svg", 1)[1]
 

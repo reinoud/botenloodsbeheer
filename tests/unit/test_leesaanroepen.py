@@ -13,8 +13,6 @@ from tests.unit.hulp import lid
 from tests.unit.test_indeling_en_toewijzing import boot, plaats
 from tests.unit.test_tokens import KOPPEL, SPEC, app_uit_omgeving, bearer, eigenaar, maak
 
-PERSOONSGEGEVENS = {"adres", "telefoon", "email"}
-LIDMAATSCHAP = {"lid_sinds", "opzegdatum"}
 ROUTES = {"/plaatsen": ("plaatsen:lezen", "Plaatsen"), "/boten": ("boten:lezen", "Boten"),
           "/leden": ("leden:lezen", "Leden"), "/wachtlijst": ("wachtlijst:lezen", "Wachtlijst")}
 
@@ -58,13 +56,11 @@ def test_elke_leesroute_vraagt_haar_recht(app, api, pad):
     eigen recht."""
     loods()
     recht, naam = ROUTES[pad]
-    anders = [r for r, _ in ROUTES.values() if r != recht] + ["persoonsgegevens"]
+    anders = [r for r, _ in ROUTES.values() if r != recht]
     r = lees(api, pad, *anders)
     assert (r.status_code, r.json) == (403, {"fout": "Geen toegang."})
     r = lees(api, pad, recht)
     assert r.status_code == 200 and r.headers["Cache-Control"] == "no-store"
-    jsonschema.validate(r.json, schema(naam))
-    r = lees(api, pad, recht, "persoonsgegevens")
     jsonschema.validate(r.json, schema(naam))
 
 
@@ -79,8 +75,8 @@ def test_plaatsen_in_de_volgorde_van_het_overzicht(app, api):
          "boot": None}]
 
 
-def test_boten_zonder_persoonsgegevens_alleen_naam_en_lidnummer(app, api):
-    """BLB-032 criterium 3: naam en lidnummer, geen adres, telefoon of e-mail."""
+def test_boten_met_eigenaar_alleen_naam_en_lidnummer(app, api):
+    """BLB-032 criterium 3 (#180): naam en lidnummer, geen adres, telefoon of e-mail."""
     loods()
     rijen = {b["naam"]: b for b in lees(api, "/boten", "boten:lezen").json}
     assert [b["naam"] for b in lees(api, "/boten", "boten:lezen").json] == sorted(rijen)
@@ -89,27 +85,16 @@ def test_boten_zonder_persoonsgegevens_alleen_naam_en_lidnummer(app, api):
     assert rijen["Clubkajak"]["eigenaar"] is None and rijen["Pijl"]["plaats"] is None
 
 
-def test_boten_met_persoonsgegevens(app, api):
+def test_leden_op_lidnummer_met_lid_sinds_en_opzegdatum_voor_leden_lezen(app, api):
+    """#180: lid sinds en opzegdatum komen mee met leden:lezen, zonder ander recht."""
     loods()
-    rijen = {b["naam"]: b for b in lees(api, "/boten", "boten:lezen", "persoonsgegevens").json}
-    assert rijen["Zeemeeuw"]["eigenaar"] == {
-        "lidnummer": "1002", "naam": "Anna", "adres": "Proefweg 1, 1234 AB Voorbeelddorp",
-        "telefoon": "06-00001234", "email": "1002@example.org"}
-    assert rijen["Clubkajak"]["eigenaar"] is None
-
-
-def test_leden_op_lidnummer_zonder_en_met_persoonsgegevens(app, api):
-    """BLB-034 criteria 2 en 3: lid sinds en opzegdatum ook alleen met het recht."""
-    loods()
-    zonder = lees(api, "/leden", "leden:lezen").json
-    assert zonder == [{"lidnummer": "1001", "naam": "Bert", "oud_lid": False},
-                      {"lidnummer": "1002", "naam": "Anna", "oud_lid": False},
-                      {"lidnummer": "1003", "naam": "Carla", "oud_lid": True}]
-    met = lees(api, "/leden", "leden:lezen", "persoonsgegevens").json
-    assert {k for rij in met for k in rij} == {"lidnummer", "naam", "oud_lid"} | (
-        PERSOONSGEGEVENS | LIDMAATSCHAP)
-    assert met[1]["lid_sinds"] == "2020-04-01" and met[2]["opzegdatum"] == "2021-01-01"
-    assert met[0]["lid_sinds"] is None  # zonder waarde: null, niet weg
+    leden = lees(api, "/leden", "leden:lezen").json
+    assert leden == [
+        {"lidnummer": "1001", "naam": "Bert", "oud_lid": False, "lid_sinds": None, "opzegdatum": None},
+        {"lidnummer": "1002", "naam": "Anna", "oud_lid": False, "lid_sinds": "2020-04-01",
+         "opzegdatum": None},
+        {"lidnummer": "1003", "naam": "Carla", "oud_lid": True, "lid_sinds": None,
+         "opzegdatum": "2021-01-01"}]
 
 
 def test_wachtlijst_per_bootsoort_langst_wachtend_eerst_zonder_oud_leden(app, api):
@@ -119,17 +104,6 @@ def test_wachtlijst_per_bootsoort_langst_wachtend_eerst_zonder_oud_leden(app, ap
         ("Canadese kano", "Bever", "2025-06-01"), ("Kajak", "Reiger", "2026-01-01"),
         ("Kajak", "Pijl", "2026-02-01")]
     assert rijen[1]["eigenaar"] == {"lidnummer": "1001", "naam": "Bert"}
-    met = lees(api, "/wachtlijst", "wachtlijst:lezen", "persoonsgegevens").json
-    assert set(met[1]["eigenaar"]) == {"lidnummer", "naam"} | PERSOONSGEGEVENS
-
-
-@pytest.mark.parametrize("pad", ["/boten", "/leden", "/wachtlijst"])
-def test_geen_persoonsgegeven_zonder_het_recht(app, api, pad):
-    """Mutant: haal de controle op persoonsgegevens weg en deze test faalt per route."""
-    loods()
-    tekst = lees(api, pad, ROUTES[pad][0]).get_data(as_text=True)
-    for waarde in ("Proefweg", "06-0000", "@example.org", "2020-04-01", "2021-01-01"):
-        assert waarde not in tekst
 
 
 def test_openapi_voorbeelden_passen_bij_de_schemas():

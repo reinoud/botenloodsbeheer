@@ -24,9 +24,8 @@ REDENEN = {
 }
 BEWAARJAREN = 5
 LIDNUMMER = re.compile(r"[A-Za-z0-9-]{1,20}")
-EMAIL = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
 # Tekstvelden en hun maximumlengte; langer wordt ingekort.
-TEKST = {"naam": 100, "adres": 200, "telefoon": 30, "email": 254}
+TEKST = {"naam": 100}
 DATUMS = ("lid_sinds", "opzegdatum")
 
 
@@ -127,8 +126,6 @@ def valideer(record):
     velden = {v: _tekst(record, v) for v in TEKST} | {d: _datum(record, d) for d in DATUMS}
     if not velden["naam"]:
         raise Ongeldig("naam")
-    if velden["email"] and not EMAIL.fullmatch(velden["email"]):
-        raise Ongeldig("email")
     return velden
 
 
@@ -146,7 +143,7 @@ def synchroniseer(records, actor):
                  "ongeldig": 0, "overgeslagen": 0}
 
     # Ook een record met een geldig lidnummer maar ongeldige velden telt als gezien: anders
-    # zou een tikfout in een e-mailadres van een lid een oud-lid maken.
+    # zou een tikfout in een datum van een lid een oud-lid maken.
     gezien, geldig = set(), {}
     for record in records:
         nummer = lidnummer_van(record)

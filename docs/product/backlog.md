@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.7
-**Datum:** 2026-11-07
+**Versie:** v0.6.8
+**Datum:** 2026-11-09
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -16,7 +16,7 @@ De loods heeft 11 rekken met 229 plaatsen (de echte indeling, issue #80), 210 le
 Deze eisen gelden voor elke story en staan niet bij elke story herhaald:
 
 - Onder elk overzicht en elk detailscherm voor beheerders staat het log met de mutaties die erbij horen (BLB-025).
-- Persoonsgegevens (adres, telefoonnummer, e-mailadres) zijn alleen zichtbaar voor een ingelogde beheerder, en voor een token met het recht daarvoor.
+- De applicatie bewaart geen adres, telefoonnummer of e-mailadres van leden (besluit stakeholder 2026-11-08, issue #180). Naam, lidnummer en lidmaatschapsdata zijn alleen zichtbaar voor een ingelogde beheerder en voor een token met het bijbehorende leesrecht.
 - Elke pagina werkt op een groot scherm en op een telefoon.
 - Tests en voorbeeldgegevens gebruiken alleen synthetische gegevens.
 - Een bezoeker die een beheerpagina opent, ziet geen gegevens en gaat naar het inlogscherm.
@@ -161,7 +161,7 @@ Als beheerder wil ik dat de ledenlijst dagelijks en op verzoek uit e-boekhouden 
 
 Gebouwd in slice 1 met de synchronisatie in de applicatie. Sinds 2026-10-31 haalt de integratiecontainer de leden op en stuurt hij ze met `PUT /api/v1/leden`; alle criteria worden in slice 6 opnieuw getoetst via die route.
 
-- Gegeven een bereikbare bron, wanneer de import draait, dan zijn nieuwe leden aangemaakt en gewijzigde leden bijgewerkt, met het lidnummer als sleutel, en bevat elk lid naam, adres, telefoonnummer, e-mailadres, lidmaatschapsdatum en eventueel opzegdatum. (slice 6)
+- Gegeven een bereikbare bron, wanneer de import draait, dan zijn nieuwe leden aangemaakt en gewijzigde leden bijgewerkt, met het lidnummer als sleutel, en bevat elk lid naam, lidmaatschapsdatum en eventueel opzegdatum. (slice 6; adres, telefoonnummer en e-mailadres vervallen in issue #180)
 - Gegeven een integratiecontainer met een ingestelde `SYNC_TIJDSTIP`, wanneer dat tijdstip is gepasseerd en die dag nog geen import slaagde, dan start de import. (slice 6)
 - Gegeven een bron die niet antwoordt of ongeldige gegevens levert, wanneer de import draait, dan blijft de ledenlijst ongewijzigd, meldt de container de fout met een reden uit de vaste lijst (`bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd`), en staat die reden op de statuspagina. Na een fout probeert de container hooguit één keer per uur opnieuw; een verzoek van een beheerder wacht niet (besluit 2026-10-31, #28), behalve na een fout van de API zelf (zoals een geweigerd token), want dan blijft het verzoek open. (slice 6)
 - Gegeven een record zonder lidnummer, wanneer de import draait, dan slaat de applicatie dat record over, telt het als ongeldig zonder de inhoud te loggen, en verwerkt de rest. (slice 6)
@@ -568,7 +568,8 @@ Als beheerder wil ik per token instellen welke rechten het heeft zodat een koppe
 
 - Gegeven het aanmaken van een token, wanneer er geen enkel recht is gekozen, dan weigert de applicatie of de CLI. (slice 5)
 - Gegeven een token zonder het recht `leden:importeren`, wanneer het `PUT /api/v1/leden` aanroept, dan weigert de API met 403 en verandert er niets. (slice 6)
-- Gegeven een token zonder het recht op persoonsgegevens, wanneer het een boot met eigenaar opvraagt, dan staan daar naam en lidnummer maar geen adres, telefoonnummer of e-mailadres. (slice 10)
+- Gegeven een token met `boten:lezen`, wanneer het een boot met eigenaar opvraagt, dan staan daar naam en lidnummer maar geen adres, telefoonnummer of e-mailadres. (slice 10; het recht `persoonsgegevens` vervalt in issue #180)
+- Gegeven de migratie van issue #180, wanneer die draait, dan verliest elk token het recht `persoonsgegevens`, wordt een actief token dat alleen dat recht had ingetrokken met een regel in het technische log, en houdt een token met andere rechten die rechten.
 - Gegeven een bestaand token, wanneer de beheerder de rechten wijzigt, dan gelden de nieuwe rechten vanaf de volgende aanroep en staat de wijziging in het log. (slice 10)
 
 #### BLB-033 IP-whitelist per token
@@ -588,8 +589,8 @@ Prioriteit: Must. Bron: overlay §6, besluiten 2026-10-31, ADR-005, ADR-012. Afh
 Als beheerder wil ik dat de API dezelfde bedrijfsregels afdwingt, beperkt wordt en wordt gelogd zodat de API geen omweg is.
 
 - Gegeven een aanroep zonder token of met een ongeldig token, wanneer die binnenkomt, dan weigert de applicatie. (slice 5)
-- Gegeven een token zonder het recht op persoonsgegevens, wanneer het leden opvraagt, dan levert de applicatie geen adres, telefoonnummer of e-mailadres, net als de webinterface die gegevens alleen aan beheerders toont. (slice 10)
-- Gegeven een token met `plaatsen:lezen`, `boten:lezen`, `leden:lezen` of `wachtlijst:lezen`, wanneer het de bijbehorende aanroep doet, dan levert de API de hele lijst met de velden uit ADR-012; adres, telefoon, e-mail, lid sinds en opzegdatum alleen met het recht op persoonsgegevens. (slice 10)
+- Gegeven een token met `leden:lezen`, wanneer het leden opvraagt, dan levert de applicatie lidnummer, naam, oud-lidstatus, lid sinds en opzegdatum, en geen adres, telefoonnummer of e-mailadres. (slice 10; besluit stakeholder 2026-11-09, issue #180)
+- Gegeven een token met `plaatsen:lezen`, `boten:lezen`, `leden:lezen` of `wachtlijst:lezen`, wanneer het de bijbehorende aanroep doet, dan levert de API de hele lijst met de velden uit ADR-012; lid sinds en opzegdatum bij de leden zonder ander recht. (slice 10; issue #180)
 - Gegeven een import via `PUT /api/v1/leden` met minder dan de helft van het huidige aantal actieve leden, wanneer die binnenkomt, dan weigert de API met 409 en verandert er niets: de import volgt dezelfde regels als elke import (architectuur §10.1). De API kent geen andere schrijfaanroepen. (slice 6)
 - Gegeven meer dan 60 aanroepen van één token binnen een minuut, wanneer de grens wordt overschreden, dan antwoordt de API met 429 en meldt wanneer het token weer mag. (slice 5)
 - Gegeven een geweigerde aanroep, wanneer die is afgehandeld, dan staan token (als dat bekend is), tijdstip en reden in het log, zonder tokenwaarde. Een geslaagde aanroep komt niet in het log (besluit 2026-10-31, vraag 20). (slice 5)
@@ -775,6 +776,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.8 | 2026-11-09 | Issue #180: adres, telefoon en e-mail van leden en het recht `persoonsgegevens` vervallen (BLB-032, BLB-034, BLB-006 criterium 1, uitgangspunt over persoonsgegevens) |
 | v0.6.6 | 2026-11-07 | BLB-015: aantal boven de lijst en een knop Toon vrije plaatsen in plaats van versturen bij een keuze (BV-44, issue #150) |
 | v0.6.5 | 2026-11-06 | Issue #157: BLB-045, rekindeling als CSV exporteren en importeren (ADR-014) |
 | v0.6.4 | 2026-11-06 | Issue #150: BLB-027 zonder instelbare kleuren (besluit stakeholder 2026-11-06); het criterium over een waarschuwing bij slecht leesbare kleuren vervalt |

@@ -39,9 +39,6 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     expect(page.locator("main")).to_contain_text(omschrijving)
     prive = {veld: page.locator(f"[data-veld={veld}]").inner_text() for veld in ("naam", "lidnummer")}
     assert all(prive.values())
-    # Adres, telefoon en e-mail staan niet op de plaats (#178); de stub levert ze nog wel.
-    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
-        expect(page.locator("main")).not_to_contain_text(stukje)
     openbare_link = page.locator("#openbare-link").get_attribute("href")
 
     # Een vak met een boot kan niet uit en een gat in een verdieping is niet toegestaan; er
@@ -89,12 +86,10 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     html = page.content()
     for veld in ("naam", "lidnummer"):
         assert prive[veld] not in html, veld
-    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
-        assert stukje not in html, stukje
     assert bootnaam not in html and omschrijving not in html
 
     # De link uit de QR-code, als bezoeker zonder inloggen: aanduiding en omschrijving, en in de
-    # hele respons geen adres, telefoon, e-mail of lidnummer.
+    # hele respons geen lidnummer.
     uitloggen(page)
     bezoeker = browser.new_page(base_url=base_url)
     antwoord = bezoeker.goto(openbare_link)
@@ -105,8 +100,6 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     expect(bezoeker.get_by_text(prive["naam"], exact=True)).to_be_visible()
     respons = antwoord.text()
     assert prive["lidnummer"] not in respons
-    for stukje in ("Voorbeelddorp", "@example.org", "06-0000"):
-        assert stukje not in respons, stukje
     bezoeker.close()
     page.goto("/indeling")
     expect(page).to_have_url(re.compile(r"/inloggen$"))

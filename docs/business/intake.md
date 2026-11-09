@@ -209,3 +209,8 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 - De live proef van het terugschrijven op een testrelatie mag (issue #178).
 - Adres, telefoon en e-mail van leden worden niet meer bewaard. De kolommen en het tokenrecht `persoonsgegevens` verdwijnen met een migratie (issue #180).
 - Boten van oud-leden gaan automatisch van de wachtlijst wanneer de integratiecontainer de leden doorgeeft. Er komt geen knop om ze met de hand eraf te halen (issue #176).
+
+### Besluiten van de stakeholder (2026-11-09, issue #180)
+
+- Lid sinds en opzegdatum komen in de leesaanroepen van de API voortaan mee met `leden:lezen`; eerder alleen met `persoonsgegevens`.
+- Een token dat alleen `persoonsgegevens` had, wordt bij de migratie ingetrokken, met een regel in het technische log. Tokens met andere rechten verliezen alleen dat recht.

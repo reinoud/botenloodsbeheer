@@ -14,7 +14,7 @@ Bij elke aanroep stuurt de container het robottoken mee uit `/run/secrets/api_to
 
 ## Namen en nummers van leden
 
-De container logt in bij e-boekhouden met de drie codes uit zijn omgeving en vraagt alle relaties op. Een relatie telt als lid als haar soort (veld `Def2`) begint met "actief" of "opgezegd", zoals `actief_gewoon`. Van elk lid geeft hij vier gegevens door: het lidnummer uit het veld `Code`, de naam uit het veld `Bedrijf`, de datum van lid worden uit `Def3` en de opzegdatum uit `Def7`. Adres, telefoon en e-mail neemt hij niet mee. De applicatie vult die velden dan leeg, ook bij een lid dat ze eerder had.
+De container logt in bij e-boekhouden met de drie codes uit zijn omgeving en vraagt alle relaties op. Een relatie telt als lid als haar soort (veld `Def2`) begint met "actief" of "opgezegd", zoals `actief_gewoon`. Van elk lid geeft hij vier gegevens door: het lidnummer uit het veld `Code`, de naam uit het veld `Bedrijf`, de datum van lid worden uit `Def3` en de opzegdatum uit `Def7`. Adres, telefoon en e-mail neemt hij niet mee, en de applicatie bewaart ze niet meer (issue #180).
 
 Datums moeten in e-boekhouden als JJJJ-MM-DD staan. Een record met een andere notatie telt in de API als ongeldig en wordt overgeslagen.
 

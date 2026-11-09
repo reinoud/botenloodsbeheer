@@ -71,8 +71,7 @@ def lid(lidnummer="1001", naam="Anna de Vries", **velden):
     alleen lezen. Geeft het lid in de sessie van de test."""
     engine = create_engine(API)
     with Session(engine) as taak:
-        nieuw = Lid(lidnummer=lidnummer, naam=naam, adres="Proefweg 1, 1234 AB Voorbeelddorp",
-                    telefoon="06-00001234", email=f"{lidnummer}@example.org", **velden)
+        nieuw = Lid(lidnummer=lidnummer, naam=naam, **velden)
         taak.add(nieuw)
         taak.commit()
         lid_id = nieuw.id

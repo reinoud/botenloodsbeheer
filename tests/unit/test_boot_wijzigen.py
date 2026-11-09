@@ -154,7 +154,7 @@ def test_eigenaarwissel_logt_geen_persoonsgegevens_en_beide_leden(app):
     (r,) = regels()
     assert r.gegevens == {"eigenaar": [f"lid:{anna.id}", f"lid:{bert.id}"]}
     assert r.verwijzingen == [f"boot:{b.id}", f"lid:{anna.id}", f"lid:{bert.id}"]
-    for deel in (anna.naam, bert.naam, anna.email, bert.lidnummer):
+    for deel in (anna.naam, bert.naam, bert.lidnummer):
         assert deel not in str((r.gegevens, r.verwijzingen))
     for betrokken in (anna, bert):
         assert r.id in [x.id for x in log.regels([f"lid:{betrokken.id}"])]

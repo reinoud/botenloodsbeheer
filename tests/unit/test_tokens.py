@@ -86,9 +86,10 @@ def test_geldigheid_hooguit_3_jaar(app):
 
 
 @pytest.mark.parametrize("rechten,melding", [([], "minstens één recht"),
-                                             (["leden:schrijven"], "Onbekend recht")])
+                                             (["leden:schrijven"], "Onbekend recht"),
+                                             (["persoonsgegevens"], "Onbekend recht: persoonsgegevens")])
 def test_zonder_of_met_onbekend_recht_geweigerd(app, rechten, melding):
-    """BLB-032 criterium 1."""
+    """BLB-032 criterium 1; persoonsgegevens is sinds #180 een onbekend recht."""
     with pytest.raises(Regelfout, match=melding):
         maak(rechten=rechten)
     assert db.session.scalar(select(Token)) is None
@@ -275,7 +276,7 @@ def test_api_kent_de_webinterface_niet(client):
 @pytest.mark.parametrize("sql", [
     ("INSERT INTO token (naam, soort, prefix, hash, rechten, ip_whitelist, verloopt_op) VALUES "
      "('x', 'robot', 'AAAAAAAA', 'x', '{leden:importeren}', '{10.0.0.0/8}', now())"),
-    "UPDATE token SET rechten = '{persoonsgegevens}'", "UPDATE token SET ingetrokken_op = NULL",
+    "UPDATE token SET rechten = '{boten:lezen}'", "UPDATE token SET ingetrokken_op = NULL",
     "UPDATE token SET ip_whitelist = '{0.0.0.0/0}'", "DELETE FROM token",
     "DELETE FROM logregel", "UPDATE logregel SET actie = 'x'",
     # Sinds slice 6 maakt api leden aan en werkt ze bij (ADR-012), maar verwijdert niets.

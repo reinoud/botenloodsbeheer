@@ -20,7 +20,7 @@ class Ledenbron:
     kan_terugschrijven = False
 
     def haal_leden(self):
-        """Lijst van dicts met lidnummer, naam, adres, telefoon, email, lid_sinds en opzegdatum
+        """Lijst van dicts met lidnummer, naam, lid_sinds en opzegdatum
         (datums als JJJJ-MM-DD). Gooit LedenbronFout."""
         raise NotImplementedError
 
