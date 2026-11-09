@@ -2,6 +2,8 @@
 {% from "_wachtwoord.html" import wachtwoordformulier %}
 {% block titel %}Profiel · {{ vereniging }}{% endblock %}
 {% block inhoud %}
+{# Na een mislukte poging staat het wachtwoordblok open, zoals op Inloggen (#188). #}
+{% set mislukt = get_flashed_messages(category_filter=['fout'])|length > 0 %}
 {% macro intrekken(methode, tekst) %}
 <div class="bl-item__actie">
   <form method="post" action="{{ url_for('web.profiel_intrekken') }}">
@@ -46,7 +48,7 @@
     </div>
   </details>
   {% if not beheerder.wachtwoordhash %}
-  <details class="dj-disclosure">
+  <details class="dj-disclosure"{% if mislukt %} open{% endif %}>
     <summary>Wachtwoord en authenticator-app toevoegen</summary>
     <div class="bl-uitklap__inhoud">
       {{ wachtwoordformulier(url_for('web.profiel_wachtwoord'), 'Wachtwoord toevoegen', qr, geheim) }}

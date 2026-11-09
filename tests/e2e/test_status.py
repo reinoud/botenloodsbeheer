@@ -1,5 +1,5 @@
-"""Slice 9: technische statuspagina (BLB-037, ADR-010) en de bootaantallen via GET /api/v1/bootaantallen (BLB-009).
-draai.sh maakt een token dat over 10 dagen verloopt
+"""Slice 9: technische statuspagina (BLB-037, ADR-010) en de bootaantallen
+via GET /api/v1/bootaantallen (BLB-009). draai.sh maakt een token dat over 10 dagen verloopt
 (e2e-kort-<stempel>) en tokens met en zonder het recht bootaantallen:lezen."""
 
 import json
@@ -54,6 +54,7 @@ def test_bootaantallen_api_gelijk_aan_de_boten_met_plaats(page):
         lidnummer = page.locator("[data-label='Lidnummer']",
                                  has_text=re.compile(f"^{re.escape(regel['lidnummer'])}$"))
         page.locator("main > ul.bl-lijst > li").filter(has=lidnummer).get_by_role("link").click()
+        expect(page.get_by_role("heading", name="Boten in de loods")).to_be_visible()
         expect(page.get_by_role("heading", name="Aantal boten per bootsoort")).to_have_count(0)
         # Alleen boten met een plaats tellen: de plaats is een link, "Geen plaats" niet.
         met_plaats = page.locator("li.bl-item").filter(has=page.locator("a[data-label='Plaats']"))
