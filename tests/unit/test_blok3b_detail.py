@@ -197,7 +197,7 @@ def test_lid_toont_boten_als_lijst_met_wachtlijst_alleen_bij_een_boot_op_de_lijs
     boot(anna.id, naam="Losse")
     tekst = ingelogd.get(f"/leden/{anna.id}").text
     items = {re.search(r'data-label="Boot"[^>]*>([^<]*)<', i).group(1): i for i in re.findall(
-        r'<li class="bl-item">(.*?)</li>', tekst.split("Aantal boten per bootsoort")[0], re.DOTALL)}
+        r'<li class="bl-item">(.*?)</li>', tekst.split("Log</summary>")[0], re.DOTALL)}
     assert list(items) == ["Bezetter", "Losse", "Wachter"]  # op naam
     assert f'href="/plaatsen/{p.id}">{p.code}</a>' in items["Bezetter"] and "Wachtlijst" not in items["Bezetter"]
     assert 'Wachtlijst: <span data-label="Wachtlijst">Sinds 01-03-2024</span>' in items["Wachter"]
@@ -205,12 +205,10 @@ def test_lid_toont_boten_als_lijst_met_wachtlijst_alleen_bij_een_boot_op_de_lijs
     assert "<table" not in tekst
 
 
-def test_lid_zonder_boten_en_oud_lid_en_de_aantallen_onder_de_lijst(ingelogd):
+def test_lid_zonder_boten_en_oud_lid(ingelogd):
     anna = lid()
     tekst = ingelogd.get(f"/leden/{anna.id}").text
     assert 'role="status">Dit lid heeft geen boten in de loods.</div>' in tekst
-    assert tekst.index("Boten in de loods") < tekst.index("Aantal boten per bootsoort")
-    assert tekst.count('data-label="Aantal"') == 5  # elke bootsoort, ook met 0
     assert "Lidnummer 1001." in tekst
     oud = oud_lid_boot().lid
     assert "Lidnummer 1003, oud-lid." in ingelogd.get(f"/leden/{oud.id}").text

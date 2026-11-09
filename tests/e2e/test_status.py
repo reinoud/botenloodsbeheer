@@ -1,10 +1,11 @@
-"""Slice 9: technische statuspagina (BLB-037, ADR-010) en de bootaantallen in de lijst per lid en
-via GET /api/v1/bootaantallen (BLB-009). draai.sh maakt een token dat over 10 dagen verloopt
+"""Slice 9: technische statuspagina (BLB-037, ADR-010) en de bootaantallen via GET /api/v1/bootaantallen (BLB-009).
+draai.sh maakt een token dat over 10 dagen verloopt
 (e2e-kort-<stempel>) en tokens met en zonder het recht bootaantallen:lezen."""
 
 import json
 import os
 import re
+from collections import Counter
 
 from conftest import STEMPEL, wachtwoord_instellen
 from playwright.sync_api import expect
@@ -41,21 +42,23 @@ def test_status_zonder_inloggen_naar_inloggen(page):
     assert "database" not in page.content()
 
 
-def test_bootaantallen_api_gelijk_aan_de_lijst_per_lid(page):
-    """BLB-009 criteria 2 en 3: de seed zet boten van leden op plaatsen."""
+def test_bootaantallen_api_gelijk_aan_de_boten_met_plaats(page):
+    """BLB-009 criterium 2 en issue #179: de API telt de boten met een plaats op de lidpagina."""
     status, _, tekst = roep(f"{API}/bootaantallen", token("lezen"))
     assert status == 200
-    regel = next(r for r in json.loads(tekst) if any(r["aantallen"].values()))
+    regels = [r for r in json.loads(tekst) if any(r["aantallen"].values())]
+    assert regels
     wachtwoord_instellen(page, "bootaantallen")
-    page.goto(f"/leden?zoek={regel['lidnummer']}")
-    lidnummer = page.locator("[data-label='Lidnummer']",
-                             has_text=re.compile(f"^{re.escape(regel['lidnummer'])}$"))
-    page.locator("main > ul.bl-lijst > li").filter(has=lidnummer).get_by_role("link").click()
-    tabel = page.locator("h2:has-text('Aantal boten per bootsoort') + p + ul")
-    getoond = dict(zip(tabel.locator("[data-label='Bootsoort']").all_inner_texts(),
-                       map(int, tabel.locator("[data-label='Aantal']").all_inner_texts()),
-                       strict=True))
-    assert getoond == regel["aantallen"]
+    for regel in regels:  # een lid met een boot zonder plaats vangt een telling die die boot meetelt
+        page.goto(f"/leden?zoek={regel['lidnummer']}")
+        lidnummer = page.locator("[data-label='Lidnummer']",
+                                 has_text=re.compile(f"^{re.escape(regel['lidnummer'])}$"))
+        page.locator("main > ul.bl-lijst > li").filter(has=lidnummer).get_by_role("link").click()
+        expect(page.get_by_role("heading", name="Aantal boten per bootsoort")).to_have_count(0)
+        # Alleen boten met een plaats tellen: de plaats is een link, "Geen plaats" niet.
+        met_plaats = page.locator("li.bl-item").filter(has=page.locator("a[data-label='Plaats']"))
+        getoond = Counter(met_plaats.locator("[data-label='Bootsoort']").all_inner_texts())
+        assert {s: getoond[s] for s in regel["aantallen"]} == regel["aantallen"], regel["lidnummer"]
 
 
 def test_bootaantallen_zonder_recht_403():

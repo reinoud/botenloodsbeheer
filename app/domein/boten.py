@@ -170,18 +170,15 @@ def boot_verwijderen(boot_id, actor):
     db.session.commit()
 
 
-def bootaantallen(lid_id=None):
+def bootaantallen():
     """Per lid elke bootsoort met het aantal, ook 0 (ADR-004, ADR-012). Alleen boten met een
-    plaats tellen; clubboten hebben geen lid en vallen dus weg (besluit 2026-10-31). De lijst per
-    lid en de API gebruiken deze ene telling."""
+    plaats tellen; clubboten hebben geen lid en vallen dus weg (besluit 2026-10-31)."""
     soorten = db.session.scalars(select(Bootsoort.naam).order_by(Bootsoort.id)).all()
     telling = Counter(db.session.execute(
         select(Boot.lid_id, Bootsoort.naam).join(Boot.bootsoort).join(Boot.plaats)).all())
-    q = select(Lid.id, Lid.lidnummer).order_by(Lid.lidnummer)
-    if lid_id is not None:
-        q = q.where(Lid.id == lid_id)
+    leden = db.session.execute(select(Lid.id, Lid.lidnummer).order_by(Lid.lidnummer))
     return [{"lidnummer": nummer, "aantallen": {s: telling[(i, s)] for s in soorten}}
-            for i, nummer in db.session.execute(q)]
+            for i, nummer in leden]
 
 
 def bootaantallen_ophalen():

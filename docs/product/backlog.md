@@ -204,8 +204,7 @@ Prioriteit: Should. Bron: intake (leden en e-boekhouden, besluiten 2026-10-31), 
 Als beheerder wil ik dat het aantal boten per bootsoort per lid klaarstaat voor terugschrijven naar e-boekhouden, zodat de vereniging dit later kan inschakelen zonder nieuwbouw.
 
 - Gegeven een standaardinstallatie, wanneer de integratiecontainer draait, dan stuurt hij niets naar de bron: terugschrijven staat uit tot `BOOTAANTALLEN_SCHRIJVEN=aan` (besluit stakeholder 2026-11-08, #178). Staat het aan, dan schrijft de bron e-boekhouden na een geslaagde import per lid de aantallen als JSON-tekst in vrij veld 10 (`boten_in_loods`); de stub kan niet terugschrijven.
-- Gegeven een lid met boten, wanneer de beheerder de lijst per lid opent (BLB-019), dan staat daar het aantal boten per bootsoort: de gegevens die later worden teruggeschreven.
-- Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0, en dezelfde aantallen als de lijst per lid. Er tellen alleen boten met een toegewezen plaats; clubboten tellen niet mee (besluit 2026-10-31).
+- Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0. Er tellen alleen boten met een toegewezen plaats; clubboten tellen niet mee (besluit 2026-10-31).
 - Gegeven een lid met één boot op een plaats en één boot op de wachtlijst, wanneer de API de bootaantallen levert, dan telt alleen de boot op de plaats.
 - Gegeven een clubboot op een clubplaats, wanneer de API de bootaantallen levert, dan staat die boot er niet in. De applicatie kent geen prijzen; de afrekening per bootsoort gebeurt in de ledenadministratie.
 - Gegeven een token zonder het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan weigert de API met 403.

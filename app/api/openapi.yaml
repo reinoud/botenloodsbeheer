@@ -270,7 +270,7 @@ paths:
       description: >
         Recht: `bootaantallen:lezen`. Argumenten: geen. Voor elk lid elke bootsoort met het
         aantal, ook 0. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst
-        zonder plaats en een clubboot tellen niet. Dezelfde aantallen staan in de lijst per lid.
+        zonder plaats en een clubboot tellen niet.
         De meegeleverde integratiecontainer roept dit op na elke geslaagde import en schrijft de
         aantallen als JSON-tekst in vrij veld 10 van het lid in e-boekhouden, maar alleen met
         `BOOTAANTALLEN_SCHRIJVEN=aan`; die schakelaar staat standaard uit. De aanroep zelf zet

@@ -434,7 +434,6 @@ def lid_detail(lid_id):
     # BLB-019: boten met plaats.
     lid = _of_404(leden.lid, lid_id)
     return render_template("lid.html", lid=lid, oud_lid=leden.is_oud_lid(lid),
-                           aantallen=boten.bootaantallen(lid.id)[0]["aantallen"],
                            regels=log.regels([f"lid:{lid.id}"]))
 
 

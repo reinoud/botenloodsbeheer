@@ -1,8 +1,7 @@
-"""Bootaantallen per lid in de lijst per lid en via GET /api/v1/bootaantallen (BLB-009, ADR-004,
+"""Bootaantallen via GET /api/v1/bootaantallen (BLB-009, ADR-004,
 ADR-012) en de technische statuspagina (BLB-037, ADR-010)."""
 
 import os
-import re
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
@@ -49,14 +48,11 @@ def test_telregel_alleen_boten_met_plaats_zonder_clubboten(app):
     assert boten.bootaantallen() == VERWACHT
 
 
-def test_lijst_per_lid_toont_dezelfde_aantallen(app, ingelogd):
-    """BLB-009 criterium 2."""
-    anna, bert = loods()
+def test_lidpagina_toont_geen_aantallen_per_bootsoort(app, ingelogd):
+    """Issue #179: de lijst vervalt; de API levert de aantallen."""
+    anna, _ = loods()
     html = ingelogd.get(f"/leden/{anna.id}").get_data(as_text=True)
-    assert "Aantal boten per bootsoort" in html
-    for soort, aantal in VERWACHT[0]["aantallen"].items():
-        assert re.search(rf'data-label="Bootsoort">{soort}</span>\s*</div>\s*<p class="bl-item__zijde"><span data-label="Aantal">{aantal}</span>', html)
-    assert 'data-label="Aantal">1<' not in ingelogd.get(f"/leden/{bert.id}").get_data(as_text=True)
+    assert "Aantal boten per bootsoort" not in html and 'data-label="Aantal"' not in html
 
 
 @pytest.fixture
