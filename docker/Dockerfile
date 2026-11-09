@@ -10,7 +10,8 @@ ENV PYTHONUNBUFFERED=1 \
     PATH=/opt/venv/bin:$PATH \
     FLASK_APP=app
 # libpq uit Debian krijgt beveiligingsupdates; psycopg-binary leverde oude pcre en libcrypto mee (#86).
-RUN apt-get update && apt-get install --yes --no-install-recommends libpq5 \
+# shortcut: zlib1g uit Debian bijwerken (CVE-2026-85091), weg zodra het basisimage deb13u1 heeft.
+RUN apt-get update && apt-get install --yes --no-install-recommends libpq5 zlib1g \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
