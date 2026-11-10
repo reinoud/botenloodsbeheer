@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.53
+**Versie overlay:** v0.5.54
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -126,7 +126,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
-- Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`; bekend wisselvallig is `test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt` (#172).
+- Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`; bekend wisselvallig zijn `test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt` (#172) en `test_methode_intrekken_beeindigt_sessie_laatste_blijft` (#217).
 - Controleer of een schermafbeelding van het scherm bestaat voordat de opdracht haar opnieuw laat maken.
 - `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`.
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
@@ -142,6 +142,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
 - Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging, en draait daarna de volledige unitsuite, niet alleen het eigen testbestand.
 - Een mutant via tekstvervanging gebeurt met python3, met een assert dat de kopie verschilt van het origineel; een mutant die niet is toegepast, laat alles slagen.
+- Een nieuwe `if` met meer voorwaarden krijgt per voorwaarde een eigen mutant die alleen die voorwaarde weglaat, met de assert die valt; een mutant die de hele regel uitzet, telt niet voor de afzonderlijke voorwaarden. Dat geldt ook voor een herstel door de regie.
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
 - Tot #213 dicht is: een nieuw E2E-bestand krijgt een naam die alfabetisch na `test_inloggen.py` valt, of de bouwer meldt de uitkomst van `test_passkey_instellen_uitloggen_en_inloggen` in de volledige run.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
@@ -171,6 +172,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
 - Draai een mutant op een gedeelde set of functie tegen de hele unitsuite, of noem de test die de set bewaakt (zoals `test_log.py` voor `log.TECHNISCH`).
 - Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
+- Stelt een brief de reviewer een vraag (zoals "komt een oud-lid erdoor?"), noem dan de test die het bewijst, of zeg dat er geen test is.
+- Heeft de regie na de bouw iets hersteld, zeg dan in de brief dat de mutanten van de bouwer verouderd zijn, en lever bij een eigen mutant de diff tegen de gestagede bron mee (`git show :<pad> | diff - <mutant>`).
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
 - Zeg in een reviewbrief of de unitsuite en de E2E-suite tegelijk mogen draaien. `draai.sh` duurt meer dan tien minuten: start hem in de achtergrond en tel de uitkomst over alle sessies op.
 - Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
@@ -409,6 +412,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.54 | 2026-11-10 | Eén regel (Bouw) aangevuld en één nieuw (Bouw), twee nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #202: mutant per voorwaarde, wisselvallige test #217, bewijs bij een vraag aan de reviewer, verouderde mutanten na een herstel | Lessen |
 | v0.5.53 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), één nieuw (Migratie en database), drie nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #204: volledige unitsuite na een eigen herstel, mutant met python3 en controle, overgenomen bouw, E2E-bestandsnaam tot #213, racetest bij elke nieuwe `with_for_update`, eigen proef los, live proef van aegis, testnaam | Lessen |
 | v0.5.52 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), twee nieuw (Security en proxy) uit de terugblikken van bedrock, sentinel en aegis bij #190: mutanten altijd op een kopie, blok open na weigering, melding per toestand, eigen testgegevens opruimen, E2E aan beide kanten van een proxygrens, eigen sessie voor de reviewer | Lessen |
 | v0.5.51 | 2026-11-10 | Drie regels (Security en proxy) uit release 0.4.0/0.4.1 en de terugblikken van sentinel bij #199 en de Dependabot-PR's: lokaal scannen vóór het taggen, zlib-fix via apt met alle CVE's, cooldown per Dependabot-PR controleren | Lessen |
