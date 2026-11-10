@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.54
+**Versie overlay:** v0.5.55
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -43,6 +43,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Teksten volgen de skill `schrijfstijl`.
 - Elke open pull request van Dependabot krijgt een issue (`taak`, `dependencies`), tenzij er al een is. Het issue noemt wat de PR mist, zoals een pakketversie die niet meebeweegt. Besluit van de stakeholder, 2026-11-05.
 - Normenbibliotheek: `/Users/reinoud/Projects/AI/01. Standaarden/`. Raadplegen mag, kopiëren niet.
+- Werk gebeurt in milestones die de regie met de stakeholder afstemt. Vóór een milestone legt de regie een voorstel voor: de issues, de volgorde, wat af betekent en wat er bewust buiten valt. Pas na akkoord start het werk. Binnen een afgestemde milestone werkt de regie door zonder tussenakkoord; een nieuw issue dat tijdens het werk ontstaat, gaat naar de volgende afstemming en niet stil de milestone in, tenzij het de milestone zelf blokkeert. Na de milestone meldt de regie de uitkomst en stelt de volgende voor. Besluit van de stakeholder, 2026-11-10.
 
 ### Briefingchecklist
 
@@ -233,6 +234,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem een mutant alleen met een code die in de specificatiebestanden van de bouwer staat; staat hij er niet in, noem dan de vervangtekst.
 - Noem bij een mutant de nieuwe assert die hem moet vangen (bestand:regel), en zeg erbij als een bredere assert hem eerder vangt.
 - Moet de reviewer een mutant tegen de E2E-stack draaien, zeg dan of `web` daarvoor even met een kopie mag draaien. Anders volstaat bewijs uit de data van de seed, zoals een leesquery die laat zien dat de seed het geval bevat.
+- Vraag je een reviewer of gegevens "via een andere weg" binnenkomen, noem dan ook de bronadapter in `integratie/koppeling/` als te toetsen pad, met het filter dat bepaalt wat de bron als lid levert.
+- Wijzigt een diff een regel uit een ADR, laat de reviewer dan in alle ADR's en documentatie zoeken naar verwijzingen naar die regel en naar de oude formulering, ook buiten de gestagede bestanden.
+- Rekent een migratie met `CURRENT_DATE`, noem dan de tijdzone van de database (`SHOW timezone`, Etc/UTC) en die van de installatie (`TZ`, Europe/Amsterdam).
 
 #### E2E
 
@@ -412,6 +416,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.55 | 2026-11-10 | Werken in milestones die de regie vooraf met de stakeholder afstemt (§4); drie nieuwe regels (Review) uit de terugblikken van aegis en sentinel bij #203: bronadapter als andere weg, oude ADR-formulering buiten de diff, tijdzone bij `CURRENT_DATE` | Besluit stakeholder 2026-11-10 |
 | v0.5.54 | 2026-11-10 | Eén regel (Bouw) aangevuld en één nieuw (Bouw), twee nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #202: mutant per voorwaarde, wisselvallige test #217, bewijs bij een vraag aan de reviewer, verouderde mutanten na een herstel | Lessen |
 | v0.5.53 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), één nieuw (Migratie en database), drie nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #204: volledige unitsuite na een eigen herstel, mutant met python3 en controle, overgenomen bouw, E2E-bestandsnaam tot #213, racetest bij elke nieuwe `with_for_update`, eigen proef los, live proef van aegis, testnaam | Lessen |
 | v0.5.52 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), twee nieuw (Security en proxy) uit de terugblikken van bedrock, sentinel en aegis bij #190: mutanten altijd op een kopie, blok open na weigering, melding per toestand, eigen testgegevens opruimen, E2E aan beide kanten van een proxygrens, eigen sessie voor de reviewer | Lessen |
