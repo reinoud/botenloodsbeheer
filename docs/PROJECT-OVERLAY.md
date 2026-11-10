@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.59
+**Versie overlay:** v0.5.60
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -338,6 +338,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een grens die alleen achter Traefik en Gunicorn werkt (buffering, lichaam weglezen), krijgt een E2E-test aan beide kanten van de buitengrens, met de herkomst van elke 413, zoals `tests/e2e/test_import.py` voor de API.
 - Een reviewer die een webroute met sessie via de proxy toetst, mag in de container `web` een eigen beheerder `aegis<issue>` aanmaken en een sessiecookie tekenen met `app.session_interface.get_signing_serializer(app)`; hij verwijdert die beheerder daarna met een delete op id én gebruikersnaam en meldt het id.
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
+- ZAP in de netwerkruimte van Traefik draait met `-port 8099` (8080 is daar bezet). Bewaar de scripts van een DAST-ronde zonder geheimen in de scratchpad en noem hun pad in het verslag, zodat de volgende ronde kan hertoetsen zonder opnieuw te bouwen.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
 - Draai `tests/proxy/draai.sh` na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik; herbouw eerst `botenloods-app` als `app/` gewijzigd is, want het script bouwt niet. Schrijf de uitvoer naar een bestand met tijdstempel en controleer daarna met `docker ps -a` en `docker network ls` dat niets met `proxytest` achterblijft. Een mutant op die labels draai je met `EXTERN_BESTAND=<kopie in de scratchpad>`. Het script draait niet twee keer tegelijk (vaste projectnaam) en toetst het gedrag, niet elke vlag van Traefik: zonder `insecure` of met `forwardedHeaders.trustedIPs` blijft het groen. De tweede ronde toetst het PROXY protocol (`proxyprotocol.trustedips`) op `websecure`, niet op `web`.
 - Een proef boven een rate limit van Traefik met TLS stuurt de aanroepen over één keep-alive-verbinding, of controleert dat ze sneller komen dan de grens bijvult; een nieuwe TLS-verbinding per aanroep kost ongeveer 100 ms.
@@ -430,6 +431,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.60 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij de DAST vóór v1.0.0 | Lessen |
 | v0.5.59 | 2026-11-10 | Eén regel (Security en proxy) uit de terugblik van aegis bij de securityronde vóór v1.0.0 | Lessen |
 | v0.5.58 | 2026-11-10 | Twee regels (Security en proxy) uit #196 en de terugblik van sentinel: breuken bij een sprong in uv, versie binnen de cooldown kiezen | Lessen |
 | v0.5.57 | 2026-11-10 | Uit de terugblikken bij #221 en #223 en de ervaring van de regie: drie nieuwe regels (Algemeen) over filters op externe invoer, gedeelde functies en berichten naar `main`; één nieuw (Review) over de nareview; de regel over de worktree (Review) aangevuld met env-bestand en `secrets/`; slotcommentaar vóór de merge (§4) | Lessen |
