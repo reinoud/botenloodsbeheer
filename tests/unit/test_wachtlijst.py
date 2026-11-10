@@ -2,6 +2,7 @@
 automatische toewijzing (BLB-011 criterium 3) en de lijst per lid (BLB-019 criterium 1).
 De import die boten van oud-leden van de lijst haalt, staat in test_leden.py (BLB-008, #27)."""
 
+import re
 from datetime import date, timedelta
 
 import pytest
@@ -386,7 +387,7 @@ def test_keuzelijst_alleen_met_boten_die_toewijzen_accepteert(ingelogd):  # noqa
     db.session.add(Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=oud.id))
     db.session.commit()
     r = ingelogd.get(f"/plaatsen/{p.id}").text
-    assert "Kievit" in r and "Clubkajak" not in r and "Oudje" not in r
+    assert "Kievit" in r and "Clubkajak (Kajak, clubboot)" in r and "Oudje" not in r  # #205
     r = ingelogd.get(f"/plaatsen/{club.id}").text
     assert "Clubkajak" in r and "Kievit" not in r and "Oudje" not in r
     leeg = plaats("A/1/3", soorten=("Surfski",))
@@ -411,10 +412,45 @@ def test_bootpagina_toont_alleen_vrije_passende_plaatsen_in_volgorde_van_de_lood
     assert eerste.code in keuzes and tweede.code in keuzes
     assert "A/1/2" not in keuzes and "A/1/3" not in keuzes and "A/1/4" not in keuzes
     assert "Wijs toe aan plek" in r
-    # Besluit stakeholder 2026-11-05: een clubboot kiest uit de vrije clubplaatsen.
+    assert "<optgroup" not in keuzes  # een ledenboot: één lijst zonder groepen (BV-74)
+    # Besluit stakeholder 2026-11-10 (BV-74, #205): een clubboot kiest uit twee groepen, clubplaatsen eerst.
+    # Mutant: vrije_plaatsen zonder ook_club valt op de volgorde; zonder de groepen op de optgroup.
+    c = boot(None, naam="Clubkajak")
+    r = ingelogd.get(f"/boten/{c.id}").text
+    keuzes = r.split('name="plaats_id"')[1].split("</select>")[0]
+    groepen = re.findall(r'<optgroup label="([^"]+)">(.*?)</optgroup>', keuzes, re.S)
+    assert [g for g, _ in groepen] == ["Clubplaatsen", "Gewone plaatsen"]
+    assert club.code in groepen[0][1] and "A/1/1" not in groepen[0][1]
+    assert groepen[1][1].index("A/1/1") < groepen[1][1].index("A/2/1")
+    assert "A/1/2" not in keuzes and "A/1/4" not in keuzes  # verkeerde soort, bezet
+    assert "Vrije plaats voor kajak" in r and "Vrije clubplaats" not in r
+
+
+def test_bootpagina_van_een_clubboot_laat_een_lege_groep_weg(ingelogd):  # noqa: F811
+    club = plaats("A/1/1", club=True)
     c = boot(None, naam="Clubkajak")
     keuzes = ingelogd.get(f"/boten/{c.id}").text.split('name="plaats_id"')[1].split("</select>")[0]
-    assert club.code in keuzes and "A/1/1" not in keuzes and "A/2/1" not in keuzes
+    assert 'label="Clubplaatsen"' in keuzes and "Gewone plaatsen" not in keuzes and club.code in keuzes
+    toewijzing.toewijzen(club.id, c.id, CLI)
+    gewoon = plaats("A/1/2")
+    d = boot(None, naam="Tweede")
+    keuzes = ingelogd.get(f"/boten/{d.id}").text.split('name="plaats_id"')[1].split("</select>")[0]
+    assert 'label="Gewone plaatsen"' in keuzes and "Clubplaatsen" not in keuzes and gewoon.code in keuzes
+
+
+def test_bootpagina_van_een_clubboot_zonder_vrije_plaats_zegt_dat_zonder_aparte_melding(ingelogd):  # noqa: F811
+    plaats("A/1/1", soorten=("Surfski",), club=True)
+    c = boot(None, naam="Clubkajak")
+    r = ingelogd.get(f"/boten/{c.id}").text
+    assert "Er is geen vrije plaats voor kajak." in r and "<optgroup" not in r and "lubplaats" not in r
+
+
+def test_clubboot_toewijzen_aan_een_gewone_plaats_via_de_bootpagina(ingelogd):  # noqa: F811
+    p, c = plaats(), boot(None, naam="Clubkajak")
+    r = ingelogd.post(f"/boten/{c.id}/toewijzen", data={"plaats_id": p.id}, follow_redirects=True)
+    assert "De boot heeft de plaats gekregen." in r.text
+    db.session.expire_all()
+    assert db.session.get(Plaats, p.id).boot_id == c.id
 
 
 def test_toewijzen_vanaf_bootpagina_haalt_boot_van_de_wachtlijst(ingelogd):  # noqa: F811

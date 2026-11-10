@@ -367,7 +367,7 @@ FOUTEN = {
     "lidnummer-te-lang": (f"A/1/1;Reiger;Kajak;;{'1' * 21}", "Het lidnummer is ongeldig."),
     "bootsoort-past-niet": ("A/1/1;Reiger;Surfski;;1001",
                             "Plaats A/1/1 is niet geschikt voor een surfski."),
-    "clubboot-op-ledenplaats": ("A/1/1;Reiger;Kajak;clubboot;", "Boot Reiger is een clubboot en hoort op een clubplaats."),
+    "clubboot-past-niet": ("A/1/1;Reiger;Surfski;clubboot;", "Plaats A/1/1 is niet geschikt voor een surfski."),
     "clubboot-met-lidnummer": ("C/1/1;Reiger;Kajak;Clubboot;1001", "Een clubboot heeft geen lidnummer."),
     "onbekende-eigenaar-op-clubplaats": ("C/1/1;Reiger;Kajak;;", "Plaats C/1/1 is een clubplaats en alleen voor clubboten."),
     "ledenboot-op-clubplaats": ("C/1/1;Reiger;Kajak;;1001",
@@ -443,14 +443,13 @@ def test_koppelen_volgorde_lidnummer_dan_onthouden_koppeling_dan_exacte_naam(app
         (bert.id, False, False, "koppeling"), (anna.id, False, False, "naam"),
         (anna.id, False, False, "lidnummer"), (None, True, False, "koppeling"),
         (None, False, True, ""), (None, True, False, "")]
-    # B6 en B8 zijn clubboten op een ledenplaats; B7 is onbekend en past daar wel
-    assert [u.uitkomst for u in (uitkomst[7], uitkomst[8], uitkomst[9])] == ["fout", "nieuwe boot", "fout"]
-    assert "clubplaats" in uitkomst[7].melding and "clubplaats" in uitkomst[9].melding
+    # B6 en B8 zijn clubboten op een gewone plaats: dat mag (#205)
+    assert [u.uitkomst for u in (uitkomst[7], uitkomst[8], uitkomst[9])] == ["nieuwe boot"] * 3
 
 
 def test_leeg_is_een_onbekende_eigenaar_en_het_woord_clubboot_een_clubboot_bij_bevestigen(app, actor):
     """#204: de oude regel "leeg is een clubboot" is weg. De onbekende eigenaar past op een gewone
-    plaats en de clubboot alleen op een clubplaats; bevestigen maakt de boten met de juiste toestand."""
+    plaats en de clubboot hier op een clubplaats; bevestigen maakt de boten met de juiste toestand."""
     plaats("A/1/1")
     plaats("C/1/1", club=True)
     plaats("C/1/2", club=True)
@@ -470,13 +469,24 @@ def test_een_onbekende_eigenaar_en_een_clubboot_met_dezelfde_naam_zijn_twee_bote
     assert [(x.uitkomst, x.nieuw) for x in u.values()] == [("ongewijzigd", False), ("nieuwe boot", True)]
 
 
+def test_clubboot_op_een_gewone_plaats_wordt_geimporteerd_en_op_een_clubplaats_ook(app, actor):
+    """#205. Mutant: de oude regel terug in controleer_past valt op de tweede assert."""
+    plaats("A/1/1")
+    plaats("C/1/1", club=True)
+    u = beoordeling(bestand("A/1/1;Reiger;Kajak;clubboot;", "C/1/1;Fuut;Kajak;clubboot;"), actor)
+    assert [x.uitkomst for x in u.values()] == ["nieuwe boot", "nieuwe boot"]
+    assert bezetting_csv.bevestigen(actor)["nieuw"] == 2
+    assert {b.naam: (b.clubboot, b.plaats.code) for b in db.session.scalars(select(Boot))} == {
+        "Reiger": (True, "A/1/1"), "Fuut": (True, "C/1/1")}
+
+
 def test_een_clubboot_met_lidnummer_is_een_fout_en_een_naam_clubboot_is_geen_lid(app, actor, anna):
     lid("1002", "Clubboot")  # een lid met deze naam is op naam niet te importeren; het lidnummer wel
     plaats("A/1/1")
     plaats("C/1/1", club=True)
     u = beoordeling(bestand("C/1/1;Reiger;Kajak;clubboot;1002", "A/1/1;Fuut;Kajak;Clubboot;"), actor)
     assert u[2].uitkomst == "fout" and "geen lidnummer" in u[2].melding
-    assert u[3].club and u[3].lid is None and u[3].uitkomst == "fout"  # clubboot op een gewone plaats
+    assert u[3].club and u[3].lid is None and u[3].uitkomst == "nieuwe boot"  # clubboot op een gewone plaats (#205)
 
 
 @pytest.mark.parametrize("eigenaar_naam, lidnummer", [("Onbekend", ""), ("anna de vries", ""),

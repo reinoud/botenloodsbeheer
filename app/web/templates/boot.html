@@ -33,15 +33,21 @@
   <form class="bl-formulier" method="post" action="{{ url_for('web.boot_toewijzen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
-      <label class="ds-field__label" for="plaats">Vrije {{ 'clubplaats' if boot.clubboot else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}</label>
+      <label class="ds-field__label" for="plaats">Vrije plaats voor {{ boot.bootsoort.naam|lower }}</label>
       <select class="dj-select" id="plaats" name="plaats_id" required>
+        {% if boot.clubboot %}
+        {% for naam, groep in (("Clubplaatsen", vrij|selectattr("is_clubplaats")|list), ("Gewone plaatsen", vrij|rejectattr("is_clubplaats")|list)) if groep %}
+        <optgroup label="{{ naam }}">{% for p in groep %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}</optgroup>
+        {% endfor %}
+        {% else %}
         {% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
+        {% endif %}
       </select>
     </div>
     <button type="submit" class="ds-btn ds-btn--primary">Wijs toe aan plek</button>
   </form>
   {% else %}
-  <p>Er is geen vrije {{ 'clubplaats' if boot.clubboot else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}.</p>
+  <p>Er is geen vrije plaats voor {{ boot.bootsoort.naam|lower }}.</p>
   {% endif %}
   <div class="bl-taak__regel">
     <h3 class="bl-subkop">Wachtlijst</h3>

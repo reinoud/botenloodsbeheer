@@ -8,11 +8,9 @@ from app.models import Boot, Plaats, db
 
 def controleer_past(p, bootnaam, bootsoort, clubboot):
     """Weigert een boot die niet bij de plaats past; gedeeld met boten.boot_wijzigen. Een boot met
-    een lid of een onbekende eigenaar hoort op een gewone plaats (#204), een clubboot op een clubplaats."""
+    een lid of een onbekende eigenaar hoort op een gewone plaats (#204); een clubboot mag op beide (#205)."""
     if p.is_clubplaats and not clubboot:
         raise Regelfout(f"Plaats {p.code} is een clubplaats en alleen voor clubboten.")
-    if not p.is_clubplaats and clubboot:
-        raise Regelfout(f"Boot {bootnaam} is een clubboot en hoort op een clubplaats.")
     if bootsoort not in p.bootsoorten:
         raise Regelfout(f"Plaats {p.code} is niet geschikt voor een {bootsoort.naam.lower()}.")
 

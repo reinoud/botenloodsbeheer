@@ -104,7 +104,7 @@ Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de b
 
 ## Boten zonder eigenaar
 
-Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Kies per boot bij **Eigenaar van** een lid of de vereniging en kies **Eigenaar opslaan** met de bootnaam erachter. Een weigering, bijvoorbeeld een clubboot op een gewone plaats, geldt alleen die boot. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt.
+Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Kies per boot bij **Eigenaar van** een lid of de vereniging en kies **Eigenaar opslaan** met de bootnaam erachter. Een weigering, bijvoorbeeld de vereniging als eigenaar van een boot op de wachtlijst, geldt alleen die boot. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt.
 
 ![De pagina Boten zonder eigenaar met een boot en de keuze van een eigenaar.](afbeeldingen/boten-zonder-eigenaar.png)
 
@@ -138,10 +138,10 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 - de plaats is bezet, of de boot heeft al een plaats;
 - de plaats is niet geschikt voor de bootsoort;
-- een clubboot op een gewone plaats, of een boot van een lid of met een onbekende eigenaar op een clubplaats;
+- een boot van een lid of met een onbekende eigenaar op een clubplaats (een clubplaats is alleen voor clubboten; een clubboot mag ook op een gewone plaats);
 - de eigenaar is oud-lid.
 
-**Vanaf de boot:** een boot zonder plaats, op de wachtlijst of niet, kan ook vanaf zijn eigen pagina een plaats krijgen. Kies onder **Plaats toewijzen** een vrije plaats en kies **Wijs toe aan plek**. De lijst toont alleen vrije plaatsen voor de bootsoort, in de volgorde van de loods; voor een clubboot zijn dat de vrije clubplaatsen. Een boot op de wachtlijst gaat daarna van de wachtlijst af. Is er geen vrije plaats, of is de eigenaar oud-lid, dan zegt de pagina dat.
+**Vanaf de boot:** een boot zonder plaats, op de wachtlijst of niet, kan ook vanaf zijn eigen pagina een plaats krijgen. Kies onder **Plaats toewijzen** een vrije plaats en kies **Wijs toe aan plek**. De lijst toont alleen vrije plaatsen voor de bootsoort, in de volgorde van de loods; voor een clubboot staan de vrije clubplaatsen eerst, onder **Clubplaatsen**, en daarna de vrije gewone plaatsen, onder **Gewone plaatsen**. Een boot op de wachtlijst gaat daarna van de wachtlijst af. Is er geen vrije plaats, of is de eigenaar oud-lid, dan zegt de pagina dat.
 
 ![De pagina van een vrije plaats met de keuze van een boot zonder plaats.](afbeeldingen/plaats-vrij.png)
 
@@ -222,7 +222,7 @@ De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naa
 
 ## De openbare pagina
 
-Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen. De pagina begint met de aanduiding van de plaats en een label: **Bezet**, **Clubplaats** of **Vrij**. Daaronder staat de zin "Hier hoort de boot van eigenaar", bij een clubboot met de vereniging als eigenaar en bij een onbekende eigenaar zonder eigenaar, met de foto van de boot ernaast of eronder. Een vrije plaats zegt dat ze vrij is en wijst wie een plaats wil naar de beheerder. Een vrije clubplaats zegt dat ze voor een clubboot is. Onderaan staat de omschrijving van het rek, als die er is. Er is geen zoekfunctie, geen menu en geen link vanaf het logo, en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
+Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen. De pagina begint met de aanduiding van de plaats en een label: **Bezet**, **Clubplaats** of **Vrij**. **Clubplaats** staat alleen bij een clubplaats; een clubboot op een gewone plaats staat bij **Bezet**. Daaronder staat de zin "Hier hoort de boot van eigenaar", bij een clubboot met de vereniging als eigenaar en bij een onbekende eigenaar zonder eigenaar, met de foto van de boot ernaast of eronder. Een vrije plaats zegt dat ze vrij is en wijst wie een plaats wil naar de beheerder. Een vrije clubplaats zegt dat ze voor een clubboot is. Onderaan staat de omschrijving van het rek, als die er is. Er is geen zoekfunctie, geen menu en geen link vanaf het logo, en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
 
 ![De openbare pagina van een plaats met boot, eigenaar en foto.](afbeeldingen/openbaar.png)
 

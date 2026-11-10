@@ -97,13 +97,21 @@ def test_bootsoort_die_de_plaats_past_gewijzigd(app):
     assert db.session.get(Boot, b.id).bootsoort.naam == "Surfski"
 
 
-def test_lid_naar_clubboot_op_gewone_plaats_geweigerd(app):
+def test_lid_naar_clubboot_op_gewone_plaats_toegestaan(app):
+    """#205. Mutant: de oude regel terug in controleer_past valt op de assert."""
     p = plaats()
     b = boot(lid().id)
     toewijzing.toewijzen(p.id, b.id, CLI)
-    with pytest.raises(Regelfout, match="is een clubboot en hoort op een clubplaats"):
-        wijzig(b, lid_id=None)
-    assert db.session.get(Boot, b.id).lid_id is not None
+    wijzig(b, lid_id=None)
+    assert db.session.get(Boot, b.id).clubboot and db.session.get(Boot, b.id).plaats.code == p.code
+
+
+def test_clubboot_naar_andere_bootsoort_op_plaats_die_niet_past_geweigerd(app):
+    p = plaats()
+    b = boot(None)
+    toewijzing.toewijzen(p.id, b.id, CLI)
+    with pytest.raises(Regelfout, match="niet geschikt voor een surfski"):
+        wijzig(b, bootsoort="Surfski", lid_id=None, club=True)
 
 
 def test_clubboot_naar_lid_op_clubplaats_geweigerd(app):
