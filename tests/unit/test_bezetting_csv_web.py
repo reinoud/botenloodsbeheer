@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import select
 
 from app.domein import Actor, bezetting_csv, csvbestand
-from app.models import Beheerder, Bezettingsimport, Boot, Naamkoppeling, db
+from app.models import Beheerder, Bezettingsimport, Boot, Bootsoort, Naamkoppeling, db
 from tests.unit.hulp import lid
 from tests.unit.test_bezetting_csv import bestand, leg, plaats
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
@@ -194,11 +194,13 @@ def test_het_overzicht_toont_de_gevonden_eigenaar_en_zijn_keuzes(ingelogd):  # n
     anna = lid("1001", "Anna de Vries")
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;Onbekend;", "A/1/2;Fuut;Zeilboot;;", "A/1/3;Meeuw;Kajak;Anna de Vries;1001"))
     tekst = pagina(ingelogd)
-    # Regel 2 is te koppelen: de keuzelijst heeft de vereniging en de leden. Regel 3 is een fout: alleen overslaan.
+    # Regel 2 is te koppelen: de keuzelijst heeft de vereniging en de leden. Regel 3 heeft een onbekende soort
+    # (de lijst heet soort-3, met overslaan en de soorten van de plaats), geen lid in de lijst.
     keuze2 = re.search(r'<select[^>]*id="keuze-2".*?</select>', tekst, re.DOTALL)[0]
-    keuze3 = re.search(r'<select[^>]*id="keuze-3".*?</select>', tekst, re.DOTALL)[0]
+    keuze3 = re.search(r'<select[^>]*id="soort-3".*?</select>', tekst, re.DOTALL)[0]
     assert 'value="club"' in keuze2 and f'value="{anna.id}"' in keuze2 and "Anna de Vries (1001)" in keuze2
-    assert 'value="overslaan"' in keuze3 and 'value="club"' not in keuze3 and "Anna" not in keuze3
+    assert 'value="overslaan"' in keuze3 and ">Kajak</option>" in keuze3 and 'value="club"' not in keuze3
+    assert "Anna" not in keuze3 and 'id="keuze-3"' not in tekst
     assert 'id="keuze-4"' not in tekst  # regel 4 is in orde: geen keuze nodig
     assert "<br>Gekoppeld: Anna de Vries (1001)" in tekst  # de gevonden eigenaar onder wat in het bestand stond
     assert "disabled" in tekst  # bevestigen kan nog niet
@@ -306,3 +308,89 @@ def test_de_route_voor_het_menu_item_en_de_bestaande_routes_zijn_er(app):
     assert regels["/bezetting/import"] in ("web.bezetting_uploaden", "web.bezetting_import")
     assert regels["/bezetting/import/koppelen"] == "web.bezetting_koppelen"
     assert regels["/bezetting/koppelingen"] == "web.bezetting_koppelingen"
+
+
+# Bootsoort kiezen (#202)
+
+
+def cel(tekst, regel):
+    """De cel Keuze van een regel."""
+    return re.search(rf'<tr role="row">\s*<td role="cell" data-label="Regel">{regel}</td>.*?data-label="Keuze">(.*?)</td>',
+                     tekst, re.DOTALL)[1]
+
+
+def test_een_regel_met_twee_problemen_toont_twee_lijsten_in_een_fieldset(ingelogd):  # noqa: F811
+    plaats("A/1/1", ("Kajak", "Surfski"))
+    lid()
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;S. de Vrees;"))
+    c = cel(pagina(ingelogd), 2)
+    assert re.search(r'<fieldset[^>]*>\s*<legend class="dj-sr-only">Keuze voor regel 2</legend>', c)
+    assert re.search(r'<label[^>]*for="soort-2">Bootsoort</label>', c)
+    assert re.search(r'<label[^>]*for="keuze-2">Eigenaar</label>', c)
+    soort_lijst = re.search(r'<select[^>]*id="soort-2".*?</select>', c, re.DOTALL)[0]
+    eigenaar_lijst = re.search(r'<select[^>]*id="keuze-2".*?</select>', c, re.DOTALL)[0]
+    assert 'value="overslaan"' in soort_lijst and ">Kajak</option>" in soort_lijst and ">Surfski</option>" in soort_lijst
+    assert 'value="overslaan"' not in eigenaar_lijst and 'value="club"' in eigenaar_lijst
+    assert "Kies bij een regel een bootsoort, een lid of de vereniging" in pagina(ingelogd)
+
+
+def test_een_regel_met_een_probleem_houdt_een_lijst_met_het_label_keuze_voor_regel(ingelogd):  # noqa: F811
+    plaats("A/1/1")
+    plaats("A/1/2")
+    lid()
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;;", "A/1/2;Fuut;Kajak;S. de Vrees;"))
+    tekst = pagina(ingelogd)
+    for regel, naam in ((2, "soort"), (3, "keuze")):
+        c = cel(tekst, regel)
+        assert "<fieldset" not in c and c.count("<select") == 1
+        assert re.search(rf'<label class="dj-sr-only" for="{naam}-{regel}">Keuze voor regel {regel}</label>', c)
+
+
+def test_een_fout_in_de_plaats_toont_alleen_regel_overslaan_in_soort_n(ingelogd):  # noqa: F811
+    plaats("A/1/1")
+    uploaden(ingelogd, bestand("Z/9/9;Reiger;Kajak;;"))
+    c = cel(pagina(ingelogd), 2)
+    assert 'name="soort-2"' in c and 'value="overslaan"' in c and c.count("<option") == 2
+    assert 'name="keuze-2"' not in c
+
+
+def test_na_het_opslaan_blijven_beide_lijsten_met_hun_keuze_staan(ingelogd):  # noqa: F811
+    plaats("A/1/1", ("Kajak", "Surfski"))
+    anna = lid()
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;S. de Vrees;"))
+    r = ingelogd.post("/bezetting/import/koppelen", data={
+        "soort-2": str(next(s.id for s in bezetting_csv.indeling.bootsoorten() if s.naam == "Surfski")),
+        "keuze-2": str(anna.id)}, follow_redirects=True)
+    c = cel(r.text, 2)
+    assert "De keuzes zijn opgeslagen." in r.text and "<fieldset" in c
+    assert ">Surfski</option>" in c and re.search(r'<option value="\d+" selected>Surfski</option>', c)
+    assert f'<option value="{anna.id}" selected>' in c
+    assert '<span class="ds-tag">nieuwe boot</span>' in r.text
+
+
+def test_een_ongeldige_soort_via_het_formulier_geeft_een_melding_en_slaat_niets_op(ingelogd):  # noqa: F811
+    plaats("A/1/1")
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;;"))
+    r = ingelogd.post("/bezetting/import/koppelen", data={"soort-2": "424242"}, follow_redirects=True)
+    assert "keuzes kloppen niet" in r.text
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {}
+
+
+def test_een_soortnaam_en_een_bootnaam_in_de_keuzecel_worden_geescaped(ingelogd):  # noqa: F811
+    db.session.add(Bootsoort(naam="<b>x</b>"))
+    db.session.commit()
+    plaats("A/1/1", ("Kajak", "<b>x</b>"))
+    uploaden(ingelogd, bestand("A/1/1;<i>y</i>;Kayak;;"))
+    tekst = pagina(ingelogd)
+    assert ">&lt;b&gt;x&lt;/b&gt;</option>" in tekst and "&lt;i&gt;y&lt;/i&gt;" in tekst
+    assert "<b>x</b>" not in tekst and "<i>y</i>" not in tekst
+
+
+def test_na_het_kiezen_van_alleen_een_soort_blijft_de_lijst_met_de_gekozen_soort_staan(ingelogd):  # noqa: F811
+    plaats("A/1/1", ("Kajak", "Surfski"))
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;;"))
+    surfski = next(s.id for s in bezetting_csv.indeling.bootsoorten() if s.naam == "Surfski")
+    r = ingelogd.post("/bezetting/import/koppelen", data={"soort-2": str(surfski)}, follow_redirects=True)
+    c = cel(r.text, 2)
+    assert '<span class="ds-tag">nieuwe boot</span>' in r.text and "<fieldset" not in c
+    assert f'<option value="{surfski}" selected>Surfski</option>' in c and 'name="keuze-2"' not in c

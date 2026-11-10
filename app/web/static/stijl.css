@@ -79,6 +79,9 @@ td form { gap: var(--space-2); }
 .bl-formulier { display: grid; gap: var(--space-4); }
 .bl-formulier .ds-field__label { letter-spacing: normal; text-transform: none; }
 .bl-formulier .ds-field { max-width: 26rem; }
+/* Keuze-cel van de bezettingsimport: bootsoort en eigenaar onder elkaar, de fieldset zonder eigen rand of marge */
+.bl-keuzepaar { min-width: 0; margin: 0; padding: 0; border: 0; }
+.bl-keuzepaar > * { min-width: 0; }
 .bl-formulier .bl-breed { max-width: 40rem; }
 .bl-formulier .ds-input { min-width: 0; } /* afwijking: een bestandsveld rekt anders buiten het paneel op een telefoon */
 .bl-velden { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); }

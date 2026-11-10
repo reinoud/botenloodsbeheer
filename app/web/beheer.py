@@ -174,8 +174,8 @@ def bezetting_import():
 @bp.post("/bezetting/import/koppelen")
 @inloggen_vereist
 def bezetting_koppelen():
-    keuzes = {naam.removeprefix("keuze-"): waarde for naam, waarde in request.form.items()
-              if naam.startswith("keuze-")}
+    keuzes = {naam.removeprefix("keuze-") if naam.startswith("keuze-") else naam: waarde
+              for naam, waarde in request.form.items() if naam.startswith(("keuze-", "soort-"))}
     uitvoeren(bezetting_csv.koppelen, keuzes, gelukt="De keuzes zijn opgeslagen.")
     return redirect(url_for("web.bezetting_import"))
 

@@ -2,8 +2,8 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.3
-**Stories:** issue #157 (rekindeling), issue #158 (bezetting)
+**Versie:** v0.2.4
+**Stories:** issue #157 (rekindeling), issue #158 (bezetting), issue #202 (bootsoort kiezen)
 
 ## Context
 
@@ -47,6 +47,8 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 
 **Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Een onbekend lidnummer valt door naar de volgende stap. Staat in `eigenaar` het woord `clubboot` (zonder verschil in hoofdletters), dan is de boot een clubboot; met een lidnummer erbij is dat een fout. Eigenaar en lidnummer leeg is een onbekende eigenaar (geen clubboot, issue #204): de boot past op een gewone plaats en staat daarna op Boten zonder eigenaar. Export en sjabloon schrijven `clubboot`. Een lid met de naam clubboot is op naam niet te importeren; het lidnummer werkt wel. Een boot wordt bij de naam gezocht op naam, lid en toestand: een clubboot en een boot met een onbekende eigenaar zijn twee boten. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
 
+**Bootsoort kiezen (issue #202).** Een regel waarvan de bootsoort niet bij precies één soort past, geeft de uitkomst `fout` ("De bootsoort … bestaat niet of is dubbelzinnig, kies hem in de lijst."). In het koppelscherm kiest de beheerder dan een soort uit de lijst `soort-N`, die alleen de soorten van `Plaats.bootsoorten` van die regel toont, plus Regel overslaan. Is de plaats leeg of onbekend, dan staat er alleen Regel overslaan, ook onder de naam `soort-N`. De beoordeling stopt niet meer bij de soort: de eigenaar wordt ook beoordeeld, zodat een regel met twee problemen twee lijsten krijgt (`soort-N` en `keuze-N`, in een `fieldset`) en één probleem één lijst. Na de keuze loopt de regel door dezelfde controles als elke regel (bestaande boot, "Boot … bestaat al als een …", `controleer_past`). De soort geldt alleen voor de lopende import en wordt niet onthouden (stakeholder 2026-11-10); er is geen nieuwe tabel. Een soort-id is externe invoer: `koppelen` accepteert alleen een soort van de plaats van die regel en weigert anders alle keuzes ("De keuzes kloppen niet meer"); verdwijnt de soort of past hij niet meer op de plaats voordat de beheerder bevestigt, dan is de regel een `fout` en blijft bevestigen geblokkeerd. Vorm van `bezettingsimport.keuzes` (JSONB, plat, geen migratie): `{"<regel>": "overslaan" | "club" | <lid-id>, "soort-<regel>": "overslaan" | <soort-id>}`. De bestaande waarden blijven geldig; een keuze uit de lijst `soort-N` is `overslaan` of een soort-id, een keuze uit `keuze-N` blijft zoals voorheen. Staat Regel overslaan in een van beide, dan is de regel overgeslagen en blijft de lijst met die keuze zichtbaar.
+
 **Onthouden.** Tabel `naamkoppeling`: `naam` (uniek), `lid_id` (FK, `ON DELETE CASCADE`) of `clubboot`, `gebruikt_op`; een check eist precies één van beide. Overslaan wordt niet onthouden. De opschoning verwijdert koppelingen die 5 jaar niet zijn gebruikt (open vraag 4). Beheerders zien de lijst en verwijderen per koppeling.
 
 **Boot herkennen.** Zelfde naam zonder verschil in hoofdletters en zelfde eigenaar. Geen treffer is een nieuwe boot, meer dan één een fout. Een afwijkende bootsoort is een fout; de import wijzigt geen boot.
@@ -62,7 +64,7 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 | nieuwe boot | Aanmaken en toewijzen (besluit 1) |
 | overgeslagen | Keuze van de beheerder |
 | te koppelen | Nog geen lid gekozen |
-| fout | Onbekende plaats of bootsoort, melding van `controleer_past`, oud-lid, plaats of boot dubbel in het bestand, boot niet eenduidig |
+| fout | Onbekende plaats of bootsoort (ook een gekozen soort die verdwenen is of niet past), melding van `controleer_past`, oud-lid, plaats of boot dubbel in het bestand, boot niet eenduidig |
 
 Bevestigen kan pas zonder `te koppelen` en `fout`; zo'n regel slaat de beheerder over.
 
@@ -138,6 +140,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.4 | 2026-11-10 | De beheerder kiest bij een onbekende bootsoort de soort van de plaats in het koppelscherm; de eigenaar wordt ook beoordeeld bij een onbekende soort; `keuzes` krijgt `soort-<regel>` | Issue #202, besluiten stakeholder 2026-11-10 |
 | v0.2.3 | 2026-11-10 | Het woord `clubboot` in `eigenaar` is een clubboot; leeg is een onbekende eigenaar in plaats van een clubboot | Issue #204, besluit stakeholder 2026-11-10 |
 | v0.2.2 | 2026-11-07 | Kolom `enige` voor één lopende import; onbekend lidnummer valt door; aantallen in `bezetting.geimporteerd`; stuurtekens ook geweigerd in de bootnaam | Bouw #158 |
 | v0.2.1 | 2026-11-06 | Fouten in twee rondes; lege cel `bootsoorten`; stuurtekens ook op het scherm geweigerd | Bouw en review #157 |
