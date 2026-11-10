@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.57
+**Versie overlay:** v0.5.58
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -321,6 +321,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
+- Bij een sprong over minorversies van uv legt de reviewer de breaking changes uit de releasenotes naast `uv.lock` (archiefformaten, hashtypen) en naast de Python-versie in `/opt/venv`.
+- Is de doelversie van een Dependabot-PR jonger dan de cooldown, neem dan de nieuwste versie die wel oud genoeg is en sluit de PR met een verwijzing naar het issue (#196).
 - Controleer bij elke Dependabot-PR de publicatiedatum van de doelversie tegen de cooldown van 14 dagen, en lees de PR-tekst op "Cooldown could not be applied". Voor images uit ghcr.io (zoals uv) werkt de cooldown niet vanzelf.
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
@@ -427,6 +429,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.58 | 2026-11-10 | Twee regels (Security en proxy) uit #196 en de terugblik van sentinel: breuken bij een sprong in uv, versie binnen de cooldown kiezen | Lessen |
 | v0.5.57 | 2026-11-10 | Uit de terugblikken bij #221 en #223 en de ervaring van de regie: drie nieuwe regels (Algemeen) over filters op externe invoer, gedeelde functies en berichten naar `main`; één nieuw (Review) over de nareview; de regel over de worktree (Review) aangevuld met env-bestand en `secrets/`; slotcommentaar vóór de merge (§4) | Lessen |
 | v0.5.56 | 2026-11-10 | Uit de terugblikken bij #205 en #220: vier nieuwe regels (Bouw), één nieuw (Review), twee nieuw (E2E); Review regel over twee kanten krijgt een voorbeeld dat na #205 klopt; E2E-uitnodigingssoort vóór `passkey` | Lessen |
 | v0.5.55 | 2026-11-10 | Werken in milestones die de regie vooraf met de stakeholder afstemt (§4); drie nieuwe regels (Review) uit de terugblikken van aegis en sentinel bij #203: bronadapter als andere weg, oude ADR-formulering buiten de diff, tijdzone bij `CURRENT_DATE` | Besluit stakeholder 2026-11-10 |
