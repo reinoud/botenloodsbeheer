@@ -1,7 +1,7 @@
 # API van buiten
 
-**Versie:** v1.1.0
-**Datum:** 2026-11-05
+**Versie:** v1.2.0
+**Datum:** 2026-11-10
 **Bronnen:** ADR-005, ADR-012, ADR-013, `compose.api-extern.yml`, `app/api/openapi.yaml`
 
 Standaard is de API alleen bereikbaar voor de integratiecontainer, via het entrypoint `intern` van Traefik. Een persoonlijk token of een koppeling buiten de installatie heeft de API op `https://DOMEIN/api/v1` nodig. Die zet je bewust open met `compose.api-extern.yml`. Zonder dat bestand geeft `https://DOMEIN/api/v1/ik` 404.
@@ -53,9 +53,9 @@ Elke aanroep geeft de hele lijst, zonder filters of paginering. De applicatie be
 | Aanroep | Recht | Velden |
 |---------|-------|--------|
 | `GET /api/v1/plaatsen` | `plaatsen:lezen` | `code` (de aanduiding, zoals `A/1/1`), `rek`, `clubplaats`, `bootsoorten`, `boot` (`id`, `naam`) |
-| `GET /api/v1/boten` | `boten:lezen` | `id`, `naam`, `bootsoort`, `plaats`, `eigenaar` (`lidnummer`, `naam`; `null` bij een clubboot) |
+| `GET /api/v1/boten` | `boten:lezen` | `id`, `naam`, `bootsoort`, `plaats`, `eigenaar` (`lidnummer`, `naam`; `null` bij een clubboot of een onbekende eigenaar), `clubboot` (`true` bij een clubboot; zo onderscheid je een clubboot van een onbekende eigenaar) |
 | `GET /api/v1/leden` | `leden:lezen` | `lidnummer`, `naam`, `oud_lid`, `lid_sinds`, `opzegdatum` |
-| `GET /api/v1/wachtlijst` | `wachtlijst:lezen` | `bootsoort`, `boot`, `eigenaar`, `aangemeld_op`; zonder boten van oud-leden |
+| `GET /api/v1/wachtlijst` | `wachtlijst:lezen` | `bootsoort`, `boot`, `eigenaar`, `aangemeld_op`; zonder boten van oud-leden; `eigenaar` is `null` bij een onbekende eigenaar |
 
 Een voorbeeld met een nep-token:
 
@@ -63,7 +63,7 @@ Een voorbeeld met een nep-token:
 curl -s -H "Authorization: Bearer blb_VOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEELDVOORBEE" \
   https://DOMEIN/api/v1/boten
 # [{"bootsoort": "Kajak", "eigenaar": {"lidnummer": "1001", "naam": "Anna Voorbeeld"},
-#   "id": 7, "naam": "Zeemeeuw", "plaats": "A/1/1"}]
+#   "clubboot": false, "id": 7, "naam": "Zeemeeuw", "plaats": "A/1/1"}]
 ```
 
 ## Weer dichtzetten
@@ -76,3 +76,4 @@ Start zonder `compose.api-extern.yml`: `docker compose up -d api`. Trek daarna d
 |--------|-------|-----------|-------|
 | v1.0.0 | 2026-11-03 | Eerste versie | BLB-042, slice 10 |
 | v1.1.0 | 2026-11-05 | Proef met een losse Traefik | Issue #53 |
+| v1.2.0 | 2026-11-10 | Boten krijgt `clubboot`; `eigenaar` is ook `null` bij een onbekende eigenaar | Issues #204 en #212 |

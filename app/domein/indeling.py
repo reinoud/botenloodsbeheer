@@ -231,7 +231,7 @@ def plaatje(p):
     basis = PLAATJES.get(soorten[0]) if soorten else None
     woord = "bezet" if p.boot else "leeg" if p.is_clubplaats else "vrij"
     if p.boot:
-        stand = f"{p.boot.naam} ({p.boot.lid.naam if p.boot.lid else 'clubboot'})"
+        stand = f"{p.boot.naam} ({p.boot.lid.naam if p.boot.lid else 'clubboot' if p.boot.clubboot else 'eigenaar onbekend'})"
     else:
         stand = "clubplaats, leeg" if p.is_clubplaats else "vrij"
     return {
@@ -302,7 +302,7 @@ def geschikt_voor(p):
 
 def export(vereniging):
     """De indeling als .xlsx, een rij per plaats (BLB-017). Een clubboot heeft de vereniging
-    als eigenaar en geen lidnummer."""
+    als eigenaar en geen lidnummer; bij een onbekende eigenaar staat daar "eigenaar onbekend"."""
     boek = Workbook()
     blad = boek.active
     blad.title = "Indeling"
@@ -312,7 +312,7 @@ def export(vereniging):
             b = p.boot
             soort = b.bootsoort.naam if b else geschikt_voor(p)
             rij = (r.naam, p.code, status(p), soort,
-                   b.naam if b else None, (b.lid.naam if b.lid else vereniging) if b else None,
+                   b.naam if b else None, (b.lid.naam if b.lid else vereniging if b.clubboot else "eigenaar onbekend") if b else None,
                    b.lid.lidnummer if b and b.lid else None)
             # Stuurtekens (mogelijk uit de ledenbron) weigert openpyxl; ze vallen weg.
             blad.append([ILLEGAL_CHARACTERS_RE.sub("", w) if w else w for w in rij])
@@ -544,7 +544,8 @@ def openbaar(publieke_sleutel):
     """Alleen wat de openbare pagina mag tonen (ADR-003, overlay §5). Wat hier niet wordt
     opgehaald, kan ook niet in de pagina terechtkomen. None als de plaats niet bestaat.
 
-    eigenaar is None bij een vrije plaats en bij een clubboot (dan de naam van de vereniging).
+    eigenaar is None bij een vrije plaats, bij een clubboot (dan de naam van de vereniging) en bij een
+    onbekende eigenaar.
     clubplaats volgt Plaats.is_clubplaats, ook als de plaats vrij is.
     """
     p = db.session.scalar(select(Plaats).where(Plaats.publieke_sleutel == publieke_sleutel))
@@ -555,7 +556,7 @@ def openbaar(publieke_sleutel):
         "code": p.code,
         "omschrijving": p.rek.omschrijving,
         "vrij": boot is None,
-        "clubboot": boot is not None and boot.lid_id is None,
+        "clubboot": boot is not None and boot.clubboot,
         "clubplaats": p.is_clubplaats,
         "boot": boot.naam if boot else None,
         "foto": boot.afbeelding.sleutel if boot and boot.afbeelding else None,

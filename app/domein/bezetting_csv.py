@@ -21,6 +21,7 @@ KOLOMMEN = ("plaats", "boot", "bootsoort", "eigenaar", "lidnummer")
 VERLOOP = timedelta(hours=2)
 BOOT_MAX = 100  # lengte van Boot.naam
 EIGENAAR_MAX = 100  # lengte van Lid.naam en Naamkoppeling.naam
+CLUBBOOT = "clubboot"  # in de kolom eigenaar; leeg is een onbekende eigenaar (#204)
 _GETAL = re.compile(r"\d{1,2}", re.ASCII)
 
 OVERGESLAGEN, TE_KOPPELEN, FOUT = "overgeslagen", "te koppelen", "fout"
@@ -34,7 +35,9 @@ UITLEG = (
     (f"# boot: de naam van de boot, hooguit {BOOT_MAX} tekens. bootsoort: een bootsoort zoals de "
      "applicatie hem toont."),
     ("# eigenaar en lidnummer: het lid dat de boot bezit. Het lidnummer gaat voor, zonder lidnummer "
-     "zoekt de import het lid op exacte naam. Een clubboot heeft beide leeg."),
+     "zoekt de import het lid op exacte naam. Voor een clubboot schrijf je clubboot bij eigenaar en laat je "
+     "het lidnummer leeg. Zijn beide leeg, dan is de eigenaar onbekend: de boot komt op de pagina Boten "
+     "zonder eigenaar en op een gewone plaats."),
     ("# Een naam die niet bij precies één lid past, koppel je na het uploaden in een scherm aan een "
      "lid of aan de vereniging. Die keuze wordt onthouden voor een volgende import."),
     ("# Een boot die nog niet bestaat, wordt aangemaakt. Ligt er al een andere boot op de plaats, "
@@ -55,7 +58,7 @@ def export(leeg=False):
         rijen = [[t] for t in UITLEG]
         rijen.append(["# Bootsoorten in deze installatie: " + ", ".join(s.naam for s in soorten)])
         rijen.append(["# Voorbeeld: A/1/1", "Zeemeeuw", voorbeeld, "Anna de Vries", "1001"])
-        rijen.append(["# Voorbeeld clubboot: B/1/1", "Clubkajak", voorbeeld, "", ""])
+        rijen.append(["# Voorbeeld clubboot: B/1/1", "Clubkajak", voorbeeld, CLUBBOOT, ""])
         rijen.append(KOLOMMEN)
         return csvbestand.schrijf(rijen)
     rijen = [KOLOMMEN]
@@ -66,7 +69,8 @@ def export(leeg=False):
         for p in r.plaatsen:
             b = p.boot
             if b is not None:
-                rijen.append((p.code, b.naam, b.bootsoort.naam, b.lid.naam if b.lid else "",
+                rijen.append((p.code, b.naam, b.bootsoort.naam,
+                              b.lid.naam if b.lid else CLUBBOOT if b.clubboot else "",
                               b.lid.lidnummer if b.lid else ""))
     if any(indeling._stuurteken(str(cel)) for rij in rijen for cel in rij):
         raise Regelfout("Een naam van een boot of eigenaar bevat een stuurteken of regeleinde. "
@@ -167,6 +171,7 @@ class Uitkomst:
     soort: Bootsoort | None = None
     lid: Lid | None = None
     club: bool = False
+    onbekend: bool = False  # geen eigenaar in het bestand (#204)
     via: str = ""  # lidnummer, koppeling, naam, keuze of leeg: hoe de eigenaar is gevonden
     bewoner: Boot | None = None  # de boot die nu op de plaats ligt en niet de boot uit het bestand is
     herkomst: Plaats | None = None  # de plaats waar de boot uit het bestand nu ligt
@@ -202,7 +207,7 @@ def beoordeel(imp, vers=False):
     alle_boten = db.session.scalars(select(Boot).execution_options(**opties)).all()
     w.boten_per_id = {b.id: b for b in alle_boten}
     for b in alle_boten:
-        w.boten_per_naam.setdefault((b.naam.lower(), b.lid_id), []).append(b)
+        w.boten_per_naam.setdefault((b.naam.lower(), b.lid_id, b.clubboot), []).append(b)
     w.plaats_van_boot = {p.boot_id: p for p in w.plaatsen.values() if p.boot_id is not None}
     w.soorten = indeling.bootsoorten()
     alle_leden = db.session.scalars(select(Lid)).all()
@@ -228,15 +233,17 @@ def _fout(u, melding):
 
 
 def _eigenaar(u, w):
-    """Volgorde (ADR-014 §3): keuze, leeg is een clubboot, lidnummer, onthouden koppeling, exacte
-    naam. Zonder precies één treffer blijft het resultaat leeg (te koppelen)."""
+    """Volgorde (ADR-014 §3): keuze, het woord clubboot, leeg is onbekend, lidnummer, onthouden
+    koppeling, exacte naam. Zonder precies één treffer blijft het resultaat leeg (te koppelen)."""
     naam, nummer = u.tekst["eigenaar"], u.tekst["lidnummer"]
     if u.keuze == "club":
         u.club, u.via = True, "keuze"
     elif u.keuze:
         u.lid, u.via = w.leden_per_id.get(int(u.keuze)), "keuze"
-    elif not naam and not nummer:
+    elif naam.lower() == CLUBBOOT:
         u.club = True
+    elif not naam and not nummer:
+        u.onbekend = True
     elif nummer in w.leden_per_nummer:
         u.lid, u.via = w.leden_per_nummer[nummer], "lidnummer"
     elif naam in w.koppelingen:
@@ -258,6 +265,8 @@ def _beoordeel_regel(u, w):
         return _fout(u, f"De eigenaar is langer dan {EIGENAAR_MAX} tekens.")
     if t["lidnummer"] and not leden.LIDNUMMER.fullmatch(t["lidnummer"]):
         return _fout(u, "Het lidnummer is ongeldig.")
+    if t["eigenaar"].lower() == CLUBBOOT and t["lidnummer"]:
+        return _fout(u, "Een clubboot heeft geen lidnummer. Maak het lidnummer leeg.")
     u.plaats = _plaats_zoeken(t["plaats"], w.rekken, w.plaatsen)
     if u.plaats is None:
         return _fout(u, f"Plaats {_kort(t['plaats'])} bestaat niet.")
@@ -269,11 +278,11 @@ def _beoordeel_regel(u, w):
         return _fout(u, f"Plaats {u.plaats.code} staat al op regel {w.plaats_op[u.plaats.id]}.")
     w.plaats_op[u.plaats.id] = u.regel
     _eigenaar(u, w)
-    if u.lid is None and not u.club:
+    if u.lid is None and not u.club and not u.onbekend:
         u.uitkomst = TE_KOPPELEN
         u.melding = "Geen lid gevonden, of meer dan één. Kies een lid of de vereniging."
         return None
-    sleutel = (t["boot"].lower(), u.lid.id if u.lid else None)
+    sleutel = (t["boot"].lower(), u.lid.id if u.lid else None, u.club)
     gevonden = w.boten_per_naam.get(sleutel, [])
     if len(gevonden) > 1:
         return _fout(u, "Er zijn meer boten met deze naam en eigenaar.")
@@ -294,7 +303,7 @@ def _beoordeel_regel(u, w):
                         "nieuwe boot.")
     try:
         toewijzing.controleer_past(u.plaats, u.boot.naam if u.boot else t["boot"], u.soort,
-                                   u.lid is not None)
+                                   u.club)
     except Regelfout as f:
         return _fout(u, str(f))
     bewoner = w.boten_per_id.get(u.plaats.boot_id)
@@ -365,7 +374,7 @@ def bevestigen(actor):
         for u in eerste:
             if u.uitkomst == "nieuwe boot":
                 b = boten._boot_aanmaken(u.tekst["boot"], u.soort.id, u.lid.id if u.lid else None,
-                                         None, actor)
+                                         None, actor, u.club)
                 boot_ids.add(b.id)
         _vergrendel(boot_ids, plaats_ids)
         uitkomsten = beoordeel(imp, vers=True)

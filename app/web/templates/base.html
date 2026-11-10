@@ -23,7 +23,7 @@
       {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail"} %}
       {% set menu = [
         ("Dagelijks", [("web.rekoverzicht", "Rekoverzicht"), ("web.indeling_overzicht", "Indeling"), ("web.vrije_plaatsen", "Vrije plaatsen"),
-                       ("web.wachtlijst_overzicht", "Wachtlijst"), ("web.opzeggend", "Gaan opzeggen"), ("web.kaartjes_kiezen", "Kaartjes")]),
+                       ("web.wachtlijst_overzicht", "Wachtlijst"), ("web.boten_zonder_eigenaar", "Boten zonder eigenaar"), ("web.opzeggend", "Gaan opzeggen"), ("web.kaartjes_kiezen", "Kaartjes")]),
         ("Registers", [("web.boten_overzicht", "Boten"), ("web.leden_overzicht", "Leden"), ("web.opgezegd", "Opgezegd"),
                        ("web.logboek", "Log"), ("web.technisch_log", "Technisch log")]),
         ("Beheer", [("web.beheerders_overzicht", "Beheerders"), ("web.tokens_overzicht", "Tokens"), ("web.instellingen_scherm", "Instellingen"),
@@ -36,7 +36,7 @@
             <p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>
             <ul class="dj-nav__list" aria-labelledby="menu-{{ loop.index0 }}">
               {% for endpoint, naam in items %}
-              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}</a></li>
+              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if request.endpoint == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
               {% endfor %}
               {% if loop.last %}
               <li>

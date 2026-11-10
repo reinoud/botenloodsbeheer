@@ -3,7 +3,7 @@
 openapi: 3.1.0
 info:
   title: Botenloodsbeheer API
-  version: 0.9.0
+  version: 0.10.0
   description: >
     Standaard alleen bereikbaar over het interne netwerk koppeling, via het entrypoint intern van
     Traefik op poort 8081. Met compose.api-extern.yml ook via https://DOMEIN/api/v1, alleen vanaf
@@ -219,8 +219,8 @@ paths:
       summary: Alle boten, op naam
       description: >
         Recht: `boten:lezen`. Argumenten: geen. De hele lijst. `plaats` is de plaatscode of
-        `null`; `eigenaar` is `null` bij een clubboot. De eigenaar heeft alleen
-        `lidnummer` en `naam`.
+        `null`; `eigenaar` is `null` bij een clubboot of een onbekende eigenaar, en `clubboot` is `true` bij
+        een clubboot. De eigenaar heeft alleen `lidnummer` en `naam`.
       responses:
         "200":
           description: Eén element per boot
@@ -234,6 +234,7 @@ paths:
                   bootsoort: Kajak
                   plaats: A/1/1
                   eigenaar: {lidnummer: "1001", naam: Anna Voorbeeld}
+                  clubboot: false
         "401":
           $ref: "#/components/responses/GeenToegang"
         "403":
@@ -245,7 +246,8 @@ paths:
       summary: De wachtlijst, per bootsoort de langst wachtende eerst
       description: >
         Recht: `wachtlijst:lezen`. Argumenten: geen. Boten van oud-leden staan er niet in, net als
-        op het scherm. De eigenaar heeft alleen `lidnummer` en `naam`.
+        op het scherm. De eigenaar heeft alleen `lidnummer` en `naam`; `null` betekent een onbekende
+        eigenaar, want een clubboot staat niet op de wachtlijst.
       responses:
         "200":
           description: Eén element per boot op de wachtlijst
@@ -329,7 +331,7 @@ components:
           type: string
     Eigenaar:
       type: [object, "null"]
-      description: "`null` bij een clubboot."
+      description: "`null` bij een clubboot of een onbekende eigenaar."
       required: [lidnummer, naam]
       additionalProperties: false
       properties:
@@ -360,7 +362,7 @@ components:
       type: array
       items:
         type: object
-        required: [id, naam, bootsoort, plaats, eigenaar]
+        required: [id, naam, bootsoort, plaats, eigenaar, clubboot]
         additionalProperties: false
         properties:
           id:
@@ -373,6 +375,9 @@ components:
             type: [string, "null"]
           eigenaar:
             $ref: "#/components/schemas/Eigenaar"
+          clubboot:
+            type: boolean
+            description: "`true` bij een clubboot. `eigenaar` is `null` bij een clubboot en bij een onbekende eigenaar; met `clubboot` onderscheid je die twee."
     Leden:
       type: array
       items:

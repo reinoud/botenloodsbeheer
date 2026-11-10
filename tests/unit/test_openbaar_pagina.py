@@ -15,10 +15,10 @@ def pagina(client, p):
     return client.get(f"/p/{p.publieke_sleutel}").text
 
 
-def bezet(code="A/1/1", boot="Zeemeeuw", eigenaar="Anna de Vries", club=False, foto=None):
+def bezet(code="A/1/1", boot="Zeemeeuw", eigenaar="Anna de Vries", club=False, foto=None, onbekend=False):
     p = plaats(code, club=club)
-    eigenaar_id = None if club else lid(naam=eigenaar).id
-    toewijzing.toewijzen(p.id, boten.boot_aanmaken(boot, 1, eigenaar_id, foto, CLI).id, CLI)
+    eigenaar_id = None if club or onbekend else lid(naam=eigenaar).id
+    toewijzing.toewijzen(p.id, boten.boot_aanmaken(boot, 1, eigenaar_id, foto, CLI, clubboot=club).id, CLI)
     return p
 
 
@@ -50,6 +50,13 @@ def test_clubboot_is_clubplaats_met_de_vereniging_als_eigenaar(client):
     assert '<span class="ds-tag">Clubplaats</span>' in html
     assert 'Hier hoort de <strong>Zeemeeuw</strong> van <strong>Botenloods</strong>.' in html
     assert VRAAG not in html
+
+
+def test_onbekende_eigenaar_staat_niet_als_eigenaar_en_niet_als_clubboot_op_de_pagina(client):
+    # Mutant: de vereniging of "None" als eigenaar bij een onbekende eigenaar valt hier.
+    html = pagina(client, bezet(onbekend=True))
+    assert '<span class="ds-tag">Bezet</span>' in html and "Clubplaats" not in html
+    assert 'Hier hoort de <strong>Zeemeeuw</strong>.' in html and "None" not in html and " van " not in html
 
 
 def test_vrije_plaats_label_zin_en_vraag(client):

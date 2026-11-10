@@ -4,7 +4,7 @@ lid (BLB-009)."""
 from collections import Counter
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, afbeeldingen, indeling, leden, log, wachtlijst
@@ -35,6 +35,19 @@ def zonder_plaats():
     return [b for b in boten() if b.plaats is None]
 
 
+def zonder_eigenaar():
+    """Boten met een onbekende eigenaar (geen lid, geen clubboot), op naam (#204)."""
+    return db.session.scalars(
+        select(Boot).where(Boot.lid_id.is_(None), Boot.clubboot.is_(False)).order_by(Boot.naam, Boot.id)
+        .options(selectinload(Boot.plaats), selectinload(Boot.bootsoort))).all()
+
+
+def aantal_zonder_eigenaar():
+    """Voor het menu op elke pagina."""
+    return db.session.scalar(select(func.count()).select_from(Boot).where(
+        Boot.lid_id.is_(None), Boot.clubboot.is_(False)))
+
+
 def boot(boot_id):
     b = db.session.get(Boot, boot_id)
     if b is None:
@@ -59,38 +72,52 @@ def _bootnaam(naam):
     return naam
 
 
-def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
-    """lid_id None maakt een clubboot: de vereniging is eigenaar."""
-    b = _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor)
+def boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor, clubboot=False):
+    """Eigenaar is het lid van lid_id, of met clubboot de vereniging; zonder beide is de eigenaar
+    onbekend (#204)."""
+    b = _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor, clubboot)
     db.session.commit()
     return b
 
 
-def _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor):
+def _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor, clubboot=False):
     """Kern van boot_aanmaken zonder commit; de bezettingsimport (ADR-014 §3) doet er meer in
     één transactie."""
     naam = _bootnaam(naam)
     soort = _soort(bootsoort_id)
     if soort is None:
         raise Regelfout("Kies een bootsoort.")
+    _controleer_eigenaar(lid_id, clubboot)
     eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None
     if lid_id is not None and eigenaar is None:
         raise Regelfout("Dit lid bestaat niet.")
     if eigenaar is not None and leden.is_oud_lid(eigenaar):
         raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
-    b = Boot(naam=naam, bootsoort=soort, lid_id=lid_id)
+    b = Boot(naam=naam, bootsoort=soort, lid_id=lid_id, clubboot=clubboot)
     if foto:
         b.afbeelding = afbeeldingen.verwerk(foto)
     db.session.add(b)
     db.session.flush()
     log.schrijf(actor, "boot.aangemaakt", _verwijzingen(b),
-                {"naam": naam, "bootsoort": soort.naam, "clubboot": lid_id is None,
+                {"naam": naam, "bootsoort": soort.naam, "clubboot": clubboot,
+                 "eigenaar_onbekend": lid_id is None and not clubboot,
                  "foto": b.afbeelding is not None})
     return b
 
 
-def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
-    """Wijzigt naam, bootsoort en eigenaar (lid_id None is een clubboot). Een boot met een plaats
+def _controleer_eigenaar(lid_id, clubboot):
+    if clubboot and lid_id is not None:
+        raise Regelfout("Een clubboot heeft geen lid als eigenaar.")
+
+
+def _eigenaar_tekst(lid_id, clubboot):
+    """Voor het log: een verwijzing, geen naam (BLB-005, ADR-006)."""
+    return f"lid:{lid_id}" if lid_id else "vereniging" if clubboot else "onbekend"
+
+
+def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
+    """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend; een boot
+    met een eigenaar wordt niet weer onbekend). Een boot met een plaats
     blijft passen bij die plaats. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
     eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
@@ -100,6 +127,7 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
         soort = _soort(bootsoort_id)
         if soort is None:
             raise Regelfout("Kies een bootsoort.")
+        _controleer_eigenaar(lid_id, clubboot)
         eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None
         if lid_id is not None and eigenaar is None:
             raise Regelfout("Dit lid bestaat niet.")
@@ -110,12 +138,14 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
                                    .execution_options(populate_existing=True))
         if eigenaar is not None and lid_id != b.lid_id and leden.is_oud_lid(eigenaar):
             raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
-        if lid_id is None and b.wachtlijst is not None:
+        if clubboot and b.wachtlijst is not None:
             raise Regelfout(f"Boot {b.naam} staat op de wachtlijst. Een clubboot kan daar niet "
                             "op; haal de boot eerst van de wachtlijst.")
-        oud_lid_id, oude_soort, oude_naam = b.lid_id, b.bootsoort, b.naam
-        if plaats is not None and (soort != oude_soort or (lid_id is None) != (oud_lid_id is None)):
-            controleer_past(plaats, naam, soort, lid_id is not None)
+        oud_lid_id, oude_club, oude_soort, oude_naam = b.lid_id, b.clubboot, b.bootsoort, b.naam
+        if lid_id is None and not clubboot and (oud_lid_id is not None or oude_club):
+            raise Regelfout(f"Boot {b.naam} heeft een eigenaar. Een eigenaar wordt niet weer onbekend.")
+        if plaats is not None and (soort != oude_soort or clubboot != oude_club):
+            controleer_past(plaats, naam, soort, clubboot)
     except Regelfout:
         db.session.rollback()
         raise
@@ -124,19 +154,43 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
         gegevens["naam"] = [oude_naam, naam]
     if soort != oude_soort:
         gegevens["bootsoort"] = [oude_soort.naam, soort.naam]
-    if lid_id != oud_lid_id:
-        # verwijzingen, geen namen: oud en nieuw zonder persoonsgegevens (BLB-005, ADR-006)
-        gegevens["eigenaar"] = [f"lid:{i}" if i else "vereniging" for i in (oud_lid_id, lid_id)]
+    if (lid_id, clubboot) != (oud_lid_id, oude_club):
+        gegevens["eigenaar"] = [_eigenaar_tekst(oud_lid_id, oude_club), _eigenaar_tekst(lid_id, clubboot)]
     if not gegevens:
         db.session.rollback()  # geen verschil: geen logregel, en het slot vrij
         return b
-    if lid_id != oud_lid_id and b.wachtlijst is not None:
-        wachtlijst._eraf(b.wachtlijst, actor, "andere eigenaar")  # besluit stakeholder 2026-11-01
-    b.naam, b.bootsoort, b.lid_id = naam, soort, lid_id
+    # Besluit stakeholder 2026-11-01: een andere eigenaar haalt de boot van de wachtlijst. Een boot
+    # waarvan de eigenaar onbekend was, houdt zijn plek: er verandert dan niemand (#204).
+    if lid_id != oud_lid_id and oud_lid_id is not None and b.wachtlijst is not None:
+        wachtlijst._eraf(b.wachtlijst, actor, "andere eigenaar")
+    b.naam, b.bootsoort, b.lid_id, b.clubboot = naam, soort, lid_id, clubboot
     leden_ids = dict.fromkeys(i for i in (oud_lid_id, lid_id) if i is not None)
     log.schrijf(actor, "boot.gewijzigd", [f"boot:{b.id}", *(f"lid:{i}" for i in leden_ids)], gegevens)
     db.session.commit()
     return b
+
+
+def eigenaar_kiezen(boot_id, lid_id, actor, clubboot=False):
+    """Geeft een boot met een onbekende eigenaar een lid of de vereniging (pagina Boten zonder
+    eigenaar, #204). Alleen zolang de eigenaar onbekend is: een andere beheerder kan hem intussen
+    hebben gekozen. De rest van de regels (plaats, wachtlijst, oud-lid) is die van boot_wijzigen,
+    in dezelfde transactie: het slot op de boot blijft staan."""
+    b = db.session.get(Boot, boot_id, with_for_update=True, populate_existing=True)
+    try:
+        if b is None:
+            raise Regelfout("Deze boot bestaat niet.")
+        if b.lid_id is not None or b.clubboot:
+            raise Regelfout(f"Boot {b.naam} heeft intussen een eigenaar. Er is niets gewijzigd.")
+        if lid_id is None and not clubboot:
+            raise Regelfout("Kies een eigenaar.")
+        lid = db.session.get(Lid, lid_id) if lid_id is not None else None
+        if lid is not None and leden.is_oud_lid(lid):
+            raise Regelfout(f"Het gekozen lid van boot {b.naam} is intussen opgezegd. "
+                            "Er is niets gewijzigd.")
+    except Regelfout:
+        db.session.rollback()
+        raise
+    return boot_wijzigen(boot_id, b.naam, b.bootsoort_id, lid_id, actor, clubboot)
 
 
 def heeft_foto(boot_id):

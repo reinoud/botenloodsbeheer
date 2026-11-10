@@ -6,11 +6,12 @@ from app.domein import Regelfout, leden, log, wachtlijst
 from app.models import Boot, Plaats, db
 
 
-def controleer_past(p, bootnaam, bootsoort, heeft_lid):
-    """Weigert een boot die niet bij de plaats past; gedeeld met boten.boot_wijzigen."""
-    if p.is_clubplaats and heeft_lid:
+def controleer_past(p, bootnaam, bootsoort, clubboot):
+    """Weigert een boot die niet bij de plaats past; gedeeld met boten.boot_wijzigen. Een boot met
+    een lid of een onbekende eigenaar hoort op een gewone plaats (#204), een clubboot op een clubplaats."""
+    if p.is_clubplaats and not clubboot:
         raise Regelfout(f"Plaats {p.code} is een clubplaats en alleen voor clubboten.")
-    if not p.is_clubplaats and not heeft_lid:
+    if not p.is_clubplaats and clubboot:
         raise Regelfout(f"Boot {bootnaam} is een clubboot en hoort op een clubplaats.")
     if bootsoort not in p.bootsoorten:
         raise Regelfout(f"Plaats {p.code} is niet geschikt voor een {bootsoort.naam.lower()}.")
@@ -19,7 +20,7 @@ def controleer_past(p, bootnaam, bootsoort, heeft_lid):
 def past(p, b):
     """Voor een keuzelijst: dezelfde regels als toewijzen, zonder te weigeren (#131)."""
     try:
-        controleer_past(p, b.naam, b.bootsoort, b.lid_id is not None)
+        controleer_past(p, b.naam, b.bootsoort, b.clubboot)
     except Regelfout:
         return False
     return b.lid is None or not leden.is_oud_lid(b.lid)
@@ -49,7 +50,7 @@ def _toewijzen(p, b, actor):
     andere = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id))
     if andere is not None:
         raise Regelfout(f"Boot {b.naam} heeft al een plaats: {andere.code}.")
-    controleer_past(p, b.naam, b.bootsoort, b.lid_id is not None)
+    controleer_past(p, b.naam, b.bootsoort, b.clubboot)
     if b.lid is not None and leden.is_oud_lid(b.lid):
         raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats.")
     p.boot = b

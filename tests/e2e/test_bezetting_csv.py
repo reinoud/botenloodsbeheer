@@ -50,7 +50,7 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
         page.get_by_role("link", name="Bezetting exporteren als CSV").click()
     export = Path(download.value.path()).read_text(encoding="utf-8-sig")
     assert f"{rek}/1/1;Reiger {rek};Kajak;{naam1};{nr1}" in export
-    assert f"{rek}/1/4;Clubkajak {rek};Kajak;;" in export
+    assert f"{rek}/1/4;Clubkajak {rek};Kajak;clubboot;" in export
     with page.expect_download() as sjabloon:
         page.get_by_role("link", name="Leeg bezettingssjabloon met uitleg downloaden").click()
     assert Path(sjabloon.value.path()).read_text(encoding="utf-8-sig").startswith("# Bezetting")
@@ -59,7 +59,7 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     spelfout = f"{naam1} {rek}"
     bestand = "\r\n".join([
         KOP, f"{rek}/1/1;Reiger {rek};Kajak;{spelfout};", f"{rek}/1/2;Fuut {rek};Kajak;;{nr2}",
-        f"{rek}/1/3;Meeuw {rek};Kajak;;{nr2}", f"{rek}/1/4;Clubkajak {rek};Kajak;;"]) + "\r\n"
+        f"{rek}/1/3;Meeuw {rek};Kajak;;{nr2}", f"{rek}/1/4;Clubkajak {rek};Kajak;clubboot;"]) + "\r\n"
     uploaden(page, bestand)
     expect(page.get_by_role("heading", name="Bezetting importeren", exact=True)).to_be_visible()
     expect(regel(page, f"Reiger {rek}")).to_contain_text("te koppelen")

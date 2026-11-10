@@ -4,6 +4,38 @@
 {% block titel %}Boten · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten</h1>
+<details class="bl-nieuw"{% if nieuw_open %} open{% endif %}>
+  <summary id="nieuw-kop">Nieuwe boot</summary>
+  <div class="dj-panel bl-nieuw__inhoud">
+  <form class="bl-formulier" method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">
+    {% include "_csrf.html" %}
+    <div class="ds-field">
+      <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
+      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" required>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="bootsoort">Bootsoort</label>
+      <select class="dj-select" id="bootsoort" name="bootsoort" required>
+        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="ds-field">
+      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
+      <select class="dj-select" id="eigenaar" name="eigenaar" required>
+        <option value="onbekend" selected>eigenaar onbekend</option>
+        <option value="club">{{ vereniging }} (clubboot)</option>
+        {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+      </select>
+    </div>
+    <p class="bl-hint">Laat de eigenaar open als die nog niet bekend is. De boot staat dan op Boten zonder eigenaar.</p>
+    <div class="ds-field">
+      <label class="ds-field__label label-lang" for="foto">Foto (JPEG, PNG of WebP, niet verplicht)</label>
+      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Boot vastleggen</button>
+  </form>
+  </div>
+</details>
 
 <form class="bl-filter" method="get" action="{{ url_for('web.boten_overzicht') }}" role="search" aria-label="Boten zoeken en filteren">
   <div class="ds-field">
@@ -24,7 +56,7 @@
 <ul class="bl-lijst">
   {% for b in boten %}
   <li class="bl-item">
-    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span> · <span data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' }}</span></span></div>
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span> · <span data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' if b.clubboot else 'eigenaar onbekend' }}</span></span></div>
     <p class="bl-item__zijde">{% if b.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
   </li>
   {% endfor %}
@@ -32,41 +64,5 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek or soort_id else 'Er zijn nog geen boten.' }}{% endcall %}
 {% endif %}
-
-<section aria-labelledby="nieuw-kop">
-<details class="dj-disclosure"{% if nieuw_open %} open{% endif %}>
-  <summary id="nieuw-kop">Nieuwe boot</summary>
-  <div class="bl-uitklap__inhoud">
-  <form class="bl-formulier" method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">
-    {% include "_csrf.html" %}
-    <div class="ds-field">
-      <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
-      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" required>
-    </div>
-    <div class="ds-field">
-      <label class="ds-field__label" for="bootsoort">Bootsoort</label>
-      <select class="dj-select" id="bootsoort" name="bootsoort" required>
-        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
-      </select>
-    </div>
-    <div class="ds-field">
-      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
-      <select class="dj-select" id="eigenaar" name="eigenaar" required>
-        <option value="">Kies een eigenaar</option>
-        <option value="club">{{ vereniging }} (clubboot)</option>
-        {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-      </select>
-    </div>
-    <div class="ds-field">
-      <label class="ds-field__label label-lang" for="foto">Foto (JPEG, PNG of WebP, niet verplicht)</label>
-      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
-    </div>
-    <button type="submit" class="ds-btn ds-btn--primary">Boot vastleggen</button>
-  </form>
-  </div>
-</details>
-</section>
-
-
 {{ logblok(regels) }}
 {% endblock %}

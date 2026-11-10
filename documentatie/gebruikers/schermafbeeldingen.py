@@ -206,6 +206,16 @@ def schermen(browser):
     o.maak("plaats-toegewezen", hoogte=1000)
     openbaar = page.locator("#openbare-link").get_attribute("href")
 
+    # Boten zonder eigenaar (#204): een boot waarvan de eigenaar open blijft.
+    page.goto("/boten")
+    page.get_by_text("Nieuwe boot", exact=True).click()
+    page.get_by_label("Naam van de boot").fill("Wulp 3")
+    page.get_by_label("Bootsoort").select_option(label="Kajak")
+    page.get_by_role("button", name="Boot vastleggen").click()
+    expect(page.get_by_text("De boot is vastgelegd.")).to_be_visible()
+    page.goto("/boten/zonder-eigenaar")
+    o.maak("boten-zonder-eigenaar", hoogte=800)
+
     # Overzichten.
     page.goto("/vrij")
     page.get_by_label("Geschikt voor").select_option(label="Kajak")

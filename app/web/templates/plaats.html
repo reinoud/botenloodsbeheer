@@ -24,8 +24,10 @@
     <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
     <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
   </dl>
-  {% else %}
+  {% elif boot.clubboot %}
   <p>{{ vereniging }} (clubboot)</p>
+  {% else %}
+  <p>onbekend</p>
   {% endif %}
 </section>
 <form method="post" action="{{ url_for('web.plaats_vrijgeven', plaats_id=plaats.id) }}">
@@ -43,12 +45,12 @@
       <select class="dj-select" id="boot" name="boot_id" required>
         {% if wachtend %}
         <optgroup label="Op de wachtlijst, langst wachtend eerst">
-          {% for w in wachtend %}<option value="{{ w.boot.id }}">{{ w.boot.naam }} ({{ w.boot.bootsoort.naam }}, {{ w.boot.lid.naam }}, sinds {{ w.aangemeld_op.strftime('%d-%m-%Y') }})</option>{% endfor %}
+          {% for w in wachtend %}<option value="{{ w.boot.id }}">{{ w.boot.naam }} ({{ w.boot.bootsoort.naam }}, {{ w.boot.lid.naam if w.boot.lid else 'eigenaar onbekend' }}, sinds {{ w.aangemeld_op.strftime('%d-%m-%Y') }})</option>{% endfor %}
         </optgroup>
         <optgroup label="Andere boten zonder plaats">
         {% endif %}
         {% for b in boten if b.wachtlijst not in wachtend %}
-        <option value="{{ b.id }}">{{ b.naam }} ({{ b.bootsoort.naam }}, {{ b.lid.naam if b.lid else 'clubboot' }})</option>
+        <option value="{{ b.id }}">{{ b.naam }} ({{ b.bootsoort.naam }}, {{ b.lid.naam if b.lid else 'clubboot' if b.clubboot else 'eigenaar onbekend' }})</option>
         {% endfor %}
         {% if wachtend %}</optgroup>{% endif %}
       </select>

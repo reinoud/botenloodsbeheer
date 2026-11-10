@@ -140,7 +140,9 @@ def bestand_te_groot(fout):
 @bp.app_context_processor
 def naam_en_logo():
     """Naam en logo voor elke pagina (BLB-027)."""
-    return {"vereniging": instellingen.huidig()["naam"], "logo": instellingen.logo()}
+    # Het aantal boten zonder eigenaar staat in het menu (#204); zonder beheerder is er geen menu.
+    return {"vereniging": instellingen.huidig()["naam"], "logo": instellingen.logo(),
+            "zonder_eigenaar": boten.aantal_zonder_eigenaar() if g.get("beheerder") else 0}
 
 
 DAGEN = ("maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag", "zondag")

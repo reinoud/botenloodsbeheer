@@ -34,7 +34,7 @@
         <td role="cell" data-label="Regel">{{ u.regel }}</td>
         <td role="cell" data-label="Plaats">{{ u.tekst.plaats }}</td>
         <td role="cell" data-label="Boot (bootsoort)">{{ u.tekst.boot }} ({{ u.tekst.bootsoort }})</td>
-        <td role="cell" data-label="Eigenaar (lidnummer)">{% if u.tekst.eigenaar or u.tekst.lidnummer %}{{ u.tekst.eigenaar }}{% if u.tekst.lidnummer %}{% if u.tekst.eigenaar %} ({{ u.tekst.lidnummer }}){% else %}{{ u.tekst.lidnummer }}{% endif %}{% endif %}{% else %}clubboot{% endif %}{% if u.lid and u.via != 'naam' %}<br>Gekoppeld: {{ u.lid.naam }} ({{ u.lid.lidnummer }}){% endif %}</td>
+        <td role="cell" data-label="Eigenaar (lidnummer)">{% if u.tekst.eigenaar or u.tekst.lidnummer %}{{ u.tekst.eigenaar }}{% if u.tekst.lidnummer %}{% if u.tekst.eigenaar %} ({{ u.tekst.lidnummer }}){% else %}{{ u.tekst.lidnummer }}{% endif %}{% endif %}{% else %}eigenaar onbekend{% endif %}{% if u.lid and u.via != 'naam' %}<br>Gekoppeld: {{ u.lid.naam }} ({{ u.lid.lidnummer }}){% endif %}</td>
         <td role="cell" data-label="Uitkomst"><span class="ds-tag">{{ u.uitkomst }}</span>{% if u.melding %}<br>{{ u.melding }}{% endif %}</td>
         <td role="cell" data-label="Keuze">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.via == 'keuze' %}{{ leden_keuze(u) }}{% else %}-{% endif %}</td>
       </tr>

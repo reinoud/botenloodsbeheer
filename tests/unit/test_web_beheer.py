@@ -12,7 +12,7 @@ from app.web import getal
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats, png
 from tests.unit.test_web import inloggen
 
-BEHEER = ["/indeling", "/boten", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
+BEHEER = ["/indeling", "/boten", "/boten/zonder-eigenaar", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
           "/profiel", "/log", "/log/techniek"]
 
 
@@ -23,10 +23,10 @@ def ingelogd(client):
     return client
 
 
-def bezette_plaats(club=False, foto=None):
+def bezette_plaats(club=False, foto=None, onbekend=False):
     p = plaats("A/1/1", club=club)
-    eigenaar = None if club else lid().id
-    b = boten.boot_aanmaken("Zeemeeuw", 1, eigenaar, foto, CLI)
+    eigenaar = None if club or onbekend else lid().id
+    b = boten.boot_aanmaken("Zeemeeuw", 1, eigenaar, foto, CLI, clubboot=club)
     toewijzing.toewijzen(p.id, b.id, CLI)
     return p
 
@@ -202,6 +202,12 @@ def test_plaatsdetail_clubboot_zonder_eigenaar(ingelogd):
     assert "(clubboot)" in tekst and "Lidnummer" not in tekst
 
 
+def test_plaatsdetail_onbekende_eigenaar_is_geen_clubboot(ingelogd):
+    p = bezette_plaats(onbekend=True)
+    tekst = ingelogd.get(f"/plaatsen/{p.id}").text
+    assert "<p>onbekend</p>" in tekst and "(clubboot)" not in tekst and "Lidnummer" not in tekst
+
+
 def test_plaatsdetail_vrij_met_geschikte_soorten(ingelogd):
     p = plaats("A/1/1", soort_ids=[1, 4])
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
@@ -211,7 +217,7 @@ def test_plaatsdetail_vrij_met_geschikte_soorten(ingelogd):
 
 def test_toewijzen_geweigerd_toont_reden(ingelogd):
     p = plaats("A/1/1")
-    b = boten.boot_aanmaken("Clubkajak", 1, None, None, CLI)
+    b = boten.boot_aanmaken("Clubkajak", 1, None, None, CLI, clubboot=True)
     r = ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": b.id}, follow_redirects=True)
     assert "is een clubboot en hoort op een clubplaats" in r.text
 
@@ -293,7 +299,7 @@ def test_nieuwe_boot_met_foto_boven_de_grens_geeft_een_melding_met_het_formulier
     assert r.status_code == 302 and r.location == "/boten?open=nieuw"
     r = ingelogd.get(r.location)
     assert r.text.count('role="alert"') == 1 and TE_GROOT in r.text and VORIGE not in r.text
-    assert re.search(r'<details class="dj-disclosure" open>\s*<summary id="nieuw-kop">', r.text)
+    assert re.search(r'<details class="bl-nieuw" open>\s*<summary id="nieuw-kop">', r.text)
     assert not boten.boten("Fuut")  # niets vastgelegd
 
 
