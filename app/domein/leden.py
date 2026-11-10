@@ -138,7 +138,6 @@ def synchroniseer(records, actor):
     log (BLB-008, #27).
     """
     dag = vandaag()
-    grens = jaren_terug(dag, BEWAARJAREN)
     aantallen = {"ontvangen": len(records), "nieuw": 0, "bijgewerkt": 0, "uit_bron": 0,
                  "ongeldig": 0, "overgeslagen": 0}
 
@@ -167,8 +166,8 @@ def synchroniseer(records, actor):
     for nummer, velden in geldig.items():
         lid = bestaand.get(nummer)
         if lid is None:
-            # Een opgeschoond oud-lid komt niet terug (ADR-004 stap 4).
-            if velden["opzegdatum"] and velden["opzegdatum"] < grens:
+            # Een oud-lid dat nog niet bestond, komt er niet in (ADR-004 stap 4, #203).
+            if velden["opzegdatum"] and velden["opzegdatum"] <= dag:
                 aantallen["overgeslagen"] += 1
                 continue
             db.session.add(Lid(lidnummer=nummer, **velden))

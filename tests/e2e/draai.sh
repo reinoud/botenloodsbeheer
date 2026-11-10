@@ -79,7 +79,8 @@ tokens_lezen=(-e "E2E_TOKEN_LEZEN=$(robot "e2e-lezen-$stempel" --recht bootaanta
 # Elk token in een eigen toewijzing: in een array met meer $(...) telt alleen de laatste voor set -e.
 tokens=(-e "E2E_API_URL=http://$koppel_ip:8081/api/v1")
 for soort in api tempo prefix ingetrokken import; do
-  waarde=$(token "$soort" "${eigen[@]}")
+  extra=(); [[ $soort == import ]] && extra=(--recht leden:lezen)  # test_import.py telt de bestaande leden
+  waarde=$(token "$soort" "${eigen[@]}" "${extra[@]}")
   tokens+=(-e "E2E_TOKEN_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$waarde")
 done
 # VERVALST staat alleen 10.203.0.99 toe: het adres dat test_api.py in X-Forwarded-For zet.

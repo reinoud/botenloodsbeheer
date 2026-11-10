@@ -211,7 +211,7 @@ Gebouwd in slice 2. Alle criteria worden in slice 6 opnieuw getoetst via `PUT /a
 - Gegeven een lid dat in de bron een opzegdatum in het verleden krijgt, wanneer de import draait, dan is het lid een oud-lid en blijven de gegevens en toegewezen plaatsen staan. (slice 6)
 - Gegeven een lid dat in de lijst van een import ontbreekt, wanneer de import slaagt, dan wordt het lid oud-lid met de datum van die import als opzegdatum en wordt het niet verwijderd. (slice 6)
 - Gegeven een boot van een lid op de wachtlijst, wanneer dat lid oud-lid wordt, dan verdwijnt de boot van de wachtlijst en staat dat in het log. (slice 7, na BLB-013)
-- Gegeven een record met een opzegdatum van meer dan 5 jaar geleden van een lid dat niet in de applicatie staat, wanneer de import draait, dan maakt de applicatie dat lid niet aan. Zo komt een opgeschoond oud-lid niet terug. (slice 6)
+- Gegeven een record met een opzegdatum op of vóór vandaag van een lid dat niet in de applicatie staat, wanneer de import draait, dan maakt de applicatie dat lid niet aan en telt het als overgeslagen. Een opzegdatum in de toekomst komt wel binnen. (slice 6, aangepast in issue #203)
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder een plaats wil toewijzen, dan weigert de applicatie.
 
 #### BLB-009 Terugschrijven naar e-boekhouden

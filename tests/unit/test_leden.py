@@ -54,11 +54,11 @@ def test_fixture_importeren_met_aantallen_volgens_het_contract(importeer):
     r = importeer(FIXTURE)
     assert r.status_code == 200
     jsonschema.validate(r.json, SPEC["components"]["schemas"]["Importuitkomst"])
-    assert r.json == {"ontvangen": 210, "nieuw": 208, "bijgewerkt": 0, "uit_bron": 0,
-                      "ongeldig": 0, "overgeslagen": 2}  # 2 langer dan 5 jaar opgezegd
-    assert len(alle()) == 208
+    assert r.json == {"ontvangen": 210, "nieuw": 198, "bijgewerkt": 0, "uit_bron": 0,
+                      "ongeldig": 0, "overgeslagen": 12}  # 12 met een opzegdatum in het verleden (#203)
+    assert len(alle()) == 198
     [run] = runs()
-    assert (run.status, run.aantallen["nieuw"]) == ("geslaagd", 208)
+    assert (run.status, run.aantallen["nieuw"]) == ("geslaagd", 198)
 
 
 def test_nieuwe_en_gewijzigde_leden_op_lidnummer_met_alle_velden(importeer):
@@ -248,12 +248,25 @@ def test_import_haalt_boot_eraf_als_de_opzegdatum_inmiddels_verstreken_is(import
     assert db.session.get(Wachtlijst, b) is None
 
 
-def test_opgeschoond_oud_lid_komt_niet_terug(importeer):
-    """BLB-008 criterium 4. Precies 5 jaar geleden opgezegd komt nog binnen; een dag eerder niet."""
-    grens = leden.jaren_terug(vandaag(), leden.BEWAARJAREN)
-    r = importeer([record("1", opzegdatum=grens.isoformat()),
-                   record("2", opzegdatum=(grens - timedelta(days=1)).isoformat())])
-    assert r.json["overgeslagen"] == 1 and set(alle()) == {"1"}
+def test_nieuw_lid_met_opzegdatum_vandaag_of_eerder_komt_er_niet_in(importeer):
+    """#203, beide kanten van de grens: vandaag en gisteren overgeslagen, morgen komt binnen. Ook
+    een opzegdatum van meer dan 5 jaar geleden (BLB-008 criterium 4) blijft overgeslagen."""
+    dag = vandaag()
+    lang = leden.jaren_terug(dag, leden.BEWAARJAREN) - timedelta(days=1)
+    r = importeer([record("vandaag", opzegdatum=dag.isoformat()),
+                   record("gisteren", opzegdatum=(dag - timedelta(days=1)).isoformat()),
+                   record("lang", opzegdatum=lang.isoformat()),
+                   record("morgen", opzegdatum=(dag + timedelta(days=1)).isoformat())])
+    assert (r.json["nieuw"], r.json["overgeslagen"]) == (1, 3) and set(alle()) == {"morgen"}
+
+
+def test_bestaand_lid_dat_opzegt_blijft_staan_met_de_opzegdatum(importeer):
+    """#203: alleen een nieuw lidnummer wordt overgeslagen, een bestaand lid wordt bijgewerkt."""
+    importeer([record("1")])
+    gisteren = vandaag() - timedelta(days=1)
+    r = importeer([record("1", opzegdatum=gisteren.isoformat())])
+    assert (r.json["bijgewerkt"], r.json["overgeslagen"]) == (1, 0)
+    assert alle()["1"].opzegdatum == gisteren
 
 
 def test_opzegdatum_in_de_toekomst_blijft_lid_tot_die_datum(importeer):

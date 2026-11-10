@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012) en 2026-11-08 (e-boekhouden, issue #178)
 **Datum:** 2026-10-30
-**Versie:** v2.5.0
+**Versie:** v2.7.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
 ## Context
@@ -26,7 +26,7 @@ De import in `domein/leden` werkt in deze stappen, bij elke aanroep van `PUT /ap
 1. De lijst uit het verzoek nemen. Is het geen lijst, of zijn er meer dan 5000 records: 422, niets wijzigen. Een gemelde fout van de bron komt in `taakrun`, met een reden uit een vaste lijst (BLB-006).
 2. Elk record valideren: lidnummer verplicht, tekstvelden ingekort tot een maximumlengte, datums geldig. Velden die het contract niet kent, zoals adres, telefoon en e-mail, worden genegeerd en niet bewaard (issue #180). Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
 3. Veiligheidsgrens: komen er minder dan de helft van het huidige aantal actieve leden terug, dan breekt de import af met 409 en staat hij als mislukte run in `taakrun`. Een kapotte bron of een container die een halve lijst stuurt, maakt zo niet alle leden oud-lid.
-4. Records met een opzegdatum van meer dan 5 jaar geleden die lokaal niet bestaan, worden overgeslagen. Anders zou de import een opgeschoond oud-lid opnieuw aanmaken.
+4. Records met een opzegdatum op of vóór vandaag die lokaal niet bestaan, worden overgeslagen en geteld als overgeslagen: een oud-lid dat nooit in de applicatie stond, komt er niet in (besluit stakeholder 2026-11-10, issue #203). Een opzegdatum in de toekomst komt wel binnen. Een bestaand lid dat opzegt, blijft staan met de opzegdatum, zodat zijn boot als boot van een oud-lid wordt herkend. Een opgeschoond oud-lid komt zo ook niet terug. Migratie 0020 verwijdert eenmalig de oud-leden zonder boot die al binnenkwamen; de koppelingen uit `naamkoppeling` gaan mee (ON DELETE CASCADE), logregels met `lid:<id>` blijven.
 5. In één transactie: nieuwe leden aanmaken, gewijzigde bijwerken, leden die ontbreken krijgen `uit_bron_op` met de datum van vandaag. Boten van leden die oud-lid worden, gaan van de wachtlijst (BLB-008).
 6. Wijzigingen in leden komen niet in het log; de aantallen staan in `taakrun`, in een run met taak `ledenimport`. Een mutatie in de botenadministratie die de import veroorzaakt, krijgt wel een logregel met het robottoken als actor (BLB-024, besluit stakeholder 2026-10-31).
 
@@ -55,6 +55,7 @@ Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, allee
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.7.0 | 2026-11-10 | Stap 4: een nieuw lid met een opzegdatum op of vóór vandaag wordt niet aangemaakt; migratie 0020 ruimt oud-leden zonder boot op | Besluit stakeholder 2026-11-10, issue #203 |
 | v2.6.0 | 2026-11-09 | De lidpagina toont de aantallen per bootsoort niet meer; alleen de API levert ze | Besluit stakeholder 2026-11-08, issue #179 |
 | v2.5.0 | 2026-11-09 | Kolommen `adres`, `telefoon` en `email` van `lid` vervallen (migratie 0018); de import negeert die velden | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v2.4.0 | 2026-11-08 | Bron e-boekhouden met zeep, velden, redenen; terugschrijven naar `Def10` achter `BOOTAANTALLEN_SCHRIJVEN` (standaard uit) | Besluiten stakeholder 2026-11-08, issue #178 |
