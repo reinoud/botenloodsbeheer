@@ -34,7 +34,7 @@
 {% endif %}
 
 <section aria-labelledby="nieuw-kop">
-<details class="dj-disclosure">
+<details class="dj-disclosure"{% if nieuw_open %} open{% endif %}>
   <summary id="nieuw-kop">Nieuwe boot</summary>
   <div class="bl-uitklap__inhoud">
   <form class="bl-formulier" method="post" action="{{ url_for('web.boot_aanmaken') }}" enctype="multipart/form-data">

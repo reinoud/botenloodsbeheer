@@ -144,7 +144,7 @@ def test_naam_instellen_en_terugzetten(page, browser, base_url):
         expect(page.locator(koplogo)).to_have_attribute("src", eerste)
 
         # Vervangen door een bestand van 1,5 MB: boven de 1 MB van de algemene router, dus alleen
-        # de router van /instellingen/logo (10 MB) laat het door. Een nieuw logo geeft een nieuwe URL.
+        # de router van /instellingen/logo (25 MB) laat het door. Een nieuw logo geeft een nieuwe URL.
         # mutant: het label van router -logo weghalen -> Traefik geeft 413.
         groot = Path(LOGO).read_bytes() + b"\0" * 1_500_000
         page.get_by_label("Nieuw logo").set_input_files(

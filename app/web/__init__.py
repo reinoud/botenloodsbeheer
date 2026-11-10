@@ -5,6 +5,7 @@ from functools import wraps
 from itertools import groupby
 from zoneinfo import ZoneInfo
 
+from werkzeug.exceptions import RequestEntityTooLarge
 from flask import (
     Blueprint,
     current_app,
@@ -19,7 +20,7 @@ from flask import (
 )
 
 from app import INT_MAX
-from app.domein import Actor, Regelfout, instellingen, log
+from app.domein import Actor, Regelfout, afbeeldingen, boten, instellingen, log
 from app.models import Beheerder, db
 
 bp = Blueprint("web", __name__)
@@ -112,6 +113,28 @@ def uitvoeren(functie, *args, gelukt=None):
     if gelukt:
         flash(gelukt, "info")
     return resultaat
+
+
+# app_errorhandler: MAX_CONTENT_LENGTH weigert al vóór de route en vóór CSRF. Terug naar het formulier
+# met een melding en het blok open; elders blijft het de standaard 413.
+@bp.app_errorhandler(RequestEntityTooLarge)
+def bestand_te_groot(fout):
+    # Lichaam weglezen, om dezelfde reden als in app.api (#91). Traefik begrenst het op 25 MB.
+    while request.environ["wsgi.input"].read(65536):
+        pass
+    if "beheerder_id" not in session:  # geen flash voor wie niet is ingelogd
+        return fout
+    if request.endpoint == "web.logo_opslaan":
+        doel, vorige = url_for("web.instellingen_scherm", open="logo"), instellingen.logo() is not None
+    elif request.endpoint == "web.boot_foto":
+        boot_id = request.view_args["boot_id"]
+        doel, vorige = url_for("web.boot_detail", boot_id=boot_id, open="foto"), boten.heeft_foto(boot_id)
+    elif request.endpoint == "web.boot_aanmaken":
+        doel, vorige = url_for("web.boten_overzicht", open="nieuw"), False
+    else:
+        return fout
+    flash(afbeeldingen.TE_GROOT + afbeeldingen.VORIGE * vorige, "fout")
+    return redirect(doel)
 
 
 @bp.app_context_processor

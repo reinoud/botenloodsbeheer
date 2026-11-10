@@ -139,9 +139,14 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor):
     return b
 
 
+def heeft_foto(boot_id):
+    return db.session.scalar(select(Boot.afbeelding_id).where(Boot.id == boot_id)) is not None
+
+
 def foto_vervangen(boot_id, inhoud, actor):
     """Pas na een geslaagde verwerking vervangt de nieuwe foto de oude (BLB-005)."""
-    nieuw = afbeeldingen.verwerk(inhoud)
+    # heeft_foto alleen voor de melding; de vergrendeling volgt pas na de verwerking.
+    nieuw = afbeeldingen.verwerk(inhoud, vorige=heeft_foto(boot_id))
     b = db.session.get(Boot, boot_id, with_for_update=True)
     if b is None:
         raise Regelfout("Deze boot bestaat niet.")

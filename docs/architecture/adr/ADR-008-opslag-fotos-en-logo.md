@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.3.0
+**Versie:** v1.4.0
 **Stories:** BLB-005, BLB-012, BLB-020, BLB-021, BLB-026, BLB-027
 
 ## Context
@@ -15,9 +15,9 @@ Bij 180 boten en een foto van rond 250 kB na verkleinen gaat het om ongeveer 45 
 
 Foto's staan in PostgreSQL, in de tabel `afbeelding` als `bytea`.
 
-**Logo.** Het logo is een afbeelding van soort `logo` in dezelfde tabel; de rij `logo` in `instelling` wijst ernaar en wordt bij elke wijziging vergrendeld, zodat er één logo is. Een beheerder uploadt, vervangt en verwijdert het op Instellingen, met een inlog van hooguit 10 minuten oud. De verwerking is die van een foto, behalve: hooguit 800 pixels aan de lange zijde en opnieuw opgeslagen als PNG zonder metadata. Elke worker van `web` leest het uit de database, dus een wijziging is direct overal zichtbaar. De route `/logo/<sleutel>` levert het, met de sleutel van de afbeelding in de URL (nieuw bij elke upload) en een lange cache-header; een sleutel van een foto geeft 404. Zonder logo toont de kopbalk alleen de naam. Uploaden en verwijderen staan in het technische log (`instelling.logo_toegevoegd`, `instelling.logo_vervangen`, `instelling.logo_verwijderd`), met de afmetingen en zonder inhoud. Traefik begrenst `/instellingen/logo` op 10 MB (ADR-013).
+**Logo.** Het logo is een afbeelding van soort `logo` in dezelfde tabel; de rij `logo` in `instelling` wijst ernaar en wordt bij elke wijziging vergrendeld, zodat er één logo is. Een beheerder uploadt, vervangt en verwijdert het op Instellingen, met een inlog van hooguit 10 minuten oud. De verwerking is die van een foto, behalve: hooguit 800 pixels aan de lange zijde en opnieuw opgeslagen als PNG zonder metadata. Elke worker van `web` leest het uit de database, dus een wijziging is direct overal zichtbaar. De route `/logo/<sleutel>` levert het, met de sleutel van de afbeelding in de URL (nieuw bij elke upload) en een lange cache-header; een sleutel van een foto geeft 404. Zonder logo toont de kopbalk alleen de naam. Uploaden en verwijderen staan in het technische log (`instelling.logo_toegevoegd`, `instelling.logo_vervangen`, `instelling.logo_verwijderd`), met de afmetingen en zonder inhoud. De applicatie begrenst het op 10 MB (`UPLOAD_MAX`); Traefik heeft op `/instellingen/logo` 25 MB als buitengrens (ADR-013).
 
-**Uploaden.** Traefik weigert verzoeken boven 10 MB (ADR-013). De applicatie opent het bestand met Pillow en accepteert alleen JPEG, PNG en WebP, op basis van de inhoud en niet van de bestandsnaam. Een JPEG met meer beelden (MPO, zoals sommige telefoons die maken) telt als JPEG; alleen het eerste beeld wordt verwerkt. Pillow verkleint foto's tot hooguit 1600 pixels aan de lange zijde, draait volgens de EXIF-oriëntatie en slaat opnieuw op als JPEG zonder metadata. `Image.MAX_IMAGE_PIXELS` begrenst decompressiebommen. Pas na een geslaagde verwerking vervangt de nieuwe afbeelding de oude, in één transactie met de logregel. Een ongeldig bestand geeft één melding met de tekst uit `afbeeldingen.verwerk`, zonder bestandsnaam.
+**Uploaden.** De applicatie weigert een bestand boven 10 MB (`UPLOAD_MAX`) en stuurt de beheerder met de melding "Dit bestand is groter dan 10 MB. Kies een kleiner bestand." terug naar het formulier, met het blok open (logo, Foto vervangen, nieuwe boot). Traefik weigert verzoeken boven 25 MB (ADR-013) met een 413 zonder uitleg. De applicatie opent het bestand met Pillow en accepteert alleen JPEG, PNG en WebP, op basis van de inhoud en niet van de bestandsnaam. Een JPEG met meer beelden (MPO, zoals sommige telefoons die maken) telt als JPEG; alleen het eerste beeld wordt verwerkt. Pillow verkleint foto's tot hooguit 1600 pixels aan de lange zijde, draait volgens de EXIF-oriëntatie en slaat opnieuw op als JPEG zonder metadata. `Image.MAX_IMAGE_PIXELS` begrenst decompressiebommen. Pas na een geslaagde verwerking vervangt de nieuwe afbeelding de oude, in één transactie met de logregel. Een ongeldig bestand geeft één melding met de tekst uit `afbeeldingen.verwerk`, zonder bestandsnaam. Zowel bij een ongeldig als bij een te groot bestand staat erachter "De vorige blijft staan.", maar alleen als er al een logo of foto is.
 
 **SVG.** Wordt geweigerd. Een SVG kan script bevatten en is lastig veilig te maken.
 
@@ -43,6 +43,7 @@ Foto's staan in PostgreSQL, in de tabel `afbeelding` als `bytea`.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.0 | 2026-11-10 | Grens van 10 MB in de applicatie met een melding; Traefik heeft 25 MB als buitengrens; "De vorige blijft staan." alleen met een vorige | Besluit stakeholder 2026-11-10, issue #190 |
 | v1.3.0 | 2026-11-08 | Logo weer in de database, uploaden en verwijderen op Instellingen met logregel; `LOGO_BESTAND` en `./huisstijl` vervallen; migratie 0017 | Besluit stakeholder 2026-11-08, issue #186 |
 | v1.2.1 | 2026-11-04 | MPO telt als JPEG, alleen het eerste beeld | Issue #70 |
 | v1.2.0 | 2026-10-31 | Grens van 10 MB in Traefik; geen korte cache in de proxy (Traefik heeft er geen, en hij was niet gebouwd) | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |

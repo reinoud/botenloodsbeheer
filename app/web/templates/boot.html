@@ -105,7 +105,7 @@
 </details>
 </section>
 <section class="kaart" aria-labelledby="foto-kop">
-<details class="dj-disclosure">
+<details class="dj-disclosure"{% if foto_open %} open{% endif %}>
   <summary id="foto-kop">Foto vervangen</summary>
   <div class="bl-uitklap__inhoud">
   <form class="bl-formulier" method="post" action="{{ url_for('web.boot_foto', boot_id=boot.id) }}" enctype="multipart/form-data">

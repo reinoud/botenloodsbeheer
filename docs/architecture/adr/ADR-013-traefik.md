@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.4.2
+**Versie:** v1.5.0
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -35,7 +35,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 | Rate limit API: 60 per minuut per token, burst 10 (ADR-005) | Middleware `ratelimit` met `sourceCriterion.requestHeaderName=Authorization` | 12 aanroepen in een seconde: 429 met `Retry-After`; een tweede token in dezelfde seconde krijgt 200; een nepgeheim met de prefix van het echte token remt het echte token niet (AEG-01) |
 | Rate limit API per IP: 300 per minuut, burst 50 | Tweede middleware `ratelimit` op het verbindingsadres, na die per token | 60 aanroepen met willekeurige tokens vanaf `koppeling`: 429 na ongeveer 50 |
 | Grens van 2 MB als JSON-413 (ADR-012) | Applicatie: `MAX_CONTENT_LENGTH` in `api` geeft de JSON al. Traefik: middleware `buffering` met `maxRequestBodyBytes` 3 MB als buitengrens, in het geheugen | 2,1 MB: 413 als JSON en één toegangsregel; 3,5 MB: 413 van Traefik |
-| 1 MB algemeen, 10 MB op `/boten` (ADR-008) | Middleware `buffering` per router; de applicatie houdt `UPLOAD_MAX` | 1,5 MB op een formulier: 413; foto van 9 MB op `/boten` slaagt |
+| 1 MB algemeen; 10 MB voor foto en logo in de applicatie, 25 MB als buitengrens in Traefik op `/boten` en `/instellingen/logo` (ADR-008, besluit stakeholder 2026-11-10) | Middleware `buffering` (`25mb`) per router; de applicatie houdt `UPLOAD_MAX` en geeft daarboven een melding | 1,5 MB op een formulier: 413; foto van 9 MB op `/boten` slaagt; 15 MB: melding van de applicatie; 30 MB: 413 van Traefik |
 | Publieke server kent `/api/` niet | Geen router naar `api` op `websecure`; regel van `web`: `Host(DOMEIN) && !PathPrefix(/api/)` | `https://DOMEIN/api/v1/ik` geeft 404 |
 | Interne server op 8081 (ADR-012) | Entrypoint `intern` op 8081, niet gepubliceerd; router `ClientIP(KOPPELNET) && PathPrefix(/api/v1/)` alleen op `intern` | Vanaf `koppeling` 200 op `/api/v1/ik`; vanaf een ander netwerk van Traefik 404; poort 8081 van buiten dicht |
 | `X-Forwarded-For` overschrijven | Traefik vertrouwt geen binnenkomende `X-Forwarded-*` zonder `trustedIPs`; `PROXY_HOPS=1` blijft | Aanroep met `X-Forwarded-For: 10.203.0.99`, en ook met `X_Forwarded_For`, `X-Real-Ip` en `Forwarded`: het log van de API toont het eigen adres; een token met alleen dat adres op de whitelist krijgt 403 |
@@ -109,11 +109,13 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 - #14 verdwijnt met de bouw: de querystring komt nooit in de log. #26 vervalt: er is geen foutlog van Nginx meer. #5 blijft open voor de foutlog van Flask. #20 blijft open: `web`, `worker` en `migrate` bereiken `api` nog via `achterkant`.
 - De gedeelde Traefik leest de Docker-socket en heeft daarmee de rechten van root op de host. Dat is beheer van de host; de beheerdocumentatie raadt een socketproxy met leesrechten aan.
 - Na een herstart van `web` of `api` is geen herstart van de proxy meer nodig.
+- De middleware `25mb` buffert een upload op `/boten` en `/instellingen/logo` tot 25 MB in het geheugen van de gedeelde Traefik, ook zonder inlog. In het slechtste geval houdt elke open verbinding 25 MB vast zolang de upload duurt; de rate limit begrenst het aantal verzoeken, niet het aantal open verbindingen. Voor deze installatie aanvaardbaar; een lager geheugendeel vraagt een schrijfbare tijdelijke map in de gedeelde Traefik (review Aegis bij #190).
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.0 | 2026-11-10 | Buitengrens van 25 MB op `/boten` en `/instellingen/logo` (middleware `25mb`), de applicatie houdt 10 MB | Besluit stakeholder 2026-11-10, issue #190 |
 | v1.4.2 | 2026-11-05 | Verschil met de verworpen opties op het entrypoint; eisen aan load balancer en `trustedips` | Review aegis, issue #54 |
 | v1.4.1 | 2026-11-05 | Herkomst van het besluit over `X-Forwarded-For`; proef bevestigt `trustedips` | Besluit stakeholder, issue #54 |
 | v1.4.0 | 2026-11-05 | Load balancer via PROXY protocol op het entrypoint; middlewares blijven gedeeld, `PROXY_HOPS=2` vervalt | Issue #54 |

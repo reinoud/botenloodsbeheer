@@ -18,7 +18,9 @@ from tests.unit.hulp import logo_zetten, png
 from tests.unit.test_indeling_en_toewijzing import plaats
 from tests.unit.test_web_beheer import bezette_plaats, ingelogd  # noqa: F401  fixture
 
-MELDING = "Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP. De vorige blijft staan."
+MELDING = "Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP."
+TE_GROOT = "Dit bestand is groter dan 10 MB. Kies een kleiner bestand."
+VORIGE = " De vorige blijft staan."
 
 
 def uploaden(client, inhoud, naam="logo.png", **vraag):
@@ -115,6 +117,11 @@ def test_scherm_toont_het_blok_met_upload_en_verwijderknop(ingelogd):  # noqa: F
                      ingelogd.get("/instellingen?open=logo").text)
 
 
+def test_ongeldig_bestand_zonder_vorig_logo_zegt_niet_dat_de_vorige_blijft(ingelogd):  # noqa: F811
+    r = ingelogd.get(uploaden(ingelogd, b"geen afbeelding").location)
+    assert r.text.count('role="alert"') == 1 and MELDING in r.text and VORIGE not in r.text
+
+
 @pytest.mark.parametrize("inhoud", [
     b"geen afbeelding",
     b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>',
@@ -125,7 +132,7 @@ def test_ongeldig_bestand_geeft_een_melding_en_het_vorige_logo_blijft(ingelogd, 
     r = uploaden(ingelogd, inhoud, naam="<b>geheim</b>.png")
     assert r.location == "/instellingen?open=logo"
     r = ingelogd.get(r.location)
-    assert r.text.count('role="alert"') == 1 and MELDING in r.text
+    assert r.text.count('role="alert"') == 1 and MELDING + VORIGE in r.text
     assert "geheim" not in r.text and "<b>geheim" not in r.text  # de bestandsnaam komt nergens terug
     assert re.search(r'<details class="dj-disclosure" open>\s*<summary>Logo</summary>', r.text)
     assert instellingen.logo() == vorig and aantal_logos() == 1
@@ -140,16 +147,27 @@ def test_geen_bestand_gekozen_geeft_een_melding(ingelogd):  # noqa: F811
     assert "Kies een logo." in r.text and instellingen.logo() == vorig
 
 
-def test_bestand_boven_de_grens_wordt_geweigerd_en_het_vorige_logo_blijft(ingelogd, app):  # noqa: F811
+@pytest.mark.parametrize("er_is_een", [True, False], ids=["met-vorig-logo", "zonder-vorig-logo"])
+def test_bestand_boven_de_grens_geeft_een_melding_en_het_vorige_logo_blijft(ingelogd, app, er_is_een):  # noqa: F811
     # Grens van het framework: MAX_CONTENT_LENGTH weigert vóór de route (en vóór CSRFProtect).
-    vorig = logo_zetten()
+    vorig = logo_zetten() if er_is_een else None
     assert app.config["MAX_CONTENT_LENGTH"] == UPLOAD_MAX
     r = uploaden(ingelogd, png() + b"0" * UPLOAD_MAX)
-    assert r.status_code == 413 and instellingen.logo() == vorig
+    assert r.status_code == 302 and r.location == "/instellingen?open=logo"
+    r = ingelogd.get(r.location)
+    assert r.text.count('role="alert"') == 1 and (TE_GROOT + VORIGE * er_is_een) in r.text
+    assert (VORIGE in r.text) is er_is_een
+    assert re.search(r'<details class="dj-disclosure" open>\s*<summary>Logo</summary>', r.text)
+    assert instellingen.logo() == vorig and aantal_logos() == er_is_een
+
+
+def test_bestand_boven_de_grens_zonder_inlog_geeft_geen_melding(client):
+    r = uploaden(client, png() + b"0" * UPLOAD_MAX)
+    assert r.status_code == 413
 
 
 def test_bestand_net_onder_de_grens_wordt_verwerkt(ingelogd):  # noqa: F811
-    # Beide kanten van de grens: dit bestand is bijna 10 MB en geldig; het ene byte erboven geeft 413.
+    # Beide kanten van de grens: dit bestand is bijna 10 MB en geldig; erboven volgt een melding.
     inhoud = png() + b"0" * (UPLOAD_MAX - len(png()) - 2048)
     assert uploaden(ingelogd, inhoud).status_code == 302 and instellingen.logo() is not None
 
