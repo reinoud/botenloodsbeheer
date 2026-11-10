@@ -17,4 +17,4 @@ Datum: 2026-11-11. Issues: #221, #223 en #196, alle drie gesloten (PR #228, #227
 
 ## Waar de lessen landen
 
-Alle lessen staan in `docs/PROJECT-OVERLAY.md` v0.5.57 tot en met v0.5.60. Voor de volgende afstemming staan open: #226, #230, #231, de adviespunten AEG-09 (inloggegevens van e-boekhouden als secret) en AEG-10 (`exclude-newer` ophogen), en de melding van probe dat de seed 11 rekken en 229 plaatsen maakt in plaats van 10 en 160.
+Alle lessen staan in `docs/PROJECT-OVERLAY.md` v0.5.57 tot en met v0.5.60. Voor de volgende afstemming staan open: #226, #230, #231, de adviespunten AEG-09 (inloggegevens van e-boekhouden als secret) en AEG-10 (`exclude-newer` ophogen), de melding van probe dat de seed 11 rekken en 229 plaatsen maakt in plaats van 10 en 160, de open vraag of PRB-01 ook met TLS in productie-opbouw is opgelost, en de observatie dat een client zonder inlog op `/boten` en `/instellingen/logo` 25 MB in het geheugen van Traefik kan laten bufferen (zonder issue).
