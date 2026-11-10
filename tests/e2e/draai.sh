@@ -33,11 +33,15 @@ API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0
 opruimen() {
   local rc=$?
   trap - EXIT
+  if [ "$stil" = 1 ]; then  # een foutroute na 'stop integratie' laat hem anders uit (#223)
+    "${c[@]}" start integratie >/dev/null || { echo "Integratiecontainer starten mislukt." >&2; rc=1; }
+  fi
   "${c[@]}" exec -T db psql -q -U botenloods -d botenloods -v stempel="$stempel" \
     < tests/e2e/opruimen.sql >/dev/null || { echo "Opruimen van de E2E-gegevens mislukt." >&2; rc=1; }
   rm -f "$dummy" "$fout"
   exit $rc
 }
+stil=0
 trap opruimen EXIT
 # Maakt een robottoken en geeft alleen de waarde; de uitleg op stderr komt alleen bij een fout.
 robot() {
@@ -46,6 +50,7 @@ robot() {
 robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:lezen \
   > secrets/api_token
 chmod 600 secrets/api_token
+stil=1
 "${c[@]}" stop integratie >/dev/null
 # Een verse stack heeft nog geen leden en de import slaat een nieuw opgezegd lid over (#203, #220):
 # importeer die eerst zonder opzegdatums; de container brengt ze daarna aan.
@@ -53,7 +58,8 @@ koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n
 {{end}}' "$("${c[@]}" ps -q traefik)" | awk '$1 ~ /_koppeling$/ {print $2}')
 aantal_leden=$("${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import leden
 with create_app().app_context():
-    print(len(leden.alle_leden()))' | tail -n 1)
+    print(len(leden.alle_leden()))' | tail -n 1) \
+  || { echo "Telling van de leden mislukt." >&2; exit 1; }
 if [ "$aantal_leden" = 0 ]; then
   eerst=$(robot "e2e-eerst-$stempel" --recht leden:importeren --whitelist "$koppel_ip/32")
   "${c[@]}" --profile e2e run --rm -T -e EERST_API="http://$koppel_ip:8081/api/v1" \
@@ -63,9 +69,10 @@ fi
 "${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import CLI, leden
 with create_app().app_context():
     leden.import_aangevraagd() or leden.import_aanvragen(CLI)' \
-  || { "${c[@]}" start integratie >/dev/null; echo "Importverzoek mislukt." >&2; exit 1; }
+  || { echo "Importverzoek mislukt." >&2; exit 1; }
 start=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 "${c[@]}" start integratie >/dev/null
+stil=0
 geimporteerd() { "${c[@]}" logs --since "$start" integratie | grep "Import geslaagd" >/dev/null; }
 for _ in $(seq 30); do geimporteerd && break; sleep 2; done
 geimporteerd || { echo "De integratiecontainer importeerde niet; zie zijn log." >&2; exit 1; }
