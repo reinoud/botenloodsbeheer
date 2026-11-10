@@ -1,16 +1,45 @@
 {% extends "base.html" %}
 {% from "_melding.html" import meldingblok %}
 {# Overzicht en koppelscherm van de lopende bezettingsimport (ADR-014 §3). Alles wat uit het bestand komt (plaats, boot, bootsoort, eigenaar, lidnummer en de meldingen) wordt geëscapet. #}
-{% macro leden_keuze(u) %}
-<label class="dj-sr-only" for="keuze-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
+{% macro soort_lijst(u) %}
+<select class="dj-select" id="soort-{{ u.regel }}" name="soort-{{ u.regel }}">
+  <option value=""{% if not u.soortkeuze %} selected{% endif %}>Geen keuze</option>
+  <option value="overslaan"{% if u.soortkeuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>
+  {% if u.plaats %}{% for s in u.plaats.bootsoorten %}<option value="{{ s.id }}"{% if u.soortkeuze == s.id|string %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}{% endif %}
+</select>
+{% endmacro %}
+{% macro leden_lijst(u, overslaan) %}
 <select class="dj-select" id="keuze-{{ u.regel }}" name="keuze-{{ u.regel }}">
-  <option value="">Geen keuze</option>
-  <option value="overslaan"{% if u.keuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>
-  {% if u.uitkomst == 'te koppelen' or u.via == 'keuze' %}
+  <option value=""{% if not u.keuze %} selected{% endif %}>Geen keuze</option>
+  {% if overslaan %}<option value="overslaan"{% if u.keuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>{% endif %}
+  {% if u.eigenaar_open or u.via == 'keuze' %}
   <option value="club"{% if u.keuze == 'club' %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
   {% for l in leden %}<option value="{{ l.id }}"{% if u.keuze == l.id|string %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
   {% endif %}
 </select>
+{% endmacro %}
+{# Eén lijst: label "Keuze voor regel N". Twee lijsten (soort en eigenaar): een fieldset met verborgen legend en zichtbare labels. #}
+{% macro keuze(u) %}
+{% set eigenaar = u.eigenaar_open or u.via == 'keuze' %}
+{% if u.soortlijst and eigenaar %}
+<fieldset class="bl-formulier bl-keuzepaar">
+  <legend class="dj-sr-only">Keuze voor regel {{ u.regel }}</legend>
+  <div class="ds-field">
+  <label class="ds-field__label" for="soort-{{ u.regel }}">Bootsoort</label>
+  {{ soort_lijst(u) }}
+  </div>
+  <div class="ds-field">
+  <label class="ds-field__label" for="keuze-{{ u.regel }}">Eigenaar</label>
+  {{ leden_lijst(u, false) }}
+  </div>
+</fieldset>
+{% elif u.soortlijst %}
+<label class="dj-sr-only" for="soort-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
+{{ soort_lijst(u) }}
+{% else %}
+<label class="dj-sr-only" for="keuze-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
+{{ leden_lijst(u, true) }}
+{% endif %}
 {% endmacro %}
 {% block titel %}Bezetting importeren · {{ vereniging }}{% endblock %}
 {% block inhoud %}
@@ -20,7 +49,7 @@
 {% if kan_bevestigen %}
 {% call meldingblok('success') %}<p>Alle regels zijn in orde. Bevestig om de bezetting te importeren.</p>{% endcall %}
 {% else %}
-{% call meldingblok('warning') %}<p>Bevestigen kan pas als geen regel nog te koppelen is of een fout heeft. Kies bij een regel een lid of de vereniging, of sla de regel over.</p>{% endcall %}
+{% call meldingblok('warning') %}<p>Bevestigen kan pas als geen regel nog te koppelen is of een fout heeft. Kies bij een regel een bootsoort, een lid of de vereniging, of sla de regel over.</p>{% endcall %}
 {% endif %}
 
 <form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_koppelen') }}">
@@ -36,7 +65,7 @@
         <td role="cell" data-label="Boot (bootsoort)">{{ u.tekst.boot }} ({{ u.tekst.bootsoort }})</td>
         <td role="cell" data-label="Eigenaar (lidnummer)">{% if u.tekst.eigenaar or u.tekst.lidnummer %}{{ u.tekst.eigenaar }}{% if u.tekst.lidnummer %}{% if u.tekst.eigenaar %} ({{ u.tekst.lidnummer }}){% else %}{{ u.tekst.lidnummer }}{% endif %}{% endif %}{% else %}eigenaar onbekend{% endif %}{% if u.lid and u.via != 'naam' %}<br>Gekoppeld: {{ u.lid.naam }} ({{ u.lid.lidnummer }}){% endif %}</td>
         <td role="cell" data-label="Uitkomst"><span class="ds-tag">{{ u.uitkomst }}</span>{% if u.melding %}<br>{{ u.melding }}{% endif %}</td>
-        <td role="cell" data-label="Keuze">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.via == 'keuze' %}{{ leden_keuze(u) }}{% else %}-{% endif %}</td>
+        <td role="cell" data-label="Keuze">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.soortlijst or u.via == 'keuze' %}{{ keuze(u) }}{% else %}-{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>

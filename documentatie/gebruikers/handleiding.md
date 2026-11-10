@@ -199,10 +199,12 @@ Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heef
 | verplaatsen | De boot ligt elders en komt hierheen. |
 | nieuwe boot | De boot bestaat nog niet en wordt aangemaakt. |
 | te koppelen | Er is nog geen lid gekozen. |
-| fout | Bijvoorbeeld een onbekende plaats of bootsoort, een boot die niet past, een oud-lid of een dubbele regel. |
+| fout | Bijvoorbeeld een onbekende plaats of bootsoort (kies de soort in de lijst), een boot die niet past, een oud-lid of een dubbele regel. |
 | overgeslagen | Jij sloeg de regel over. |
 
 Het lidnummer gaat voor. Zonder lidnummer, of met een onbekend nummer, zoekt de import een onthouden koppeling of een lid met exact die naam. Past er niet precies één lid, dan kies je zelf een lid of de vereniging, of sla je de regel over, en kies je **Keuzes opslaan**. Die keuze wordt onthouden voor een volgende import. Op **Onthouden koppelingen** verwijder je ze weer. Een koppeling vervalt met het lid en vijf jaar na het laatste gebruik.
+
+Staat er in het bestand een bootsoort die de applicatie niet kent, bijvoorbeeld een spelfout, dan kies je bij die regel in de lijst **Bootsoort** een van de soorten die de plaats toelaat, of je slaat de regel over. Is de plaats zelf onbekend of fout, dan kun je de regel alleen overslaan. Past ook de eigenaar niet, dan staan er twee lijsten onder elkaar, **Bootsoort** en **Eigenaar**. De gekozen bootsoort geldt alleen voor deze import en wordt niet onthouden. Je kunt beide keuzes na **Keuzes opslaan** nog wijzigen.
 
 **Bezetting importeren** kan pas als geen regel nog te koppelen is of een fout heeft. Het is alles of niets. Een oud-lid krijgt geen nieuwe plaats of boot, en een bestaande boot wijzigt de import niet. De import verloopt na twee uur. Er is één lopende import voor de hele vereniging: elke beheerder kan hem koppelen, bevestigen of annuleren. De bootmutaties staan in het mutatielog en de aantallen in het technische log (`bezetting.geimporteerd`).
 

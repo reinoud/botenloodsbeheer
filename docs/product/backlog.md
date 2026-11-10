@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.10
+**Versie:** v0.6.11
 **Datum:** 2026-11-10
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -475,6 +475,7 @@ Als beheerder wil ik de rekindeling als CSV-bestand exporteren en importeren, me
 - Gegeven een export, wanneer de beheerder die ongewijzigd importeert, dan verandert er niets.
 - Gegeven een bestand met een fout (te groot, meer dan 2000 regels, verkeerd scheidingsteken of codering, onbekende bootsoort, gat in een verdieping, bezette plaats die ongeschikt wordt of van clubplaats verandert), wanneer de beheerder het importeert, dan verandert er niets en noemt de melding elke foute regel met regelnummer en reden.
 - Gegeven een import, dan vraagt die een recente inlog en staat in het technische log alleen een regel met aantallen.
+- Gegeven een bezettingsregel (issue #202, ADR-014 §3) met een bootsoort die niet bij precies één soort past, wanneer de beheerder het overzicht opent, dan kiest die bij die regel een van de soorten die de plaats van die regel toelaat, of slaat de regel over; is de plaats onbekend of fout, dan kan de regel alleen overgeslagen worden. Na Keuzes opslaan krijgt de regel de uitkomst die hij met die soort zou hebben (nieuwe boot, overschrijven, ongewijzigd of een andere fout). De soort geldt alleen voor die import; een ongeldige of verdwenen soort wordt geweigerd.
 
 Route voor een mens (issue #157): open de indeling, exporteer, voeg in een spreadsheet een rek toe, importeer en controleer het rekoverzicht. Download het lege sjabloon en lees de uitleg.
 
@@ -793,6 +794,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.11 | 2026-11-10 | Issue #202: BLB-045 krijgt het criterium voor het kiezen van een bootsoort in de bezettingsimport (ADR-014 §3) |
 | v0.6.10 | 2026-11-10 | Wachtlijst: een boot met een onbekende eigenaar houdt zijn plek als hij een lid krijgt (besluit stakeholder, #204); de lijst toont "eigenaar onbekend" |
 | v0.6.9 | 2026-11-10 | Issues #204, #207 en #212: BLB-046 (boten zonder eigenaar, met `clubboot` in de API), BLB-005 krijgt de knop Nieuwe boot bovenaan met eigenaar onbekend |
 | v0.6.8 | 2026-11-09 | Issue #180: adres, telefoon en e-mail van leden en het recht `persoonsgegevens` vervallen (BLB-032, BLB-034, BLB-006 criterium 1, uitgangspunt over persoonsgegevens) |
