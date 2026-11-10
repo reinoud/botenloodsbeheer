@@ -72,11 +72,10 @@ def test_een_eigenaar_wordt_niet_weer_onbekend_en_een_onbekende_boot_wordt_clubb
     assert gegevens["eigenaar"] == ["onbekend", f"lid:{anna.id}"]
 
 
-def test_onbekend_naar_clubboot_op_gewone_plaats_geweigerd_en_zonder_plaats_toegestaan(app):
+def test_onbekend_naar_clubboot_mag_op_een_gewone_plaats_en_zonder_plaats(app):
     toewijzing.toewijzen(plaats("A/1/1").id, (o := onbekend()).id, CLI)
-    with pytest.raises(Regelfout, match="is een clubboot en hoort op een clubplaats"):
-        wijzig(o, lid_id=None, club=True)
-    assert o.clubboot is False
+    wijzig(o, lid_id=None, club=True)  # #205; mutant: de oude regel terug valt hier
+    assert o.clubboot is True and o.plaats.code == "A/1/1"
     wijzig(p := onbekend("Zonder"), lid_id=None, club=True)
     assert p.clubboot is True
 
@@ -199,15 +198,16 @@ def test_boot_met_onbekende_eigenaar_hernoemen_via_het_formulier(ingelogd):  # n
     assert (o.naam, o.lid_id, o.clubboot) == ("Wulp 2", None, False)
 
 
-def test_eigenaar_opslaan_gelukt_en_weigering_geldt_alleen_die_boot(ingelogd):  # noqa: F811
+def test_eigenaar_opslaan_gelukt_ook_clubboot_op_gewone_plaats_en_raakt_alleen_die_boot(ingelogd):  # noqa: F811
     anna = lid()
     toewijzing.toewijzen(plaats("A/1/1").id, (kluut := onbekend("Kluut")).id, CLI)
     wulp = onbekend("Wulp")
+    onbekend("Waterhoen")
     r = ingelogd.post(f"/boten/{kluut.id}/eigenaar", data={"eigenaar": "club"}, follow_redirects=True)
-    assert "hoort op een clubplaats" in r.text and "Kluut" in r.text and "Wulp" in r.text
+    assert "De eigenaar van Kluut is opgeslagen." in r.text and "Wulp" in r.text  # #205
     r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"eigenaar": str(anna.id)}, follow_redirects=True)
     assert "De eigenaar van Wulp is opgeslagen." in r.text
-    assert wulp.lid_id == anna.id and kluut.lid_id is None and kluut.clubboot is False
+    assert wulp.lid_id == anna.id and kluut.lid_id is None and kluut.clubboot is True
     assert "1 boot zonder eigenaar" in r.text
 
 

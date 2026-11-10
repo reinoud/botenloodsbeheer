@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.11
+**Versie:** v0.6.12
 **Datum:** 2026-11-10
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -223,7 +223,7 @@ Als beheerder wil ik dat het aantal boten per bootsoort per lid klaarstaat voor 
 - Gegeven een standaardinstallatie, wanneer de integratiecontainer draait, dan stuurt hij niets naar de bron: terugschrijven staat uit tot `BOOTAANTALLEN_SCHRIJVEN=aan` (besluit stakeholder 2026-11-08, #178). Staat het aan, dan schrijft de bron e-boekhouden na een geslaagde import per lid de aantallen als JSON-tekst in vrij veld 10 (`boten_in_loods`); de stub kan niet terugschrijven.
 - Gegeven een token met het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan levert de API voor elk lid elke bootsoort met het aantal, ook 0. Er tellen alleen boten met een toegewezen plaats; clubboten tellen niet mee (besluit 2026-10-31).
 - Gegeven een lid met één boot op een plaats en één boot op de wachtlijst, wanneer de API de bootaantallen levert, dan telt alleen de boot op de plaats.
-- Gegeven een clubboot op een clubplaats, wanneer de API de bootaantallen levert, dan staat die boot er niet in. De applicatie kent geen prijzen; de afrekening per bootsoort gebeurt in de ledenadministratie.
+- Gegeven een clubboot op een plaats, wanneer de API de bootaantallen levert, dan staat die boot er niet in. De applicatie kent geen prijzen; de afrekening per bootsoort gebeurt in de ledenadministratie.
 - Gegeven een token zonder het recht `bootaantallen:lezen`, wanneer het `GET /api/v1/bootaantallen` aanroept, dan weigert de API met 403.
 - Gegeven de webinterface, wanneer de beheerder de instellingen opent, dan is er geen instelling voor terugschrijven.
 
@@ -265,7 +265,8 @@ Als beheerder wil ik een plaats toewijzen aan een boot van een lid zodat duideli
 - Gegeven een lid met twee boten, wanneer de beheerder beide een eigen plaats geeft, dan lukt dat. Een lid kan dus meerdere plaatsen hebben.
 - Gegeven een plaats die niet geschikt is voor de bootsoort, wanneer de beheerder toewijst, dan weigert de applicatie met de reden.
 - Gegeven een bezette plaats, wanneer de beheerder er een tweede boot aan wil toewijzen, dan weigert de applicatie.
-- Gegeven een clubplaats, een boot van een oud-lid of een boot die al een plaats heeft, wanneer de beheerder toewijst, dan weigert de applicatie met de reden.
+- Gegeven een clubplaats en de boot van een lid of met een onbekende eigenaar, een boot van een oud-lid of een boot die al een plaats heeft, wanneer de beheerder toewijst, dan weigert de applicatie met de reden.
+- Gegeven een clubboot zonder plaats en een vrije plaats die geschikt is voor de bootsoort, wanneer de beheerder toewijst, dan lukt dat op een clubplaats en op een gewone plaats (besluit stakeholder 2026-11-10, issue #205). Op de pagina van de boot staat de keuzelijst in twee groepen, **Clubplaatsen** en **Gewone plaatsen**, elk in de volgorde van de loods; een lege groep ontbreekt (BV-74). De bootsoort van de plaats moet kloppen.
 
 #### BLB-011 Plaats vrijgeven
 
@@ -285,7 +286,7 @@ Als beheerder wil ik van een plaats weten welke boot er hoort te liggen en wie d
 
 - Gegeven een bezette plaats, wanneer de beheerder het plaatsdetail opent, dan ziet die de boot (naam, bootsoort, eventuele foto) en de eigenaar met naam, adres, telefoonnummer en e-mailadres.
 - Gegeven een vrije plaats, wanneer de beheerder het detail opent, dan staat er dat de plaats vrij is, met de geschikte bootsoorten.
-- Gegeven een clubplaats met een clubboot, wanneer de beheerder het detail opent, dan is de vereniging de eigenaar en staan er geen persoonsgegevens.
+- Gegeven een plaats met een clubboot, wanneer de beheerder het detail opent, dan is de vereniging de eigenaar en staan er geen persoonsgegevens.
 
 ### EP-04 Wachtlijst
 
@@ -384,7 +385,7 @@ Als bezoeker wil ik van een plaats weten welke boot er hoort te liggen en wie de
 - Gegeven een plaats waarvan de aanduiding wijzigt door een nieuwe reknaam, wanneer een bezoeker de bestaande link opent, dan werkt die nog.
 - Gegeven een plaats die alleen via de QR-link op te vragen is, wanneer een bezoeker een aanduiding probeert in te typen of op te zoeken, dan biedt de applicatie daar geen mogelijkheid voor (besluit stakeholder 2026-10-30: anders zijn de namen van leden uit de applicatie te halen).
 - Gegeven een link van een plaats die niet bestaat, wanneer een bezoeker die opent, dan staat er een neutrale melding dat de pagina niet bestaat, zonder gegevens.
-- Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een clubplaats staan de clubboot en de naam van de vereniging als eigenaar.
+- Gegeven een vrije plaats, wanneer een bezoeker de pagina opent, dan staat er dat de plaats vrij is. Bij een plaats met een clubboot staan de clubboot en de naam van de vereniging als eigenaar. Het label **Clubplaats** staat alleen bij een clubplaats, niet bij een clubboot op een gewone plaats (issue #205).
 
 #### BLB-021 Kaartjes printen met QR-code
 

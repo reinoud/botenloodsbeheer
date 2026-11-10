@@ -52,6 +52,15 @@ def test_clubboot_is_clubplaats_met_de_vereniging_als_eigenaar(client):
     assert VRAAG not in html
 
 
+def test_clubboot_op_een_gewone_plaats_geen_clubplaats_tag_en_de_vereniging_als_eigenaar(client):
+    # #205, BV-74. Mutant: de tag ook bij plaats.clubboot (de oude voorwaarde) valt op de eerste assert.
+    p = plaats()
+    toewijzing.toewijzen(p.id, boten.boot_aanmaken("Zeemeeuw", 1, None, None, CLI, clubboot=True).id, CLI)
+    html = pagina(client, p)
+    assert '<span class="ds-tag">Bezet</span>' in html and "Clubplaats" not in html
+    assert 'Hier hoort de <strong>Zeemeeuw</strong> van <strong>Botenloods</strong>.' in html
+
+
 def test_onbekende_eigenaar_staat_niet_als_eigenaar_en_niet_als_clubboot_op_de_pagina(client):
     # Mutant: de vereniging of "None" als eigenaar bij een onbekende eigenaar valt hier.
     html = pagina(client, bezet(onbekend=True))

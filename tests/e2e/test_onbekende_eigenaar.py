@@ -56,14 +56,7 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
         expect(regel_van(page, boot)).to_contain_text(plaats)
     zonder_scroll(page)
 
-    # De vereniging is voor Kluut op een gewone plaats geweigerd; Tureluur en Wulp blijven ongemoeid.
     page.set_viewport_size({"width": 1100, "height": 900})
-    regel_van(page, kluut).get_by_label(f"Eigenaar van {kluut}").select_option(value="club")
-    regel_van(page, kluut).get_by_role("button", name=f"Eigenaar opslaan: {kluut}").click()
-    expect(page.get_by_text("hoort op een clubplaats")).to_be_visible()
-    for boot in (tureluur, kluut, wulp):
-        expect(regel_van(page, boot)).to_have_count(1)
-
     # Een lid kiezen: de boot is van de lijst.
     for boot in (tureluur, kluut):
         regel_van(page, boot).get_by_label(f"Eigenaar van {boot}").select_option(index=2)

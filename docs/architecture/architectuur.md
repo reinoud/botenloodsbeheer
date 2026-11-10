@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.7
+**Versie:** v0.8.8
 **Datum:** 2026-11-10
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -63,7 +63,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 | `plaats_bootsoort` | plaats, bootsoort | Welke bootsoorten op een plaats passen. |
 | `verdieping_bootsoort` | rek, verdieping, bootsoort | Hooguit één bootsoort per verdieping van een rek. Een nieuwe plaats op die verdieping krijgt die bootsoort; bestaande plaatsen veranderen niet (ADR-003). |
 | `lid` | lidnummer (uniek), naam, lid_sinds, opzegdatum, uit_bron_op | Alleen de import via de API wijzigt een lid (rol `botenloods_api`). Oud-lid is afgeleid: opzegdatum of uit_bron_op is gevuld en ligt in het verleden. |
-| `boot` | naam, bootsoort, `lid_id`, `clubboot`, `afbeelding_id` | Drie toestanden: een lid (`lid_id` gevuld), de vereniging (`clubboot`, geen lid) of eigenaar onbekend (geen lid, geen clubboot, issue #204). De database eist dat een boot met een lid geen clubboot is (`lid_of_clubboot`). Een clubboot mag alleen op een clubplaats; een boot van een lid of met een onbekende eigenaar alleen op een gewone plaats. Een boot met een onbekende eigenaar mag op de wachtlijst. |
+| `boot` | naam, bootsoort, `lid_id`, `clubboot`, `afbeelding_id` | Drie toestanden: een lid (`lid_id` gevuld), de vereniging (`clubboot`, geen lid) of eigenaar onbekend (geen lid, geen clubboot, issue #204). De database eist dat een boot met een lid geen clubboot is (`lid_of_clubboot`). Een clubplaats is alleen voor clubboten; een clubboot mag ook op een gewone plaats (issue #205). Een boot van een lid of met een onbekende eigenaar mag alleen op een gewone plaats. Een boot met een onbekende eigenaar mag op de wachtlijst. |
 | `wachtlijst` | boot (uniek), aangemeld_op | De bootsoort volgt uit de boot, dus er is per bootsoort vanzelf een eigen lijst. |
 | `afbeelding` | soort (foto), mime-type, inhoud (bytea), breedte, hoogte, `sleutel` (willekeurig, voor de URL) | ADR-008. |
 | `beheerder` | naam, gebruikersnaam, actief, sessieversie, wachtwoordhash (leeg zonder wachtwoord), versleuteld TOTP-geheim, laatste TOTP-tijdstap, aantal mislukte pogingen, geblokkeerd_tot | Drie beheerders met gelijke rechten. Wachtwoord en TOTP gaan samen (ADR-001). |
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.8 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats (§3; ADR-003 v2.3.2) |
 | v0.8.7 | 2026-11-10 | Issue #220: een verse stack importeert de leden twee keer (eerst zonder opzegdatums), zodat de seed oud-leden heeft (§6.2, §6.3) |
 | v0.8.6 | 2026-11-10 | Issue #203: de import neemt geen nieuw opgezegd lid op; seed en bevinding 1 bijgewerkt (§6.3, §11); verse stack zonder oud-leden in issue #220 |
 | v0.8.5 | 2026-11-10 | Issue #204: `boot.clubboot` en de toestand eigenaar onbekend (migratie 0019); bestaande boten zonder lid zijn clubboot |

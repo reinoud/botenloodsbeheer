@@ -125,7 +125,7 @@ def test_taak_van_een_clubboot_kent_geen_wachtlijst(ingelogd):
     plaats(club=True)
     b = boot(None)
     t = taak(ingelogd.get(f"/boten/{b.id}").text)
-    assert "Vrije clubplaats voor kajak" in t and "Een clubboot kan niet op de wachtlijst." in t
+    assert "Vrije plaats voor kajak" in t and '<optgroup label="Clubplaatsen">' in t and "Een clubboot kan niet op de wachtlijst." in t
     assert "Op de wachtlijst zetten" not in t
 
 

@@ -251,14 +251,15 @@ def rekoverzicht(rek):
     return {(p.verdieping, p.vak): plaatje(p) for p in rek.plaatsen}
 
 
-def vrije_plaatsen(bootsoort_id=None, clubplaats=False):
+def vrije_plaatsen(bootsoort_id=None, ook_club=False):
     """Vrije plaatsen voor leden (BLB-015): zonder boot en geen clubplaats, in de volgorde van
-    de loods. Met bootsoort_id alleen de plaatsen die voor die soort geschikt zijn. Met
-    clubplaats alleen de vrije clubplaatsen, voor een clubboot (#132)."""
-    q = (select(Plaats).join(Plaats.rek)
-         .where(Plaats.boot_id.is_(None), Plaats.is_clubplaats.is_(clubplaats))
-         .order_by(Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)
+    de loods. Met bootsoort_id alleen de plaatsen die voor die soort geschikt zijn. Met ook_club
+    (een clubboot, #132, #205) komen de vrije clubplaatsen er eerst bij, elk in loodsvolgorde."""
+    q = (select(Plaats).join(Plaats.rek).where(Plaats.boot_id.is_(None))
+         .order_by(Plaats.is_clubplaats.desc(), Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)
          .options(selectinload(Plaats.rek), selectinload(Plaats.bootsoorten)))
+    if not ook_club:
+        q = q.where(Plaats.is_clubplaats.is_(False))
     if bootsoort_id:
         q = q.where(Plaats.bootsoorten.any(Bootsoort.id == bootsoort_id))
     return db.session.scalars(q).all()

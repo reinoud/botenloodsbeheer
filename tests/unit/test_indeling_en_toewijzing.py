@@ -189,10 +189,23 @@ def test_clubboot_op_clubplaats(app):
     assert p.boot.lid is None
 
 
+def test_clubboot_op_gewone_plaats(app):
+    """#205. Mutant: de oude regel "een clubboot hoort op een clubplaats" terug in controleer_past valt hier."""
+    p = plaats()
+    toewijzing.toewijzen(p.id, boot(None).id, CLI)
+    assert p.boot.clubboot and p.boot.lid is None and toewijzing.past(p, p.boot)
+
+
+def test_clubboot_op_plaats_met_verkeerde_bootsoort_geweigerd(app):
+    p = plaats(soorten=("Surfski",))
+    with pytest.raises(Regelfout, match="niet geschikt voor een kajak"):
+        toewijzing.toewijzen(p.id, boot(None, bootsoort="Kajak").id, CLI)
+    assert p.boot is None
+
+
 @pytest.mark.parametrize("geval, melding", [
     ("bezet", "is al bezet"),
     ("al_plaats", "heeft al een plaats"),
-    ("clubboot_op_ledenplaats", "hoort op een clubplaats"),
     ("ledenboot_op_clubplaats", "alleen voor clubboten"),
     ("verkeerde_soort", "niet geschikt voor een supboard"),
     ("oud_lid", "is oud-lid"),
@@ -201,7 +214,7 @@ def test_clubboot_op_clubplaats(app):
 def test_toewijzen_geweigerd(app, geval, melding):
     p = plaats("A/1/1", club=geval == "ledenboot_op_clubplaats")
     gisteren = date.today() - timedelta(days=1)
-    eigenaar = None if geval == "clubboot_op_ledenplaats" else lid(
+    eigenaar = lid(
         opzegdatum=gisteren if geval == "oud_lid" else None,
         uit_bron_op=gisteren if geval == "uit_bron" else None).id
     if geval in ("oud_lid", "uit_bron"):  # de boot bestond al voor de opzegging

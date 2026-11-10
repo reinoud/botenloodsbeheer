@@ -15,7 +15,7 @@
 {% else %}
 <div class="bl-plaats{% if plaats.foto %} bl-plaats--foto{% endif %}">
 <h1>Plaats {{ plaats.code }}</h1>
-{% if plaats.clubboot or plaats.clubplaats %}<span class="ds-tag">Clubplaats</span>
+{% if plaats.clubplaats %}<span class="ds-tag">Clubplaats</span>
 {% elif plaats.vrij %}<span class="ds-tag bl-tag--vrij">Vrij</span>
 {% else %}<span class="ds-tag">Bezet</span>{% endif %}
 {% if plaats.vrij and plaats.clubplaats %}<p class="bl-zin">Deze plaats is voor een clubboot.</p>

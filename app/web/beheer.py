@@ -365,9 +365,9 @@ def boot_eigenaar_kiezen(boot_id):
 def boot_detail(boot_id):
     b = _of_404(boten.boot, boot_id)
     oud_lid = b.lid is not None and leden.is_oud_lid(b.lid)
-    # #132: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert.
-    vrij = [] if b.plaats or oud_lid else indeling.vrije_plaatsen(b.bootsoort_id,
-                                                                  clubplaats=b.clubboot)
+    # #132, #205: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert;
+    # een clubboot ook uit de clubplaatsen.
+    vrij = [] if b.plaats or oud_lid else indeling.vrije_plaatsen(b.bootsoort_id, ook_club=b.clubboot)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
                            bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
                            oud_lid=oud_lid, vrij=vrij, vandaag=vandaag(),

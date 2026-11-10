@@ -166,19 +166,50 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     expect(page).to_have_url(re.compile(r"/inloggen$"))
 
 
-def test_clubboot_op_ledenplaats_en_verkeerde_bootsoort_geweigerd(page):
+def test_ledenboot_op_clubplaats_en_verkeerde_bootsoort_geweigerd(page):
     wachtwoord_instellen(page, "regels")
     rek = reknaam("r")
     code = rek_met_plaats(page, rek, ["Supboard"])
     boot_vastleggen(page, f"Kajak {rek}", "Kajak", eigenaar_index=2)
-    boot_vastleggen(page, f"Clubboot {rek}", "Supboard")
-
     toewijzen_buiten_lijst(page, code, f"Kajak {rek}")
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een kajak")
-    toewijzen_buiten_lijst(page, code, f"Clubboot {rek}")
-    expect(page.get_by_role("alert")).to_contain_text("is een clubboot en hoort op een clubplaats")
-    expect(page.get_by_role("heading", name="Deze plaats is vrij")).to_be_visible()
     expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+
+    # #205: een clubplaats blijft voor clubboten; een ledenboot staat niet in de keuzelijst en de server weigert hem.
+    club = rek_met_plaats(page, f"{rek}c", ["Supboard"], club=True)
+    boot_vastleggen(page, f"Lid {rek}", "Supboard", eigenaar_index=2)
+    toewijzen_buiten_lijst(page, club, f"Lid {rek}")
+    expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")
+    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+
+
+def test_clubboot_krijgt_via_het_scherm_boot_een_gewone_plaats(page):
+    """#205, BV-74: de keuzelijst van een clubboot heeft twee groepen, clubplaatsen eerst."""
+    wachtwoord_instellen(page, "clubboot")
+    rek = reknaam("u")
+    gewoon = rek_met_plaats(page, rek, ["Supboard"])
+    club = rek_met_plaats(page, f"{rek}c", ["Supboard"], club=True)
+    naam = f"Clubboot {rek}"
+    boot_vastleggen(page, naam, "Supboard")
+    page.goto("/boten")
+    page.get_by_role("link", name=naam, exact=True).click()
+    keuze = page.get_by_label("Vrije plaats voor supboard")
+    expect(keuze.locator("optgroup")).to_have_count(2)
+    expect(keuze.locator("optgroup").nth(0)).to_have_attribute("label", "Clubplaatsen")
+    expect(keuze.locator("optgroup").nth(1)).to_have_attribute("label", "Gewone plaatsen")
+    # De stack heeft ook andere vrije plaatsen: de twee van deze test staan in hun eigen groep.
+    expect(keuze.locator("optgroup").nth(0).locator("option", has_text=f"{club} (rek")).to_have_count(1)
+    expect(keuze.locator("optgroup").nth(1).locator("option", has_text=f"{gewoon} (rek")).to_have_count(1)
+    expect(keuze.locator("optgroup").nth(0).locator("option", has_text=f"{gewoon} (rek")).to_have_count(0)
+    keuze.select_option(label=f"{gewoon} (rek {rek})")
+    page.get_by_role("button", name="Wijs toe aan plek").click()
+    expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
+    expect(page.get_by_role("link", name=gewoon, exact=True).first).to_be_visible()
+    page.goto("/indeling")
+    page.get_by_role("link", name=gewoon, exact=True).click()
+    openbare_link = page.locator("#openbare-link").get_attribute("href")
+    page.goto(openbare_link)
+    expect(page.locator("span.ds-tag")).to_have_text("Bezet")  # geen tag "Clubplaats" op een gewone plaats
 
 
 def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):

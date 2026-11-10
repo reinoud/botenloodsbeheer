@@ -216,10 +216,10 @@ def test_plaatsdetail_vrij_met_geschikte_soorten(ingelogd):
 
 
 def test_toewijzen_geweigerd_toont_reden(ingelogd):
-    p = plaats("A/1/1")
-    b = boten.boot_aanmaken("Clubkajak", 1, None, None, CLI, clubboot=True)
+    p = plaats("A/1/1", club=True)
+    b = boten.boot_aanmaken("Ledenkajak", 1, lid().id, None, CLI)
     r = ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": b.id}, follow_redirects=True)
-    assert "is een clubboot en hoort op een clubplaats" in r.text
+    assert "is een clubplaats en alleen voor clubboten" in r.text
 
 
 def test_import_aanvragen(ingelogd):
@@ -417,7 +417,7 @@ def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):
     boot_id = p.boot_id
     r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4", "eigenaar": "club"},
                       follow_redirects=True)
-    assert "is een clubboot en hoort op een clubplaats" in r.text and "De boot is opgeslagen." not in r.text
+    assert "niet geschikt voor een c11" in r.text and "De boot is opgeslagen." not in r.text
     r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4",
                                                    "eigenaar": str(p.boot.lid_id)}, follow_redirects=True)
     assert "niet geschikt voor een c11" in r.text
