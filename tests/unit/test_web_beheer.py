@@ -1,6 +1,7 @@
 """Beheerschermen en openbare pagina via de Flask-testclient (BLB-001, 005, 010, 012, 020, 025)."""
 
 import io
+import re
 
 import pytest
 from sqlalchemy import select
@@ -181,7 +182,8 @@ def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": str(anna.id),
                                       "foto": (io.BytesIO(b"tekst"), "boot.jpg")},
                       follow_redirects=True)
-    assert "geen geldige afbeelding" in r.text and anna.boten == []
+    assert "geen geldige afbeelding in JPEG, PNG of WebP." in r.text and VORIGE not in r.text
+    assert anna.boten == []
     r = ingelogd.post("/boten", data={"naam": "Clubkajak", "bootsoort": "1", "eigenaar": "club"},
                       follow_redirects=True)
     assert "De boot is vastgelegd." in r.text and "boot.aangemaakt" in r.text
@@ -280,11 +282,48 @@ def test_afbeelding_met_headers(client):
     assert client.get("/afbeelding/onbekend").status_code == 404
 
 
-def test_upload_boven_grens_geweigerd(ingelogd, app):
+TE_GROOT = "Dit bestand is groter dan 10 MB. Kies een kleiner bestand."
+VORIGE = " De vorige blijft staan."
+
+
+def test_nieuwe_boot_met_foto_boven_de_grens_geeft_een_melding_met_het_formulier_open(ingelogd, app):
     groot = b"x" * (app.config["MAX_CONTENT_LENGTH"] + 1)
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club",
                                       "foto": (io.BytesIO(groot), "groot.jpg")})
-    assert r.status_code == 413
+    assert r.status_code == 302 and r.location == "/boten?open=nieuw"
+    r = ingelogd.get(r.location)
+    assert r.text.count('role="alert"') == 1 and TE_GROOT in r.text and VORIGE not in r.text
+    assert re.search(r'<details class="dj-disclosure" open>\s*<summary id="nieuw-kop">', r.text)
+    assert not boten.boten("Fuut")  # niets vastgelegd
+
+
+@pytest.mark.parametrize("er_is_een", [True, False], ids=["met-vorige-foto", "zonder-vorige-foto"])
+def test_foto_vervangen_boven_de_grens_geeft_een_melding_met_het_blok_open(ingelogd, app, er_is_een):
+    b = bezette_plaats(foto=png() if er_is_een else None).boot
+    sleutel = b.afbeelding.sleutel if er_is_een else None
+    groot = b"x" * (app.config["MAX_CONTENT_LENGTH"] + 1)
+    r = ingelogd.post(f"/boten/{b.id}/foto", data={"foto": (io.BytesIO(groot), "groot.jpg")})
+    assert r.status_code == 302 and r.location == f"/boten/{b.id}?open=foto"
+    r = ingelogd.get(r.location)
+    assert r.text.count('role="alert"') == 1 and (TE_GROOT + VORIGE * er_is_een) in r.text
+    assert (VORIGE in r.text) is er_is_een
+    assert re.search(r'<details class="dj-disclosure" open>\s*<summary id="foto-kop">', r.text)
+    db.session.refresh(b)
+    assert (b.afbeelding and b.afbeelding.sleutel) == sleutel
+
+
+@pytest.mark.parametrize("er_is_een", [True, False], ids=["met-vorige-foto", "zonder-vorige-foto"])
+def test_foto_vervangen_met_ongeldig_bestand_noemt_de_vorige_alleen_als_die_er_is(ingelogd, er_is_een):
+    b = bezette_plaats(foto=png() if er_is_een else None).boot
+    ingelogd.post(f"/boten/{b.id}/foto", data={"foto": (io.BytesIO(b"tekst"), "boot.jpg")})
+    r = ingelogd.get(f"/boten/{b.id}")
+    assert "Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP." in r.text
+    assert (VORIGE in r.text) is er_is_een
+
+
+def test_te_groot_op_een_ander_pad_blijft_een_gewone_413(ingelogd, app):
+    groot = b"x" * (app.config["MAX_CONTENT_LENGTH"] + 1)
+    assert ingelogd.post("/instellingen", data={"naam": groot}).status_code == 413
 
 
 def test_plaats_wijzigen_en_vrijgeven(ingelogd):

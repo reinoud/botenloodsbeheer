@@ -29,7 +29,7 @@ def _verplicht(naam):
 
 
 DIENSTEN = ("web", "worker", "api")
-UPLOAD_MAX = 10 * 1024 * 1024  # gelijk aan de buffering van de router /boten (ADR-008)
+UPLOAD_MAX = 10 * 1024 * 1024  # foto en logo; Traefik heeft 25 MB als buitengrens (ADR-008, ADR-013)
 IMPORT_MAX = 2 * 1024 * 1024  # PUT /api/v1/leden; Traefik heeft 3 MB als buitengrens
 
 

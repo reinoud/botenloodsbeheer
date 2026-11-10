@@ -60,7 +60,7 @@ def logo_op_kenmerk(kenmerk):
 def logo_vervangen(inhoud, actor):
     """Pas na een geslaagde verwerking vervangt het nieuwe logo het oude (ADR-008). De inhoud
     komt niet in het log, alleen de afmetingen."""
-    nieuw = afbeeldingen.verwerk(inhoud, "logo")
+    nieuw = afbeeldingen.verwerk(inhoud, "logo", vorige=logo() is not None)
     rij = _vergrendel(["logo"])["logo"]
     oud = db.session.get(Afbeelding, int(rij.waarde)) if rij.waarde else None
     db.session.add(nieuw)

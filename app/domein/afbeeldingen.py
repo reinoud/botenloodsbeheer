@@ -21,8 +21,13 @@ Image.MAX_IMAGE_PIXELS = MAX_PIXELS
 # volume, een beperkte wijziging in deze module en de route /afbeelding (ADR-008).
 
 
-def verwerk(inhoud, soort="foto"):
-    """Geeft een nieuwe, nog niet opgeslagen Afbeelding, of een Regelfout."""
+VORIGE = " De vorige blijft staan."
+TE_GROOT = "Dit bestand is groter dan 10 MB. Kies een kleiner bestand."  # = UPLOAD_MAX (app.config)
+
+
+def verwerk(inhoud, soort="foto", vorige=False):
+    """Geeft een nieuwe, nog niet opgeslagen Afbeelding, of een Regelfout. De melding zegt alleen
+    dat de vorige blijft staan als die er is (`vorige`)."""
     try:
         with Image.open(io.BytesIO(inhoud), formats=OPENEN) as img:
             if img.format not in TOEGESTAAN or img.width * img.height > MAX_PIXELS:
@@ -44,8 +49,8 @@ def verwerk(inhoud, soort="foto"):
     except Regelfout:
         raise
     except (OSError, ValueError, SyntaxError, Image.DecompressionBombError):
-        raise Regelfout("Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP. "
-                        "De vorige blijft staan.") from None
+        raise Regelfout("Dit bestand is geen geldige afbeelding in JPEG, PNG of WebP."
+                        + VORIGE * vorige) from None
     return Afbeelding(soort=soort, mime_type=mime, inhoud=uit.getvalue(), breedte=img.width,
                       hoogte=img.height, sleutel=secrets.token_urlsafe(12))
 

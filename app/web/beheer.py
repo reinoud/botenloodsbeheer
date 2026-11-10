@@ -310,7 +310,8 @@ def boten_overzicht():
     soort_id = request.args.get("bootsoort", type=getal)
     return render_template("boten.html", boten=boten.boten(zoek, soort_id), zoek=zoek, soort_id=soort_id,
                            bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
-                           regels=log.regels(acties=("boot.",)))
+                           regels=log.regels(acties=("boot.",)),
+                           nieuw_open=request.args.get("open") == "nieuw")
 
 
 @bp.post("/boten")
@@ -339,7 +340,8 @@ def boot_detail(boot_id):
                                                                   clubplaats=b.lid_id is None)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
                            bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
-                           oud_lid=oud_lid, vrij=vrij, vandaag=vandaag())
+                           oud_lid=oud_lid, vrij=vrij, vandaag=vandaag(),
+                           foto_open=request.args.get("open") == "foto")
 
 
 @bp.post("/boten/<int:boot_id>/toewijzen")
