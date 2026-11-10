@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.58
+**Versie overlay:** v0.5.59
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -314,6 +314,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een optie of vlag van een externe component komen de namen en de volledige lijst uit de gebruikte versie (binary of `--help`), en de ADR zegt welke opties bewust ontbreken.
 - ADR-008 "zonder metadata" betekent zonder EXIF, tekstblokken en ICC-profiel; de test en de reviewer gebruiken een bronbestand met alle drie. Een issue over metadata noemt in de acceptatiecriteria alle drie de soorten (EXIF, tekstblokken, ICC); vul het aan vóór de bouw.
 - Een test met een bijzondere bronvorm (zoals een MPO of een tweede beeld) controleert eerst zelf dat de bron die vorm heeft, bijvoorbeeld `Image.open(bron).format == "MPO"`; anders test hij stil een ander geval als de bibliotheek verandert.
+- Een securityronde scant met `trivy fs --include-dev-deps`, bouwt de images uit `git archive <commit>` in de scratchpad en zoekt vóór elke nieuwe bevinding in `docs/architecture/adr/` naar een aanvaard restrisico op hetzelfde punt.
 - Scan images met `trivy --ignore-unfixed`; meldingen zonder oplossing komen alleen als aantal in het rapport.
 - Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog). Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
 - Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
@@ -429,6 +430,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.59 | 2026-11-10 | Eén regel (Security en proxy) uit de terugblik van aegis bij de securityronde vóór v1.0.0 | Lessen |
 | v0.5.58 | 2026-11-10 | Twee regels (Security en proxy) uit #196 en de terugblik van sentinel: breuken bij een sprong in uv, versie binnen de cooldown kiezen | Lessen |
 | v0.5.57 | 2026-11-10 | Uit de terugblikken bij #221 en #223 en de ervaring van de regie: drie nieuwe regels (Algemeen) over filters op externe invoer, gedeelde functies en berichten naar `main`; één nieuw (Review) over de nareview; de regel over de worktree (Review) aangevuld met env-bestand en `secrets/`; slotcommentaar vóór de merge (§4) | Lessen |
 | v0.5.56 | 2026-11-10 | Uit de terugblikken bij #205 en #220: vier nieuwe regels (Bouw), één nieuw (Review), twee nieuw (E2E); Review regel over twee kanten krijgt een voorbeeld dat na #205 klopt; E2E-uitnodigingssoort vóór `passkey` | Lessen |
