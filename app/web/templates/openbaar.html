@@ -21,7 +21,7 @@
 {% if plaats.vrij and plaats.clubplaats %}<p class="bl-zin">Deze plaats is voor een clubboot.</p>
 {% elif plaats.vrij %}<p class="bl-zin">Deze plaats is vrij.</p>
 <p class="bl-vraag">Wil je een plaats in de loods? Vraag het de beheerder van de botenloods.</p>
-{% else %}<p class="bl-zin">Hier hoort de <strong>{{ plaats.boot }}</strong> van <strong>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</strong>.</p>{% endif %}
+{% else %}<p class="bl-zin">Hier hoort de <strong>{{ plaats.boot }}</strong>{% if plaats.clubboot or plaats.eigenaar %} van <strong>{{ vereniging if plaats.clubboot else plaats.eigenaar }}</strong>{% endif %}.</p>{% endif %}
 {% if plaats.foto %}<img class="bl-plaatsfoto" src="{{ url_for('web.afbeelding', sleutel=plaats.foto) }}" alt="Foto van {{ plaats.boot }}">{% endif %}
 {% if plaats.omschrijving %}<p class="bl-rekregel">{{ plaats.omschrijving }}</p>{% endif %}
 </div>

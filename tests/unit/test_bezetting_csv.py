@@ -55,10 +55,12 @@ def bestand(*regels, kop=KOP, bom=True):
     return (("﻿" if bom else "") + tekst).encode("utf-8")
 
 
-def leg(code, naam="Zeemeeuw", lid_id=None, bootsoort="Kajak", soorten=("Kajak",), club=False):
-    """Een plaats met een boot erop. Geeft (plaats, boot)."""
-    p = plaats(code, soorten, club or lid_id is None)
-    b = boot(lid_id, bootsoort, naam)
+def leg(code, naam="Zeemeeuw", lid_id=None, bootsoort="Kajak", soorten=("Kajak",), club=False,
+        onbekend=False):
+    """Een plaats met een boot erop; zonder lid_id een clubboot op een clubplaats, met onbekend=True
+    een boot met een onbekende eigenaar op een gewone plaats. Geeft (plaats, boot)."""
+    p = plaats(code, soorten, club or (lid_id is None and not onbekend))
+    b = boot(lid_id, bootsoort, naam, onbekend=onbekend)
     toewijzing.toewijzen(p.id, b.id, CLI)
     return p, b
 
@@ -118,10 +120,12 @@ def test_export_een_regel_per_bezette_plaats_in_de_volgorde_van_de_loods(app):
     leg("B/1/1", "Reiger", anna.id)  # B is het eerste rek, A het tweede
     leg("A/1/1", "Clubkajak")
     leg("A/2/1", "Fuut", anna.id, "Surfski", ("Surfski",))
-    plaats("A/1/2")  # vrij: geen regel
+    leg("A/1/2", "Wulp", onbekend=True)
+    plaats("A/1/3")  # vrij: geen regel
     regels = bezetting_csv.export().decode("utf-8-sig").split("\r\n")[:-1]
-    assert regels == [KOP, "B/1/1;Reiger;Kajak;Anna de Vries;1001", "A/1/1;Clubkajak;Kajak;;",
-                      "A/2/1;Fuut;Surfski;Anna de Vries;1001"]
+    # een clubboot schrijft het woord clubboot, een onbekende eigenaar blijft leeg (#204)
+    assert regels == [KOP, "B/1/1;Reiger;Kajak;Anna de Vries;1001", "A/1/1;Clubkajak;Kajak;clubboot;",
+                      "A/1/2;Wulp;Kajak;;", "A/2/1;Fuut;Surfski;Anna de Vries;1001"]
 
 
 def test_lege_export_is_een_sjabloon_met_uitleg_en_voorbeelden_en_importeren_weigert_het(app, actor):
@@ -132,8 +136,9 @@ def test_lege_export_is_een_sjabloon_met_uitleg_en_voorbeelden_en_importeren_wei
     tekst = "\n".join(regels)
     assert "Kajak, Canadese kano, Surfski, C11, Supboard" in tekst
     assert "# Voorbeeld: A/1/1;Zeemeeuw;Kajak;Anna de Vries;1001" in regels
-    assert "# Voorbeeld clubboot: B/1/1;Clubkajak;Kajak;;" in regels
-    assert "beide leeg" in tekst and "niets tot je bevestigt" in tekst
+    assert "# Voorbeeld clubboot: B/1/1;Clubkajak;Kajak;clubboot;" in regels
+    assert "Zijn beide leeg, dan is de eigenaar onbekend" in tekst and "niets tot je bevestigt" in tekst
+    assert "Een clubboot heeft beide leeg" not in tekst
     with pytest.raises(Regelfout, match="geen regels"):
         bezetting_csv.uploaden(data, actor)
     assert db.session.scalar(select(Bezettingsimport)) is None
@@ -171,6 +176,7 @@ def rondgang_wereld():
     leg("A/1/2", "=1+1", anna.id)  # een formule: de export zet er een ' voor
     leg("A/1/3", "Clubkajak")
     leg("B/1/1", "Fuut", oud.id)
+    leg("A/2/1", "Wulp", onbekend=True)
     eigenaar("UPDATE lid SET opzegdatum = '2020-01-01' WHERE id = :i", i=oud.id)
     plaats("B/1/2")
 
@@ -182,10 +188,10 @@ def test_rondgang_export_ongewijzigd_importeren_geeft_alles_ongewijzigd_en_veran
     voor = stand()
     uitkomst = beoordeling(data, actor)
     assert {regel_van(u) for u in uitkomst.values()} == {("ongewijzigd", "")}
-    assert len(uitkomst) == 4
+    assert len(uitkomst) == 5
     assert bezetting_csv.bevestigen(actor) == {
-        "regels": 4, "nieuw": 0, "toegewezen": 0, "overschreven": 0, "verplaatst": 0,
-        "ongewijzigd": 4, "overgeslagen": 0, "koppelingen": 0}
+        "regels": 5, "nieuw": 0, "toegewezen": 0, "overschreven": 0, "verplaatst": 0,
+        "ongewijzigd": 5, "overgeslagen": 0, "koppelingen": 0}
     assert stand() == voor
     assert db.session.scalar(select(Bezettingsimport)) is None
     assert bezetting_csv.export() == data
@@ -361,7 +367,9 @@ FOUTEN = {
     "lidnummer-te-lang": (f"A/1/1;Reiger;Kajak;;{'1' * 21}", "Het lidnummer is ongeldig."),
     "bootsoort-past-niet": ("A/1/1;Reiger;Surfski;;1001",
                             "Plaats A/1/1 is niet geschikt voor een surfski."),
-    "clubboot-op-ledenplaats": ("A/1/1;Reiger;Kajak;;", "Boot Reiger is een clubboot en hoort op een clubplaats."),
+    "clubboot-op-ledenplaats": ("A/1/1;Reiger;Kajak;clubboot;", "Boot Reiger is een clubboot en hoort op een clubplaats."),
+    "clubboot-met-lidnummer": ("C/1/1;Reiger;Kajak;Clubboot;1001", "Een clubboot heeft geen lidnummer."),
+    "onbekende-eigenaar-op-clubplaats": ("C/1/1;Reiger;Kajak;;", "Plaats C/1/1 is een clubplaats en alleen voor clubboten."),
     "ledenboot-op-clubplaats": ("C/1/1;Reiger;Kajak;;1001",
                                 "Plaats C/1/1 is een clubplaats en alleen voor clubboten."),
     "afwijkende-bootsoort": ("A/1/2;Fuut;Surfski;;1001", "Boot Fuut bestaat al als een kajak. De import wijzigt geen boot."),
@@ -399,7 +407,7 @@ def test_elke_foutsoort_geeft_de_uitkomst_fout_met_de_reden_en_blokkeert_bevesti
 def test_bootsoort_zonder_verschil_in_hoofdletters_alleen_als_het_er_een_is(app, actor):
     db.session.add_all([Bootsoort(naam="Zee"), Bootsoort(naam="ZEE")])
     db.session.commit()
-    plaats("A/1/1", ("Kajak",), club=True)
+    plaats("A/1/1", ("Kajak",))
     uitkomst = beoordeling(bestand("A/1/1;Reiger;kajak;;"), actor)
     assert regel_van(uitkomst[2]) == ("nieuwe boot", "")  # Kajak: één soort zonder hoofdletters
     bezetting_csv.annuleren(actor)
@@ -414,7 +422,7 @@ def test_bootsoort_zonder_verschil_in_hoofdletters_alleen_als_het_er_een_is(app,
 
 def test_koppelen_volgorde_lidnummer_dan_onthouden_koppeling_dan_exacte_naam(app, actor, anna):
     bert = lid("1002", "Bert Jansen")
-    for n in range(1, 8):
+    for n in range(1, 9):
         plaats(f"A/1/{n}")
     db.session.add(Naamkoppeling(naam="Bertje", lid_id=bert.id))
     db.session.add(Naamkoppeling(naam="De club", clubboot=True))
@@ -426,14 +434,49 @@ def test_koppelen_volgorde_lidnummer_dan_onthouden_koppeling_dan_exacte_naam(app
         "A/1/4;B4;Kajak;Anna de Vries;9999",  # onbekend lidnummer, dan de naam: Anna
         "A/1/5;B5;Kajak;Bertje;1001",  # lidnummer gaat voor een onthouden koppeling
         "A/1/6;B6;Kajak;De club;",  # onthouden koppeling aan de vereniging
-        "A/1/7;B7;Kajak;;",  # leeg is een clubboot
+        "A/1/7;B7;Kajak;;",  # leeg is een onbekende eigenaar, geen clubboot (#204)
+        "A/1/8;B8;Kajak;ClubBoot;",  # het woord clubboot, zonder verschil in hoofdletters
     ), actor)
-    assert [(u.lid.id if u.lid else None, u.club, u.via) for u in
-            (uitkomst[n] for n in range(2, 9))] == [
-        (anna.id, False, "lidnummer"), (bert.id, False, "naam"), (bert.id, False, "koppeling"),
-        (anna.id, False, "naam"), (anna.id, False, "lidnummer"), (None, True, "koppeling"),
-        (None, True, "")]
-    assert uitkomst[8].uitkomst == "fout" and "clubplaats" in uitkomst[8].melding  # B6/B7 op ledenplaats
+    assert [(u.lid.id if u.lid else None, u.club, u.onbekend, u.via) for u in
+            (uitkomst[n] for n in range(2, 10))] == [
+        (anna.id, False, False, "lidnummer"), (bert.id, False, False, "naam"),
+        (bert.id, False, False, "koppeling"), (anna.id, False, False, "naam"),
+        (anna.id, False, False, "lidnummer"), (None, True, False, "koppeling"),
+        (None, False, True, ""), (None, True, False, "")]
+    # B6 en B8 zijn clubboten op een ledenplaats; B7 is onbekend en past daar wel
+    assert [u.uitkomst for u in (uitkomst[7], uitkomst[8], uitkomst[9])] == ["fout", "nieuwe boot", "fout"]
+    assert "clubplaats" in uitkomst[7].melding and "clubplaats" in uitkomst[9].melding
+
+
+def test_leeg_is_een_onbekende_eigenaar_en_het_woord_clubboot_een_clubboot_bij_bevestigen(app, actor):
+    """#204: de oude regel "leeg is een clubboot" is weg. De onbekende eigenaar past op een gewone
+    plaats en de clubboot alleen op een clubplaats; bevestigen maakt de boten met de juiste toestand."""
+    plaats("A/1/1")
+    plaats("C/1/1", club=True)
+    plaats("C/1/2", club=True)
+    beoordeling(bestand("A/1/1;Wulp;Kajak;;", "C/1/1;Clubkajak;Kajak;clubboot;", "C/1/2;Tweede;Kajak;CLUBBOOT;"), actor)
+    assert bezetting_csv.bevestigen(actor)["nieuw"] == 3
+    toestand = {b.naam: (b.lid_id, b.clubboot) for b in db.session.scalars(select(Boot))}
+    assert toestand == {"Wulp": (None, False), "Clubkajak": (None, True), "Tweede": (None, True)}
+    aangemaakt = [r.gegevens for r in db.session.scalars(
+        select(Logregel).where(Logregel.actie == "boot.aangemaakt").order_by(Logregel.id))]
+    assert [(g["clubboot"], g["eigenaar_onbekend"]) for g in aangemaakt] == [(False, True), (True, False), (True, False)]
+
+
+def test_een_onbekende_eigenaar_en_een_clubboot_met_dezelfde_naam_zijn_twee_boten(app, actor):
+    leg("A/1/1", "Wulp", onbekend=True)
+    plaats("C/1/1", club=True)
+    u = beoordeling(bestand("A/1/1;Wulp;Kajak;;", "C/1/1;Wulp;Kajak;clubboot;"), actor)
+    assert [(x.uitkomst, x.nieuw) for x in u.values()] == [("ongewijzigd", False), ("nieuwe boot", True)]
+
+
+def test_een_clubboot_met_lidnummer_is_een_fout_en_een_naam_clubboot_is_geen_lid(app, actor, anna):
+    lid("1002", "Clubboot")  # een lid met deze naam is op naam niet te importeren; het lidnummer wel
+    plaats("A/1/1")
+    plaats("C/1/1", club=True)
+    u = beoordeling(bestand("C/1/1;Reiger;Kajak;clubboot;1002", "A/1/1;Fuut;Kajak;Clubboot;"), actor)
+    assert u[2].uitkomst == "fout" and "geen lidnummer" in u[2].melding
+    assert u[3].club and u[3].lid is None and u[3].uitkomst == "fout"  # clubboot op een gewone plaats
 
 
 @pytest.mark.parametrize("eigenaar_naam, lidnummer", [("Onbekend", ""), ("anna de vries", ""),

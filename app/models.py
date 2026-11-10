@@ -255,14 +255,17 @@ class Afbeelding(db.Model):
 
 
 class Boot(db.Model):
-    """Een clubboot heeft geen lid."""
+    """Eigenaar: een lid, de vereniging (clubboot, geen lid) of onbekend (geen lid, geen clubboot,
+    issue #204). Een boot heeft nooit een lid en is clubboot tegelijk."""
 
     __tablename__ = "boot"
+    __table_args__ = (CheckConstraint("NOT (lid_id IS NOT NULL AND clubboot)", name="lid_of_clubboot"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
     naam: Mapped[str] = mapped_column(String(100))
     bootsoort_id: Mapped[int] = mapped_column(ForeignKey("bootsoort.id"))
     lid_id: Mapped[int | None] = mapped_column(ForeignKey("lid.id"), index=True)
+    clubboot: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     afbeelding_id: Mapped[int | None] = mapped_column(ForeignKey("afbeelding.id"), unique=True)
 
     bootsoort: Mapped[Bootsoort] = relationship()

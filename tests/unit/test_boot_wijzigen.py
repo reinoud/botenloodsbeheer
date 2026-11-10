@@ -12,9 +12,13 @@ from tests.unit.hulp import lid, race
 from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats, soort
 
 
-def wijzig(b, naam=None, bootsoort="Kajak", lid_id=..., actor=CLI):
+def wijzig(b, naam=None, bootsoort="Kajak", lid_id=..., actor=CLI, club=None):
+    """lid_id=None maakt een clubboot, tenzij club=False (onbekende eigenaar, #204); zonder lid_id
+    blijft de eigenaar zoals hij was."""
+    if club is None:
+        club = b.clubboot if lid_id is ... else lid_id is None
     return boten.boot_wijzigen(b.id, b.naam if naam is None else naam, soort(bootsoort),
-                               b.lid_id if lid_id is ... else lid_id, actor)
+                               b.lid_id if lid_id is ... else lid_id, actor, clubboot=club)
 
 
 def regels():

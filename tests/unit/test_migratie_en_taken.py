@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0018"]
+    assert scripts.get_heads() == ["0019"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -316,5 +316,36 @@ def test_migratie_0018_haalt_contactgegevens_en_het_recht_weg_en_trekt_tokens_in
         assert c.execute(text("SELECT adres, telefoon, email, naam FROM lid")).all() == [
             (None, None, None, "Anna")]
         assert c.execute(text("SELECT count(*) FROM token WHERE ingetrokken_op IS NOT NULL")).scalar() == 2
+    command.upgrade(cfg, "head")
+    engine.dispose()
+
+
+def test_migratie_0019_maakt_boten_zonder_lid_clubboot_en_de_controle_sluit_lid_en_clubboot_uit(database):
+    """Issue #204: elke bestaande boot zonder lid wordt clubboot, een boot met een lid blijft
+    zoals hij was. De controle weigert lid en clubboot samen; geen lid en geen clubboot (onbekend)
+    mag. De downgrade haalt kolom en controle weg."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0018")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    with engine.begin() as c:
+        c.execute(text("INSERT INTO lid (lidnummer, naam) VALUES ('1', 'Anna')"))
+        soort = c.execute(text("SELECT id FROM bootsoort ORDER BY id LIMIT 1")).scalar()
+        c.execute(text("INSERT INTO boot (naam, bootsoort_id, lid_id) VALUES ('Club', :s, NULL)"), {"s": soort})
+        c.execute(text("INSERT INTO boot (naam, bootsoort_id, lid_id) "
+                       "VALUES ('Eigen', :s, (SELECT id FROM lid))"), {"s": soort})
+    command.upgrade(cfg, "0019")
+    with engine.connect() as c:
+        assert dict(c.execute(text("SELECT naam, clubboot FROM boot")).all()) == {"Club": True, "Eigen": False}
+    with engine.begin() as c:  # geen lid en geen clubboot: eigenaar onbekend
+        c.execute(text("INSERT INTO boot (naam, bootsoort_id) VALUES ('Onbekend', :s)"), {"s": soort})
+    with pytest.raises(IntegrityError, match="lid_of_clubboot"), engine.begin() as c:
+        c.execute(text("INSERT INTO boot (naam, bootsoort_id, lid_id, clubboot) "
+                       "VALUES ('Beide', :s, (SELECT id FROM lid), true)"), {"s": soort})
+    command.downgrade(cfg, "0018")
+    with engine.connect() as c:
+        kolommen = c.execute(text("SELECT column_name FROM information_schema.columns "
+                                  "WHERE table_name = 'boot'")).scalars().all()
+        assert "clubboot" not in kolommen
+        assert c.execute(text("SELECT count(*) FROM boot")).scalar() == 3
     command.upgrade(cfg, "head")
     engine.dispose()

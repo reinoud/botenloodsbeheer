@@ -4,7 +4,7 @@
 {% block titel %}Wachtlijst · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Wachtlijst</h1>
-<p>Boten van leden zonder plaats, per bootsoort, de langst wachtende bovenaan. De volgorde is informatie: jij kiest welke boot een vrije plaats krijgt. Een boot zet je op de lijst vanaf de pagina van de boot.</p>
+<p>Boten zonder plaats, per bootsoort, de langst wachtende bovenaan. De volgorde is informatie: jij kiest welke boot een vrije plaats krijgt. Een boot zet je op de lijst vanaf de pagina van de boot.</p>
 
 <form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Wachtlijst zoeken en filteren">
   <div class="ds-field">
@@ -30,7 +30,7 @@
   <ul class="bl-lijst">
     {% for w in rij %}
     <li class="bl-item">
-      <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a> <span class="bl-item__sub"><a data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a></span> <span class="bl-item__sub">aangemeld op <time data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</time>, wachttijd <span data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</span></span></div>
+      <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=w.boot.id) }}">{{ w.boot.naam }}</a> <span class="bl-item__sub">{% if w.boot.lid %}<a data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=w.boot.lid.id) }}">{{ w.boot.lid.naam }}</a>{% else %}<span data-label="Eigenaar">eigenaar onbekend</span>{% endif %}</span> <span class="bl-item__sub">aangemeld op <time data-label="Aangemeld op">{{ w.aangemeld_op.strftime('%d-%m-%Y') }}</time>, wachttijd <span data-label="Wachttijd">{{ wachttijd(w.aangemeld_op) }}</span></span></div>
       <div class="bl-item__actie">
         <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=w.boot.id) }}">
           {% include "_csrf.html" %}

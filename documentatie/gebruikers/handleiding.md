@@ -88,23 +88,29 @@ Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, logo en boot
 
 ## Boten
 
-Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters tellen niet mee) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid of de vereniging zelf (clubboot).
+Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters tellen niet mee) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
 
 ![De pagina Boten met de lijst met boten en het uitgeklapte formulier voor een nieuwe boot.](afbeeldingen/boten.png)
 
-1. Open **Nieuwe boot**. Vul de naam in, kies de bootsoort en de eigenaar. Een oud-lid staat niet in de lijst.
+1. Open **Nieuwe boot**. Vul de naam in, kies de bootsoort en de eigenaar. De keuze begint op **eigenaar onbekend**; laat die staan als de eigenaar nog niet bekend is. Een oud-lid staat niet in de lijst.
 2. Voeg eventueel een foto toe (JPEG, PNG of WebP, hooguit 10 MB). Is het bestand groter, dan zegt de applicatie dat en wordt de boot niet vastgelegd.
 3. Kies **Boot vastleggen**. Je ziet daarna de pagina van de boot.
 
-Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de bootsoort, de eigenaar (een link naar het lid; bij een clubboot staat er geen link), de plaats en, bij een boot zonder plaats, of de boot op de wachtlijst staat. Is er een foto, dan staat die klein rechts. Daaronder staat één blok met de taak die nu past. Heeft de boot een plaats, dan zegt het blok dat je vrijgeven en verplaatsen op de plaats doet, met een link naar de plaats. Heeft de boot geen plaats, dan staan er **Plaats toewijzen** en **Wachtlijst**. Is de eigenaar oud-lid, dan is de taak **Boot verwijderen**. De blokken **Boot wijzigen of verwijderen**, **Foto vervangen** en **Log** zijn dicht; open ze met een klik. Onder **Foto vervangen** kies je een andere foto (hooguit 10 MB). Is die groter, dan staat het blok open met de melding; is het geen geldige afbeelding, dan staat de melding boven het blok. In beide gevallen blijft een vorige foto staan. Bij een boot van een oud-lid heet het eerste blok **Boot wijzigen**, omdat de knop om te verwijderen dan in het taakblok staat. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij. Verwijderen vraagt niet om een bevestiging.
+Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de bootsoort, de eigenaar (een link naar het lid; bij een clubboot staat er geen link, bij een onbekende eigenaar staat er alleen "onbekend"), de plaats en, bij een boot zonder plaats, of de boot op de wachtlijst staat. Is er een foto, dan staat die klein rechts. Daaronder staat één blok met de taak die nu past. Heeft de boot een plaats, dan zegt het blok dat je vrijgeven en verplaatsen op de plaats doet, met een link naar de plaats. Heeft de boot geen plaats, dan staan er **Plaats toewijzen** en **Wachtlijst**. Is de eigenaar oud-lid, dan is de taak **Boot verwijderen**. De blokken **Boot wijzigen of verwijderen**, **Foto vervangen** en **Log** zijn dicht; open ze met een klik. Onder **Foto vervangen** kies je een andere foto (hooguit 10 MB). Is die groter, dan staat het blok open met de melding; is het geen geldige afbeelding, dan staat de melding boven het blok. In beide gevallen blijft een vorige foto staan. Bij een boot van een oud-lid heet het eerste blok **Boot wijzigen**, omdat de knop om te verwijderen dan in het taakblok staat. Een boot met een plaats verwijderen weigert de applicatie: geef de plaats eerst vrij. Verwijderen vraagt niet om een bevestiging.
 
-**Boot wijzigen:** open de boot, open het blok **Boot wijzigen of verwijderen** en pas onder **Boot wijzigen** de naam, de bootsoort of de eigenaar aan (een actief lid of de vereniging) en kies **Boot opslaan**. Een oud-lid kan geen nieuwe eigenaar worden; een boot die al van een oud-lid is, kan wel zo blijven. Heeft de boot een plaats, dan weigert de applicatie een bootsoort die niet bij de plaats past en een wissel tussen een boot van een lid en een clubboot, en zegt ze waarom. Geef de plaats dan eerst vrij. Elke wijziging komt als `boot.gewijzigd` in het log onder de boot, onder het oude en het nieuwe lid en in het log van de bootmutaties. Naam, bootsoort en eigenaar staan er met de oude en de nieuwe waarde. De eigenaar staat er als lidverwijzing (zoals `lid:7`) of als `vereniging`, zonder naam. Wie opslaat zonder iets te veranderen, geeft geen logregel.
+**Boot wijzigen:** open de boot, open het blok **Boot wijzigen of verwijderen** en pas onder **Boot wijzigen** de naam, de bootsoort of de eigenaar aan (een actief lid of de vereniging) en kies **Boot opslaan**. Een boot met een onbekende eigenaar heeft in die lijst ook de keuze **eigenaar onbekend**; een boot met een eigenaar wordt niet weer onbekend. Een onbekende eigenaar hoort net als een lid op een gewone plaats. Een oud-lid kan geen nieuwe eigenaar worden; een boot die al van een oud-lid is, kan wel zo blijven. Heeft de boot een plaats, dan weigert de applicatie een bootsoort die niet bij de plaats past en een wissel tussen een boot van een lid en een clubboot, en zegt ze waarom. Geef de plaats dan eerst vrij. Elke wijziging komt als `boot.gewijzigd` in het log onder de boot, onder het oude en het nieuwe lid en in het log van de bootmutaties. Naam, bootsoort en eigenaar staan er met de oude en de nieuwe waarde. De eigenaar staat er als lidverwijzing (zoals `lid:7`), als `vereniging` of als `onbekend`, zonder naam. Wie opslaat zonder iets te veranderen, geeft geen logregel.
 
 ![De pagina van een boot zonder plaats, met bootsoort, eigenaar, foto en de taak Plaats toewijzen.](afbeeldingen/boot.png)
 
+## Boten zonder eigenaar
+
+Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Kies per boot bij **Eigenaar van** een lid of de vereniging en kies **Eigenaar opslaan** met de bootnaam erachter. Een weigering, bijvoorbeeld een clubboot op een gewone plaats, geldt alleen die boot. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt.
+
+![De pagina Boten zonder eigenaar met een boot en de keuze van een eigenaar.](afbeeldingen/boten-zonder-eigenaar.png)
+
 ## De wachtlijst
 
-Een boot van een lid zonder plaats kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid, de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
 
 ![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
 
@@ -132,7 +138,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 - de plaats is bezet, of de boot heeft al een plaats;
 - de plaats is niet geschikt voor de bootsoort;
-- een clubboot op een gewone plaats, of een boot van een lid op een clubplaats;
+- een clubboot op een gewone plaats, of een boot van een lid of met een onbekende eigenaar op een clubplaats;
 - de eigenaar is oud-lid.
 
 **Vanaf de boot:** een boot zonder plaats, op de wachtlijst of niet, kan ook vanaf zijn eigen pagina een plaats krijgen. Kies onder **Plaats toewijzen** een vrije plaats en kies **Wijs toe aan plek**. De lijst toont alleen vrije plaatsen voor de bootsoort, in de volgorde van de loods; voor een clubboot zijn dat de vrije clubplaatsen. Een boot op de wachtlijst gaat daarna van de wachtlijst af. Is er geen vrije plaats, of is de eigenaar oud-lid, dan zegt de pagina dat.
@@ -181,7 +187,7 @@ Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elk
 
 ## Bezetting als CSV exporteren en importeren
 
-Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft eigenaar en lidnummer leeg. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
+Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
 
 Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heeft een uitkomst:
 
@@ -214,7 +220,7 @@ De QR-code opent de openbare pagina van de plaats. Krijgt het rek een andere naa
 
 ## De openbare pagina
 
-Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen. De pagina begint met de aanduiding van de plaats en een label: **Bezet**, **Clubplaats** of **Vrij**. Daaronder staat de zin "Hier hoort de boot van eigenaar", bij een clubboot met de vereniging als eigenaar, met de foto van de boot ernaast of eronder. Een vrije plaats zegt dat ze vrij is en wijst wie een plaats wil naar de beheerder. Een vrije clubplaats zegt dat ze voor een clubboot is. Onderaan staat de omschrijving van het rek, als die er is. Er is geen zoekfunctie, geen menu en geen link vanaf het logo, en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
+Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleutel. Je vindt de link op de pagina van de plaats, onder **Openbare pagina**. Wie de link opent, hoeft niet in te loggen. De pagina begint met de aanduiding van de plaats en een label: **Bezet**, **Clubplaats** of **Vrij**. Daaronder staat de zin "Hier hoort de boot van eigenaar", bij een clubboot met de vereniging als eigenaar en bij een onbekende eigenaar zonder eigenaar, met de foto van de boot ernaast of eronder. Een vrije plaats zegt dat ze vrij is en wijst wie een plaats wil naar de beheerder. Een vrije clubplaats zegt dat ze voor een clubboot is. Onderaan staat de omschrijving van het rek, als die er is. Er is geen zoekfunctie, geen menu en geen link vanaf het logo, en er staan geen adresgegevens op. De pagina gebruikt de naam en het logo van de vereniging.
 
 ![De openbare pagina van een plaats met boot, eigenaar en foto.](afbeeldingen/openbaar.png)
 
@@ -372,6 +378,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/boten/{nummer}` | Een boot, een plaats toewijzen |
 | `/vrij` | Vrije plaatsen |
 | `/wachtlijst` | Wachtlijst per bootsoort |
+| `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, een eigenaar kiezen |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |
 | `/leden` | Leden en de import |

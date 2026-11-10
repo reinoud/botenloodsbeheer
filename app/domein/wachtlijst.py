@@ -11,14 +11,14 @@ from app.models import Boot, Plaats, Wachtlijst, db
 
 
 def _verwijzingen(boot):
-    return [f"boot:{boot.id}", f"lid:{boot.lid_id}"]
+    return [f"boot:{boot.id}", *([f"lid:{boot.lid_id}"] if boot.lid_id else [])]
 
 
 def lijsten(zoek="", bootsoort_id=None):
     """Per bootsoort de boten op de lijst, de langst wachtende eerst. Een boot van een oud-lid
     telt niet mee; de eerstvolgende import haalt hem eraf (BLB-008). Met zoek alleen boten
     waarvan boot of lid de tekst bevat, met bootsoort_id alleen die soort."""
-    q = select(Wachtlijst).join(Wachtlijst.boot).join(Boot.lid).where(leden.boot_of_lid_bevat(zoek))
+    q = select(Wachtlijst).join(Wachtlijst.boot).outerjoin(Boot.lid).where(leden.boot_of_lid_bevat(zoek))
     if bootsoort_id:
         q = q.where(Boot.bootsoort_id == bootsoort_id)
     rijen = db.session.scalars(
@@ -28,7 +28,7 @@ def lijsten(zoek="", bootsoort_id=None):
     ).all()
     per_soort = {}
     for w in rijen:
-        if not leden.is_oud_lid(w.boot.lid):
+        if w.boot.lid is None or not leden.is_oud_lid(w.boot.lid):
             per_soort.setdefault(w.boot.bootsoort, []).append(w)
     return sorted(per_soort.items(), key=lambda item: item[0].naam)
 
@@ -69,9 +69,9 @@ def erop_zetten(boot_id, aangemeld_op, actor):
         b = db.session.get(Boot, boot_id, with_for_update=True, populate_existing=True)
         if b is None:
             raise Regelfout("Deze boot bestaat niet.")
-        if b.lid is None:
+        if b.clubboot:
             raise Regelfout(f"Boot {b.naam} is een clubboot. Een clubboot kan niet op de wachtlijst.")
-        if leden.is_oud_lid(b.lid):
+        if b.lid is not None and leden.is_oud_lid(b.lid):
             raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot kan niet op de "
                             "wachtlijst.")
         if db.session.scalar(select(Plaats.code).where(Plaats.boot_id == b.id)):
@@ -120,5 +120,5 @@ def oud_leden_eraf(actor, dag):
     rijen = db.session.scalars(select(Wachtlijst).options(
         selectinload(Wachtlijst.boot).selectinload(Boot.lid))).all()
     for w in rijen:
-        if leden.is_oud_lid(w.boot.lid, dag):
+        if w.boot.lid is not None and leden.is_oud_lid(w.boot.lid, dag):
             _eraf(w, actor, "oud-lid")

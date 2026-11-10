@@ -81,8 +81,9 @@ def test_boten_met_eigenaar_alleen_naam_en_lidnummer(app, api):
     rijen = {b["naam"]: b for b in lees(api, "/boten", "boten:lezen").json}
     assert [b["naam"] for b in lees(api, "/boten", "boten:lezen").json] == sorted(rijen)
     assert rijen["Zeemeeuw"] == {"id": 1, "naam": "Zeemeeuw", "bootsoort": "Kajak",
-                                 "plaats": "A/1/1", "eigenaar": {"lidnummer": "1002", "naam": "Anna"}}
-    assert rijen["Clubkajak"]["eigenaar"] is None and rijen["Pijl"]["plaats"] is None
+                                 "plaats": "A/1/1", "eigenaar": {"lidnummer": "1002", "naam": "Anna"},
+                                 "clubboot": False}
+    assert rijen["Clubkajak"]["eigenaar"] is None and rijen["Clubkajak"]["clubboot"] is True and rijen["Pijl"]["plaats"] is None
 
 
 def test_leden_op_lidnummer_met_lid_sinds_en_opzegdatum_voor_leden_lezen(app, api):

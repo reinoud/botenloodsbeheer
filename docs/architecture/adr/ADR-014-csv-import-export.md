@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.2
+**Versie:** v0.2.3
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting)
 
 ## Context
@@ -18,7 +18,7 @@ Het voorstel uit de issues blijft.
 | Bestand | Kopregel |
 |---------|----------|
 | Rekindeling | `rek;omschrijving;verdieping;vak;bootsoorten;clubplaats`, één regel per plaats; `bootsoorten` gescheiden door `/` (leeg is geen bootsoort, alleen bij een nieuwe plaats of een plaats die al geen bootsoort heeft, zoals op het scherm), `clubplaats` is `ja` of `nee` |
-| Bezetting | `plaats;boot;bootsoort;eigenaar;lidnummer`, één regel per bezette plaats; `lidnummer` optioneel; een clubboot heeft beide leeg |
+| Bezetting | `plaats;boot;bootsoort;eigenaar;lidnummer`, één regel per bezette plaats; `lidnummer` optioneel; een clubboot heeft in `eigenaar` het woord `clubboot` (zonder verschil in hoofdletters) en een leeg lidnummer; beide leeg is een onbekende eigenaar |
 
 | Onderwerp | Regel |
 |-----------|-------|
@@ -45,7 +45,7 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 
 **Lopende import.** Na de upload staat de import in tabel `bezettingsimport`, niet in de cookie: ingelezen regels en keuzes als JSON, niet het ruwe bestand. Hooguit één voor de hele installatie (stakeholder 2026-11-06, open vraag 3), afgedwongen in de database met een unieke kolom `enige` die altijd waar is: elke beheerder ziet de lopende import en kan koppelen, bevestigen of annuleren, dus de routes dragen geen id. De tabel bewaart wie uploadde (`beheerder_id`) en toont dat in het overzicht. Een nieuwe upload terwijl er een loopt, wordt geweigerd met een melding dat eerst de lopende import bevestigd of geannuleerd moet worden. Bevestigen vergrendelt de rij, zodat twee beheerders niet tegelijk bevestigen. Verlooptijd 2 uur. `web` verwijdert verlopen rijen bij elke upload en elk koppelscherm, de dagelijkse opschoning (ADR-006) ook.
 
-**Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Een onbekend lidnummer valt door naar de volgende stap. Eigenaar en lidnummer leeg is een clubboot. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
+**Koppelen.** Volgorde: lidnummer, onthouden koppeling, exacte naam (zonder spaties aan begin en eind). Een onbekend lidnummer valt door naar de volgende stap. Staat in `eigenaar` het woord `clubboot` (zonder verschil in hoofdletters), dan is de boot een clubboot; met een lidnummer erbij is dat een fout. Eigenaar en lidnummer leeg is een onbekende eigenaar (geen clubboot, issue #204): de boot past op een gewone plaats en staat daarna op Boten zonder eigenaar. Export en sjabloon schrijven `clubboot`. Een lid met de naam clubboot is op naam niet te importeren; het lidnummer werkt wel. Een boot wordt bij de naam gezocht op naam, lid en toestand: een clubboot en een boot met een onbekende eigenaar zijn twee boten. Zonder precies één treffer komt de regel in het koppelscherm: lid (uit `leden.actieve_leden()`), clubboot of overslaan.
 
 **Onthouden.** Tabel `naamkoppeling`: `naam` (uniek), `lid_id` (FK, `ON DELETE CASCADE`) of `clubboot`, `gebruikt_op`; een check eist precies één van beide. Overslaan wordt niet onthouden. De opschoning verwijdert koppelingen die 5 jaar niet zijn gebruikt (open vraag 4). Beheerders zien de lijst en verwijderen per koppeling.
 
@@ -138,6 +138,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.3 | 2026-11-10 | Het woord `clubboot` in `eigenaar` is een clubboot; leeg is een onbekende eigenaar in plaats van een clubboot | Issue #204, besluit stakeholder 2026-11-10 |
 | v0.2.2 | 2026-11-07 | Kolom `enige` voor één lopende import; onbekend lidnummer valt door; aantallen in `bezetting.geimporteerd`; stuurtekens ook geweigerd in de bootnaam | Bouw #158 |
 | v0.2.1 | 2026-11-06 | Fouten in twee rondes; lege cel `bootsoorten`; stuurtekens ook op het scherm geweigerd | Bouw en review #157 |
 | v0.2.0 | 2026-11-06 | Open vragen besloten; één lopende bezettingsimport voor de installatie, zichtbaar voor elke beheerder | Besluiten stakeholder |

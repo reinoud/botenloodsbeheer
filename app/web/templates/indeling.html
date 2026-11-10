@@ -108,7 +108,7 @@
         <td role="cell" data-label="Plaats"><a href="{{ url_for('web.plaats_detail', plaats_id=p.id) }}">{{ p.code }}</a></td>
         <td role="cell" data-label="Status"><span class="ds-tag">{{ status(p) }}</span></td>
         <td role="cell" data-label="Boot">{{ p.boot.naam if p.boot else '' }}</td>
-        <td role="cell" data-label="Eigenaar">{% if p.boot %}{{ p.boot.lid.naam if p.boot.lid else vereniging }}{% endif %}</td>
+        <td role="cell" data-label="Eigenaar">{% if p.boot %}{{ p.boot.lid.naam if p.boot.lid else vereniging if p.boot.clubboot else 'eigenaar onbekend' }}{% endif %}</td>
         <td role="cell" data-label="Geschikt voor">{{ p.bootsoorten|map(attribute='naam')|join(', ') }}</td>
       </tr>
     {% endfor %}

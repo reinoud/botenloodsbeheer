@@ -16,7 +16,7 @@ def _datum(d):
 
 
 def _eigenaar(lid):
-    if lid is None:  # clubboot
+    if lid is None:  # clubboot of eigenaar onbekend: beide null (#212)
         return None
     return {"lidnummer": lid.lidnummer, "naam": lid.naam}
 
@@ -35,7 +35,7 @@ def plaatsen():
 def boten():
     return [{"id": b.id, "naam": b.naam, "bootsoort": b.bootsoort.naam,
              "plaats": b.plaats.code if b.plaats else None,
-             "eigenaar": _eigenaar(b.lid)} for b in boten_.boten()]
+             "eigenaar": _eigenaar(b.lid), "clubboot": b.clubboot} for b in boten_.boten()]
 
 
 def leden():

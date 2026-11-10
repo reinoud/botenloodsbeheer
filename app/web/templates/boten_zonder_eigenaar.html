@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
+{% block titel %}Boten zonder eigenaar · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Boten zonder eigenaar</h1>
+{% if boten %}
+<p class="bl-aantal">{{ boten|length }} {{ 'boot' if boten|length == 1 else 'boten' }} zonder eigenaar</p>
+<p class="bl-hint">Kies bij een boot een lid of de vereniging en sla op.</p>
+<ul class="bl-lijst">
+  {% for b in boten %}
+  <li class="bl-item">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span></span></div>
+    <p class="bl-item__zijde">{% if b.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
+    <form class="bl-formulier bl-item__actie bl-eigenaarkeuze" method="post" action="{{ url_for('web.boot_eigenaar_kiezen', boot_id=b.id) }}">
+      {% include "_csrf.html" %}
+      <div class="ds-field">
+        <label class="ds-field__label" for="eigenaar-{{ loop.index0 }}">Eigenaar van {{ b.naam }}</label>
+        <select class="dj-select" id="eigenaar-{{ loop.index0 }}" name="eigenaar" required>
+          <option value="" selected>Geen keuze</option>
+          <option value="club">{{ vereniging }} (clubboot)</option>
+          {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="ds-btn ds-btn--primary">Eigenaar opslaan: {{ b.naam }}</button>
+    </form>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% call meldingblok() %}Alle boten hebben een eigenaar.{% endcall %}
+{% endif %}
+{% endblock %}

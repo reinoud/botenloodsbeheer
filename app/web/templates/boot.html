@@ -8,7 +8,7 @@
     <h1>{{ boot.naam }}</h1>
     <dl class="bl-feiten">
       <div><dt>Bootsoort</dt> <dd>{{ boot.bootsoort.naam }}</dd></div>
-      <div><dt>Eigenaar</dt> <dd>{% if boot.lid %}<a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% else %}{{ vereniging }} (clubboot){% endif %}</dd></div>
+      <div><dt>Eigenaar</dt> <dd>{% if boot.lid %}<a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% elif boot.clubboot %}{{ vereniging }} (clubboot){% else %}onbekend{% endif %}</dd></div>
       <div><dt>Plaats</dt> <dd>{% if boot.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">{{ boot.plaats.code }}</a>{% else %}geen{% endif %}</dd></div>
       {% if not boot.plaats %}<div><dt>Wachtlijst</dt> <dd>{% if boot.wachtlijst %}sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}nee{% endif %}</dd></div>{% endif %}
     </dl>
@@ -33,7 +33,7 @@
   <form class="bl-formulier" method="post" action="{{ url_for('web.boot_toewijzen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
-      <label class="ds-field__label" for="plaats">Vrije {{ 'clubplaats' if not boot.lid else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}</label>
+      <label class="ds-field__label" for="plaats">Vrije {{ 'clubplaats' if boot.clubboot else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}</label>
       <select class="dj-select" id="plaats" name="plaats_id" required>
         {% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
       </select>
@@ -41,7 +41,7 @@
     <button type="submit" class="ds-btn ds-btn--primary">Wijs toe aan plek</button>
   </form>
   {% else %}
-  <p>Er is geen vrije {{ 'clubplaats' if not boot.lid else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}.</p>
+  <p>Er is geen vrije {{ 'clubplaats' if boot.clubboot else 'plaats' }} voor {{ boot.bootsoort.naam|lower }}.</p>
   {% endif %}
   <div class="bl-taak__regel">
     <h3 class="bl-subkop">Wachtlijst</h3>
@@ -51,7 +51,7 @@
       {% include "_csrf.html" %}
       <button type="submit" class="ds-btn">Van de wachtlijst halen</button>
     </form>
-    {% elif not boot.lid %}
+    {% elif boot.clubboot %}
     <p>Een clubboot kan niet op de wachtlijst.</p>
     {% else %}
     <form class="bl-formulier" method="post" action="{{ url_for('web.boot_op_wachtlijst', boot_id=boot.id) }}">
@@ -87,7 +87,8 @@
     <div class="ds-field">
       <label class="ds-field__label" for="eigenaar">Eigenaar</label>
       <select class="dj-select" id="eigenaar" name="eigenaar" required>
-        <option value="club"{% if boot.lid_id is none %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
+        {% if not boot.lid_id and not boot.clubboot %}<option value="onbekend" selected>eigenaar onbekend</option>{% endif %}
+        <option value="club"{% if boot.clubboot %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
         {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
         {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
       </select>

@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.8
-**Datum:** 2026-11-09
+**Versie:** v0.6.10
+**Datum:** 2026-11-10
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -147,11 +147,28 @@ Als beheerder wil ik een boot met naam, bootsoort, eigenaar en eventueel een fot
 
 - Gegeven een lid in de ledenlijst, wanneer de beheerder een boot met naam en bootsoort voor dat lid aanmaakt, dan staat de boot bij het lid. Een lid kan meerdere boten hebben.
 - Gegeven een clubboot, wanneer de beheerder die aanmaakt, dan heeft de vereniging de boot als eigenaar en is er geen lid aan gekoppeld.
+- Gegeven het overzicht van boten, wanneer de beheerder bovenaan de knop **Nieuwe boot** opent, dan staat het formulier open onder de kop en begint de keuze Eigenaar op **eigenaar onbekend**, gevolgd door de vereniging en de leden. Blijft die keuze staan, dan krijgt de boot de toestand eigenaar onbekend (BLB-046) en staat hij op Boten zonder eigenaar. Een lege of ongeldige waarde geeft "Kies een eigenaar." (issue #207, besluit stakeholder 2026-11-10).
 - Gegeven een bestand dat geen afbeelding is, wanneer de beheerder dat als foto uploadt, dan weigert de applicatie het bestand en blijft de eerdere foto staan.
 - Gegeven een boot met een toegewezen plaats, wanneer de beheerder de boot wil verwijderen, dan weigert de applicatie tot de plaats is vrijgegeven.
 - Gegeven een boot, wanneer de beheerder naam, bootsoort of eigenaar (een actief lid of de vereniging) wijzigt, dan staat de wijziging met oude en nieuwe waarde in het log van de bootmutaties (`boot.gewijzigd`), onder de boot en onder het oude en het nieuwe lid. Een wijziging zonder verschil geeft geen logregel (besluit stakeholder 2026-11-01, issue #39).
 - Gegeven een boot met een plaats, wanneer de nieuwe bootsoort niet bij de plaats past, of de boot van clubboot naar lid gaat of andersom, dan weigert de applicatie en zegt waarom. Een oud-lid kan geen nieuwe eigenaar worden.
 - Gegeven het overzicht van boten, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon boten** kiest, dan staan alleen de boten waarvan de boot of de eigenaar de tekst bevat en die van die soort zijn in de lijst, met het aantal erboven. De zoektekst telt letterlijk (ook `%` en `_`) en hoofdletters tellen niet mee. Geen enkel filter geeft alle boten. Een onbekende bootsoort geeft geen boten en geen foutmelding. Een keuzelijst verstuurt niet zelf (WCAG 3.2.2).
+
+#### BLB-046 Boten zonder eigenaar
+
+Prioriteit: Should. Bron: issue #204, besluiten stakeholder 2026-11-10, ADR-014. Afhankelijk van: BLB-005, BLB-010, BLB-013.
+
+Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en later een eigenaar geven, zodat een oude bezetting zonder eigenaren de boten niet tot clubboot maakt.
+
+- Gegeven een bezettingsregel met lege eigenaar en leeg lidnummer, wanneer de beheerder importeert, dan ontstaat een boot met de toestand eigenaar onbekend, geen clubboot, op de plaats uit het bestand. Het woord `clubboot` in de kolom Eigenaar (zonder verschil in hoofdletters) maakt een clubboot.
+- Gegeven een boot met een onbekende eigenaar, wanneer die een plaats krijgt, dan weigert de applicatie een clubplaats en accepteert ze een gewone plaats. De boot mag op de wachtlijst.
+- Gegeven de pagina `/boten/zonder-eigenaar`, dan staat per boot een regel met naam, bootsoort en plaats, een keuze van een lid of de vereniging en de knop **Eigenaar opslaan** met de bootnaam. Na opslaan is de boot van de lijst; een weigering geldt alleen die boot. Zonder boten staat er "Alle boten hebben een eigenaar."
+- Gegeven het menu, dan staat **Boten zonder eigenaar** onder Dagelijks na Wachtlijst, met het aantal in de link; bij nul staat er geen aantal.
+- Gegeven een boot met een eigenaar, dan wordt die niet weer onbekend.
+- Gegeven de migratie, dan zijn alle bestaande boten zonder lid clubboot.
+- Gegeven `GET /api/v1/boten`, dan heeft elke boot een boolean `clubboot`: `true` bij een clubboot, `false` bij een boot van een lid en bij een onbekende eigenaar. `eigenaar` blijft `null` bij een clubboot en bij een onbekende eigenaar; er gaat geen veld uit de API af (issue #212, besluit stakeholder 2026-11-10).
+
+Route voor een mens (issue #204): importeer een CSV met een regel zonder eigenaar, open Boten zonder eigenaar, kies een lid en sla op.
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
@@ -283,7 +300,8 @@ Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoo
 - Gegeven een clubboot of een boot van een oud-lid, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie met de reden.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die boot een clubboot wil maken, dan weigert de applicatie met de reden.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder de eigenaar wijzigt in een ander lid, dan gaat de boot van de wachtlijst, ziet de beheerder dat in een melding en staat dat in het log van de bootmutaties (besluit stakeholder 2026-11-01).
-- Gegeven de wachtlijst van een bootsoort, wanneer de beheerder die opent, dan toont de lijst per boot het lid, de aanmelddatum en de wachttijd, met de langst wachtende bovenaan. Lijsten van verschillende bootsoorten staan gescheiden.
+- Gegeven een boot met een onbekende eigenaar op de wachtlijst, wanneer de beheerder een lid als eigenaar kiest, dan blijft de boot op de wachtlijst met dezelfde aanmelddatum: de eigenaar wordt bekend en verandert niet (besluit stakeholder 2026-11-10, issue #204).
+- Gegeven de wachtlijst van een bootsoort, wanneer de beheerder die opent, dan toont de lijst per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, met de langst wachtende bovenaan. Lijsten van verschillende bootsoorten staan gescheiden.
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die van de lijst haalt, dan is de boot niet meer op de lijst en staat dat in het log.
 - Gegeven een boot die op de wachtlijst komt of eraf gaat, wanneer de beheerder het log van de bootmutaties of de pagina van de boot opent, dan staat die handeling daar en niet in het technische log (BLB-043, besluit 2026-11-01).
@@ -775,6 +793,8 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.10 | 2026-11-10 | Wachtlijst: een boot met een onbekende eigenaar houdt zijn plek als hij een lid krijgt (besluit stakeholder, #204); de lijst toont "eigenaar onbekend" |
+| v0.6.9 | 2026-11-10 | Issues #204, #207 en #212: BLB-046 (boten zonder eigenaar, met `clubboot` in de API), BLB-005 krijgt de knop Nieuwe boot bovenaan met eigenaar onbekend |
 | v0.6.8 | 2026-11-09 | Issue #180: adres, telefoon en e-mail van leden en het recht `persoonsgegevens` vervallen (BLB-032, BLB-034, BLB-006 criterium 1, uitgangspunt over persoonsgegevens) |
 | v0.6.6 | 2026-11-07 | BLB-015: aantal boven de lijst en een knop Toon vrije plaatsen in plaats van versturen bij een keuze (BV-44, issue #150) |
 | v0.6.5 | 2026-11-06 | Issue #157: BLB-045, rekindeling als CSV exporteren en importeren (ADR-014) |

@@ -25,8 +25,10 @@ def plaats(code="A/1/1", soorten=("Kajak",), club=False):
     return plaats_aanmaken(code, [soort(s) for s in soorten], club)
 
 
-def boot(lid_id=None, bootsoort="Kajak", naam="Zeemeeuw", foto=None):
-    return boten.boot_aanmaken(naam, soort(bootsoort), lid_id, foto, CLI)
+def boot(lid_id=None, bootsoort="Kajak", naam="Zeemeeuw", foto=None, onbekend=False):
+    """Zonder lid een clubboot; met onbekend=True een boot met een onbekende eigenaar (#204)."""
+    return boten.boot_aanmaken(naam, soort(bootsoort), lid_id, foto, CLI,
+                               clubboot=lid_id is None and not onbekend)
 
 
 def acties():

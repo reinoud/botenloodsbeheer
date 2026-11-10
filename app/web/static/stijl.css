@@ -271,3 +271,15 @@ td form { gap: var(--space-2); }
   .bl-stap--breed { grid-column: 1 / -1; }
   .bl-paar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* Eigenaar onbekend (blok 5, designsystem 6f4cabb, #204 en #207): aantal in het menu, een eigen formulier per boot op Boten zonder eigenaar,
+   en het uitklapblok Nieuwe boot als knop bovenaan Boten (de summary is de knop; geen script, geen tweede element). */
+.bl-nav__aantal { margin-left: var(--space-2); }
+.bl-eigenaarkeuze { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--space-3); }
+.bl-eigenaarkeuze > div { flex: 1 1 16rem; min-width: 0; }
+.bl-eigenaarkeuze > button { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
+.bl-nieuw > summary { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-height: var(--control-height); padding: var(--space-2) var(--space-5); border: var(--stroke-2) solid var(--on-accent); border-radius: var(--radius-control); background: var(--accent); color: var(--on-accent); font: var(--type-control); list-style: none; cursor: pointer; }
+.bl-nieuw > summary::-webkit-details-marker { display: none; }
+.bl-nieuw > summary:hover { border-color: var(--accent-hover); background: var(--accent-hover); color: var(--on-accent-hover); }
+.bl-nieuw > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.bl-nieuw > .bl-nieuw__inhoud { margin-top: var(--space-3); }

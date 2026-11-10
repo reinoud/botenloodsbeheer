@@ -80,7 +80,7 @@ def seed(echo=print):
     soort = {s.naam: s.id for s in indeling.bootsoorten()}
     _indeling_opbouwen(soort)
 
-    def boot(eigenaar, oud_lid=False, soorten=SOORTEN):
+    def boot(eigenaar, oud_lid=False, soorten=SOORTEN, club=False):
         naam = f"{r.choice(NAMEN)} {r.randint(1, 99)}"
         if oud_lid:
             # De boot bestond al voor de opzegging; boot_aanmaken weigert een oud-lid.
@@ -92,12 +92,12 @@ def seed(echo=print):
                          "foto": False, "seed": "oud-lid"})  # #10: ook deze mutatie in het log
             db.session.commit()
             return b
-        return boten.boot_aanmaken(naam, soort[r.choice(soorten)], eigenaar, None, CLI)
+        return boten.boot_aanmaken(naam, soort[r.choice(soorten)], eigenaar, None, CLI, clubboot=club)
 
     alle = leden.alle_leden()
     oud = [lid for lid in alle if leden.is_oud_lid(lid)]
     actief = [lid for lid in alle if not leden.is_oud_lid(lid)]
-    clubboten = [boot(None, soorten=CLUBSOORTEN) for _ in range(CLUBBOTEN)]
+    clubboten = [boot(None, soorten=CLUBSOORTEN, club=True) for _ in range(CLUBBOTEN)]
     oud_boten = [boot(lid.id, oud_lid=True) for lid in oud[:BOTEN_OUD_LID]]
     eigen = [boot(lid.id) for lid in r.choices(actief, k=BOTEN_LEDEN)]
 
@@ -107,7 +107,7 @@ def seed(echo=print):
         if geplaatst == MET_PLAATS:
             break
         p = next((p for p in vrij if b.bootsoort in p.bootsoorten
-                  and p.is_clubplaats == (b.lid_id is None)), None)
+                  and p.is_clubplaats == b.clubboot), None)
         if p is None:
             continue
         if b in oud_boten:
