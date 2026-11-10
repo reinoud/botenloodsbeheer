@@ -101,11 +101,14 @@ class EboekhoudenBron(Ledenbron):
             cFilter={"Trefwoord": SkipValue, "Code": SkipValue, "ID": SkipValue})
         self._controleer(antwoord["ErrorMsg"])
         relaties = antwoord["Relaties"]["cRelatie"] if antwoord["Relaties"] is not None else []
-        return [r for r in relaties if (r["Def2"] or "").startswith(LID_IN_DEF2)]
+        # opgezegd zonder opzegdatum (Def7) zou als actief lid binnenkomen; overslaan (#221)
+        return [r for r in relaties if (r["Def2"] or "").startswith(LID_IN_DEF2)
+                and not ((r["Def2"] or "").startswith("opgezegd") and _tekst(r["Def7"]) is None)]
 
     def haal_leden(self):
         """Besluit 1 van #178: lidnummer, naam, lid_sinds en opzegdatum; geen adres, telefoon of
-        e-mail. Lid is een relatie waarvan Def2 begint met "actief" of "opgezegd"."""
+        e-mail. Lid is een relatie waarvan Def2 begint met "actief", of met "opgezegd" en die een
+        opzegdatum in Def7 heeft (#221)."""
         with self._sessie() as (service, sessie):
             return [{"lidnummer": _tekst(r["Code"]), "naam": _tekst(r["Bedrijf"]),
                      "lid_sinds": _tekst(r["Def3"]), "opzegdatum": _tekst(r["Def7"])}

@@ -1,7 +1,7 @@
 # Werking van de integratiecontainer
 
-**Versie:** v1.0.0
-**Datum:** 2026-11-08
+**Versie:** v1.1.0
+**Datum:** 2026-11-10
 **Bronnen:** ADR-004, ADR-012, ADR-013, issue #178
 
 De integratiecontainer houdt de ledenlijst van de applicatie gelijk aan e-boekhouden en schrijft per lid terug hoeveel plaatsen dat lid in de loods heeft. Hij is de enige dienst die met e-boekhouden praat. De applicatie zelf kent e-boekhouden niet en bevat geen code ervoor.
@@ -14,7 +14,7 @@ Bij elke aanroep stuurt de container het robottoken mee uit `/run/secrets/api_to
 
 ## Namen en nummers van leden
 
-De container logt in bij e-boekhouden met de drie codes uit zijn omgeving en vraagt alle relaties op. Een relatie telt als lid als haar soort (veld `Def2`) begint met "actief" of "opgezegd", zoals `actief_gewoon`. Van elk lid geeft hij vier gegevens door: het lidnummer uit het veld `Code`, de naam uit het veld `Bedrijf`, de datum van lid worden uit `Def3` en de opzegdatum uit `Def7`. Adres, telefoon en e-mail neemt hij niet mee, en de applicatie bewaart ze niet meer (issue #180).
+De container logt in bij e-boekhouden met de drie codes uit zijn omgeving en vraagt alle relaties op. Een relatie telt als lid als haar soort (veld `Def2`) begint met "actief", zoals `actief_gewoon`, of met "opgezegd" en er een opzegdatum in `Def7` staat. Een relatie op "opgezegd" zonder opzegdatum slaat de container over; stond die persoon al in de applicatie, dan wordt die oud-lid (issue #221). Van elk lid geeft hij vier gegevens door: het lidnummer uit het veld `Code`, de naam uit het veld `Bedrijf`, de datum van lid worden uit `Def3` en de opzegdatum uit `Def7`. Adres, telefoon en e-mail neemt hij niet mee, en de applicatie bewaart ze niet meer (issue #180).
 
 Datums moeten in e-boekhouden als JJJJ-MM-DD staan. Een record met een andere notatie telt in de API als ongeldig en wordt overgeslagen.
 
