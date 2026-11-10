@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.55
+**Versie overlay:** v0.5.56
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -166,6 +166,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een `|safe`-mutant krijgt een testgeval per tak van het sjabloon die het veld toont, ook in een attribuut als `alt` (dan met een foto in de test).
 - Een bouwer met mutanten controleert vóór de oplevering met `ls` dat `commando.txt` naast de mutanten staat. Draai een reeks mutanten met `docker compose run --rm -T` en `</dev/null` in een `while read`-lus.
 - Meet een basislijn of uitlijning aan het begin van de eerste regel van elk element, niet aan het einde van de tekst.
+- Draai de unitsuite in een worktree met `docker compose -p botenloods ...`; zonder `-p` heet het project naar de map en vindt `test` de database niet.
+- Controleer vóór een opdracht over een schermafbeelding of de afbeelding in `main` het gebrek uit het issue toont; zo niet, zeg welke aanpassing aan het script mag, zoals de hoogte van de uitsnede.
+- Bouwen twee agents tegelijk en werken ze hetzelfde document bij (zoals `architectuur.md`), dan kiezen ze hetzelfde nieuwe versienummer; de regie lost dat op bij de rebase van de tweede branch.
+- Vervalt een regel, zoek dan ook op de omschrijving van het geweigerde geval zelf (zoals "clubboot op een gewone plaats"), niet alleen op de tekst van de oude melding.
 
 #### Review
 
@@ -196,7 +200,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai de unitsuite op een proefimage met `docker compose -f docker-compose.yml -f compose.dev.yml -f <scratchpad>/compose.<proef>.yml --profile test run --rm test pytest -q`; het override-bestand zet alleen `services.test.image: <proefimage>` en `pull_policy: never`. Hertag `botenloods-dev` niet, anderen gebruiken het.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
-- Haalt een mutant een controle met twee kanten weg (zoals clubboot op een ledenplaats en ledenboot op een clubplaats), draai dan per kant een eigen mutant, met per kant de assert die moet falen.
+- Haalt een mutant een controle met twee kanten weg (zoals een ledenboot op een clubplaats en een boot op een plaats voor een andere bootsoort), draai dan per kant een eigen mutant, met per kant de assert die moet falen.
 - Wordt een lus in een Jinja-macro gewijzigd, noem dan elke aanroep van de macro en de mutant die alleen één aanroep raakt.
 - Noem bij een test op escaping de mutant met `|safe` op het veld, en of de regie die al heeft gedraaid. Een templatemutant draait als bind mount van alleen het template: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <scratchpad>/<template>.html:/app/app/web/templates/<template>.html:ro test pytest -q <testbestand>`.
 - Een mutant die een object uit `upgrade()` weghaalt, haalt de bijbehorende regel uit `downgrade()` ook weg; anders faalt de mutant op de downgrade in plaats van op de assert van het criterium.
@@ -237,12 +241,13 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vraag je een reviewer of gegevens "via een andere weg" binnenkomen, noem dan ook de bronadapter in `integratie/koppeling/` als te toetsen pad, met het filter dat bepaalt wat de bron als lid levert.
 - Wijzigt een diff een regel uit een ADR, laat de reviewer dan in alle ADR's en documentatie zoeken naar verwijzingen naar die regel en naar de oude formulering, ook buiten de gestagede bestanden.
 - Rekent een migratie met `CURRENT_DATE`, noem dan de tijdzone van de database (`SHOW timezone`, Etc/UTC) en die van de installatie (`TZ`, Europe/Amsterdam).
+- Geef bij een nareview de regelnummers van de nieuwe hunks of een diff tussen de eerste en de tweede staging, zodat de reviewer alleen het nieuwe deel leest.
 
 #### E2E
 
 - Elke E2E-test draait ook los: `tests/e2e/draai.sh -k <testnaam>`, zonder pad, want de e2e-container werkt vanuit `tests/e2e`. Laat de reviewer één test met `-k` draaien als controle op de volgorde.
 - Een E2E-test leunt niet op gegevens van een eerder testbestand. Bestaat er geen route om ze in de test te maken (zoals een token), dan maakt `tests/e2e/draai.sh` ze vers vóór elke aanroep van pytest. Een E2E-test die gedeelde instellingen wijzigt, zet ze ook terug als hij faalt (try/finally), of krijgt een eigen installatie.
-- De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`.
+- De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`, vóór `passkey`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
 - Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
@@ -259,6 +264,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Zet een bouwopdracht een blok dicht in een `details`, zoek dan in `tests/e2e/` en `schermafbeeldingen.py` alle `to_be_visible`, `all_inner_texts`, `fill`, `click` en `select_option` op elementen in dat blok. `to_contain_text` en `all_text_contents` werken ook in een dicht blok, de andere niet; open het blok eerst met de summary.
 - Een test op een scherm met een eigen zoekveld zoekt de knop Zoeken binnen `main`; de kop heeft ook een knop Zoeken.
 - Een subagent wacht op een achtergrondrun met een `until grep -q`-lus op een eindregel in het uitvoerbestand, en telt het E2E-totaal met een script uit de losse `passed`-regels van `draai.sh`.
+- Een E2E-assert op een keuzelijst filtert op de eigen plaatscode; de seed heeft ook vrije plaatsen.
+- Een nieuwe foutroute in `draai.sh` toetst ook welke toestand het script achterlaat (integratiecontainer gestart, `secrets/api_token`), niet alleen dat het stopt.
 
 #### Migratie en database
 
@@ -416,6 +423,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.56 | 2026-11-10 | Uit de terugblikken bij #205 en #220: vier nieuwe regels (Bouw), één nieuw (Review), twee nieuw (E2E); Review regel over twee kanten krijgt een voorbeeld dat na #205 klopt; E2E-uitnodigingssoort vóór `passkey` | Lessen |
 | v0.5.55 | 2026-11-10 | Werken in milestones die de regie vooraf met de stakeholder afstemt (§4); drie nieuwe regels (Review) uit de terugblikken van aegis en sentinel bij #203: bronadapter als andere weg, oude ADR-formulering buiten de diff, tijdzone bij `CURRENT_DATE` | Besluit stakeholder 2026-11-10 |
 | v0.5.54 | 2026-11-10 | Eén regel (Bouw) aangevuld en één nieuw (Bouw), twee nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #202: mutant per voorwaarde, wisselvallige test #217, bewijs bij een vraag aan de reviewer, verouderde mutanten na een herstel | Lessen |
 | v0.5.53 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), één nieuw (Migratie en database), drie nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #204: volledige unitsuite na een eigen herstel, mutant met python3 en controle, overgenomen bouw, E2E-bestandsnaam tot #213, racetest bij elke nieuwe `with_for_update`, eigen proef los, live proef van aegis, testnaam | Lessen |
