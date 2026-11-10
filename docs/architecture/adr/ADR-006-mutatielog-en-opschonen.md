@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.4.2
+**Versie:** v1.4.3
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
 
 ## Context
@@ -52,7 +52,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 3. Van die oud-leden de boten, foto's en het lid zelf verwijderen.
 4. Aantallen vastleggen in `taakrun` (taak `opschoning`: logregels, leden, boten, foto's) en één logregel `opschoning.uitgevoerd` met alleen de aantallen en een verwijzing naar de run (BLB-026).
 
-De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een startdatum van precies 5 jaar geleden blijft staan. De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`. Een beheerder geeft een oud-lid geen nieuwe boot of plaats, maar de import kan het oud-lid weer actief maken. Daarom neemt de opschoning naast haar eigen slot ook het importslot; loopt er een import, dan wacht ze tot de volgende ronde van de worker (#49). Een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
+De grens rekent met `jaren_terug`: een startdatum van precies 5 jaar geleden blijft staan. Een opgeschoond oud-lid komt niet terug, want de import neemt geen nieuw lid op met een opzegdatum op of vóór vandaag (ADR-004 stap 4, issue #203). De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`. Een beheerder geeft een oud-lid geen nieuwe boot of plaats, maar de import kan het oud-lid weer actief maken. Daarom neemt de opschoning naast haar eigen slot ook het importslot; loopt er een import, dan wacht ze tot de volgende ronde van de worker (#49). Een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
 
 ## Alternatieven
 
@@ -76,6 +76,7 @@ De grens is dezelfde als in de import (`jaren_terug`, ADR-004 stap 4): een start
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.3 | 2026-11-10 | De grens van de opschoning staat los van de import; de import neemt geen nieuw opgezegd lid op | Issue #203 |
 | v1.4.2 | 2026-11-09 | De opschoning kent de kolommen `adres`, `telefoon` en `email` niet meer; migratie 0018 schrijft een regel `token.ingetrokken` met actor systeem/migratie | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.4.1 | 2026-11-04 | Rekoverzicht toont geen log | Besluiten stakeholder 2026-11-04, issue #87 |
 | v1.4.0 | 2026-11-03 | Acties van de bootsoorten in het technische log | Bouw slice 11, issue #56 |

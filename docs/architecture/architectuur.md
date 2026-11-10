@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.5
+**Versie:** v0.8.6
 **Datum:** 2026-11-10
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -140,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
-- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. De fixture bevat ook 2 oud-leden met een opzegdatum langer dan 5 jaar geleden; die slaat de import over (ADR-004). Een test voor de opschoning maakt zulke leden zelf aan;
+- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum op of vóór vandaag slaat de import over (ADR-004, issue #203). Oud-leden ontstaan dus alleen als een lid eerst zonder opzegdatum is geïmporteerd; de seedtest importeert daarom eerst de fixture zonder opzegdatums. Op een verse stack met één import heeft de seed geen oud-leden (issue #220). Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
@@ -273,7 +273,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 
 | # | Bevinding | Categorie | Zekerheid | Actie | Prioriteit |
 |---|-----------|-----------|-----------|-------|------------|
-| 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De synchronisatie slaat records over waarvan de opzegdatum meer dan 5 jaar geleden ligt en die lokaal niet bestaan (ADR-004). | H |
+| 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De import slaat records over met een opzegdatum op of vóór vandaag die lokaal niet bestaan (ADR-004, issue #203). | H |
 | 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). | H |
 | 3 | Elke API-aanroep in het log zou bij een robot die elke minuut vraagt ongeveer 2,6 miljoen regels in 5 jaar geven. | Schaal | Opgelost | Besluit stakeholder 2026-10-31: geslaagde aanroepen en wijzigingen in leden door de import niet in het log (ADR-005 v1.2.0, ADR-006). | L |
 | 5 | Het netwerk `achterkant` is `internal: true`; `web`, `api` en `worker` hebben dan geen uitgaand verkeer. | Betrouwbaarheid | Probable | Geen van de drie heeft dat nu nodig; forge controleert dat bij slice B. | L |
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.6 | 2026-11-10 | Issue #203: de import neemt geen nieuw opgezegd lid op; seed en bevinding 1 bijgewerkt (§6.3, §11); verse stack zonder oud-leden in issue #220 |
 | v0.8.5 | 2026-11-10 | Issue #204: `boot.clubboot` en de toestand eigenaar onbekend (migratie 0019); bestaande boten zonder lid zijn clubboot |
 | v0.8.4 | 2026-11-09 | Issue #180: kolommen `adres`, `telefoon` en `email` van `lid` en het tokenrecht `persoonsgegevens` vervallen (§3, §4, §6, §8; ADR-004 v2.5.0, ADR-005 v1.5.0, ADR-006, ADR-012 v1.9.0); lid sinds en opzegdatum komen mee met `leden:lezen` |
 | v0.8.3 | 2026-11-08 | Issue #186: het logo staat weer in de database en is te uploaden op Instellingen; `./huisstijl` en `LOGO_BESTAND` vervallen (§8.1, §9 besluit 6; ADR-008 v1.3.0, ADR-009 v1.5.0) |

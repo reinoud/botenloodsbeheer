@@ -35,9 +35,16 @@ def roep(methode, pad, gegevens=None, soort="import", ruw=None):
 
 
 def test_fixture_importeren_en_veiligheidsgrens():
-    """BLB-006 criterium 1, BLB-007 criterium 1, BLB-034 criterium 3, BLB-007 criterium 4."""
+    """BLB-006 criterium 1, BLB-007 criterium 1, BLB-034 criterium 3, BLB-007 criterium 4, #203:
+    een opgezegd lid dat nog niet bestaat, telt als overgeslagen. Op een verse stack zijn dat alle
+    12 oud-leden van de fixture; op een stack met oud-leden met een boot minder."""
+    status, bestaand = roep("GET", "/leden")
+    assert status == 200
+    bekend = {lid["lidnummer"] for lid in bestaand}
+    verwacht = sum(1 for r in FIXTURE if r["opzegdatum"] and r["lidnummer"] not in bekend)
+    assert verwacht >= 2  # de fixture heeft 12 oud-leden, hooguit 10 met een boot
     status, uitkomst = roep("PUT", "/leden", {"leden": FIXTURE})
-    assert status == 200 and (uitkomst["ontvangen"], uitkomst["overgeslagen"]) == (210, 2)
+    assert status == 200 and (uitkomst["ontvangen"], uitkomst["overgeslagen"]) == (210, verwacht)
     status, antwoord = roep("PUT", "/leden", {"leden": FIXTURE[:90]})
     assert status == 409 and "minder dan de helft" in antwoord["fout"]
     status, uitkomst = roep("PUT", "/leden", {"leden": FIXTURE})

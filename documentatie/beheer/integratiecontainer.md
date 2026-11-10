@@ -74,7 +74,7 @@ roep("GET", "/bootaantallen")
 #                                             "C11": 0, "Supboard": 0}}])
 ```
 
-Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import of opschoning (409, "Er loopt al een import."; de opschoning houdt hetzelfde slot), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum van meer dan 5 jaar geleden telt als `overgeslagen`, zodat een opgeschoond oud-lid niet terugkomt.
+Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import of opschoning (409, "Er loopt al een import."; de opschoning houdt hetzelfde slot), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum op of vóór vandaag telt als `overgeslagen`: een oud-lid dat nog niet in de applicatie stond, komt er niet in en een opgeschoond oud-lid komt niet terug. Een bestaand lid dat opzegt, blijft staan.
 
 ## Bootaantallen
 

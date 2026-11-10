@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0019"]
+    assert scripts.get_heads() == ["0020"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -186,6 +186,8 @@ def test_api_kan_de_hartslag_niet_wijzigen_of_aanmaken(app, database):
 def test_seed_maakt_de_synthetische_loods(app):
     with pytest.raises(seed.SeedFout, match="nog geen leden"):
         seed.seed(echo=lambda _: None)
+    # Eerst lid, daarna opgezegd: een nieuw opgezegd lid komt er niet in (#203).
+    als_api(leden.importeer, [{**r, "opzegdatum": None} for r in FIXTURE], CLI)
     als_api(leden.importeer, FIXTURE, CLI)
     seed.seed(echo=lambda _: None)
 
@@ -194,7 +196,7 @@ def test_seed_maakt_de_synthetische_loods(app):
 
     assert tel(Rek) == 11 and tel(Plaats) == 229 and tel(Plaats, Plaats.is_clubplaats) == 30
     _controleer_bootsoort_per_vak()
-    assert tel(Lid) == 208 and tel(Boot) == 180 and tel(Boot, Boot.lid_id.is_(None)) == 6
+    assert tel(Lid) == 210 and tel(Boot) == 180 and tel(Boot, Boot.lid_id.is_(None)) == 6
     assert tel(Plaats, Plaats.boot_id.isnot(None)) == 150
     oud_met_plaats = [p for p in db.session.scalars(select(Plaats).where(Plaats.boot_id.isnot(None)))
                       if p.boot.lid and leden.is_oud_lid(p.boot.lid)]
@@ -347,5 +349,40 @@ def test_migratie_0019_maakt_boten_zonder_lid_clubboot_en_de_controle_sluit_lid_
                                   "WHERE table_name = 'boot'")).scalars().all()
         assert "clubboot" not in kolommen
         assert c.execute(text("SELECT count(*) FROM boot")).scalar() == 3
+    command.upgrade(cfg, "head")
+    engine.dispose()
+
+
+def test_migratie_0020_verwijdert_oud_leden_zonder_boot_en_laat_de_rest(database):
+    """Issue #203: opzegdatum vandaag of eerder en geen boot: weg, met de naamkoppeling (ON DELETE
+    CASCADE); de logregel met lid:<id> blijft. Een oud-lid met boot, een lid zonder opzegdatum en
+    een lid dat morgen of later opzegt blijven. De downgrade doet niets."""
+    cfg = nieuwe_database("botenloods_migratie")
+    command.upgrade(cfg, "0019")
+    engine = create_engine(cfg.get_main_option("sqlalchemy.url"))
+    leden_in = {"gisteren": "CURRENT_DATE - 1", "vandaag": "CURRENT_DATE", "morgen": "CURRENT_DATE + 1",
+                "geen": "NULL", "oud_met_boot": "CURRENT_DATE - 400"}
+    with engine.begin() as c:
+        for nummer, opzegdatum in leden_in.items():
+            c.execute(text(f"INSERT INTO lid (lidnummer, naam, opzegdatum) VALUES ('{nummer}', 'L', {opzegdatum})"))
+        soort = c.execute(text("SELECT id FROM bootsoort ORDER BY id LIMIT 1")).scalar()
+        c.execute(text("INSERT INTO boot (naam, bootsoort_id, lid_id) VALUES ('Eigen', :s, "
+                       "(SELECT id FROM lid WHERE lidnummer = 'oud_met_boot'))"), {"s": soort})
+        c.execute(text("INSERT INTO naamkoppeling (naam, lid_id) SELECT 'koppeling ' || lidnummer, id FROM lid"))
+        gisteren = c.execute(text("SELECT id FROM lid WHERE lidnummer = 'gisteren'")).scalar()
+        c.execute(text("INSERT INTO logregel (soort, actor_soort, actor_naam, actie, verwijzingen, gegevens) "
+                       "VALUES ('mutatie', 'systeem', 'test', 'x', CAST(:v AS text[]), '{}')"),
+                  {"v": f"{{lid:{gisteren}}}"})
+    command.upgrade(cfg, "0020")
+    with engine.connect() as c:
+        assert sorted(c.execute(text("SELECT lidnummer FROM lid")).scalars()) == [
+            "geen", "morgen", "oud_met_boot"]
+        assert sorted(c.execute(text("SELECT naam FROM naamkoppeling")).scalars()) == [
+            "koppeling geen", "koppeling morgen", "koppeling oud_met_boot"]
+        assert c.execute(text("SELECT verwijzingen FROM logregel")).scalar() == [f"lid:{gisteren}"]
+        assert c.execute(text("SELECT count(*) FROM boot")).scalar() == 1
+    command.downgrade(cfg, "0019")
+    with engine.connect() as c:
+        assert c.execute(text("SELECT count(*) FROM lid")).scalar() == 3
     command.upgrade(cfg, "head")
     engine.dispose()

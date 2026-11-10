@@ -97,7 +97,7 @@ paths:
         Recht: `leden:importeren`. Altijd de volledige lijst: een lid dat ontbreekt, wordt
         oud-lid. Nieuwe leden worden aangemaakt en gewijzigde bijgewerkt, met het lidnummer als
         sleutel. Een ongeldig record wordt overgeslagen en geteld, zonder de inhoud te loggen.
-        Een nieuw record met een opzegdatum van meer dan 5 jaar geleden wordt overgeslagen.
+        Een nieuw record met een opzegdatum op of vóór vandaag wordt overgeslagen en geteld.
         De uitkomst sluit een open importverzoek af. Wijzigingen in leden komen niet in het log.
         Een veld dat in het record ontbreekt, geldt als leeg en overschrijft de bewaarde waarde.
         Velden die dit contract niet kent, zoals adres, telefoon of e-mail, worden genegeerd en
@@ -481,7 +481,7 @@ components:
           type: integer
         overgeslagen:
           type: integer
-          description: Nieuwe records met een opzegdatum van meer dan 5 jaar geleden
+          description: Nieuwe records met een opzegdatum op of vóór vandaag
     Importfout:
       type: object
       required: [reden]
