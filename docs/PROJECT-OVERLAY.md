@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.56
+**Versie overlay:** v0.5.57
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -38,7 +38,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Volgorde: apex (backlog en user stories), foundation (architectuur en ADR's), forge (delivery in slices).
 - Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`, met dezelfde regels als de Forgejo-afspraak in `~/.claude/CLAUDE.md`: type en label, sluiten met commit, test en bewijs.
 - Review vóór elke codecommit volgens `~/.claude/CLAUDE.md`. Voor inloggen, tokens, autorisatie en de koppeling met e-boekhouden reviewt aegis mee.
-- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
+- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. Zet het slotcommentaar (gewijzigd, getest, bewijs) vóór de merge op het issue: `Closes` sluit het issue bij de merge zonder commentaar. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
 - Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
 - Teksten volgen de skill `schrijfstijl`.
 - Elke open pull request van Dependabot krijgt een issue (`taak`, `dependencies`), tenzij er al een is. Het issue noemt wat de PR mist, zoals een pakketversie die niet meebeweegt. Besluit van de stakeholder, 2026-11-05.
@@ -76,6 +76,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem in een reviewbrief de niet-gestagede bestanden in de werkmap (`git status --short`, tweede kolom) en of de review ze negeert.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
 - Noem bij een filter op tekst uit een externe bron de waarden die in de praktijk voorkomen, of zeg dat ze onbekend zijn, zodat bouwer en reviewer weten of "begint met", "bevat" of "is gelijk aan" bedoeld is.
+- Noem bij een filter op externe invoer of hoofdletters en witruimte vóór de waarde meetellen, en welke test elk randgeval dekt.
+- Staat een filter in een gedeelde functie zodat meer aanroepers hetzelfde gedrag krijgen, dan heeft elke aanroeper een test met het nieuwe geval; noem die tests in de brief.
+- Zeg in elke agentopdracht: stuur het oordeel of de uitkomst met SendMessage naar `main`; een bericht aan `team-lead` komt niet aan.
 - Geef bij een externe SOAP-dienst de WSDL vooraf mee in de scratchpad, en noem het adresschema (http of https) dat de dienst gebruikt.
 - Kiest een besluit een bibliotheek, controleer dan vóór het besluit in de broncode van de vastgepinde versie dat elke nodige aanroep bestaat, voor lezen én schrijven, en noem die aanroepen in de opdracht.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
@@ -166,13 +169,14 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een `|safe`-mutant krijgt een testgeval per tak van het sjabloon die het veld toont, ook in een attribuut als `alt` (dan met een foto in de test).
 - Een bouwer met mutanten controleert vóór de oplevering met `ls` dat `commando.txt` naast de mutanten staat. Draai een reeks mutanten met `docker compose run --rm -T` en `</dev/null` in een `while read`-lus.
 - Meet een basislijn of uitlijning aan het begin van de eerste regel van elk element, niet aan het einde van de tekst.
-- Draai de unitsuite in een worktree met `docker compose -p botenloods ...`; zonder `-p` heet het project naar de map en vindt `test` de database niet.
+- Draai de unitsuite in een worktree met `docker compose -p botenloods --env-file <hoofdwerkmap>/.env ...`; zonder `-p` heet het project naar de map, start compose een eigen `db` die op poort 5432 botst en blijft er een volume `<map>_dbdata` achter. Een worktree heeft geen `.env` en geen `secrets/`: maak `secrets/` voor een proef met `draai.sh` vooraf aan en verwijder hem na de laatste run, als los commando.
 - Controleer vóór een opdracht over een schermafbeelding of de afbeelding in `main` het gebrek uit het issue toont; zo niet, zeg welke aanpassing aan het script mag, zoals de hoogte van de uitsnede.
 - Bouwen twee agents tegelijk en werken ze hetzelfde document bij (zoals `architectuur.md`), dan kiezen ze hetzelfde nieuwe versienummer; de regie lost dat op bij de rebase van de tweede branch.
 - Vervalt een regel, zoek dan ook op de omschrijving van het geweigerde geval zelf (zoals "clubboot op een gewone plaats"), niet alleen op de tekst van de oude melding.
 
 #### Review
 
+- Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
 - Draai een mutant op een gedeelde set of functie tegen de hele unitsuite, of noem de test die de set bewaakt (zoals `test_log.py` voor `log.TECHNISCH`).
@@ -423,6 +427,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.57 | 2026-11-10 | Uit de terugblikken bij #221 en #223 en de ervaring van de regie: drie nieuwe regels (Algemeen) over filters op externe invoer, gedeelde functies en berichten naar `main`; één nieuw (Review) over de nareview; de regel over de worktree (Review) aangevuld met env-bestand en `secrets/`; slotcommentaar vóór de merge (§4) | Lessen |
 | v0.5.56 | 2026-11-10 | Uit de terugblikken bij #205 en #220: vier nieuwe regels (Bouw), één nieuw (Review), twee nieuw (E2E); Review regel over twee kanten krijgt een voorbeeld dat na #205 klopt; E2E-uitnodigingssoort vóór `passkey` | Lessen |
 | v0.5.55 | 2026-11-10 | Werken in milestones die de regie vooraf met de stakeholder afstemt (§4); drie nieuwe regels (Review) uit de terugblikken van aegis en sentinel bij #203: bronadapter als andere weg, oude ADR-formulering buiten de diff, tijdzone bij `CURRENT_DATE` | Besluit stakeholder 2026-11-10 |
 | v0.5.54 | 2026-11-10 | Eén regel (Bouw) aangevuld en één nieuw (Bouw), twee nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #202: mutant per voorwaarde, wisselvallige test #217, bewijs bij een vraag aan de reviewer, verouderde mutanten na een herstel | Lessen |
