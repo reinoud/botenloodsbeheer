@@ -14,6 +14,7 @@ def token_maken(page, naam, rechten, soort="Persoonlijk"):
     page.get_by_role("link", name="Tokens").click()
     page.get_by_role("link", name="Token maken").click()
     page.get_by_role("radio", name=soort).check()
+    expect(page.get_by_role("radio", name=soort)).to_have_css("border-radius", "50%")  # #191
     page.get_by_label("Naam (a-z, cijfers, punt, - en _)").fill(naam)
     for recht in rechten:
         page.get_by_label(recht, exact=True).check()
@@ -73,7 +74,9 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
     """BLB-035 criterium 2: een collega maakt een token, deze beheerder trekt het in."""
     collega = browser.new_context(base_url=base_url).new_page()
     wachtwoord_instellen(collega, "tokenscollega")
-    naam = f"e2e-collega-{os.environ['E2E_STEMPEL']}"
+    # #191: 50 tekens met een lang stuk zonder afbreekpunt; het patroon van opruimen.sql blijft
+    naam = f"e2e-collega{'x' * 28}-{os.environ['E2E_STEMPEL']}"
+    assert len(naam) == 50
     waarde = token_maken(collega, naam, ["plaatsen:lezen"])
     assert roep(f"{API}/plaatsen", waarde)[0] == 200
     uitloggen(collega)
@@ -83,7 +86,16 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
     page.get_by_role("link", name="Tokens").click()
     expect(rij(page, naam).locator('td[data-label="Eigenaar of maker"]')).to_have_text(
         gebruikersnaam("tokenscollega"))
-    rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}").click()
+    intrekken = rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}")
+    page.locator("summary", has_text=naam).click()  # "Rechten van <naam>" telt ook mee
+    for breedte in (1100, 360):
+        page.set_viewport_size({"width": breedte, "height": 900})
+        assert page.evaluate("""() => [document.documentElement, document.querySelector('.ds-table-wrap')]
+            .every(el => el.scrollWidth <= el.clientWidth)"""), breedte
+        vak = intrekken.bounding_box()
+        assert vak["x"] >= 0 and vak["x"] + vak["width"] <= breedte, breedte
+    page.set_viewport_size({"width": 1280, "height": 720})  # standaard van Playwright
+    intrekken.click()
     expect(page.get_by_text("Het token is ingetrokken.")).to_be_visible()
     expect(rij(page, naam).locator('td[data-label="Intrekken"]')).to_contain_text("Ingetrokken op")
     assert roep(f"{API}/plaatsen", waarde)[0] == 401

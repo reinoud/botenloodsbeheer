@@ -239,6 +239,8 @@ td form { gap: var(--space-2); }
 .bl-acties .ds-field__label { letter-spacing: normal; text-transform: none; }
 
 /* Tabel als kaart (3A, 6A, 7A): meerdere knoppen in een cel naast elkaar, een knop breekt af bij een lange naam */
+/* Een tokennaam zonder afbreekpunt (tot 50 tekens) duwt Intrekken anders buiten beeld, en onder "Rechten wijzigen" de pagina breder dan 360 px */
+.bl-tabel td:first-child, .dj-disclosure summary, .dj-disclosure legend { overflow-wrap: anywhere; }
 .bl-tabel td > form { display: inline-block; margin: 0 var(--space-2) var(--space-2) 0; }
 .bl-tabel .ds-btn { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
 
@@ -257,7 +259,7 @@ td form { gap: var(--space-2); }
 .bl-paar { display: grid; gap: var(--space-5); align-items: start; }
 .bl-paar > * { min-width: 0; margin-block: 0; }
 .bl-vast { position: sticky; bottom: 0; z-index: 1; padding-block: var(--space-3); border-top: var(--stroke-1) solid var(--line); background: var(--page); }
-.bl-radio { border-radius: var(--radius-round); }
+.bl-radio[type="radio"] { border-radius: var(--radius-round); }
 
 /* Kaartjes (5B): elk rek een vak dat altijd open staat; "Heel rek" eerst over de volle breedte */
 .bl-rekkeuze { padding: var(--space-4); border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); background: var(--surface); }
