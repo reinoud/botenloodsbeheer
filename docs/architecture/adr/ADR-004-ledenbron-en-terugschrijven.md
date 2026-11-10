@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012) en 2026-11-08 (e-boekhouden, issue #178)
 **Datum:** 2026-10-30
-**Versie:** v2.7.0
+**Versie:** v2.8.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
 ## Context
@@ -30,7 +30,7 @@ De import in `domein/leden` werkt in deze stappen, bij elke aanroep van `PUT /ap
 5. In één transactie: nieuwe leden aanmaken, gewijzigde bijwerken, leden die ontbreken krijgen `uit_bron_op` met de datum van vandaag. Boten van leden die oud-lid worden, gaan van de wachtlijst (BLB-008).
 6. Wijzigingen in leden komen niet in het log; de aantallen staan in `taakrun`, in een run met taak `ledenimport`. Een mutatie in de botenadministratie die de import veroorzaakt, krijgt wel een logregel met het robottoken als actor (BLB-024, besluit stakeholder 2026-10-31).
 
-De bron e-boekhouden (`koppeling/eboekhouden.py`, issue #178) logt in met `EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1` en `EBOEKHOUDEN_CODE2` en vraagt met GetRelaties alle relaties op. Een relatie is een lid als `Def2` begint met "actief" of "opgezegd" (zoals `actief_gewoon`); "inactief" telt niet. Het lidnummer is `Code`, de naam is `Bedrijf`, lid_sinds is `Def3` en de opzegdatum is `Def7`. Adres, telefoon en e-mail gaan niet mee en de applicatie bewaart ze niet (issue #180). De API leest een ontbrekend veld als leeg en overschrijft de bewaarde waarde. Een fout van e-boekhouden wordt `bron_geweigerd` (foutcode in het antwoord, HTTP 401 of 403), `bron_onbereikbaar` (geen verbinding, andere HTTP-fout) of `bron_onleesbaar` (geen geldig SOAP-antwoord); er gaat geen tekst van e-boekhouden naar de API of het log.
+De bron e-boekhouden (`koppeling/eboekhouden.py`, issue #178) logt in met `EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1` en `EBOEKHOUDEN_CODE2` en vraagt met GetRelaties alle relaties op. Een relatie is een lid als `Def2` begint met "actief" (zoals `actief_gewoon`), of met "opgezegd" en `Def7` een opzegdatum heeft; "inactief" telt niet. Een relatie op "opgezegd" zonder opzegdatum slaat de bron over, ook bij het terugschrijven (issue #221). Was die relatie al lid, dan wordt het lid oud-lid zoals elk lid dat uit de bron verdwijnt. Het lidnummer is `Code`, de naam is `Bedrijf`, lid_sinds is `Def3` en de opzegdatum is `Def7`. Adres, telefoon en e-mail gaan niet mee en de applicatie bewaart ze niet (issue #180). De API leest een ontbrekend veld als leeg en overschrijft de bewaarde waarde. Een fout van e-boekhouden wordt `bron_geweigerd` (foutcode in het antwoord, HTTP 401 of 403), `bron_onbereikbaar` (geen verbinding, andere HTTP-fout) of `bron_onleesbaar` (geen geldig SOAP-antwoord); er gaat geen tekst van e-boekhouden naar de API of het log.
 
 De stub in de integratiecontainer leest leden uit een JSON-bestand (`LEDENBRON_STUB_BESTAND`). De tests van de applicatie sturen het fixturebestand `tests/fixtures/leden.json` rechtstreeks naar `PUT /api/v1/leden`; dat is de nepbron.
 
@@ -55,6 +55,7 @@ Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, allee
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.8.0 | 2026-11-10 | Bron e-boekhouden slaat een relatie op "opgezegd" zonder opzegdatum (`Def7`) over | Besluit stakeholder 2026-11-10, issue #221 |
 | v2.7.0 | 2026-11-10 | Stap 4: een nieuw lid met een opzegdatum op of vóór vandaag wordt niet aangemaakt; migratie 0020 ruimt oud-leden zonder boot op | Besluit stakeholder 2026-11-10, issue #203 |
 | v2.6.0 | 2026-11-09 | De lidpagina toont de aantallen per bootsoort niet meer; alleen de API levert ze | Besluit stakeholder 2026-11-08, issue #179 |
 | v2.5.0 | 2026-11-09 | Kolommen `adres`, `telefoon` en `email` van `lid` vervallen (migratie 0018); de import negeert die velden | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |

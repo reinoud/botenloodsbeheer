@@ -123,7 +123,8 @@ def bijwerkingen(nep):
 # ophalen
 
 def test_alleen_leden_met_de_vier_velden(nep, bron):
-    """Besluit 1: Def2 die begint met actief of opgezegd is lid; naam is Bedrijf; geen adres, telefoon, e-mail."""
+    """Besluit 1: Def2 die begint met actief, of met opgezegd en een opzegdatum, is lid (#221); naam is
+    Bedrijf; geen adres, telefoon, e-mail."""
     nep.relaties = [
         relatie(),
         relatie(ID="12", Code="1002", Bedrijf="Piet", Def2="opgezegd", Def3="2010-01-01",
@@ -132,6 +133,8 @@ def test_alleen_leden_met_de_vier_velden(nep, bron):
         relatie(ID="14", Code="2002", Bedrijf="Zonder soort", Def2=""),
         relatie(ID="16", Code="2003", Bedrijf="Oud", Def2="inactief"),  # bevat "actief"
         relatie(ID="15", Code="1003", Bedrijf="Kees", Def2="actief_jeugd", Def3="", Def7=""),
+        relatie(ID="17", Code="1004", Bedrijf="Opgezegd zonder datum", Def2="opgezegd", Def7=" "),  # #221
+        relatie(ID="18", Code="1005", Bedrijf="Opgezegd, lege datum", Def2="opgezegd_gewoon", Def7=""),
     ]
     assert bron.haal_leden() == [
         {"lidnummer": "1001", "naam": "Jan de Vries", "lid_sinds": "2015-03-01", "opzegdatum": None},
@@ -197,11 +200,12 @@ def test_gelijke_waarde_wordt_niet_geschreven(nep, bron):
 
 
 def test_onbekend_lidnummer_en_geen_lid_worden_overgeslagen(nep, bron):
-    """Een relatie die geen lid is (Def2), raakt de koppeling nooit."""
-    nep.relaties = [relatie(Code="2001", Def2="crediteur")]
+    """Een relatie die geen lid is (Def2, of opgezegd zonder Def7: #221), raakt de koppeling nooit."""
+    nep.relaties = [relatie(Code="2001", Def2="crediteur"), relatie(Code="2004", Def2="opgezegd")]
     uitkomst = bron.schrijf_bootaantallen(AANTALLEN + [{"lidnummer": "2001", "aantallen": {}},
+                                                      {"lidnummer": "2004", "aantallen": {}},
                                                       {"lidnummer": "9999", "aantallen": {}}])
-    assert uitkomst == {"geschreven": 0, "ongewijzigd": 0, "niet_gevonden": 3, "fout": 0}
+    assert uitkomst == {"geschreven": 0, "ongewijzigd": 0, "niet_gevonden": 4, "fout": 0}
     assert bijwerkingen(nep) == []
 
 
