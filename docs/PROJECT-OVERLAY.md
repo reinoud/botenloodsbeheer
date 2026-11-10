@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.51
+**Versie overlay:** v0.5.52
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -142,7 +142,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
 - Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
-- Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten bij voorkeur op een kopie die over het testimage gemount is.
+- Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script.
+- Noem bij een geweigerde actie (upload, formulier) per scherm of het blok daarna al open gaat; zo niet, zeg of het in dit issue open moet.
+- Hangt een melding af van een toestand (zoals een vorige afbeelding), noem dan bij elke bestaande en nieuwe test welke toestand geldt.
+- Een live proef die eigen testgegevens maakt (zoals een boot), ruimt die zelf op met een domeinfunctie; `opruimen.sql` kent alleen de stempelaccounts.
 - Noem bij elke toestand die zonder JavaScript open moet staan (zoals een blok na een actie) het mechanisme: querystring, sessie of flash.
 - Een schermafbeelding met `hoogte=` moet de nieuwe inhoud halen; bekijk elke nieuwe afbeelding.
 - Noem bij een upload de router in Traefik met de grens op de grootte; een route buiten `/boten` valt onder de 1 MB van de algemene router. Test via Traefik met een geldig bestand boven 1 MB.
@@ -304,6 +307,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een proef via de proxy met `http.client` die de Host-kop zelf zet, gebruikt `putrequest(..., skip_host=True)`; anders geeft Traefik 400.
 - Een proef met veel verzoeken via Traefik gebruikt per verzoek een eigen Authorization-kop en blijft onder 50 verzoeken per adres; anders meet je de rate limit.
 - Bij een update van een afhankelijkheid van webauthn noemt de opdracht of de E2E-test voor passkeys gedraaid is, en welk pad die test niet raakt (attestatie tpm en android-key).
+- Een grens die alleen achter Traefik en Gunicorn werkt (buffering, lichaam weglezen), krijgt een E2E-test aan beide kanten van de buitengrens, met de herkomst van elke 413, zoals `tests/e2e/test_import.py` voor de API.
+- Een reviewer die een webroute met sessie via de proxy toetst, mag in de container `web` een eigen beheerder `aegis<issue>` aanmaken en een sessiecookie tekenen met `app.session_interface.get_signing_serializer(app)`; hij verwijdert die beheerder daarna met een delete op id én gebruikersnaam en meldt het id.
 - Na de eerste echte release controleert de regie met `docker buildx imagetools inspect` of elke verwachte tag bestaat en hetzelfde digest heeft, en zet de uitkomst in het issue.
 - Een DAST-stack draait zonder de mounts van `app/` uit `compose.dev.yml`, of vanuit een eigen worktree van de te testen commit, zodat parallel werk in de werkmap de test niet verandert. Controleer na de eerste minuut van een ingelogde scan in de toegangslog dat de verzoeken ingelogd zijn (200 op een beschermde route), voordat de active scan doorloopt.
 - Draai `tests/proxy/draai.sh` na elke wijziging aan de labels van `api`, aan `compose.api-extern.yml` of aan de eisen aan Traefik; herbouw eerst `botenloods-app` als `app/` gewijzigd is, want het script bouwt niet. Schrijf de uitvoer naar een bestand met tijdstempel en controleer daarna met `docker ps -a` en `docker network ls` dat niets met `proxytest` achterblijft. Een mutant op die labels draai je met `EXTERN_BESTAND=<kopie in de scratchpad>`. Het script draait niet twee keer tegelijk (vaste projectnaam) en toetst het gedrag, niet elke vlag van Traefik: zonder `insecure` of met `forwardedHeaders.trustedIPs` blijft het groen. De tweede ronde toetst het PROXY protocol (`proxyprotocol.trustedips`) op `websecure`, niet op `web`.
@@ -397,6 +402,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.52 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), twee nieuw (Security en proxy) uit de terugblikken van bedrock, sentinel en aegis bij #190: mutanten altijd op een kopie, blok open na weigering, melding per toestand, eigen testgegevens opruimen, E2E aan beide kanten van een proxygrens, eigen sessie voor de reviewer | Lessen |
 | v0.5.51 | 2026-11-10 | Drie regels (Security en proxy) uit release 0.4.0/0.4.1 en de terugblikken van sentinel bij #199 en de Dependabot-PR's: lokaal scannen vóór het taggen, zlib-fix via apt met alle CVE's, cooldown per Dependabot-PR controleren | Lessen |
 | v0.5.50 | 2026-11-09 | Twee regels (Bouw) aangevuld en één nieuw (Bouw), één regel (Review) uit de terugblikken van prism en sentinel bij #179: zoeken in `tests/unit/` naar een weggehaalde tekst, mutant bij een E2E-vergelijking, bestaande schermafbeelding, E2E-mutant of bewijs uit de seed | Lessen |
 | v0.5.49 | 2026-11-09 | §3 gevoeligheid van gegevens zonder adres, telefoon en e-mail (#180); twee regels (Review) en één regel (Bouw) uit de terugblikken van bedrock en sentinel bij #180 | Besluit stakeholder, lessen |
