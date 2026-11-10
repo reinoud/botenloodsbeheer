@@ -4,7 +4,8 @@
 # Elke test krijgt een eigen uitnodiging, zodat hij ook los draait (-k).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-c=(docker compose -f docker-compose.yml -f compose.dev.yml)
+c=(docker compose -f docker-compose.yml -f compose.dev.yml ${DRAAI_OVERRIDE:+-f "$DRAAI_OVERRIDE"})
+# Een eigen stack naast de gedeelde: COMPOSE_PROJECT_NAME, KOPPELNET, INSTALLATIE en DRAAI_OVERRIDE=documentatie/gebruikers/compose.doc.yml (geen poorten naar de host).
 stempel=$(date +%s)
 
 # BLB-042 criterium 7: compose.api-extern.yml start niet zonder API_EXTERN_BRONNEN, en met een
@@ -46,6 +47,19 @@ robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:l
   > secrets/api_token
 chmod 600 secrets/api_token
 "${c[@]}" stop integratie >/dev/null
+# Een verse stack heeft nog geen leden en de import slaat een nieuw opgezegd lid over (#203, #220):
+# importeer die eerst zonder opzegdatums; de container brengt ze daarna aan.
+koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n}} {{$v.IPAddress}}
+{{end}}' "$("${c[@]}" ps -q traefik)" | awk '$1 ~ /_koppeling$/ {print $2}')
+aantal_leden=$("${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import leden
+with create_app().app_context():
+    print(len(leden.alle_leden()))' | tail -n 1)
+if [ "$aantal_leden" = 0 ]; then
+  eerst=$(robot "e2e-eerst-$stempel" --recht leden:importeren --whitelist "$koppel_ip/32")
+  "${c[@]}" --profile e2e run --rm -T -e EERST_API="http://$koppel_ip:8081/api/v1" \
+    -e EERST_TOKEN="$eerst" e2e python eerste_import.py >/dev/null \
+    || { echo "Eerste import van de leden mislukt." >&2; exit 1; }
+fi
 "${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import CLI, leden
 with create_app().app_context():
     leden.import_aangevraagd() or leden.import_aanvragen(CLI)' \
@@ -68,9 +82,8 @@ for soort in wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
 done
 
 # Robottokens voor test_api.py en test_import.py. De e2e-container deelt het netwerk van traefik
-# en roept de API aan op het adres van traefik op koppeling; dat adres is dan ook de afzender.
-koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n}} {{$v.IPAddress}}
-{{end}}' "$("${c[@]}" ps -q traefik)" | awk '$1 ~ /_koppeling$/ {print $2}')
+# en roept de API aan op het adres van traefik op koppeling (koppel_ip hierboven); dat adres is
+# dan ook de afzender.
 eigen=(--whitelist "$koppel_ip/32")
 token() { robot "e2e-$1-$stempel" --recht leden:importeren "${@:2}"; }
 # Zonder leden:importeren, voor BLB-032 criterium 2.

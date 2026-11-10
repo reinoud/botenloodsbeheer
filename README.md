@@ -12,7 +12,7 @@ Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OV
 1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand). De standaarden `DOMEIN=localhost` en een lege `TRAEFIK_CERTRESOLVER` passen bij lokaal.
 2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`: zonder dat bestand start compose niet.
 3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`. Lokaal start een eigen Traefik mee; de netwerken maakt compose zelf.
-4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub.
+4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub. De import slaat een nieuw lid met een opzegdatum over (#203); wil je ook oud-leden, importeer dan eerst één keer zonder opzegdatums en laat daarna de container importeren. `tests/e2e/draai.sh` doet dat op een stack zonder leden zelf: `tests/e2e/eerste_import.py` in de container `e2e`, met een robottoken met `leden:importeren` en de whitelist op het adres van Traefik op het netwerk `koppeling`.
 5. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed maakt geen leden: alleen de import via de API schrijft leden.
 6. Een login aanmaken, zie hieronder.
 
