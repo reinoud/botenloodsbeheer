@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.52
+**Versie overlay:** v0.5.53
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-10
@@ -140,7 +140,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De werkmap is gemount in `web`: een sjabloonwijziging werkt direct door in een lopende E2E-run. Draai de baseline op `main` vóór je iets wijzigt, of in een aparte worktree.
 - Zeg in de opdracht of de baseline op `main` in een aparte worktree draait of dat de bouwer de ongeveer 15 minuten wacht; tot de baseline klaar is, ligt de werkmap vast.
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
-- Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging.
+- Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging, en draait daarna de volledige unitsuite, niet alleen het eigen testbestand.
+- Een mutant via tekstvervanging gebeurt met python3, met een assert dat de kopie verschilt van het origineel; een mutant die niet is toegepast, laat alles slagen.
+- Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
+- Tot #213 dicht is: een nieuw E2E-bestand krijgt een naam die alfabetisch na `test_inloggen.py` valt, of de bouwer meldt de uitkomst van `test_passkey_instellen_uitloggen_en_inloggen` in de volledige run.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script.
 - Noem bij een geweigerde actie (upload, formulier) per scherm of het blok daarna al open gaat; zo niet, zeg of het in dit issue open moet.
@@ -183,6 +186,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Een nieuw Python-bestand buiten `app/` en `tests/` (zoals `docker/`) lint de reviewer met `-v $PWD/<map>:/app/<map>:ro` en `ruff check --no-cache <map>`; de testcontainer mount die map niet.
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
+- Een eigen proef met `-p tests.unit.conftest /app/scratch/<bestand>` draait los, niet in dezelfde run als een bestand onder `tests/unit/`.
+- Een live proef van aegis met een eigen beheerder in `web` vraagt vooraf toestemming in de omgeving. Zonder die toestemming toetst aegis CSRF en autorisatie statisch en meldt dat in het oordeel.
+- Een testnaam noemt alleen de routes of schermen die de test opvraagt.
 - Draai de unitsuite op een proefimage met `docker compose -f docker-compose.yml -f compose.dev.yml -f <scratchpad>/compose.<proef>.yml --profile test run --rm test pytest -q`; het override-bestand zet alleen `services.test.image: <proefimage>` en `pull_policy: never`. Hertag `botenloods-dev` niet, anderen gebruiken het.
 - Ruff draait in de testcontainer met `ruff check --no-cache`. Een lintfout buiten de diff blokkeert de review niet; meld bestand:regel en of er al een issue voor is.
 - Een mutant draai je als bind mount over het bestand in de testcontainer (`docker compose ... run --rm -v <scratchpad>/mutant.py:/app/<pad>:ro test pytest ...`), niet in de werkmap; zo raakt hij de draaiende stack niet. Draai hem tegen het hele testbestand van de wijziging, niet met een `-k`-selectie op naam. Lever bij elke mutant het doelpad in de container en het volledige `docker compose ... run --rm -v`-commando in een `commando.txt` naast de mutanten.
@@ -257,6 +263,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Wijzig je databaserechten, zoek dan eerst welke tests en seedcode als die rol schrijven, en noem in je antwoord welke tests je hebt aangepast. `flask seed` draait als de worker (`botenloods_taken`); een nieuwe tabel die seed vult, krijgt rechten voor die rol. Noem bij een domeinfunctie die een nieuwe databaserol raakt de test die als die rol draait (marker of fixture), zodat de reviewer de positieve controle niet zelf hoeft te zoeken.
 - Voeg je rijen toe aan een tabel met een startlijst uit een migratie (zoals `bootsoort`), zet die lijst dan in `tests/unit/conftest.py` terug na elke test.
 - Vraagt een domeinfunctie om `FOR UPDATE`, lever dan een test met twee sessies die de race laat zien, of noteer in het issue waarom die test ontbreekt. De racetest moet falen met een mutant zonder de vergrendeling; overleeft de mutant, meld dan waarom de vergrendeling toch nodig is.
+- Elke nieuwe `with_for_update` in een bouw krijgt in dezelfde bouw zijn racetest; de reviewbrief noemt per nieuwe `with_for_update` de racetest of de notitie in het issue.
 - Een racetest voor een domeinfunctie laadt het object eerst in dezelfde sessie, zoals `laad_beheerder` dat doet, zodat verouderde attributen na `with_for_update` zichtbaar worden. Gebruik `populate_existing=True` bij een vergrendeling van een object dat al geladen kan zijn. Een racetest via `race()` toetst `populate_existing` niet, omdat de actie in een verse sessie draait; laad het object in de actie eerst zonder slot als dat getoetst moet worden.
 - Een racetest die verouderde attributen toetst, houdt het eerst geladen object vast in een variabele tot na de aanroep; anders ruimt de identity map het op en overleeft de mutant zonder `populate_existing`.
 - Vergrendelt een domeinfunctie boot en plaats, dan eerst de boot en daarna de plaats, net als `toewijzen` en `boot_wijzigen`; een andere volgorde kan een deadlock geven. Een wijziging in een vergrendelvolgorde krijgt een racetest die faalt met de oude volgorde (bijvoorbeeld met `FOR UPDATE NOWAIT` op de tweede rij).
@@ -402,6 +409,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.53 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), één nieuw (Migratie en database), drie nieuw (Review) uit de terugblikken van bedrock, sentinel en aegis bij #204: volledige unitsuite na een eigen herstel, mutant met python3 en controle, overgenomen bouw, E2E-bestandsnaam tot #213, racetest bij elke nieuwe `with_for_update`, eigen proef los, live proef van aegis, testnaam | Lessen |
 | v0.5.52 | 2026-11-10 | Eén regel (Bouw) aangescherpt en drie nieuw (Bouw), twee nieuw (Security en proxy) uit de terugblikken van bedrock, sentinel en aegis bij #190: mutanten altijd op een kopie, blok open na weigering, melding per toestand, eigen testgegevens opruimen, E2E aan beide kanten van een proxygrens, eigen sessie voor de reviewer | Lessen |
 | v0.5.51 | 2026-11-10 | Drie regels (Security en proxy) uit release 0.4.0/0.4.1 en de terugblikken van sentinel bij #199 en de Dependabot-PR's: lokaal scannen vóór het taggen, zlib-fix via apt met alle CVE's, cooldown per Dependabot-PR controleren | Lessen |
 | v0.5.50 | 2026-11-09 | Twee regels (Bouw) aangevuld en één nieuw (Bouw), één regel (Review) uit de terugblikken van prism en sentinel bij #179: zoeken in `tests/unit/` naar een weggehaalde tekst, mutant bij een E2E-vergelijking, bestaande schermafbeelding, E2E-mutant of bewijs uit de seed | Lessen |
