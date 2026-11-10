@@ -1,5 +1,5 @@
 """Maakt de schermafbeeldingen van de handleiding, in de container botenloods-e2e (Playwright).
-Wordt aangeroepen door schermafbeeldingen.sh met een fase: import, opzeggers of schermen.
+Wordt aangeroepen door schermafbeeldingen.sh met een fase: eerst, import, opzeggers of schermen.
 Alleen synthetische gegevens. Geheimen (TOTP-sleutel, QR-code, uitnodigingscode) worden vóór
 elke opname uit het scherm gehaald."""
 
@@ -225,7 +225,7 @@ def schermen(browser):
     page.goto("/wachtlijst")
     o.maak("wachtlijst", hoogte=1000)
     page.goto("/opgezegd")
-    o.maak("opgezegd", hoogte=600)
+    o.maak("opgezegd", hoogte=900)  # 600 knipt de rijen onder de teller af (#220)
     page.goto("/opzeggend")
     o.maak("opzeggend", hoogte=600)
 
@@ -265,7 +265,10 @@ def schermen(browser):
 
 def main():
     fase = sys.argv[1]
-    if fase == "import":
+    if fase == "eerst":
+        # Een nieuw lid met een opzegdatum slaat de import over (#203): eerst lid, daarna opgezegd.
+        importeren([{**lid, "opzegdatum": None} for lid in LEDEN])
+    elif fase == "import":
         importeren(LEDEN)
     elif fase == "opzeggers":
         opzeggers()

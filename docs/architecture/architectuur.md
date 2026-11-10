@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.6
+**Versie:** v0.8.7
 **Datum:** 2026-11-10
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -131,7 +131,7 @@ Lokaal start de ontwikkelaar de stack met:
 5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
 6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
-`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
+`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, importeert op een verse stack eerst de leden zonder opzegdatums via de API (§6.3), zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
@@ -140,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
-- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum op of vóór vandaag slaat de import over (ADR-004, issue #203). Oud-leden ontstaan dus alleen als een lid eerst zonder opzegdatum is geïmporteerd; de seedtest importeert daarom eerst de fixture zonder opzegdatums. Op een verse stack met één import heeft de seed geen oud-leden (issue #220). Een test voor de opschoning maakt zulke leden zelf aan;
+- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum op of vóór vandaag slaat de import over (ADR-004, issue #203). Oud-leden ontstaan dus alleen als een lid eerst zonder opzegdatum is geïmporteerd; de seedtest importeert daarom eerst de fixture zonder opzegdatums. Een verse stack importeert de leden daarom twee keer: eerst zonder opzegdatums (`tests/e2e/eerste_import.py`, via de API), daarna met, door de integratiecontainer of de API. `tests/e2e/draai.sh` en `documentatie/gebruikers/schermafbeeldingen.sh` doen dat zelf (issue #220); met één import heeft de seed geen oud-leden. Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
@@ -284,6 +284,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.8.7 | 2026-11-10 | Issue #220: een verse stack importeert de leden twee keer (eerst zonder opzegdatums), zodat de seed oud-leden heeft (§6.2, §6.3) |
 | v0.8.6 | 2026-11-10 | Issue #203: de import neemt geen nieuw opgezegd lid op; seed en bevinding 1 bijgewerkt (§6.3, §11); verse stack zonder oud-leden in issue #220 |
 | v0.8.5 | 2026-11-10 | Issue #204: `boot.clubboot` en de toestand eigenaar onbekend (migratie 0019); bestaande boten zonder lid zijn clubboot |
 | v0.8.4 | 2026-11-09 | Issue #180: kolommen `adres`, `telefoon` en `email` van `lid` en het tokenrecht `persoonsgegevens` vervallen (§3, §4, §6, §8; ADR-004 v2.5.0, ADR-005 v1.5.0, ADR-006, ADR-012 v1.9.0); lid sinds en opzegdatum komen mee met `leden:lezen` |

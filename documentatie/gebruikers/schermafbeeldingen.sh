@@ -24,6 +24,7 @@ api=(-e "DOC_API=http://$koppel_ip:8081/api/v1")
 token=$(flask token robot doc-import --recht leden:importeren --whitelist "$koppel_ip/32")
 # Verloopt binnen 31 dagen: de waarschuwing op de statuspagina (BLB-037).
 flask token robot integratie-oud --recht bootaantallen:lezen --dagen 20 >/dev/null
+e2e eerst -e "DOC_TOKEN=$token" "${api[@]}"   # een verse stack: de oud-leden komen er pas bij de tweede import in (#220)
 e2e import -e "DOC_TOKEN=$token" "${api[@]}"
 "${c[@]}" exec -T worker flask seed
 # Drie leden met een boot op een plaats krijgen een opzegdatum in de toekomst.
