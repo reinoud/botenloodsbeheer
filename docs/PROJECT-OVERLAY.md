@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.61
+**Versie overlay:** v0.5.62
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -86,7 +86,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Bouw
 
 - Controleer vóór een bouwopdracht of Docker draait, en noem in de opdracht welke images al lokaal staan.
-- Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`. Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad. Een proef met de fixtures van de unittests krijgt daarbij een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef`.
+- Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`; dat geldt ook voor reviewers. Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad. Een proef met de fixtures van de unittests krijgt daarbij een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef`.
 - Bewerk geen Python-bestanden in de werkmap terwijl een reviewer de log van `web` en `api` controleert (`--reload` laadt halve bestanden); noem het tijdstip van de laatste `up --build` in de brief.
 - Wijzig je templates of CSS, maak `web` dan opnieuw aan met `docker compose -f docker-compose.yml -f compose.dev.yml up -d --no-deps --force-recreate web`, nooit zonder `compose.dev.yml` (dan leidt `:8080` om naar https en valt de hele E2E-suite); `--reload` laadt alleen Python opnieuw. Controleer vóór een E2E-run met `docker inspect -f '{{index .Config.Labels "com.docker.compose.project.config_files"}}' botenloods-web-1` dat `web` met `compose.dev.yml` draait. Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, wacht je tot de containers healthy zijn voordat je E2E-tests of curl-controles draait; tot dan geeft Traefik 404. Een herstart van de proxy is niet nodig.
 - Een nieuwe map in de repository die een test leest, moet in de testcontainer gemount worden in `compose.dev.yml`.
@@ -127,6 +127,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elke wijziging van de signatuur van een domeinfunctie alle aanroepers (web, `app/seed.py`, `tests/unit/hulp.py`).
 - Een nieuwe parameter van een domeinfunctie die een webroute via `uitvoeren()` aanroept, gaat als keyword via `functools.partial`; `uitvoeren` zet de actor als laatste positionele argument.
 - Sluit een agentopdracht af met het eindrapport als laatste bericht; een terugblik in een bestand vervangt het rapport niet.
+- Bewerk geen bestanden die een lopende testrun leest (handleiding, ADR) tot die run klaar is, en draai de documentatietest na de laatste tekstwijziging opnieuw.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
@@ -273,6 +274,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Migratie en database
 
+- Een leesquery op de testdatabase draait als `psql -U botenloods -d botenloods_test` in de db-container; de rol `postgres` bestaat niet.
 - SQL in de db-container gaat via een bestand in de scratchpad, op stdin aan `psql -At`; geen query als argument in de shellregel.
 - Na een nieuwe migratie eerst `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d --wait`; de dienst migrate leest de migraties uit het image. Downgrade en upgrade controleer je via `docker compose -f docker-compose.yml -f compose.dev.yml run --rm migrate alembic ...`, databasecontroles in de db-container met `psql -U botenloods -d botenloods`. Controleer na een migratie de rechten in de database.
 - Een reviewer die een downgrade draait, doet dat op een eigen database (`nieuwe_database`), of meldt vooraf aan de andere reviewers dat de gedeelde database even op de vorige revisie staat.
@@ -322,6 +324,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
+- Gaat een geëscapete zoektekst in SQL nog door een normalisatie (zoals `unaccent`, `lower` of `translate`), controleer dan of die normalisatie `%`, `_` of `\` kan maken, en escape ná de normalisatie (#232, AEG-01).
 - Draai `uv lock --check` met `--platform linux/arm64` op `python:3.14-slim` (op de Mac) en lees de exitcode zonder pipe (`; echo exit=$?`).
 - Draai na een update van ruff `ruff check --no-cache .` in de testcontainer; nieuwe meldingen los je in dezelfde ronde op.
 - Bij een sprong over minorversies van uv legt de reviewer de breaking changes uit de releasenotes naast `uv.lock` (archiefformaten, hashtypen) en naast de Python-versie in `/opt/venv`.
@@ -433,6 +436,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.62 | 2026-11-11 | Uit de terugblikken bij #232: escape na een normalisatie (Security en proxy), geen tekstwijziging tijdens een testrun (Bouw), Python via `web` ook voor reviewers (Bouw), rol voor psql op de testdatabase (Migratie en database) | Lessen |
 | v0.5.61 | 2026-11-11 | Twee regels (Security en proxy) uit de terugblik van sentinel bij #235: `uv lock --check` op arm64 met exitcode, ruff na een update | Lessen |
 | v0.5.60 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij de DAST vóór v1.0.0 | Lessen |
 | v0.5.59 | 2026-11-10 | Eén regel (Security en proxy) uit de terugblik van aegis bij de securityronde vóór v1.0.0 | Lessen |

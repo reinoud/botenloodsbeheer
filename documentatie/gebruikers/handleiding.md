@@ -88,7 +88,7 @@ Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, logo en boot
 
 ## Boten
 
-Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters tellen niet mee) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
+Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
 
 ![De pagina Boten met de lijst met boten en het uitgeklapte formulier voor een nieuwe boot.](afbeeldingen/boten.png)
 
@@ -110,7 +110,7 @@ Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met 
 
 ## De wachtlijst
 
-Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
 
 ![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
 
@@ -158,8 +158,8 @@ In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
 | Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort en kies **Toon vrije plaatsen**. |
-| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid en kies **Toon plaatsen**. |
-| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid en kies **Toon boten**. |
+| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid en kies **Toon plaatsen**; hoofdletters en accenten tellen niet mee. |
+| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid en kies **Toon boten**; hoofdletters en accenten tellen niet mee. |
 
 ![De vrije plaatsen voor kajaks, met rek, aanduiding en geschikte bootsoorten.](afbeeldingen/vrij.png)
 
@@ -230,7 +230,7 @@ Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleu
 
 De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applicatie. De integratiecontainer haalt de lijst dagelijks op en stuurt haar naar de applicatie.
 
-Op `/leden` staat per lid de naam, het lidnummer, de datum van lid sinds en of het een lid of oud-lid is, met het aantal leden erboven. Zoek op naam of lidnummer en kies **Zoeken**. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt geen oud-leden op die nog niet in de applicatie stonden: een lid dat al is opgezegd, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt wel binnen.
+Op `/leden` staat per lid de naam, het lidnummer, de datum van lid sinds en of het een lid of oud-lid is, met het aantal leden erboven. Zoek op naam of lidnummer en kies **Zoeken**; hoofdletters en accenten tellen niet mee. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt geen oud-leden op die nog niet in de applicatie stonden: een lid dat al is opgezegd, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt wel binnen.
 
 Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. De aantallen per bootsoort staan niet op deze pagina. De integratiecontainer haalt ze op via de API: alleen boten met een plaats tellen, een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet, en de ledenadministratie kan ze later overnemen. Terugschrijven naar de ledenbron staat standaard uit; de beheerder kan het aanzetten.
 

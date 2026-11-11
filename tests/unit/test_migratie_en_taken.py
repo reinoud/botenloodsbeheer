@@ -141,7 +141,7 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
 
 def test_precies_een_migratiehead(database):
     scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
-    assert scripts.get_heads() == ["0020"]
+    assert scripts.get_heads() == ["0021"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
