@@ -147,7 +147,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 **Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. De plaats blijft vrij tot jij een boot kiest, ook als er een wachtlijst is. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
 
-Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link naar de openbare pagina. Het lidnummer is alleen voor beheerders. Adres, telefoon en e-mail haalt de applicatie niet op uit de ledenadministratie.
+Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link naar de openbare pagina. In het blok **Eigenaar** is de naam een link naar het lid; bij een oud-lid staat "(oud-lid)" achter de link. Bij een clubboot of een onbekende eigenaar staat er geen link. De openbare pagina heeft geen link naar het lid. Het lidnummer is alleen voor beheerders. Adres, telefoon en e-mail haalt de applicatie niet op uit de ledenadministratie.
 
 ![Een plaats direct na het toewijzen, met de melding dat de boot de plaats heeft gekregen.](afbeeldingen/plaats-toegewezen.png)
 

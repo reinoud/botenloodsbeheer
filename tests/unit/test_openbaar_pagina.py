@@ -68,6 +68,12 @@ def test_onbekende_eigenaar_staat_niet_als_eigenaar_en_niet_als_clubboot_op_de_p
     assert 'Hier hoort de <strong>Zeemeeuw</strong>.' in html and "None" not in html and " van " not in html
 
 
+def test_eigenaar_op_de_openbare_pagina_is_geen_link_naar_het_lid(client):
+    # Issue #234: alleen het beheerscherm linkt naar het lid. Mutant: de link uit plaats.html in openbaar.html kopiëren valt hier.
+    p = bezet()
+    assert "/leden/" not in pagina(client, p)
+
+
 def test_vrije_plaats_label_zin_en_vraag(client):
     # Mutant: de vraag weglaten of het label zonder bl-tag--vrij valt hier.
     html = pagina(client, plaats())

@@ -51,6 +51,43 @@ def test_menu_markeert_boten_op_een_boot_en_leden_op_een_lid(ingelogd):
     assert 'href="/boten" aria-current="page">Boten' in ingelogd.get("/boten").text  # het overzicht zelf blijft "page"
 
 
+# Plaats: eigenaar (issue #234)
+
+
+def eigenaar_blok(tekst):
+    return re.search(r'<h2 class="dj-panel__title" id="eigenaar-kop">.*?</section>', tekst, re.DOTALL).group(0)
+
+
+def test_plaats_linkt_de_naam_van_een_lid_en_een_oud_lid_naar_het_lid(ingelogd):
+    # Mutant: de <a> in plaats.html weghalen valt op de eerste assert; "(oud-lid)" binnen de link zetten op de tweede.
+    anna = lid()
+    p = plaats("A/1/1")
+    toewijzing.toewijzen(p.id, boot(anna.id).id, CLI)
+    assert f'<dd data-veld="naam"><a href="/leden/{anna.id}">Anna de Vries</a></dd>' in eigenaar_blok(ingelogd.get(f"/plaatsen/{p.id}").text)
+    oud, q = lid("1003", "Oud Lid"), plaats("A/1/2")
+    toewijzing.toewijzen(q.id, boot(oud.id, naam="Oudje").id, CLI)
+    opzeggen(oud.id, opzegdatum=vandaag())  # een opzegdatum van vandaag telt als oud-lid
+    assert f'<a href="/leden/{oud.id}">Oud Lid</a> (oud-lid)</dd>' in eigenaar_blok(ingelogd.get(f"/plaatsen/{q.id}").text)
+
+
+def test_plaats_laat_clubboot_en_onbekende_eigenaar_zonder_link(ingelogd):
+    # Mutant: een link om "clubboot" of "onbekend" in plaats.html valt hier op de assert dat er geen /leden/ staat.
+    for code, b in (("A/1/1", boot(None, naam="Club")), ("A/1/2", boot(None, naam="Wulp", onbekend=True))):
+        p = plaats(code)
+        toewijzing.toewijzen(p.id, b.id, CLI)
+        blok = eigenaar_blok(ingelogd.get(f"/plaatsen/{p.id}").text)
+        assert "/leden/" not in blok and "<a " not in blok
+
+
+def test_plaats_geeft_de_naam_van_de_eigenaar_geescapet_terug(ingelogd):
+    # Mutant: |safe op boot.lid.naam in plaats.html valt hier.
+    x = lid(naam=XSS)
+    p = plaats("A/1/1")
+    toewijzing.toewijzen(p.id, boot(x.id).id, CLI)
+    blok = eigenaar_blok(ingelogd.get(f"/plaatsen/{p.id}").text)
+    assert XSS not in blok and f">{GEESCAPET}</a>" in blok
+
+
 # Boot: feiten
 
 
