@@ -26,10 +26,15 @@ def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
 
     # Het technische log toont de uitnodiging en de passkey, zonder de code uit de link.
     page.get_by_role("link", name="Technisch log").click()
-    log = page.locator("section.log")
-    expect(log).to_contain_text("beheerder.uitgenodigd")
-    expect(log).to_contain_text("methode: passkey")
+    expect(page.locator("section.log")).to_contain_text("methode: passkey")
     assert link("passkey").rsplit("/", 1)[1] not in page.content()
+    # De uitnodiging maakte draai.sh vóór alle tests; zoek haar over de pagina's heen (#213).
+    uitnodiging = page.locator("li.bl-logregel", has_text="beheerder.uitgenodigd").filter(has_text=gebruikersnaam("passkey"))
+    while not uitnodiging.count():
+        oudere = page.get_by_role("link", name="Oudere regels")
+        assert oudere.count(), "de uitnodiging staat niet in het technische log"
+        oudere.click()
+        page.wait_for_load_state()
 
 
 def test_zonder_passkeys_staat_het_wachtwoordblok_open(page):
@@ -38,6 +43,15 @@ def test_zonder_passkeys_staat_het_wachtwoordblok_open(page):
     page.goto("/inloggen")
     expect(page.get_by_role("alert")).to_have_text("Deze browser ondersteunt geen passkeys. Gebruik wachtwoord en code.")
     expect(page.get_by_label("Gebruikersnaam")).to_be_visible()
+
+
+def test_leeg_passkeyblok_is_geen_alert_zolang_het_stijlblad_laadt(page):
+    """#172, #217: `.ds-notice` zet `display: grid` en wint van `hidden` tot stijl.css (met `[hidden]`) laadt;
+    een leeg `#passkey-fout` met `role=alert` telde dan als tweede melding. De rol komt pas met de tekst."""
+    page.route("**/static/stijl.css", lambda route: route.abort())
+    page.goto("/inloggen")
+    expect(page.locator("#passkey-fout")).to_be_visible()  # het blok is dus echt zichtbaar zonder stijl.css
+    expect(page.get_by_role("alert")).to_have_count(0)
 
 
 def test_wachtwoord_en_totp_foute_code_geweigerd_juiste_code_werkt(page):

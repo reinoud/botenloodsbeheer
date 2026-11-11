@@ -1,8 +1,7 @@
 """Bezetting importeren (issue #202), de route voor een mens: bij een onbekende bootsoort de juiste soort
 kiezen (één lijst, of twee lijsten bij een regel met ook een eigenaar die niet te koppelen is), opslaan,
 importeren en controleren dat de boot de gekozen soort heeft. Op 1100 en 360 pixels breed, met een
-Tab-run door de cel Keuze. Eigen bestand, alfabetisch na test_inloggen.py: de passkey-test zoekt zijn
-uitnodiging in de 50 nieuwste regels van het technische log."""
+Tab-run door de cel Keuze. Eigen bestand."""
 
 import re
 
