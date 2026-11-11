@@ -328,7 +328,8 @@ def test_nieuw_token_toont_de_waarde_eenmalig_zonder_sessie(app, scherm):
 @pytest.mark.parametrize("data,melding", [
     ({"dagen": "1096"}, "1095 dagen"), ({"dagen": "veel"}, "geef een aantal dagen"),
     ({"recht": ["leden:importeren"]}, "alleen bij een robottoken"),
-    ({"whitelist": "10.0.0.1/8"}, "Whitelist"), ({"recht": []}, "minstens één recht")])
+    ({"whitelist": "10.0.0.1/8"}, "Whitelist"), ({"whitelist": "fe80::%eth0/64"}, "Whitelist"),
+    ({"recht": []}, "minstens één recht")])
 def test_nieuw_token_geweigerd_houdt_de_invoer(app, scherm, data, melding):
     invoer = {"soort": "persoonlijk", "naam": "anna-laptop", "dagen": "30",
               "recht": ["boten:lezen"], "whitelist": ""} | data
