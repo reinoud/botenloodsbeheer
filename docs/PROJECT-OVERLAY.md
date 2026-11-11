@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.68
+**Versie overlay:** v0.5.69
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -319,6 +319,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een proef op een rate limit van Traefik probeert ook het pad met `%2F` en andere gecodeerde tekens. Een proef boven de grens van een proxy stuurt alleen de kop met `Content-Length`, niet het hele lichaam.
 - Een proef met een losse Traefik op dezelfde host als de gedeelde stack gebruikt routers op een eigen `Host(...)` en toetst met die `Host`-kop; via de socket(proxy) ziet hij ook de labels van `botenloods-*`.
 - Een criterium als "Traefik haalt een certificaat op" bewijs je lokaal met Pebble (`ghcr.io/letsencrypt/pebble`, `tlsPort` 443; `caserver` en `LEGO_CA_CERTIFICATES` in een override; Traefik met een netwerkalias voor het domein), niet als restpunt.
+- Een proef die laat zien dat Traefik iets weigert, draait ook een mutant zonder de weigerende optie; anders bewijst een 400 niet dat die optie het doet.
 - Een proef op routering in Traefik (welke router een pad krijgt) draait na minstens drie herstarts van Traefik; twee routers die hetzelfde pad kunnen raken, krijgen een expliciete `priority`.
 - Noem bij een proef op een weigering welke laag de 400 geeft (Traefik of de applicatie) en hoe dat te zien is: een regel in de log van `web` of geen regel. Weigert de lokale Traefik zelf, laat de reviewer de applicatielaag dan direct op Gunicorn in de container proeven.
 - Gaat een proxy of netwerk gedeeld worden met andere diensten, zeg dan of `web` en `api` op het gedeelde netwerk mogen; standaard niet.
@@ -445,6 +446,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.69 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij #237: mutant zonder de weigerende optie | Lessen |
 | v0.5.68 | 2026-11-11 | §4: `Refs` in plaats van `Closes` bij een criterium dat pas na de merge te toetsen is (#230) | Lessen |
 | v0.5.67 | 2026-11-11 | Uit de terugblikken bij #230: eigen `Host` in een losse Traefik, Pebble voor ACME (Security en proxy); lezen in een proef van een andere reviewer (Review) | Lessen |
 | v0.5.66 | 2026-11-11 | Twee regels (Review) uit de terugblikken bij #231: bewijs voor "geen ERROR-regel", casten naar het kolomtype | Lessen |
