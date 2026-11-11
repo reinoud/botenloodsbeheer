@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.65
+**Versie overlay:** v0.5.66
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -183,6 +183,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
 - Draai een mutant op een gedeelde set of functie tegen de hele unitsuite, of noem de test die de set bewaakt (zoals `test_log.py` voor `log.TECHNISCH`).
 - Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
+- Vraagt een criterium "geen ERROR-regel in de log", zeg dan of een test met `caplog` verwacht wordt of dat een 200 met melding als statisch bewijs volstaat.
+- Laat bij een invoercontrole vóór een databasekolom de reviewer de door Python genormaliseerde vormen met een leesquery naar het kolomtype casten (`SELECT '<waarde>'::<type>`), via stdin.
 - Stelt een brief de reviewer een vraag (zoals "komt een oud-lid erdoor?"), noem dan de test die het bewijst, of zeg dat er geen test is.
 - Heeft de regie na de bouw iets hersteld, zeg dan in de brief dat de mutanten van de bouwer verouderd zijn, en lever bij een eigen mutant de diff tegen de gestagede bron mee (`git show :<pad> | diff - <mutant>`).
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
@@ -440,6 +442,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.66 | 2026-11-11 | Twee regels (Review) uit de terugblikken bij #231: bewijs voor "geen ERROR-regel", casten naar het kolomtype | Lessen |
 | v0.5.65 | 2026-11-11 | Omvang 11 rekken en 229 plaatsen volgens de echte indeling (§3, Algemeen) | #236 |
 | v0.5.64 | 2026-11-11 | Uit de terugblikken bij #234: E2E-mutant op een template, `DOC_UIT` bij een `FileNotFoundError` (E2E); run of statisch per toetspunt (Review) | Lessen |
 | v0.5.63 | 2026-11-11 | Uit de terugblikken bij #233: unieke mapnamen voor mutanten, boot van een oud-lid in een test (Bouw); de backlog heeft wel een wijzigingslog (Documentatie) | Lessen |
