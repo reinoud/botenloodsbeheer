@@ -18,6 +18,7 @@
 
   function toon(fout) {
     const el = document.getElementById("passkey-fout");
+    el.setAttribute("role", "alert");  // pas met de tekst: een lege alert telt als melding zolang `hidden` nog niet wint van `.ds-notice`
     el.textContent = fout;
     el.parentElement.hidden = false;
   }
