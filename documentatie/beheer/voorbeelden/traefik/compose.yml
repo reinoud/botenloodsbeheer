@@ -4,8 +4,13 @@
 services:
   # Traefik leest de Docker-API via deze proxy, alleen lezen en alleen containers.
   socketproxy:
-    image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1
+    image: ghcr.io/tecnativa/docker-socket-proxy:v0.4.1@sha256:3400c429c5f9e1b21d62130fb93b16e2e772d4fb7695bd52fc2b743800b9fe9e
     restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    # De ingang schrijft zijn haproxy-configuratie naar /tmp en zijn pidbestand naar /run.
+    tmpfs: [/tmp, /run]
     environment:
       CONTAINERS: 1
     volumes:
@@ -13,8 +18,13 @@ services:
     networks: [socket]
 
   traefik:
-    image: traefik:v3.7.17
+    image: traefik:v3.7.17@sha256:30ff62491aacdb862ceb8c9edcf2627da638d7deafdd4b6dab32fe34f8aa3e90
     restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    # Alleen om op 80 en 443 te mogen luisteren; de ACME-opslag staat op het volume hieronder.
+    cap_add: [NET_BIND_SERVICE]
+    security_opt: [no-new-privileges:true]
     command:
       - --providers.docker.endpoint=tcp://socketproxy:2375
       - --providers.docker.exposedbydefault=false

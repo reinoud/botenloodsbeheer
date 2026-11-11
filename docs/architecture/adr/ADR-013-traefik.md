@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.5.0
+**Versie:** v1.5.1
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -115,6 +115,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.1 | 2026-11-11 | Voorbeeld van de gedeelde Traefik: images op een digest, onder Dependabot, `read_only`, `cap_drop` en `no-new-privileges` | Issue #230, AEG-08 |
 | v1.5.0 | 2026-11-10 | Buitengrens van 25 MB op `/boten` en `/instellingen/logo` (middleware `25mb`), de applicatie houdt 10 MB | Besluit stakeholder 2026-11-10, issue #190 |
 | v1.4.2 | 2026-11-05 | Verschil met de verworpen opties op het entrypoint; eisen aan load balancer en `trustedips` | Review aegis, issue #54 |
 | v1.4.1 | 2026-11-05 | Herkomst van het besluit over `X-Forwarded-For`; proef bevestigt `trustedips` | Besluit stakeholder, issue #54 |
