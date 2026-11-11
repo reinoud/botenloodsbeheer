@@ -116,9 +116,9 @@ def _eigenaar_tekst(lid_id, clubboot):
 
 
 def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
-    """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend; een boot
-    met een eigenaar wordt niet weer onbekend). Een boot met een plaats
-    blijft passen bij die plaats. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
+    """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend, ook bij een boot
+    die al een eigenaar had, #233). Een boot met een plaats blijft passen bij die plaats; een clubboot
+    op een clubplaats wordt dus pas onbekend nadat hij van die plaats af is. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
     eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
     toewijzing die vlak ervoor is gecommit (READ COMMITTED)."""
@@ -142,8 +142,6 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
             raise Regelfout(f"Boot {b.naam} staat op de wachtlijst. Een clubboot kan daar niet "
                             "op; haal de boot eerst van de wachtlijst.")
         oud_lid_id, oude_club, oude_soort, oude_naam = b.lid_id, b.clubboot, b.bootsoort, b.naam
-        if lid_id is None and not clubboot and (oud_lid_id is not None or oude_club):
-            raise Regelfout(f"Boot {b.naam} heeft een eigenaar. Een eigenaar wordt niet weer onbekend.")
         if plaats is not None and (soort != oude_soort or clubboot != oude_club):
             controleer_past(plaats, naam, soort, clubboot)
     except Regelfout:

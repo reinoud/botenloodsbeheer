@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.12
-**Datum:** 2026-11-10
+**Versie:** v0.6.13
+**Datum:** 2026-11-11
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -164,7 +164,7 @@ Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en 
 - Gegeven een boot met een onbekende eigenaar, wanneer die een plaats krijgt, dan weigert de applicatie een clubplaats en accepteert ze een gewone plaats. De boot mag op de wachtlijst.
 - Gegeven de pagina `/boten/zonder-eigenaar`, dan staat per boot een regel met naam, bootsoort en plaats, een keuze van een lid of de vereniging en de knop **Eigenaar opslaan** met de bootnaam. Na opslaan is de boot van de lijst; een weigering geldt alleen die boot. Zonder boten staat er "Alle boten hebben een eigenaar."
 - Gegeven het menu, dan staat **Boten zonder eigenaar** onder Dagelijks na Wachtlijst, met het aantal in de link; bij nul staat er geen aantal.
-- Gegeven een boot met een eigenaar, dan wordt die niet weer onbekend.
+- Gegeven een boot met een lid of de vereniging als eigenaar, wanneer de beheerder bij Boot wijzigen de eigenaar op **eigenaar onbekend** zet, dan is de boot onbekend en staat hij op Boten zonder eigenaar; een boot op de wachtlijst gaat dan van de lijst en een boot met een gewone plaats houdt die plaats. Een clubboot op een clubplaats weigert de applicatie met een melding; de plaats moet eerst vrij (issue #233, besluit stakeholder 2026-11-11).
 - Gegeven de migratie, dan zijn alle bestaande boten zonder lid clubboot.
 - Gegeven `GET /api/v1/boten`, dan heeft elke boot een boolean `clubboot`: `true` bij een clubboot, `false` bij een boot van een lid en bij een onbekende eigenaar. `eigenaar` blijft `null` bij een clubboot en bij een onbekende eigenaar; er gaat geen veld uit de API af (issue #212, besluit stakeholder 2026-11-10).
 
@@ -795,6 +795,8 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.13 | 2026-11-11 | Issue #233: een boot met een eigenaar kan weer eigenaar onbekend worden; een clubboot op een clubplaats eerst van die plaats af |
+| v0.6.12 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats liggen |
 | v0.6.11 | 2026-11-10 | Issue #202: BLB-045 krijgt het criterium voor het kiezen van een bootsoort in de bezettingsimport (ADR-014 §3) |
 | v0.6.10 | 2026-11-10 | Wachtlijst: een boot met een onbekende eigenaar houdt zijn plek als hij een lid krijgt (besluit stakeholder, #204); de lijst toont "eigenaar onbekend" |
 | v0.6.9 | 2026-11-10 | Issues #204, #207 en #212: BLB-046 (boten zonder eigenaar, met `clubboot` in de API), BLB-005 krijgt de knop Nieuwe boot bovenaan met eigenaar onbekend |

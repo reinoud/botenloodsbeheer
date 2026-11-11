@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.62
+**Versie overlay:** v0.5.63
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -151,6 +151,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
 - Tot #213 dicht is: een nieuw E2E-bestand krijgt een naam die alfabetisch na `test_inloggen.py` valt, of de bouwer meldt de uitkomst van `test_passkey_instellen_uitloggen_en_inloggen` in de volledige run.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
+- Maak mutantkopieën in een map met een unieke naam (met tijdstempel) in de scratchpad, zonder `rm -rf`. Een boot van een oud-lid maak je in een test met een directe insert van `Boot`; de helper `boot()` weigert een oud-lid.
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script.
 - Noem bij een geweigerde actie (upload, formulier) per scherm of het blok daarna al open gaat; zo niet, zeg of het in dit issue open moet.
 - Hangt een melding af van een toestand (zoals een vorige afbeelding), noem dan bij elke bestaande en nieuwe test welke toestand geldt.
@@ -366,7 +367,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Verandert een story welke regels een scherm toont, noem dan ook de ADR's die het tonen beschrijven (zoals ADR-002 en ADR-006), zodat het agent ze in dezelfde ronde bijwerkt of er vooraf een issue voor is. Verandert een wijziging wanneer een API-route een foutcode geeft, noem dan ook de documentatie en de OpenAPI-beschrijving van die route, zodat bouwer en reviewer ze in dezelfde ronde bijwerken.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
 - Een woordbudget voor een ADR telt alleen ADR-tekst. Noem per besluitpunt of een korte zin volstaat; bij meer dan vier besluitpunten krijgt het budget 75 woorden per punt.
-- Heeft een document nog geen versie of wijzigingslog, begin dan op v1.0.0 en voeg onderaan een wijzigingslog toe. De backlog heeft geen wijzigingslog; de versie gaat omhoog zonder logregel.
+- Heeft een document nog geen versie of wijzigingslog, begin dan op v1.0.0 en voeg onderaan een wijzigingslog toe. De backlog heeft een wijzigingslog in §9: bij een nieuwe versie komt er een logregel bij en gaat de datum mee.
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat. Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
 - `documentatie/gebruikers/schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw; zet afbeeldingen van schermen die niet veranderd zijn terug met `git checkout`. Een nieuw menu-item verandert alle schermafbeeldingen met de kopbalk; die blijven dan staan en worden niet teruggezet.
 - Schermafbeeldingen tonen het testlogo (`tests/fixtures/logo.png`, door `schermafbeeldingen.py` geüpload op Instellingen na het inloggen); de reviewer vergelijkt de kopbalk van één afbeelding met de versie in `HEAD`. Werk niet met twee agents tegelijk in `documentatie/gebruikers/afbeeldingen/` en draai tijdens het script geen checkout of stash. Geeft het script een `FileNotFoundError` op de mount, draai het opnieuw en meld een oorzaak pas als die bewezen is.
@@ -436,6 +437,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.63 | 2026-11-11 | Uit de terugblikken bij #233: unieke mapnamen voor mutanten, boot van een oud-lid in een test (Bouw); de backlog heeft wel een wijzigingslog (Documentatie) | Lessen |
 | v0.5.62 | 2026-11-11 | Uit de terugblikken bij #232: escape na een normalisatie (Security en proxy), geen tekstwijziging tijdens een testrun (Bouw), Python via `web` ook voor reviewers (Bouw), rol voor psql op de testdatabase (Migratie en database) | Lessen |
 | v0.5.61 | 2026-11-11 | Twee regels (Security en proxy) uit de terugblik van sentinel bij #235: `uv lock --check` op arm64 met exitcode, ruff na een update | Lessen |
 | v0.5.60 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij de DAST vóór v1.0.0 | Lessen |

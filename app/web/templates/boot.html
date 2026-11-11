@@ -93,7 +93,7 @@
     <div class="ds-field">
       <label class="ds-field__label" for="eigenaar">Eigenaar</label>
       <select class="dj-select" id="eigenaar" name="eigenaar" required>
-        {% if not boot.lid_id and not boot.clubboot %}<option value="onbekend" selected>eigenaar onbekend</option>{% endif %}
+        <option value="onbekend"{% if not boot.lid_id and not boot.clubboot %} selected{% endif %}>eigenaar onbekend</option>
         <option value="club"{% if boot.clubboot %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
         {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
         {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
