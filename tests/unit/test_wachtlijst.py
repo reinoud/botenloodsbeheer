@@ -418,7 +418,7 @@ def test_bootpagina_toont_alleen_vrije_passende_plaatsen_in_volgorde_van_de_lood
     c = boot(None, naam="Clubkajak")
     r = ingelogd.get(f"/boten/{c.id}").text
     keuzes = r.split('name="plaats_id"')[1].split("</select>")[0]
-    groepen = re.findall(r'<optgroup label="([^"]+)">(.*?)</optgroup>', keuzes, re.S)
+    groepen = re.findall(r'<optgroup label="([^"]+)">(.*?)</optgroup>', keuzes, re.DOTALL)
     assert [g for g, _ in groepen] == ["Clubplaatsen", "Gewone plaatsen"]
     assert club.code in groepen[0][1] and "A/1/1" not in groepen[0][1]
     assert groepen[1][1].index("A/1/1") < groepen[1][1].index("A/2/1")
