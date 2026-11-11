@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.63
+**Versie overlay:** v0.5.64
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -186,6 +186,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Stelt een brief de reviewer een vraag (zoals "komt een oud-lid erdoor?"), noem dan de test die het bewijst, of zeg dat er geen test is.
 - Heeft de regie na de bouw iets hersteld, zeg dan in de brief dat de mutanten van de bouwer verouderd zijn, en lever bij een eigen mutant de diff tegen de gestagede bron mee (`git show :<pad> | diff - <mutant>`).
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
+- Zeg per toetspunt in een reviewbrief of het een run vraagt (met het commando) of statisch mag; een E2E-selector die alleen tekst leest, mag statisch als de tekst niet verandert.
 - Zeg in een reviewbrief of de unitsuite en de E2E-suite tegelijk mogen draaien. `draai.sh` duurt meer dan tien minuten: start hem in de achtergrond en tel de uitkomst over alle sessies op.
 - Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
 - Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
@@ -256,6 +257,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`, vóór `passkey`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
+- Een E2E-mutant op een template draai je met `DRAAI_OVERRIDE=<scratchpad>/compose.<mutant>.yml tests/e2e/draai.sh -k <test>`; de override legt het mutant-template als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
+- Geeft `schermafbeeldingen.sh` een `FileNotFoundError`, draai hem dan met `DOC_UIT=/documentatie/gebruikers/<tijdelijke map>` en kopieer alleen de eigen afbeeldingen.
 - Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
 - Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`; anders stopt het script vóór de regel die je test.
@@ -437,6 +440,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.64 | 2026-11-11 | Uit de terugblikken bij #234: E2E-mutant op een template, `DOC_UIT` bij een `FileNotFoundError` (E2E); run of statisch per toetspunt (Review) | Lessen |
 | v0.5.63 | 2026-11-11 | Uit de terugblikken bij #233: unieke mapnamen voor mutanten, boot van een oud-lid in een test (Bouw); de backlog heeft wel een wijzigingslog (Documentatie) | Lessen |
 | v0.5.62 | 2026-11-11 | Uit de terugblikken bij #232: escape na een normalisatie (Security en proxy), geen tekstwijziging tijdens een testrun (Bouw), Python via `web` ook voor reviewers (Bouw), rol voor psql op de testdatabase (Migratie en database) | Lessen |
 | v0.5.61 | 2026-11-11 | Twee regels (Security en proxy) uit de terugblik van sentinel bij #235: `uv lock --check` op arm64 met exitcode, ruff na een update | Lessen |
