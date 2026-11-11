@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Versie:** v0.6.13
-**Datum:** 2026-11-10
+**Datum:** 2026-11-11
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -795,6 +795,8 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.13 | 2026-11-11 | Issue #233: een boot met een eigenaar kan weer eigenaar onbekend worden; een clubboot op een clubplaats eerst van die plaats af |
+| v0.6.12 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats liggen |
 | v0.6.11 | 2026-11-10 | Issue #202: BLB-045 krijgt het criterium voor het kiezen van een bootsoort in de bezettingsimport (ADR-014 §3) |
 | v0.6.10 | 2026-11-10 | Wachtlijst: een boot met een onbekende eigenaar houdt zijn plek als hij een lid krijgt (besluit stakeholder, #204); de lijst toont "eigenaar onbekend" |
 | v0.6.9 | 2026-11-10 | Issues #204, #207 en #212: BLB-046 (boten zonder eigenaar, met `clubboot` in de API), BLB-005 krijgt de knop Nieuwe boot bovenaan met eigenaar onbekend |
