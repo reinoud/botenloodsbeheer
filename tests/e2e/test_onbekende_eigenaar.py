@@ -1,14 +1,14 @@
 """Eigenaar onbekend (issues #204 en #207), de route voor een mens: een boot vastleggen met de knop
 Nieuwe boot bovenaan Boten en de eigenaar open laten, twee boten zonder eigenaar importeren, op
 Boten zonder eigenaar per boot een eigenaar kiezen, een weigering die alleen die boot raakt. Op
-1100 en 360 pixels breed."""
+1100 en 360 pixels breed. Daarna een boot met een eigenaar weer onbekend maken (#233)."""
 
 import re
 
 from conftest import reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_bezetting_csv import KOP, uploaden
-from test_loods import rek_aanmaken
+from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, toewijzen
 
 
 def regel_van(page, boot):
@@ -70,3 +70,53 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     page.goto("/boten")
     expect(regel_van(page, wulp)).to_contain_text("clubboot")
     expect(regel_van(page, tureluur)).not_to_contain_text("onbekend")
+
+
+def boot_opslaan_als_onbekend(page, boot):
+    page.goto("/boten")
+    page.get_by_role("link", name=boot, exact=True).click()
+    page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
+    formulier = page.locator("section.kaart", has=page.get_by_role("heading", name="Boot wijzigen"))
+    formulier.get_by_label("Eigenaar").select_option(label="eigenaar onbekend")
+    formulier.get_by_role("button", name="Boot opslaan").click()
+
+
+def test_boot_met_een_eigenaar_weer_onbekend_maken_en_een_clubboot_eerst_van_de_clubplaats(page):
+    wachtwoord_instellen(page, "weeronbekend")
+    rek = reknaam("e")
+    lidboot, clubboot = f"Lidboot {rek}", f"Clubboot {rek}"
+    rek_aanmaken(page, rek, vakken=((1, 1), (1, 2)), soorten={1: "Kajak"})
+    plaats_instellen(page, f"{rek}/1/2", [], club=True)
+    boot_vastleggen(page, lidboot, "Kajak", eigenaar_index=2)
+    boot_vastleggen(page, clubboot, "Kajak")
+    toewijzen(page, f"{rek}/1/1", lidboot)
+    toewijzen(page, f"{rek}/1/2", clubboot)
+
+    # Happy: een boot van een lid wordt onbekend en houdt zijn gewone plaats. De keuze staat er ook
+    # bij een boot met een eigenaar. Mutant: de optie in boot.html weer alleen bij een onbekende
+    # eigenaar valt op select_option (label niet gevonden).
+    boot_opslaan_als_onbekend(page, lidboot)
+    expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
+    expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")
+    expect(page.locator("dl.bl-feiten dd").nth(2)).to_have_text(f"{rek}/1/1")
+    expect(page.locator("section.log")).to_contain_text("'onbekend'")
+    page.goto("/boten/zonder-eigenaar")
+    expect(regel_van(page, lidboot)).to_contain_text(f"{rek}/1/1")
+
+    # Unhappy: een clubboot op een clubplaats blijft clubboot, met een melding. Mutant: de
+    # voorwaarde `clubboot != oude_club` in boot_wijzigen weg valt op de melding (de boot wordt dan onbekend).
+    boot_opslaan_als_onbekend(page, clubboot)
+    expect(page.get_by_role("alert")).to_contain_text(f"Plaats {rek}/1/2 is een clubplaats en alleen voor clubboten")
+    expect(page.locator("dl.bl-feiten dd").nth(1)).to_contain_text("(clubboot)")
+    page.goto("/boten/zonder-eigenaar")
+    expect(regel_van(page, clubboot)).to_have_count(0)
+
+    # Na het vrijgeven van de plaats lukt het wel. Mutant: de melding blokkeert ook zonder plaats
+    # valt op de laatste twee asserts.
+    page.goto("/indeling")
+    page.get_by_role("link", name=f"{rek}/1/2", exact=True).click()
+    page.get_by_role("button", name=f"Plaats {rek}/1/2 vrijgeven").click()
+    expect(page.get_by_text("De plaats is vrijgegeven.")).to_be_visible()
+    boot_opslaan_als_onbekend(page, clubboot)
+    expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
+    expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")

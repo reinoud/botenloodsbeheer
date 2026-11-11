@@ -83,7 +83,7 @@ for soort in wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
             methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen \
             wachtlijst wachtlijstfout kaartjes status bootaantallen tokens tokenscollega \
             tokensintrekken bootsoorten indelingraster rekoverzicht bootplaats rekindelingcsv \
-            bezettingcsv bezettingsoort eigenaaronbekend clubboot passkey; do  # test_inloggen zoekt zijn uitnodiging in de 50 nieuwste regels van het technische log: passkey is de laatste uitnodiging en een nieuwe E2E-test die vóór test_inloggen draait (alfabetisch) schuift hem eruit
+            bezettingcsv bezettingsoort eigenaaronbekend weeronbekend clubboot passkey; do  # test_inloggen zoekt zijn uitnodiging in de 50 nieuwste regels van het technische log: passkey is de laatste uitnodiging en een nieuwe E2E-test die vóór test_inloggen draait (alfabetisch) schuift hem eruit
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done

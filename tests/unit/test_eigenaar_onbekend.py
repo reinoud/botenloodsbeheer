@@ -10,8 +10,8 @@ from sqlalchemy import select
 from app.domein import CLI, Regelfout, boten, toewijzing, uitlezen, vandaag, wachtlijst
 from app.models import Boot, Logregel, db
 from tests.unit.hulp import lid, race
-from tests.unit.test_boot_wijzigen import wijzig
-from tests.unit.test_indeling_en_toewijzing import boot, plaats
+from tests.unit.test_boot_wijzigen import regels, wijzig
+from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
 
@@ -57,19 +57,74 @@ def test_onbekende_eigenaar_mag_op_de_wachtlijst_en_een_clubboot_niet(app):
     assert wachtlijst.lijsten()  # een boot zonder lid blijft staan
 
 
-def test_een_eigenaar_wordt_niet_weer_onbekend_en_een_onbekende_boot_wordt_clubboot_of_lid(app):
+def test_een_onbekende_boot_wordt_clubboot_of_lid(app):
     anna = lid()
-    b = boot(anna.id, "Kajak", "Fuut")
-    with pytest.raises(Regelfout, match="niet weer onbekend"):
-        wijzig(b, lid_id=None, club=False)
-    c = boot(None, "Kajak", "Club")
-    with pytest.raises(Regelfout, match="niet weer onbekend"):
-        wijzig(c, lid_id=None, club=False)
     o = onbekend()
     wijzig(o, lid_id=anna.id)
     assert (o.lid_id, o.clubboot) == (anna.id, False)
     gegevens = db.session.scalars(select(Logregel).where(Logregel.actie == "boot.gewijzigd")).all()[-1].gegevens
     assert gegevens["eigenaar"] == ["onbekend", f"lid:{anna.id}"]
+
+
+def test_een_boot_van_een_lid_wordt_weer_onbekend_en_houdt_zijn_gewone_plaats(app):
+    # #233; mutant: de weigering "wordt niet weer onbekend" terug valt hier.
+    anna = lid()
+    b = boot(anna.id, "Kajak", "Fuut")
+    toewijzing.toewijzen(plaats("A/1/1").id, b.id, CLI)
+    wijzig(b, lid_id=None, club=False)
+    assert (b.lid_id, b.clubboot, b.plaats.code) == (None, False, "A/1/1")
+    assert boten.zonder_eigenaar() == [b]
+    gegevens = db.session.scalars(select(Logregel).where(Logregel.actie == "boot.gewijzigd")).all()[-1].gegevens
+    assert gegevens["eigenaar"] == [f"lid:{anna.id}", "onbekend"]
+
+
+def test_een_clubboot_zonder_plaats_wordt_onbekend(app):
+    # Mutant: de weigering voor een boot met een eigenaar (oude_club) terug valt hier.
+    c = boot(None, "Kajak", "Club")
+    wijzig(c, lid_id=None, club=False)
+    assert (c.lid_id, c.clubboot) == (None, False)
+    gegevens = db.session.scalars(select(Logregel).where(Logregel.actie == "boot.gewijzigd")).all()[-1].gegevens
+    assert gegevens["eigenaar"] == ["vereniging", "onbekend"]
+
+
+def test_een_clubboot_op_een_clubplaats_wordt_niet_onbekend_zolang_hij_daar_ligt(app):
+    # Besluit 2026-11-11 (#233). Mutant: `clubboot != oude_club` uit de voorwaarde van
+    # controleer_past in boot_wijzigen halen valt op de eerste assert.
+    club = plaats("A/1/1", club=True)
+    c = boot(None, "Kajak", "Club")
+    toewijzing.toewijzen(club.id, c.id, CLI)
+    n = len(regels())
+    with pytest.raises(Regelfout, match="Plaats A/1/1 is een clubplaats en alleen voor clubboten"):
+        wijzig(c, lid_id=None, club=False)
+    assert (c.clubboot, c.plaats.code, len(regels())) == (True, "A/1/1", n)
+    toewijzing.vrijgeven(club.id, CLI)
+    wijzig(c, lid_id=None, club=False)
+    assert (c.clubboot, c.plaats) == (False, None)
+
+
+def test_een_clubboot_op_een_gewone_plaats_wordt_onbekend_en_blijft_liggen(app):
+    c = boot(None, "Kajak", "Club")
+    toewijzing.toewijzen(plaats("A/1/1").id, c.id, CLI)
+    wijzig(c, lid_id=None, club=False)
+    assert (c.clubboot, c.plaats.code) == (False, "A/1/1")
+
+
+def test_een_boot_van_een_lid_op_de_wachtlijst_gaat_eraf_als_hij_onbekend_wordt(app):
+    # #233: een andere eigenaar (hier: geen) haalt de boot van de lijst. Mutant: de aanroep
+    # wachtlijst._eraf in boot_wijzigen weglaten valt op de eerste assert.
+    b = boot(lid().id, "Kajak", "Fuut")
+    wachtlijst.erop_zetten(b.id, None, CLI)
+    wijzig(b, lid_id=None, club=False)
+    assert b.wachtlijst is None and (b.lid_id, b.clubboot) == (None, False)
+    assert "wachtlijst.verwijderd" in acties()
+    gegevens = db.session.scalars(select(Logregel).where(Logregel.actie == "wachtlijst.verwijderd")).all()[-1].gegevens
+    assert gegevens["reden"] == "andere eigenaar"
+
+
+def test_wijzigen_naar_onbekend_zonder_verschil_schrijft_geen_logregel(app):
+    o = onbekend()
+    wijzig(o, lid_id=None, club=False)
+    assert not regels()
 
 
 def test_onbekend_naar_clubboot_mag_op_een_gewone_plaats_en_zonder_plaats(app):
@@ -262,7 +317,7 @@ def test_nieuwe_boot_met_lege_of_ongeldige_eigenaar_geeft_kies_een_eigenaar(inge
 # Andere schermen met een eigenaar
 
 
-def test_boot_toont_onbekend_en_biedt_de_keuze_alleen_zolang_de_eigenaar_onbekend_is(ingelogd):  # noqa: F811
+def test_boot_toont_onbekend_en_biedt_de_keuze_bij_elke_boot(ingelogd):  # noqa: F811
     o, club, eigen = onbekend("Wulp"), boot(None, "Kajak", "Club"), boot(lid().id, "Kajak", "Eigen")
     plaats("A/1/1")
     html = ingelogd.get(f"/boten/{o.id}").text
@@ -270,8 +325,9 @@ def test_boot_toont_onbekend_en_biedt_de_keuze_alleen_zolang_de_eigenaar_onbeken
     assert '<option value="onbekend" selected>eigenaar onbekend</option>' in html
     assert "Vrije plaats voor kajak" in html and "clubplaats" not in html and "Een clubboot kan niet" not in html
     assert "Op de wachtlijst zetten" in html
+    # #233; mutant: de optie weer alleen bij een onbekende boot valt hier. Niet geselecteerd bij een eigenaar.
     for b in (club, eigen):
-        assert 'value="onbekend"' not in ingelogd.get(f"/boten/{b.id}").text
+        assert '<option value="onbekend">eigenaar onbekend</option>' in ingelogd.get(f"/boten/{b.id}").text
 
 
 def test_boot_met_onbekende_eigenaar_kiest_uit_gewone_plaatsen(ingelogd):  # noqa: F811

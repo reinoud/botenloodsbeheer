@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.12
+**Versie:** v0.6.13
 **Datum:** 2026-11-10
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -164,7 +164,7 @@ Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en 
 - Gegeven een boot met een onbekende eigenaar, wanneer die een plaats krijgt, dan weigert de applicatie een clubplaats en accepteert ze een gewone plaats. De boot mag op de wachtlijst.
 - Gegeven de pagina `/boten/zonder-eigenaar`, dan staat per boot een regel met naam, bootsoort en plaats, een keuze van een lid of de vereniging en de knop **Eigenaar opslaan** met de bootnaam. Na opslaan is de boot van de lijst; een weigering geldt alleen die boot. Zonder boten staat er "Alle boten hebben een eigenaar."
 - Gegeven het menu, dan staat **Boten zonder eigenaar** onder Dagelijks na Wachtlijst, met het aantal in de link; bij nul staat er geen aantal.
-- Gegeven een boot met een eigenaar, dan wordt die niet weer onbekend.
+- Gegeven een boot met een lid of de vereniging als eigenaar, wanneer de beheerder bij Boot wijzigen de eigenaar op **eigenaar onbekend** zet, dan is de boot onbekend en staat hij op Boten zonder eigenaar; een boot op de wachtlijst gaat dan van de lijst en een boot met een gewone plaats houdt die plaats. Een clubboot op een clubplaats weigert de applicatie met een melding; de plaats moet eerst vrij (issue #233, besluit stakeholder 2026-11-11).
 - Gegeven de migratie, dan zijn alle bestaande boten zonder lid clubboot.
 - Gegeven `GET /api/v1/boten`, dan heeft elke boot een boolean `clubboot`: `true` bij een clubboot, `false` bij een boot van een lid en bij een onbekende eigenaar. `eigenaar` blijft `null` bij een clubboot en bij een onbekende eigenaar; er gaat geen veld uit de API af (issue #212, besluit stakeholder 2026-11-10).
 
