@@ -3,7 +3,14 @@ Elke test heeft een eigen uitnodiging uit draai.sh en draait ook los."""
 
 import re
 
-from conftest import STEMPEL, WACHTWOORD, blok_openen, gebruikersnaam, uitloggen, wachtwoord_instellen
+from conftest import (
+    STEMPEL,
+    WACHTWOORD,
+    blok_openen,
+    gebruikersnaam,
+    uitloggen,
+    wachtwoord_instellen,
+)
 from playwright.sync_api import expect
 
 MISLUKT = "Inloggen is mislukt"

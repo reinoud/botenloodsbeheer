@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.60
+**Versie overlay:** v0.5.61
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-10
+**Bijgewerkt:** 2026-11-11
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -322,6 +322,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
+- Draai `uv lock --check` met `--platform linux/arm64` op `python:3.14-slim` (op de Mac) en lees de exitcode zonder pipe (`; echo exit=$?`).
+- Draai na een update van ruff `ruff check --no-cache .` in de testcontainer; nieuwe meldingen los je in dezelfde ronde op.
 - Bij een sprong over minorversies van uv legt de reviewer de breaking changes uit de releasenotes naast `uv.lock` (archiefformaten, hashtypen) en naast de Python-versie in `/opt/venv`.
 - Is de doelversie van een Dependabot-PR jonger dan de cooldown, neem dan de nieuwste versie die wel oud genoeg is en sluit de PR met een verwijzing naar het issue (#196).
 - Controleer bij elke Dependabot-PR de publicatiedatum van de doelversie tegen de cooldown van 14 dagen, en lees de PR-tekst op "Cooldown could not be applied". Voor images uit ghcr.io (zoals uv) werkt de cooldown niet vanzelf.
@@ -431,6 +433,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.61 | 2026-11-11 | Twee regels (Security en proxy) uit de terugblik van sentinel bij #235: `uv lock --check` op arm64 met exitcode, ruff na een update | Lessen |
 | v0.5.60 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij de DAST vóór v1.0.0 | Lessen |
 | v0.5.59 | 2026-11-10 | Eén regel (Security en proxy) uit de terugblik van aegis bij de securityronde vóór v1.0.0 | Lessen |
 | v0.5.58 | 2026-11-10 | Twee regels (Security en proxy) uit #196 en de terugblik van sentinel: breuken bij een sprong in uv, versie binnen de cooldown kiezen | Lessen |

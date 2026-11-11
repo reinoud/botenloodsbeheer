@@ -27,10 +27,7 @@ dev = ["pytest>=8.4", "ruff>=0.13", "pyyaml>=6.0", "openapi-spec-validator>=0.7"
 [tool.uv]
 package = false
 # Alleen versies die minstens twee weken uit zijn; ophogen bij elke update van het lockbestand.
-exclude-newer = "2026-10-21T00:00:00Z"
-# pyasn1 0.6.5 eerder voor release v0.1.0 (vier CVE's, #63, besluit stakeholder 2026-11-03);
-# vervalt zodra exclude-newer 2026-10-28 of later is.
-exclude-newer-package = { pyasn1 = "2026-10-28T00:00:00Z" }
+exclude-newer = "2026-10-28T00:00:00Z"
 
 [tool.pytest.ini_options]
 testpaths = ["tests/unit"]

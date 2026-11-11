@@ -5,7 +5,6 @@ from functools import wraps
 from itertools import groupby
 from zoneinfo import ZoneInfo
 
-from werkzeug.exceptions import RequestEntityTooLarge
 from flask import (
     Blueprint,
     current_app,
@@ -18,6 +17,7 @@ from flask import (
     session,
     url_for,
 )
+from werkzeug.exceptions import RequestEntityTooLarge
 
 from app import INT_MAX
 from app.domein import Actor, Regelfout, afbeeldingen, boten, instellingen, log
