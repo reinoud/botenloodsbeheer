@@ -54,9 +54,13 @@ def als_actor(token):
 
 def whitelist_lezen(reeksen):
     """Adressen en reeksen in CIDR-notatie, IPv4 en IPv6 (BLB-033). Een reeks met hostbits
-    weigeren we, net als PostgreSQL cidr: dan is niet duidelijk welke reeks bedoeld is."""
+    weigeren we, net als PostgreSQL cidr: dan is niet duidelijk welke reeks bedoeld is. Een zone-index
+    (fe80::1%eth0) kent cidr niet; zonder deze controle gaf opslaan een fout 500 (#231)."""
     try:
-        return [ipaddress.ip_network(r.strip()) for r in reeksen]
+        netten = [ipaddress.ip_network(r.strip()) for r in reeksen]
+        if any(getattr(n.network_address, "scope_id", None) for n in netten):
+            raise ValueError
+        return netten
     except ValueError:
         raise Regelfout("Whitelist: alleen IPv4- of IPv6-adressen of reeksen zoals "
                         "10.203.0.0/24 of fd00::/64.") from None

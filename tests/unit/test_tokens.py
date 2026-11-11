@@ -96,7 +96,8 @@ def test_zonder_of_met_onbekend_recht_geweigerd(app, rechten, melding):
 
 
 @pytest.mark.parametrize("reeks", ["10.203.0.1/24", "geen-adres", "10.0.0.0/33", "fd00::1/129",
-                                   "", "10.203.0.0/24, 10.0.0.0/8"])
+                                   "", "10.203.0.0/24, 10.0.0.0/8", "fe80::1%eth0",
+                                   "fe80::%eth0/64"])
 def test_ongeldige_whitelist_geweigerd(app, reeks):
     """BLB-033 criterium 3."""
     with pytest.raises(Regelfout, match="Whitelist"):
@@ -313,6 +314,7 @@ def test_cli_maakt_en_trekt_in(app):
     ([], "minstens één recht"),
     (["--recht", "leden:importeren", "--dagen", "1096"], "1095 dagen"),
     (["--recht", "leden:importeren", "--whitelist", "10.203.0.1/24"], "Whitelist"),
+    (["--recht", "leden:importeren", "--whitelist", "fe80::1%eth0"], "Whitelist"),  # #231
 ])
 def test_cli_weigert(app, extra, melding):
     """BLB-031 criterium 3, BLB-032 criterium 1, BLB-033 criterium 3."""
