@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.64
+**Versie overlay:** v0.5.65
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -26,7 +26,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 | Aanleiding en probleem | De kanovereniging houdt de indeling van de botenloods bij in een spreadsheet. Daarin is niet goed te zien welke boot op welke plaats hoort, van wie die is, welke plaatsen vrij zijn en wie op de wachtlijst staat. |
 | Product | Webapplicatie voor het beheer van stallingsplaatsen in de botenloods, met wachtlijst per bootsoort, overzichten, Excel-export, printbare kaartjes met QR-code en een openbare pagina per plaats. |
 | Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
-| Omvang | Ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten. |
+| Omvang | 11 rekken en 229 plaatsen (de echte indeling, #80), ongeveer 210 leden en 180 boten. |
 | Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013). |
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (lidnummer, naam, lidmaatschapsdata). Adres, telefoon en e-mail worden niet bewaard (#180). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
 | Bron van leden | e-boekhouden, via een aparte en vervangbare integratiecontainer die alleen via de API werkt (ADR-012). Leden worden niet in de applicatie beheerd. |
@@ -52,7 +52,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Algemeen (elke brief)
 
 - Geef bij elke agentopdracht model en effort expliciet mee (besluit stakeholder, 2026-11-06). Reviews (sentinel, aegis): Opus 5.5 met effort `higher`. Bouw (prism, bedrock en andere bouwers): Sonnet 5.5, effort standaard. Mechanische opdrachten die zichzelf controleren (zoeken en rapporteren, een vaste reeks stappen nalopen): effort `lower`. Een grote review (meer dan 50 bestanden of een migratie) krijgt altijd `higher`.
-- Geef de omvang (10 rekken, 160 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
+- Geef de omvang (11 rekken, 229 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
 - Noem een ADR bij nummer en bestandsnaam zoals `ls docs/architecture/adr/` die toont, niet met een omschrijving uit het hoofd.
 - Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal. Een woordgrens voor een alinea telt alleen de alinea; kop, versieregel en wijzigingslog tellen apart.
@@ -440,6 +440,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.65 | 2026-11-11 | Omvang 11 rekken en 229 plaatsen volgens de echte indeling (§3, Algemeen) | #236 |
 | v0.5.64 | 2026-11-11 | Uit de terugblikken bij #234: E2E-mutant op een template, `DOC_UIT` bij een `FileNotFoundError` (E2E); run of statisch per toetspunt (Review) | Lessen |
 | v0.5.63 | 2026-11-11 | Uit de terugblikken bij #233: unieke mapnamen voor mutanten, boot van een oud-lid in een test (Bouw); de backlog heeft wel een wijzigingslog (Documentatie) | Lessen |
 | v0.5.62 | 2026-11-11 | Uit de terugblikken bij #232: escape na een normalisatie (Security en proxy), geen tekstwijziging tijdens een testrun (Bouw), Python via `web` ook voor reviewers (Bouw), rol voor psql op de testdatabase (Migratie en database) | Lessen |

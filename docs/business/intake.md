@@ -59,6 +59,7 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 ### Omvang en gebruikers
 
 - De loods heeft ongeveer 10 rekken en 160 plaatsen. De vereniging heeft ongeveer 210 leden en 180 boten.
+  Bijgewerkt: de echte indeling die de stakeholder op 2026-11-03 aanleverde (#80), heeft 11 rekken en 229 plaatsen (#236).
 - Er zijn 3 beheerders met dezelfde rechten. Er is geen aparte rol voor systeembeheer.
 
 ### Wachtlijst

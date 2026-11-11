@@ -1,6 +1,6 @@
 # Handleiding voor beheerders van de botenloods
 
-Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van ongeveer 10 rekken, 160 plaatsen, 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
+Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van 11 rekken, 229 plaatsen, ongeveer 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
 
 Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft drie groepen: Dagelijks, Registers en Beheer. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 

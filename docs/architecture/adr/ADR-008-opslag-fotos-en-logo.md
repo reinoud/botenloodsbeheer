@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.4.0
+**Versie:** v1.4.1
 **Stories:** BLB-005, BLB-012, BLB-020, BLB-021, BLB-026, BLB-027
 
 ## Context
@@ -36,13 +36,14 @@ Foto's staan in PostgreSQL, in de tabel `afbeelding` als `bytea`.
 - De back-up van de database bevat alle foto's en het logo. `LOGO_BESTAND` en de map `./huisstijl` bestaan niet meer; een logo uit de installatie wordt niet overgenomen en moet één keer worden geüpload.
 - Migratie 0017 laat in `afbeelding` weer de soort `logo` toe. De downgrade verwijdert het logo.
 - Een foto ophalen kost een databasequery; met de cache-header is dat bij deze omvang geen probleem.
-- Kaartjes printen voor 160 plaatsen laadt het logo één keer, dankzij dezelfde URL.
+- Kaartjes printen voor 229 plaatsen laadt het logo één keer, dankzij dezelfde URL.
 - Groeit een installatie ver boven 1000 foto's, dan is overstappen naar een volume een beperkte wijziging in `domein/afbeeldingen` en de route. Dat staat als `shortcut:`-opmerking in de code.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.1 | 2026-11-11 | Omvang 229 plaatsen volgens de echte indeling | Issue #236 |
 | v1.4.0 | 2026-11-10 | Grens van 10 MB in de applicatie met een melding; Traefik heeft 25 MB als buitengrens; "De vorige blijft staan." alleen met een vorige | Besluit stakeholder 2026-11-10, issue #190 |
 | v1.3.0 | 2026-11-08 | Logo weer in de database, uploaden en verwijderen op Instellingen met logregel; `LOGO_BESTAND` en `./huisstijl` vervallen; migratie 0017 | Besluit stakeholder 2026-11-08, issue #186 |
 | v1.2.1 | 2026-11-04 | MPO telt als JPEG, alleen het eerste beeld | Issue #70 |

@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluiten stakeholder 2026-10-31)
 **Datum:** 2026-10-31
-**Versie:** v1.10.0
+**Versie:** v1.10.1
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -34,7 +34,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe (BLB-042, 
 | `POST /api/v1/leden/import-mislukt` | `leden:importeren` | `{"reden": ...}`, één van `bron_onbereikbaar`, `bron_onleesbaar`, `bron_geweigerd` | 201; andere reden 422 |
 | `GET /api/v1/bootaantallen` | `bootaantallen:lezen` | geen | 200 `[{"lidnummer", "aantallen": {bootsoort: aantal}}]`, voor elk lid elke bootsoort, ook 0 |
 
-**Leesaanroepen (slice 10).** Vier aanroepen voor persoonlijke tokens en andere koppelingen; de integratiecontainer gebruikt ze niet. Elke aanroep geeft de hele lijst, zonder filters of paginering: bij 160 plaatsen, 180 boten en 210 leden blijft een antwoord ruim onder 100 kB. De domeinlaag kiest de velden. Een veld zonder waarde is `null`. Adres, telefoon en e-mail van leden bestaan niet meer (issue #180); het recht `persoonsgegevens` is vervallen.
+**Leesaanroepen (slice 10).** Vier aanroepen voor persoonlijke tokens en andere koppelingen; de integratiecontainer gebruikt ze niet. Elke aanroep geeft de hele lijst, zonder filters of paginering: bij 229 plaatsen, 180 boten en 210 leden blijft een antwoord ruim onder 100 kB. De domeinlaag kiest de velden. Een veld zonder waarde is `null`. Adres, telefoon en e-mail van leden bestaan niet meer (issue #180); het recht `persoonsgegevens` is vervallen.
 
 | Aanroep | Recht | Velden per element |
 |---------|-------|--------------------|
@@ -74,6 +74,7 @@ Wie de API op internet wil, voegt bewust `compose.api-extern.yml` toe (BLB-042, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.10.1 | 2026-11-11 | Omvang 229 plaatsen volgens de echte indeling | Issue #236 |
 | v1.10.0 | 2026-11-10 | `GET /boten` krijgt de boolean `clubboot`; `eigenaar` is `null` bij een clubboot en bij een onbekende eigenaar; contract 0.10.0 | Besluit stakeholder 2026-11-10, issues #204 en #212 |
 | v1.9.0 | 2026-11-09 | Leesaanroepen zonder `persoonsgegevens`; lid sinds en opzegdatum mee met `leden:lezen`; `PUT /leden` kent adres, telefoon en e-mail niet meer en negeert ze; contract 0.9.0 | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.8.0 | 2026-11-08 | Bron e-boekhouden met zeep, hashes en een image in drie stages; terugschrijven achter `BOOTAANTALLEN_SCHRIJVEN`; WSDL als kopie in het image | Besluiten stakeholder 2026-11-08, issue #178 |
