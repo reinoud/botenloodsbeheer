@@ -65,7 +65,7 @@ def actieve_leden():
 
 def bevat(kolom, zoek):
     """Voorwaarde: kolom bevat zoek, zonder onderscheid in hoofdletters of accenten (#232).
-    Beide kanten gaan door unaccent van PostgreSQL (migratie 0021); % en _ in zoek zijn letterlijk.
+    Beide kanten gaan door unaccent van PostgreSQL (migratie 0021); %, _ en \\ in zoek zijn letterlijk.
     De escape komt na unaccent, want unaccent maakt van bijvoorbeeld ％ een % (AEG-01)."""
     patroon = func.unaccent(zoek)
     for teken in ("\\", "%", "_"):
