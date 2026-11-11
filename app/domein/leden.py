@@ -63,12 +63,21 @@ def actieve_leden():
     ).all()
 
 
+def bevat(kolom, zoek):
+    """Voorwaarde: kolom bevat zoek, zonder onderscheid in hoofdletters of accenten (#232).
+    Beide kanten gaan door unaccent van PostgreSQL (migratie 0021); % en _ in zoek zijn letterlijk.
+    De escape komt na unaccent, want unaccent maakt van bijvoorbeeld ％ een % (AEG-01)."""
+    patroon = func.unaccent(zoek)
+    for teken in ("\\", "%", "_"):
+        patroon = func.replace(patroon, teken, "\\" + teken)
+    return func.unaccent(kolom).ilike(func.concat("%", patroon, "%"), escape="\\")
+
+
 def alle_leden(zoek=""):
     """Alle leden, of die waarvan naam of lidnummer de zoektekst bevat (BLB-019)."""
     q = select(Lid).order_by(Lid.naam, Lid.lidnummer)
     if zoek := (zoek or "").strip():
-        q = q.where(or_(Lid.naam.icontains(zoek, autoescape=True),
-                        Lid.lidnummer.icontains(zoek, autoescape=True)))
+        q = q.where(or_(bevat(Lid.naam, zoek), bevat(Lid.lidnummer, zoek)))
     return db.session.scalars(q).all()
 
 
@@ -77,7 +86,7 @@ def boot_of_lid_bevat(zoek):
     zoektekst. Een lege zoektekst laat alles door."""
     if not (zoek := (zoek or "").strip()):
         return True
-    return or_(Boot.naam.icontains(zoek, autoescape=True), Lid.naam.icontains(zoek, autoescape=True))
+    return or_(bevat(Boot.naam, zoek), bevat(Lid.naam, zoek))
 
 
 def lid(lid_id):
