@@ -38,8 +38,11 @@ updates:
       # Versie hoort bij playwright in tests/e2e/requirements.txt, dat Dependabot niet bijhoudt.
       - dependency-name: playwright/python
         update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
+  # Ook het voorbeeld van een gedeelde Traefik (#230): images op een digest, zoals in de rest.
   - package-ecosystem: docker-compose
-    directory: /
+    directories:
+      - /
+      - /documentatie/beheer/voorbeelden/traefik
     schedule:
       interval: weekly
     cooldown:

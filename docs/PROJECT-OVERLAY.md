@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.66
+**Versie overlay:** v0.5.67
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -185,6 +185,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem in een reviewbrief voor aegis de securityrelevante paden apart van schermafbeeldingen en CSS, en noem per nieuw sjabloon of nieuwe macro op welke pagina's die wordt ingevoegd.
 - Vraagt een criterium "geen ERROR-regel in de log", zeg dan of een test met `caplog` verwacht wordt of dat een 200 met melding als statisch bewijs volstaat.
 - Laat bij een invoercontrole vóór een databasekolom de reviewer de door Python genormaliseerde vormen met een leesquery naar het kolomtype casten (`SELECT '<waarde>'::<type>`), via stdin.
+- Draaien twee reviewers tegelijk en start één een proef met containers, zeg dan of de ander daarin met `docker exec` mag lezen (met de projectnaam), of statisch blijft.
 - Stelt een brief de reviewer een vraag (zoals "komt een oud-lid erdoor?"), noem dan de test die het bewijst, of zeg dat er geen test is.
 - Heeft de regie na de bouw iets hersteld, zeg dan in de brief dat de mutanten van de bouwer verouderd zijn, en lever bij een eigen mutant de diff tegen de gestagede bron mee (`git show :<pad> | diff - <mutant>`).
 - Stuurt een oude route na de wijziging door naar de nieuwe, toets dan de doorverwijzing zelf (`location` of de JSON-url); een test op de eindpagina slaagt ook via de omweg.
@@ -316,6 +317,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een proef op een gedeelde rate limit doe je in een losse Traefik met de gestagede labels (eigen teller, stub als upstream); de gedeelde proxy alleen voor proeven onder de grens. Render de labels met `docker compose config` met dummywaarden voor de verplichte variabelen. De stub leest de body en geeft 200. Toetst de proef ook wat de applicatie doet (zoals een omzeilde rate limit), gebruik dan als upstream Flask achter Gunicorn met dezelfde routes, niet alleen de stub.
 - Een proef met veel geweigerde aanroepen in een losse Traefik gebruikt een eigen database (`nieuwe_database`) of meldt vooraf dat er regels `api.geweigerd` in het gedeelde log komen.
 - Een proef op een rate limit van Traefik probeert ook het pad met `%2F` en andere gecodeerde tekens. Een proef boven de grens van een proxy stuurt alleen de kop met `Content-Length`, niet het hele lichaam.
+- Een proef met een losse Traefik op dezelfde host als de gedeelde stack gebruikt routers op een eigen `Host(...)` en toetst met die `Host`-kop; via de socket(proxy) ziet hij ook de labels van `botenloods-*`.
+- Een criterium als "Traefik haalt een certificaat op" bewijs je lokaal met Pebble (`ghcr.io/letsencrypt/pebble`, `tlsPort` 443; `caserver` en `LEGO_CA_CERTIFICATES` in een override; Traefik met een netwerkalias voor het domein), niet als restpunt.
 - Een proef op routering in Traefik (welke router een pad krijgt) draait na minstens drie herstarts van Traefik; twee routers die hetzelfde pad kunnen raken, krijgen een expliciete `priority`.
 - Noem bij een proef op een weigering welke laag de 400 geeft (Traefik of de applicatie) en hoe dat te zien is: een regel in de log van `web` of geen regel. Weigert de lokale Traefik zelf, laat de reviewer de applicatielaag dan direct op Gunicorn in de container proeven.
 - Gaat een proxy of netwerk gedeeld worden met andere diensten, zeg dan of `web` en `api` op het gedeelde netwerk mogen; standaard niet.
@@ -442,6 +445,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.67 | 2026-11-11 | Uit de terugblikken bij #230: eigen `Host` in een losse Traefik, Pebble voor ACME (Security en proxy); lezen in een proef van een andere reviewer (Review) | Lessen |
 | v0.5.66 | 2026-11-11 | Twee regels (Review) uit de terugblikken bij #231: bewijs voor "geen ERROR-regel", casten naar het kolomtype | Lessen |
 | v0.5.65 | 2026-11-11 | Omvang 11 rekken en 229 plaatsen volgens de echte indeling (§3, Algemeen) | #236 |
 | v0.5.64 | 2026-11-11 | Uit de terugblikken bij #234: E2E-mutant op een template, `DOC_UIT` bij een `FileNotFoundError` (E2E); run of statisch per toetspunt (Review) | Lessen |
