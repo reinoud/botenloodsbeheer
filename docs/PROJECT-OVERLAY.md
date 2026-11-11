@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.67
+**Versie overlay:** v0.5.68
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -38,7 +38,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Volgorde: apex (backlog en user stories), foundation (architectuur en ADR's), forge (delivery in slices).
 - Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`, met dezelfde regels als de Forgejo-afspraak in `~/.claude/CLAUDE.md`: type en label, sluiten met commit, test en bewijs.
 - Review vóór elke codecommit volgens `~/.claude/CLAUDE.md`. Voor inloggen, tokens, autorisatie en de koppeling met e-boekhouden reviewt aegis mee.
-- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. Zet het slotcommentaar (gewijzigd, getest, bewijs) vóór de merge op het issue: `Closes` sluit het issue bij de merge zonder commentaar. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
+- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. Zet het slotcommentaar (gewijzigd, getest, bewijs) vóór de merge op het issue: `Closes` sluit het issue bij de merge zonder commentaar. Is een criterium pas na de merge te toetsen (zoals Dependabot), gebruik dan `Refs #<nr>` in plaats van `Closes` en sluit het issue zelf na die controle. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
 - Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
 - Teksten volgen de skill `schrijfstijl`.
 - Elke open pull request van Dependabot krijgt een issue (`taak`, `dependencies`), tenzij er al een is. Het issue noemt wat de PR mist, zoals een pakketversie die niet meebeweegt. Besluit van de stakeholder, 2026-11-05.
@@ -445,6 +445,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.68 | 2026-11-11 | §4: `Refs` in plaats van `Closes` bij een criterium dat pas na de merge te toetsen is (#230) | Lessen |
 | v0.5.67 | 2026-11-11 | Uit de terugblikken bij #230: eigen `Host` in een losse Traefik, Pebble voor ACME (Security en proxy); lezen in een proef van een andere reviewer (Review) | Lessen |
 | v0.5.66 | 2026-11-11 | Twee regels (Review) uit de terugblikken bij #231: bewijs voor "geen ERROR-regel", casten naar het kolomtype | Lessen |
 | v0.5.65 | 2026-11-11 | Omvang 11 rekken en 229 plaatsen volgens de echte indeling (§3, Algemeen) | #236 |
