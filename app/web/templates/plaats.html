@@ -21,7 +21,7 @@
   <h2 class="dj-panel__title" id="eigenaar-kop">Eigenaar</h2>
   {% if boot.lid %}
   <dl class="dj-dl">
-    <dt>Naam</dt><dd data-veld="naam">{{ boot.lid.naam }}{% if oud_lid %} (oud-lid){% endif %}</dd>
+    <dt>Naam</dt><dd data-veld="naam"><a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% if oud_lid %} (oud-lid){% endif %}</dd>
     <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
   </dl>
   {% elif boot.clubboot %}
