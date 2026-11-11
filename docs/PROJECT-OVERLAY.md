@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.69
+**Versie overlay:** v0.5.70
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -131,7 +131,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
 - Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
-- Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`; bekend wisselvallig zijn `test_beide_methodes_wachtwoord_vergrendeld_passkey_slaagt` (#172) en `test_methode_intrekken_beeindigt_sessie_laatste_blijft` (#217).
+- Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`.
 - Controleer of een schermafbeelding van het scherm bestaat voordat de opdracht haar opnieuw laat maken.
 - `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`.
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
@@ -149,7 +149,6 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant via tekstvervanging gebeurt met python3, met een assert dat de kopie verschilt van het origineel; een mutant die niet is toegepast, laat alles slagen.
 - Een nieuwe `if` met meer voorwaarden krijgt per voorwaarde een eigen mutant die alleen die voorwaarde weglaat, met de assert die valt; een mutant die de hele regel uitzet, telt niet voor de afzonderlijke voorwaarden. Dat geldt ook voor een herstel door de regie.
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
-- Tot #213 dicht is: een nieuw E2E-bestand krijgt een naam die alfabetisch na `test_inloggen.py` valt, of de bouwer meldt de uitkomst van `test_passkey_instellen_uitloggen_en_inloggen` in de volledige run.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
 - Maak mutantkopieën in een map met een unieke naam (met tijdstempel) in de scratchpad, zonder `rm -rf`. Een boot van een oud-lid maak je in een test met een directe insert van `Boot`; de helper `boot()` weigert een oud-lid.
 - Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script.
@@ -178,6 +177,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
 - Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
@@ -255,6 +255,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### E2E
 
+- Een proef op volgorde of volume van het technische log schrijft vooraf minstens 50 regels van een andere actie dan de gezochte, met `log.schrijf` via `docker compose exec web`, niet via de interface; dan blijven er geen beheerders of andere gegevens achter. De oude test moet aantoonbaar falen op die ruis voordat het herstel telt.
 - Elke E2E-test draait ook los: `tests/e2e/draai.sh -k <testnaam>`, zonder pad, want de e2e-container werkt vanuit `tests/e2e`. Laat de reviewer één test met `-k` draaien als controle op de volgorde.
 - Een E2E-test leunt niet op gegevens van een eerder testbestand. Bestaat er geen route om ze in de test te maken (zoals een token), dan maakt `tests/e2e/draai.sh` ze vers vóór elke aanroep van pytest. Een E2E-test die gedeelde instellingen wijzigt, zet ze ook terug als hij faalt (try/finally), of krijgt een eigen installatie.
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`, vóór `passkey`.
@@ -446,6 +447,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.70 | 2026-11-11 | Regel over E2E-bestandsnamen tot #213 en de wisselvallige tests #172 en #217 weg (opgelost); één regel (E2E) en één (Review) uit de terugblikken van prism, sentinel en aegis: ruis bij een volgordeproef op het log, testbestanden in een securityreview | Lessen |
 | v0.5.69 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij #237: mutant zonder de weigerende optie | Lessen |
 | v0.5.68 | 2026-11-11 | §4: `Refs` in plaats van `Closes` bij een criterium dat pas na de merge te toetsen is (#230) | Lessen |
 | v0.5.67 | 2026-11-11 | Uit de terugblikken bij #230: eigen `Host` in een losse Traefik, Pebble voor ACME (Security en proxy); lezen in een proef van een andere reviewer (Review) | Lessen |
