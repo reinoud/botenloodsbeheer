@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.75
+**Versie overlay:** v0.5.76
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-12
@@ -149,6 +149,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een visuele controle van een bezette plaats met foto vraagt een foto in de lokale database; de seed heeft er geen. Noem in de opdracht hoe de bouwer er een koppelt en weer weghaalt, of laat een unittest met foto volstaan.
 - Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging, en draait daarna de volledige unitsuite, niet alleen het eigen testbestand.
 - Een mutant via tekstvervanging gebeurt met python3, met een assert dat de kopie verschilt van het origineel; een mutant die niet is toegepast, laat alles slagen.
+- Noem per mutant welke waarde de falende assert moet tonen (zoals het lidnummer dat ontbreekt of erbij komt), zodat de verwachting vooraf vastligt (#226).
+- Normaliseert een wijziging externe invoer, noem dan in de securitybrief of het terugschrijven dezelfde selectie gebruikt (#226).
 - Een nieuwe `if` met meer voorwaarden krijgt per voorwaarde een eigen mutant die alleen die voorwaarde weglaat, met de assert die valt; een mutant die de hele regel uitzet, telt niet voor de afzonderlijke voorwaarden. Dat geldt ook voor een herstel door de regie.
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
@@ -458,6 +460,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.76 | 2026-11-12 | Twee regels (Review): verwachte waarde per mutant, normalisatie en terugschrijven in de securitybrief; uit de terugblikken van sentinel en aegis bij #226 | Lessen |
 | v0.5.75 | 2026-11-12 | Twee regels (Security en proxy): proef en mutant op de socketproxy, brief voor een update van een afhankelijkheid; uit de terugblikken van pipeline bij #251 en sentinel bij #258 | Lessen |
 | v0.5.74 | 2026-11-12 | Regel over mutantruns (Review) aangevuld: één bestand over het testimage mounten; uit de terugblik van sentinel bij #255 | Lessen |
 | v0.5.73 | 2026-11-12 | Eén regel (Security en proxy): aantallen van de E2E-runs in het releaseissue; uit de release van v1.0.2 | Lessen |
