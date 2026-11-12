@@ -135,11 +135,15 @@ def test_alleen_leden_met_de_vier_velden(nep, bron):
         relatie(ID="15", Code="1003", Bedrijf="Kees", Def2="actief_jeugd", Def3="", Def7=""),
         relatie(ID="17", Code="1004", Bedrijf="Opgezegd zonder datum", Def2="opgezegd", Def7=" "),  # #221
         relatie(ID="18", Code="1005", Bedrijf="Opgezegd, lege datum", Def2="opgezegd_gewoon", Def7=""),
+        relatie(ID="19", Code="1006", Bedrijf="Hoofdletter", Def2=" Actief_gewoon", Def3="", Def7=""),  # #226
+        relatie(ID="20", Code="1007", Bedrijf="Opgezegd, hoofdletter", Def2="Opgezegd_gewoon ",
+                Def7=""),  # #226
     ]
     assert bron.haal_leden() == [
         {"lidnummer": "1001", "naam": "Jan de Vries", "lid_sinds": "2015-03-01", "opzegdatum": None},
         {"lidnummer": "1002", "naam": "Piet", "lid_sinds": "2010-01-01", "opzegdatum": "2025-12-31"},
         {"lidnummer": "1003", "naam": "Kees", "lid_sinds": None, "opzegdatum": None},
+        {"lidnummer": "1006", "naam": "Hoofdletter", "lid_sinds": None, "opzegdatum": None},
     ]
 
 
