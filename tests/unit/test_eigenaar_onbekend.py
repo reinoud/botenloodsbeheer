@@ -253,6 +253,21 @@ def test_boot_met_onbekende_eigenaar_hernoemen_via_het_formulier(ingelogd):  # n
     assert (o.naam, o.lid_id, o.clubboot) == ("Wulp 2", None, False)
 
 
+def test_melding_bij_onbekend_noemt_geen_andere_eigenaar(ingelogd):  # noqa: F811
+    # #240. Mutant: altijd de melding "andere eigenaar" valt op de eerste assert, altijd "onbekend" op de tweede.
+    anna, bram = lid(), lid("1002", "Bram")
+    a, b = boot(anna.id, "Kajak", "Fuut"), boot(anna.id, "Kajak", "Kluut")
+    wachtlijst.erop_zetten(a.id, None, CLI)
+    wachtlijst.erop_zetten(b.id, None, CLI)
+    r = ingelogd.post(f"/boten/{a.id}", data={"naam": "Fuut", "bootsoort": a.bootsoort_id, "eigenaar": "onbekend"},
+                      follow_redirects=True).text
+    assert "De eigenaar is nu onbekend en de boot is van de wachtlijst gehaald." in r and "heeft een andere eigenaar" not in r
+    assert "reden: andere eigenaar" in r  # het log houdt de vaste reden
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Kluut", "bootsoort": b.bootsoort_id, "eigenaar": str(bram.id)},
+                      follow_redirects=True).text
+    assert "De boot heeft een andere eigenaar en is van de wachtlijst gehaald." in r and "nu onbekend" not in r
+
+
 def test_eigenaar_opslaan_gelukt_ook_clubboot_op_gewone_plaats_en_raakt_alleen_die_boot(ingelogd):  # noqa: F811
     anna = lid()
     toewijzing.toewijzen(plaats("A/1/1").id, (kluut := onbekend("Kluut")).id, CLI)

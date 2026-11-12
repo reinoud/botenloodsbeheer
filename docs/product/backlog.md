@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.13
-**Datum:** 2026-11-11
+**Versie:** v0.6.14
+**Datum:** 2026-11-12
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -213,6 +213,7 @@ Gebouwd in slice 2. Alle criteria worden in slice 6 opnieuw getoetst via `PUT /a
 - Gegeven een boot van een lid op de wachtlijst, wanneer dat lid oud-lid wordt, dan verdwijnt de boot van de wachtlijst en staat dat in het log. (slice 7, na BLB-013)
 - Gegeven een record met een opzegdatum op of vóór vandaag van een lid dat niet in de applicatie staat, wanneer de import draait, dan maakt de applicatie dat lid niet aan en telt het als overgeslagen. Een opzegdatum in de toekomst komt wel binnen. (slice 6, aangepast in issue #203)
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder een plaats wil toewijzen, dan weigert de applicatie.
+- Gegeven een boot van een oud-lid die nog op de wachtlijst staat, wanneer de beheerder de pagina van de boot opent, dan zegt de taak "De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst." Er is geen knop om hem met de hand van de lijst te halen (besluit stakeholder 2026-11-08, issue #176).
 
 #### BLB-009 Terugschrijven naar e-boekhouden
 
@@ -301,6 +302,7 @@ Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoo
 - Gegeven een clubboot of een boot van een oud-lid, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie met de reden.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die boot een clubboot wil maken, dan weigert de applicatie met de reden.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder de eigenaar wijzigt in een ander lid, dan gaat de boot van de wachtlijst, ziet de beheerder dat in een melding en staat dat in het log van de bootmutaties (besluit stakeholder 2026-11-01).
+- Gegeven een boot van een lid op de wachtlijst, wanneer de beheerder de eigenaar op eigenaar onbekend zet, dan gaat de boot van de wachtlijst en meldt de applicatie "De eigenaar is nu onbekend en de boot is van de wachtlijst gehaald." zonder een andere eigenaar te noemen. Het log noemt de reden `andere eigenaar` (issue #240).
 - Gegeven een boot met een onbekende eigenaar op de wachtlijst, wanneer de beheerder een lid als eigenaar kiest, dan blijft de boot op de wachtlijst met dezelfde aanmelddatum: de eigenaar wordt bekend en verandert niet (besluit stakeholder 2026-11-10, issue #204).
 - Gegeven de wachtlijst van een bootsoort, wanneer de beheerder die opent, dan toont de lijst per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, met de langst wachtende bovenaan. Lijsten van verschillende bootsoorten staan gescheiden.
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
@@ -795,6 +797,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.14 | 2026-11-12 | Issues #240 en #176: melding bij eigenaar onbekend op de wachtlijst (BLB-013); taak van een oud-lid met een boot op de wachtlijst (BLB-008) |
 | v0.6.13 | 2026-11-11 | Issue #233: een boot met een eigenaar kan weer eigenaar onbekend worden; een clubboot op een clubplaats eerst van die plaats af |
 | v0.6.12 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats liggen |
 | v0.6.11 | 2026-11-10 | Issue #202: BLB-045 krijgt het criterium voor het kiezen van een bootsoort in de bezettingsimport (ADR-014 §3) |
