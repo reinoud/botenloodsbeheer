@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.14
+**Versie:** v0.6.15
 **Datum:** 2026-11-12
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -602,6 +602,7 @@ Als beheerder wil ik per token vastleggen vanaf welke IP-adressen het gebruikt m
 - Gegeven een token met een whitelist, wanneer een aanroep vanaf een adres in de lijst komt, dan beantwoordt de applicatie die, ook voor IPv6-adressen.
 - Gegeven een token met een whitelist, wanneer een aanroep vanaf een adres buiten de lijst komt, dan weigert de applicatie ook met een geldig token en komt de poging in het log.
 - Gegeven een adres dat geen geldig IPv4- of IPv6-adres of -reeks is, wanneer het als whitelist wordt opgegeven, dan weigert de applicatie of de CLI het token.
+- Gegeven een robottoken, wanneer de whitelist een reeks bevat die breder is dan /8 (IPv4) of /32 (IPv6), zoals `0.0.0.0/0` of `::/0`, dan weigert de applicatie of de CLI het token met een melding. `10.0.0.0/8` en `2001:db8::/32` mogen wel (besluit stakeholder 2026-11-12, issue #243).
 
 #### BLB-034 Aanroepen volgen dezelfde regels als de webinterface
 
@@ -797,6 +798,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.15 | 2026-11-12 | Issue #243: BLB-033, een robottoken weigert een whitelistreeks breder dan /8 of /32 |
 | v0.6.14 | 2026-11-12 | Issues #240 en #176: melding bij eigenaar onbekend op de wachtlijst (BLB-013); taak van een oud-lid met een boot op de wachtlijst (BLB-008) |
 | v0.6.13 | 2026-11-11 | Issue #233: een boot met een eigenaar kan weer eigenaar onbekend worden; een clubboot op een clubplaats eerst van die plaats af |
 | v0.6.12 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats liggen |

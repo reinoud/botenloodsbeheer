@@ -110,6 +110,17 @@ def test_whitelist_met_ipv4_en_ipv6(app):
     assert [str(n) for n in netten] == ["10.203.0.7/32", "fd00::/64"]
 
 
+@pytest.mark.parametrize("reeks,mag", [("10.0.0.0/8", True), ("8.0.0.0/7", False), ("0.0.0.0/0", False),
+                                       ("2001:db8::/32", True), ("2001:da8::/31", False), ("::/0", False)])
+def test_robottoken_weigert_een_reeks_breder_dan_8_of_32(app, reeks, mag):
+    # #243, een test per kant van de grens. Mutant: < wordt <= valt op /8 en /32; de controle weg valt op de rest.
+    runner = app.test_cli_runner()
+    r = runner.invoke(args=["token", "robot", "breed", "--recht", "boten:lezen", "--whitelist", reeks])
+    assert (r.exit_code == 0) is mag, r.output
+    assert mag or "niet breder zijn dan /8 (IPv4) of /32 (IPv6)" in r.output
+    assert (db.session.scalar(select(Token)) is not None) is mag
+
+
 def test_naam_is_uniek(app):
     maak()
     with pytest.raises(Regelfout, match="al een token"):

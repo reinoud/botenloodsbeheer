@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.5.0
+**Versie:** v1.6.0
 **Stories:** BLB-029 tot en met BLB-035, BLB-037
 
 ## Context
@@ -17,7 +17,7 @@ De externe API `/api/v1` is aan en uit te zetten en staat standaard aan. Ze leve
 
 **Geldigheid.** `verloopt_op` is verplicht en ligt hooguit 3 jaar na aanmaken. Een persoonlijk token werkt niet meer zodra de beheerder geblokkeerd of verwijderd is. Een robottoken onthoudt wie het maakte, maar blijft werken als die beheerder vertrekt (BLB-031).
 
-**IP-whitelist.** Een lijst van adressen en reeksen in CIDR-notatie, IPv4 en IPv6, opgeslagen als PostgreSQL `cidr[]` en bij invoer gevalideerd met `ipaddress`. Verplicht en niet leeg bij een robottoken, optioneel bij een persoonlijk token. De standaardwaarde bij aanmaken is het subnet van het netwerk `koppeling` (`KOPPELNET`). Het clientadres komt uit de header die Traefik zet; Flask vertrouwt via `ProxyFix` precies één proxy. Traefik vertrouwt geen binnenkomend `X-Forwarded-For` en zet het verbindingsadres, zodat een client het adres niet kan vervalsen (ADR-013). Dat geldt alleen voor verkeer via Traefik (issue #20).
+**IP-whitelist.** Een lijst van adressen en reeksen in CIDR-notatie, IPv4 en IPv6, opgeslagen als PostgreSQL `cidr[]` en bij invoer gevalideerd met `ipaddress`. Verplicht en niet leeg bij een robottoken, optioneel bij een persoonlijk token. Een robottoken weigert een reeks breder dan /8 (IPv4) of /32 (IPv6), zoals `0.0.0.0/0` en `::/0`: die maakt de verplichte whitelist in feite leeg (besluit stakeholder 2026-11-12, issue #243). Een bestaand token blijft werken; de whitelist is niet te wijzigen. De standaardwaarde bij aanmaken is het subnet van het netwerk `koppeling` (`KOPPELNET`). Het clientadres komt uit de header die Traefik zet; Flask vertrouwt via `ProxyFix` precies één proxy. Traefik vertrouwt geen binnenkomend `X-Forwarded-For` en zet het verbindingsadres, zodat een client het adres niet kan vervalsen (ADR-013). Dat geldt alleen voor verkeer via Traefik (issue #20).
 
 **Controle per aanroep.** In deze volgorde: API aan, token bestaat en hash klopt, niet verlopen of ingetrokken, eigenaar actief (persoonlijk), IP in de whitelist, recht voor dit endpoint. Elke weigering geeft 401 of 403 zonder te verraden welke controle faalde, en een logregel van soort `api` met de tokennaam en reden. Een geslaagde aanroep geeft geen logregel en werkt alleen `laatst_gebruikt_op` bij (besluit stakeholder 2026-10-31).
 
@@ -65,6 +65,7 @@ Naam, whitelist en vervaldatum zijn niet te wijzigen: daarvoor maakt de beheerde
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.6.0 | 2026-11-12 | Robottoken weigert een whitelistreeks breder dan /8 (IPv4) of /32 (IPv6) | Besluit stakeholder 2026-11-12, issue #243 |
 | v1.5.0 | 2026-11-09 | Recht `persoonsgegevens` vervalt; migratie 0018 trekt tokens in die alleen dat recht hadden | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.4.2 | 2026-11-05 | Load balancer via het PROXY protocol; geen twee hops meer | ADR-013 v1.4.0, issue #54 |
 | v1.4.1 | 2026-11-03 | `leden:importeren` alleen met de CLI | Besluit stakeholder 2026-11-03, issue #52 |

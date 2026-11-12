@@ -305,7 +305,7 @@ Er zijn twee soorten tokens:
 1. Kies **Token maken** (`/tokens/nieuw`).
 2. Kies onder **Wie en hoe lang** de soort, een naam (a-z, cijfers, punt, - en _) en hoeveel dagen het geldig is: standaard 365, hooguit 1095 (3 jaar).
 3. Vink onder **Wat mag het token** minstens één recht aan. `leden:importeren` staat er niet bij: dat recht geeft wie de installatie beheert met de CLI, aan het robottoken van de integratiecontainer.
-4. Vul de IP-whitelist in: adressen of reeksen, gescheiden door komma's. Het formulier vult het netwerk van de integratiecontainer voor. Een robottoken heeft altijd een whitelist; een persoonlijk token zonder whitelist werkt vanaf elk adres dat de installatie doorlaat.
+4. Vul de IP-whitelist in: adressen of reeksen, gescheiden door komma's. Het formulier vult het netwerk van de integratiecontainer voor. Een robottoken heeft altijd een whitelist, zonder reeksen breder dan /8 (IPv4) of /32 (IPv6), dus niet `0.0.0.0/0` of `::/0`; een persoonlijk token zonder whitelist werkt vanaf elk adres dat de installatie doorlaat.
 5. Kopieer de waarde die verschijnt. Ze staat onder een waarschuwing in een kader; met één tik selecteer je haar helemaal. Er is geen kopieerknop. De waarde is daarna niet meer te zien; ben je haar kwijt, maak dan een nieuw token en trek het oude in.
 
 ![Het formulier Token maken met soort, naam, geldigheid, rechten en whitelist.](afbeeldingen/token-nieuw.png)

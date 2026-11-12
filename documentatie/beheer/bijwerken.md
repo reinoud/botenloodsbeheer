@@ -28,7 +28,7 @@ Versie 0.4.0 bevat migratie 0017 hierboven en migratie 0018. Migratie 0018 haalt
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding.
-- Maken met de CLI: `docker compose exec web flask token robot <naam> --recht leden:importeren --recht bootaantallen:lezen`. Het token verschijnt één keer. Zonder `--whitelist` geldt `KOPPELNET`, zonder `--dagen` 365 dagen, hooguit 1095.
+- Maken met de CLI: `docker compose exec web flask token robot <naam> --recht leden:importeren --recht bootaantallen:lezen`. Het token verschijnt één keer. Zonder `--whitelist` geldt `KOPPELNET`, zonder `--dagen` 365 dagen, hooguit 1095. Een reeks breder dan /8 (IPv4) of /32 (IPv6) weigert de CLI.
 - Vernieuwen: een nieuw token onder een andere naam maken, in `secrets/api_token` zetten en daarna het oude intrekken.
 - Intrekken: `docker compose exec web flask token intrekken <naam>`.
 - API uitzetten: `API_INGESCHAKELD=false` in `.env` en `docker compose up -d api web`.

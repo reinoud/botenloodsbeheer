@@ -94,6 +94,10 @@ def maken(soort, naam, rechten, whitelist, dagen, actor):
     netten = whitelist_lezen(whitelist)
     if soort == "robot" and not netten:
         raise Regelfout("Een robottoken heeft een whitelist nodig.")
+    if soort == "robot" and any(n.prefixlen < (8 if n.version == 4 else 32) for n in netten):
+        # Een reeks als 0.0.0.0/0 maakt de verplichte whitelist leeg (ADR-005, #243).
+        raise Regelfout("Whitelist van een robottoken: een reeks mag niet breder zijn dan /8 (IPv4) "
+                        "of /32 (IPv6).")
     dagen = STANDAARD_DAGEN if dagen is None else dagen
     if not 1 <= dagen <= MAX_DAGEN:
         raise Regelfout(f"Geldigheid: 1 tot en met {MAX_DAGEN} dagen (3 jaar).")
