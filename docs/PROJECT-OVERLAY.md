@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.72
+**Versie overlay:** v0.5.73
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-12
@@ -341,6 +341,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
+- Het releaseissue noemt per E2E-run vóór de tag de commit en de aantallen geslaagd, mislukt en overgeslagen, ook als de stakeholder de runs draaide. Ontbreken de aantallen, dan zegt het slotcommentaar dat (#257).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
 - Gaat een geëscapete zoektekst in SQL nog door een normalisatie (zoals `unaccent`, `lower` of `translate`), controleer dan of die normalisatie `%`, `_` of `\` kan maken, en escape ná de normalisatie (#232, AEG-01).
 - Draai `uv lock --check` met `--platform linux/arm64` op `python:3.14-slim` (op de Mac) en lees de exitcode zonder pipe (`; echo exit=$?`).
@@ -455,6 +456,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.73 | 2026-11-12 | Eén regel (Security en proxy): aantallen van de E2E-runs in het releaseissue; uit de release van v1.0.2 | Lessen |
 | v0.5.72 | 2026-11-12 | Drie regels (Review): verwachte falende assert en gelijkwaardige mutant, mutant op de soortvoorwaarde, ruff zonder cache; één regel (Security en proxy): vorm van het clientadres; uit de terugblikken van sentinel en aegis bij #240, #176, #208 en #243 | Lessen |
 | v0.5.71 | 2026-11-12 | Regel over SendMessage aangepast (subagent levert via de hand-back), pad van de handleiding (Algemeen), versmalde weigering (Bouw), bestaande controles in een securitybrief (Review), Dependabot-configuratie (Security en proxy); uit de terugblikken van apex, bedrock, sentinel, aegis en pipeline bij #214, #230, #240 en #176 | Lessen |
 | v0.5.70 | 2026-11-11 | Regel over E2E-bestandsnamen tot #213 en de wisselvallige tests #172 en #217 weg (opgelost); één regel (E2E) en één (Review) uit de terugblikken van prism, sentinel en aegis: ruis bij een volgordeproef op het log, testbestanden in een securityreview | Lessen |
