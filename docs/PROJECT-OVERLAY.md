@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.74
+**Versie overlay:** v0.5.75
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-12
@@ -315,6 +315,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Security en proxy
 
 - Een wijziging in `.github/dependabot.yml` valideert de reviewer met `check-jsonschema --builtin-schema vendor.dependabot` in een venv in zijn scratchpad. Na de merge laat de regie de stakeholder per ecosysteem de eerstvolgende run in Insights, Dependabot nakijken ("Check for updates"). Bij `docker-compose` gaf `directories` een "unknown error" zonder log; gebruik daar één ingang per map (#230).
+- Een proef op de socketproxy noemt de bron van de eerdere proef met nummer en plek (slotcommentaar van #230 en #251). Een mutant met schrijfrecht gebruikt een aanroep zonder effect, zoals `POST /containers/<bestaat-niet>/stop`, nooit `POST /containers/create` (#251).
+- Een brief voor een update van een afhankelijkheid noemt de bron voor de hashes (de JSON van PyPI) en het exacte testcommando per plek waar de versie staat: `uv.lock`, `integratie/requirements-test.txt` en `tests/e2e/requirements.txt` (#258).
 - Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
 - Komt een handeling die eerst alleen via de CLI kon in de webinterface, noem dat in de brief aan de reviewer. Elke webroute met blijvend effect (een link, een nieuw account, een nieuwe inlogmethode) vraagt een recente inlog (ADR-001).
 - Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan het maskeren in de toegangslog van Gunicorn (`app/toegangslog.py`).
@@ -456,6 +458,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.75 | 2026-11-12 | Twee regels (Security en proxy): proef en mutant op de socketproxy, brief voor een update van een afhankelijkheid; uit de terugblikken van pipeline bij #251 en sentinel bij #258 | Lessen |
 | v0.5.74 | 2026-11-12 | Regel over mutantruns (Review) aangevuld: één bestand over het testimage mounten; uit de terugblik van sentinel bij #255 | Lessen |
 | v0.5.73 | 2026-11-12 | Eén regel (Security en proxy): aantallen van de E2E-runs in het releaseissue; uit de release van v1.0.2 | Lessen |
 | v0.5.72 | 2026-11-12 | Drie regels (Review): verwachte falende assert en gelijkwaardige mutant, mutant op de soortvoorwaarde, ruff zonder cache; één regel (Security en proxy): vorm van het clientadres; uit de terugblikken van sentinel en aegis bij #240, #176, #208 en #243 | Lessen |
