@@ -187,7 +187,7 @@ Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elk
 
 ## Bezetting als CSV exporteren en importeren
 
-Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
+Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Heet een lid zelf "clubboot", dan staat in de export het lidnummer erbij en koppelt de import op dat lidnummer. Een clubboot met een lidnummer dat bij geen lid hoort, weigert de import. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
 
 Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heeft een uitkomst:
 

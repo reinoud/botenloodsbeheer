@@ -368,7 +368,7 @@ FOUTEN = {
     "bootsoort-past-niet": ("A/1/1;Reiger;Surfski;;1001",
                             "Plaats A/1/1 is niet geschikt voor een surfski."),
     "clubboot-past-niet": ("A/1/1;Reiger;Surfski;clubboot;", "Plaats A/1/1 is niet geschikt voor een surfski."),
-    "clubboot-met-lidnummer": ("C/1/1;Reiger;Kajak;Clubboot;1001", "Een clubboot heeft geen lidnummer."),
+    "clubboot-met-onbekend-lidnummer": ("C/1/1;Reiger;Kajak;Clubboot;9999", "Een clubboot heeft geen lidnummer."),
     "onbekende-eigenaar-op-clubplaats": ("C/1/1;Reiger;Kajak;;", "Plaats C/1/1 is een clubplaats en alleen voor clubboten."),
     "ledenboot-op-clubplaats": ("C/1/1;Reiger;Kajak;;1001",
                                 "Plaats C/1/1 is een clubplaats en alleen voor clubboten."),
@@ -480,13 +480,23 @@ def test_clubboot_op_een_gewone_plaats_wordt_geimporteerd_en_op_een_clubplaats_o
         "Reiger": (True, "A/1/1"), "Fuut": (True, "C/1/1")}
 
 
-def test_een_clubboot_met_lidnummer_is_een_fout_en_een_naam_clubboot_is_geen_lid(app, actor, anna):
-    lid("1002", "Clubboot")  # een lid met deze naam is op naam niet te importeren; het lidnummer wel
+def test_een_clubboot_met_onbekend_lidnummer_is_een_fout_en_een_naam_clubboot_is_geen_lid(app, actor, anna):
+    lid("1002", "Clubboot")  # een lid met deze naam is op naam niet te importeren; het lidnummer wel (#214)
     plaats("A/1/1")
     plaats("C/1/1", club=True)
-    u = beoordeling(bestand("C/1/1;Reiger;Kajak;clubboot;1002", "A/1/1;Fuut;Kajak;Clubboot;"), actor)
+    u = beoordeling(bestand("C/1/1;Reiger;Kajak;clubboot;9999", "A/1/1;Fuut;Kajak;Clubboot;"), actor)
     assert u[2].uitkomst == "fout" and "geen lidnummer" in u[2].melding
     assert u[3].club and u[3].lid is None and u[3].uitkomst == "nieuwe boot"  # clubboot op een gewone plaats (#205)
+
+
+def test_een_lid_met_de_naam_clubboot_komt_door_export_en_ongewijzigde_import(app, actor):
+    """#214. Mutanten: zonder de uitzondering in _eigenaar wordt de boot clubboot (nieuwe eigenaar, en
+    zonder die in _beoordeel_regel een fout); beide moeten falen."""
+    leg("A/1/1", "Reiger", lid("1002", "Clubboot").id, soorten=("Kajak",))
+    data = bezetting_csv.export()
+    assert b"A/1/1;Reiger;Kajak;Clubboot;1002" in data
+    u = beoordeling(data, actor)[2]
+    assert u.uitkomst == "ongewijzigd" and u.lid.lidnummer == "1002" and not u.club
 
 
 @pytest.mark.parametrize("eigenaar_naam, lidnummer", [("Onbekend", ""), ("anna de vries", ""),
