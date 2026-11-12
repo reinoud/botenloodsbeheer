@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.70
+**Versie overlay:** v0.5.71
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-11
@@ -78,13 +78,15 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een filter op tekst uit een externe bron de waarden die in de praktijk voorkomen, of zeg dat ze onbekend zijn, zodat bouwer en reviewer weten of "begint met", "bevat" of "is gelijk aan" bedoeld is.
 - Noem bij een filter op externe invoer of hoofdletters en witruimte vóór de waarde meetellen, en welke test elk randgeval dekt.
 - Staat een filter in een gedeelde functie zodat meer aanroepers hetzelfde gedrag krijgen, dan heeft elke aanroeper een test met het nieuwe geval; noem die tests in de brief.
-- Zeg in elke agentopdracht: stuur het oordeel of de uitkomst met SendMessage naar `main`; een bericht aan `team-lead` komt niet aan.
+- Een subagent levert zijn uitkomst via de hand-back; vraag geen SendMessage naar `main` (dat kanaal heeft hij niet). Alleen een teammate stuurt naar `main`, nooit naar `team-lead`.
+- Noem bij een tekstwijziging voor gebruikers de handleiding met pad: `documentatie/gebruikers/handleiding.md`.
 - Geef bij een externe SOAP-dienst de WSDL vooraf mee in de scratchpad, en noem het adresschema (http of https) dat de dienst gebruikt.
 - Kiest een besluit een bibliotheek, controleer dan vóór het besluit in de broncode van de vastgepinde versie dat elke nodige aanroep bestaat, voor lezen én schrijven, en noem die aanroepen in de opdracht.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
 
 #### Bouw
 
+- Versmalt een besluit een weigering, noem dan elk geval dat van fout naar geaccepteerd gaat (ook buiten het issue), met per geval of er een test en een zin in de handleiding komt. Laat de bouwer eerst in `tests/` zoeken op de oude melding en de tests noemen die hij omzet.
 - Controleer vóór een bouwopdracht of Docker draait, en noem in de opdracht welke images al lokaal staan.
 - Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`; dat geldt ook voor reviewers. Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad. Een proef met de fixtures van de unittests krijgt daarbij een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef`.
 - Bewerk geen Python-bestanden in de werkmap terwijl een reviewer de log van `web` en `api` controleert (`--reload` laadt halve bestanden); noem het tijdstip van de laatste `up --build` in de brief.
@@ -177,6 +179,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
 - Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
 - Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
@@ -308,6 +311,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Security en proxy
 
+- Een wijziging in `.github/dependabot.yml` valideert de reviewer met `check-jsonschema --builtin-schema vendor.dependabot` in een venv in zijn scratchpad. Na de merge laat de regie de stakeholder per ecosysteem de eerstvolgende run in Insights, Dependabot nakijken ("Check for updates"). Bij `docker-compose` gaf `directories` een "unknown error" zonder log; gebruik daar één ingang per map (#230).
 - Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
 - Komt een handeling die eerst alleen via de CLI kon in de webinterface, noem dat in de brief aan de reviewer. Elke webroute met blijvend effect (een link, een nieuw account, een nieuwe inlogmethode) vraagt een recente inlog (ADR-001).
 - Komt er een nieuwe route met querystring of padparameter die persoonsgegevens kan bevatten, controleer dan het maskeren in de toegangslog van Gunicorn (`app/toegangslog.py`).
@@ -447,6 +451,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.71 | 2026-11-12 | Regel over SendMessage aangepast (subagent levert via de hand-back), pad van de handleiding (Algemeen), versmalde weigering (Bouw), bestaande controles in een securitybrief (Review), Dependabot-configuratie (Security en proxy); uit de terugblikken van apex, bedrock, sentinel, aegis en pipeline bij #214, #230, #240 en #176 | Lessen |
 | v0.5.70 | 2026-11-11 | Regel over E2E-bestandsnamen tot #213 en de wisselvallige tests #172 en #217 weg (opgelost); één regel (E2E) en één (Review) uit de terugblikken van prism, sentinel en aegis: ruis bij een volgordeproef op het log, testbestanden in een securityreview | Lessen |
 | v0.5.69 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij #237: mutant zonder de weigerende optie | Lessen |
 | v0.5.68 | 2026-11-11 | §4: `Refs` in plaats van `Closes` bij een criterium dat pas na de merge te toetsen is (#230) | Lessen |
