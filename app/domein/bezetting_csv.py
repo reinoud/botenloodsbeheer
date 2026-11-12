@@ -265,14 +265,14 @@ def _fout(u, melding):
 
 
 def _eigenaar(u, w):
-    """Volgorde (ADR-014 §3): keuze, het woord clubboot, leeg is onbekend, lidnummer, onthouden
-    koppeling, exacte naam. Zonder precies één treffer blijft het resultaat leeg (te koppelen)."""
+    """Volgorde (ADR-014 §3): keuze, het woord clubboot zonder bekend lidnummer, leeg is onbekend,
+    lidnummer, onthouden koppeling, exacte naam. Zonder precies één treffer blijft het resultaat leeg (te koppelen)."""
     naam, nummer = u.tekst["eigenaar"], u.tekst["lidnummer"]
     if u.keuze == "club":
         u.club, u.via = True, "keuze"
     elif u.keuze:
         u.lid, u.via = w.leden_per_id.get(int(u.keuze)), "keuze"
-    elif naam.lower() == CLUBBOOT:
+    elif naam.lower() == CLUBBOOT and nummer not in w.leden_per_nummer:  # een lid "clubboot" koppelt op nummer (#214)
         u.club = True
     elif not naam and not nummer:
         u.onbekend = True
@@ -298,7 +298,7 @@ def _beoordeel_regel(u, w):
         return _fout(u, f"De eigenaar is langer dan {EIGENAAR_MAX} tekens.")
     if t["lidnummer"] and not leden.LIDNUMMER.fullmatch(t["lidnummer"]):
         return _fout(u, "Het lidnummer is ongeldig.")
-    if t["eigenaar"].lower() == CLUBBOOT and t["lidnummer"]:
+    if t["eigenaar"].lower() == CLUBBOOT and t["lidnummer"] and t["lidnummer"] not in w.leden_per_nummer:
         return _fout(u, "Een clubboot heeft geen lidnummer. Maak het lidnummer leeg.")
     u.plaats = _plaats_zoeken(t["plaats"], w.rekken, w.plaatsen)
     if u.plaats is None:
