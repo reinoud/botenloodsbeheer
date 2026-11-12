@@ -1,9 +1,11 @@
 """Beheerders beheren (BLB-023) en de eigen inlogmethodes toevoegen of intrekken (BLB-038),
 volgens ADR-001 v1.1.0: recente inlog van 10 minuten, intrekken beëindigt alle eigen sessies."""
 
+import re
 import time
 
 import pytest
+import segno
 from cryptography.fernet import Fernet
 from sqlalchemy import select
 
@@ -343,3 +345,30 @@ def test_profiel_toont_methodes_en_wachtwoord_toevoegen(app, client):
     assert r.location.endswith("/profiel")
     assert db.session.get(Beheerder, anna.id).wachtwoordhash is not None
     assert client.get("/rekoverzicht").status_code == 200  # toevoegen laat de sessie staan
+
+
+def _qr_pad(html):
+    return re.search(r'<svg[^>]*class="bl-qr".*? d="([^"]+)"', html, re.DOTALL).group(1)
+
+
+def _link_en_qr(r):
+    html = r.get_data(as_text=True)
+    link = re.search(r'<code id="uitnodigingslink">([^<]+)</code>', html).group(1)
+    return link, html
+
+
+@pytest.mark.parametrize("pad", ["/beheerders", "/beheerders/{bert}/herstellen"])
+def test_link_toont_qr_naar_dezelfde_link_met_naam_en_zonder_cache(ingelogd, pad):
+    client, _anna, bert = ingelogd
+    data = {"gebruikersnaam": "carla"} if pad == "/beheerders" else {}
+    r = client.post(pad.format(bert=bert.id), data=data)
+    link, html = _link_en_qr(r)
+    assert "/uitnodiging/" in link
+    assert _qr_pad(html) == _qr_pad(segno.make(link, error="m").svg_inline(svgclass="bl-qr"))
+    assert re.search(r'<svg role="img" aria-label="QR-code van de uitnodigingslink"', html)
+    assert r.headers["Cache-Control"] == "no-store"
+    code = link.rsplit("/", 1)[1]
+    assert code not in client.get("/beheerders").get_data(as_text=True)
+    assert all(code not in str(r.gegevens) for r in db.session.scalars(select(Logregel)))
+    with client.session_transaction() as s:
+        assert "_flashes" not in s

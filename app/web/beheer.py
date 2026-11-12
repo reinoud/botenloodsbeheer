@@ -4,7 +4,9 @@ Schermen over boten en plaatsen tonen de bootmutaties die erbij horen (BLB-025, 
 import json
 from functools import partial
 
+import segno
 from flask import abort, current_app, flash, g, redirect, render_template, request, url_for
+from markupsafe import Markup
 
 from app.domein import (
     Actor,
@@ -491,8 +493,10 @@ def beheerders_overzicht():
 
 def _link(code, titel, uitleg):
     # De link staat alleen in dit antwoord; niet in een flash, want de sessiecookie is leesbaar.
-    return render_template("link.html", titel=titel, uitleg=uitleg,
-                           link=f"{current_app.config['BASIS_URL']}/uitnodiging/{code}")
+    link = f"{current_app.config['BASIS_URL']}/uitnodiging/{code}"
+    qr = segno.make(link, error="m").svg_inline(omitsize=True, svgclass="bl-qr").replace(
+        "<svg ", '<svg role="img" aria-label="QR-code van de uitnodigingslink" ', 1)
+    return render_template("link.html", titel=titel, uitleg=uitleg, link=link, qr=Markup(qr))
 
 
 @bp.post("/beheerders")

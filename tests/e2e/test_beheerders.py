@@ -68,6 +68,16 @@ def test_methode_intrekken_beeindigt_sessie_laatste_blijft(page, authenticator):
     expect(log).to_contain_text("methode: wachtwoord en TOTP")
 
 
+def qr_zichtbaar(page):
+    """De QR-code staat onder de tekstlink, op telefoon- en laptopbreedte, op de maat van bl-qr."""
+    for breedte in (360, 1100):
+        page.set_viewport_size({"width": breedte, "height": 900})
+        qr = page.get_by_role("img", name="QR-code van de uitnodigingslink")
+        expect(qr).to_be_visible()
+        vak = qr.bounding_box()
+        assert 136 <= vak["width"] <= 144 and vak["x"] + vak["width"] <= breedte, vak  # bl-qr: 8,75rem
+
+
 def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     wachtwoord_instellen(page, "beheerders")
     nieuw = f"e2e-nieuw-{STEMPEL}"
@@ -75,6 +85,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     page.get_by_label("Gebruikersnaam").fill(nieuw)
     page.get_by_role("button", name="Uitnodigen").click()
     link = page.locator("#uitnodigingslink").inner_text()
+    qr_zichtbaar(page)
 
     collega = browser.new_context(base_url=base_url).new_page()
     wachtwoord_instellen(collega, None, url=link)
@@ -83,6 +94,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     page.goto("/beheerders")
     page.get_by_role("button", name=f"Toegang herstellen: {nieuw}").click()
     herstel = page.locator("#uitnodigingslink").inner_text()
+    qr_zichtbaar(page)
     collega.goto("/")
     expect(collega).to_have_url(re.compile(r"/inloggen$"))
     wachtwoord_instellen(collega, None, url=herstel)
