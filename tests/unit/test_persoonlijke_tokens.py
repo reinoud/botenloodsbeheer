@@ -338,11 +338,12 @@ def test_nieuw_token_geweigerd_houdt_de_invoer(app, scherm, data, melding):
     assert db.session.scalar(select(Token)) is None
 
 
-@pytest.mark.parametrize("whitelist,mag", [("10.0.0.0/8, 2001:db8::/32", True), ("0.0.0.0/0", False),
-                                           ("10.203.0.0/24, ::/0", False)])
-def test_robottoken_in_het_scherm_weigert_een_te_brede_reeks(app, scherm, whitelist, mag):
-    # #243. Een persoonlijk token houdt een lege of brede whitelist (BLB-033).
-    r = scherm.post("/tokens/nieuw", data={"soort": "robot", "naam": "koppeling", "dagen": "30",
+@pytest.mark.parametrize("soort,whitelist,mag", [
+    ("robot", "10.0.0.0/8, 2001:db8::/32", True), ("robot", "0.0.0.0/0", False),
+    ("robot", "10.203.0.0/24, ::/0", False), ("persoonlijk", "0.0.0.0/0", True)])
+def test_robottoken_in_het_scherm_weigert_een_te_brede_reeks(app, scherm, soort, whitelist, mag):
+    # #243. Een persoonlijk token houdt een lege of brede whitelist (BLB-033, #255).
+    r = scherm.post("/tokens/nieuw", data={"soort": soort, "naam": "koppeling", "dagen": "30",
                                            "recht": ["boten:lezen"], "whitelist": whitelist})
     assert r.status_code == 200 and ("niet breder zijn dan /8" in r.text) is not mag
     assert (db.session.scalar(select(Token)) is not None) is mag
