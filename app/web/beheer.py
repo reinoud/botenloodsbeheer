@@ -393,7 +393,9 @@ def boot_wijzigen(boot_id):
                      request.form.get("bootsoort", type=getal), lid_id,
                      gelukt="De boot is opgeslagen.") and was_wachtend \
                 and boten.boot(boot_id).wachtlijst is None:
-            flash("De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
+            flash("De eigenaar is nu onbekend en de boot is van de wachtlijst gehaald."
+                  if lid_id is None and not clubboot else
+                  "De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 

@@ -22,7 +22,11 @@
   <p>Vrijgeven of verplaatsen doe je op de plaats. <a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">Naar plaats {{ boot.plaats.code }}</a></p>
   {% elif verwijderen_in_taak %}
   <h2 class="bl-taak__kop" id="taak-kop">Boot verwijderen</h2>
+  {% if boot.wachtlijst %}
+  <p>De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst.</p>
+  {% else %}
   <p>De eigenaar is oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst.</p>
+  {% endif %}
   <form method="post" action="{{ url_for('web.boot_verwijderen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
     <button type="submit" class="ds-btn ds-btn--danger">Boot {{ boot.naam }} verwijderen</button>

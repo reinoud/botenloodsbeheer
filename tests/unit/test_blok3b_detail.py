@@ -177,6 +177,19 @@ def test_oud_lid_heeft_boot_verwijderen_als_taak_en_het_blok_heet_boot_wijzigen(
     assert feiten(tekst)["Wachtlijst"] == "nee"
 
 
+def test_oud_lid_met_een_boot_op_de_wachtlijst_ziet_dat_de_import_hem_eraf_haalt(ingelogd):
+    # #176. Mutant: de tak boot.wachtlijst in de taak weglaten valt op de eerste assert.
+    oud = lid("1003", "Oud Lid")
+    b = boot(oud.id, naam="Oudje")
+    wachtlijst.erop_zetten(b.id, "2024-03-01", CLI)
+    opzeggen(oud.id, opzegdatum=vandaag())
+    tekst = ingelogd.get(f"/boten/{b.id}").text
+    t = taak(tekst)
+    assert "De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst." in t
+    assert "kan niet op de wachtlijst" not in t and "Van de wachtlijst halen" not in t
+    assert feiten(tekst)["Wachtlijst"] == "sinds 01-03-2024"
+
+
 def test_oud_lid_met_een_boot_op_een_plaats_houdt_de_taak_op_plaats(ingelogd):
     # Toets bouw deel B (designsystem ce772e6): eerst gaat de plaats vrij. Mutant: verwijderen_in_taak = oud_lid valt op de assert op het blok.
     p = plaats()

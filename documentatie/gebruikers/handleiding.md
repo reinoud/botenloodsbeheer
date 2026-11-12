@@ -123,8 +123,8 @@ De applicatie weigert een clubboot, een boot van een oud-lid, een boot met een p
 **Van de lijst halen:** kies op `/wachtlijst` of op de pagina van de boot de knop om de boot van de lijst te halen. Drie gevallen gaan vanzelf:
 
 - een boot die een plaats krijgt, gaat van de lijst;
-- krijgt de boot een andere eigenaar (een ander lid), dan gaat hij van de lijst. De applicatie meldt dat en het log noemt de reden `andere eigenaar`. Zet de boot er daarna zo nodig opnieuw op;
-- wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder.
+- krijgt de boot een andere eigenaar (een ander lid), dan gaat hij van de lijst. De applicatie meldt dat en het log noemt de reden `andere eigenaar`. Zet de boot er daarna zo nodig opnieuw op. Zet je de eigenaar op **eigenaar onbekend**, dan gaat de boot ook van de lijst, met de melding "De eigenaar is nu onbekend en de boot is van de wachtlijst gehaald." Het log noemt ook dan de reden `andere eigenaar`;
+- wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder. Tot die import zegt de taak op de pagina van de boot: "De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst." Een knop om de boot met de hand van de lijst te halen is er dan niet.
 
 Op de pagina van een lid staat een boot op de wachtlijst met de regel **Wachtlijst: Sinds** en de aanmelddatum; een boot die niet op de lijst staat, heeft die regel niet.
 
