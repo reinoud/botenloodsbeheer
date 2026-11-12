@@ -75,8 +75,9 @@ class Opnamen:
 def verberg_geheimen(page):
     """QR-code en sleutel zijn een TOTP-geheim; de uitnodigingslink bevat de eenmalige code; de
     tokenwaarde is een geheim."""
+    page.wait_for_load_state()  # de inline SVG van de QR-code heeft zonder stijl.css de volle breedte
     page.evaluate("""() => {
-        const qr = document.querySelector('img.bl-qr');
+        const qr = document.querySelector('.bl-qr');
         if (qr) { const b = qr.getBoundingClientRect(); const vak = document.createElement('div');
           vak.style.cssText = `width:${b.width}px;height:${b.height}px;background:#ddd`; qr.replaceWith(vak); }
         const sleutel = document.querySelector('#totp-geheim');
@@ -144,7 +145,7 @@ def schermen(browser):
     page.get_by_label("Gebruikersnaam (a-z, cijfers, punt, - en _)").fill("beheerder.twee")
     page.get_by_role("button", name="Uitnodigen").click()
     verberg_geheimen(page)
-    o.maak("uitnodiging-link", hoogte=650)
+    o.maak("uitnodiging-link", hoogte=850)
     page.goto("/beheerders")
     o.maak("beheerders", hoogte=700)
     # Tokens: een persoonlijk token en een robottoken, binnen 10 minuten na het inloggen.

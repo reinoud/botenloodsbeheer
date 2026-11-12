@@ -31,7 +31,7 @@ Het scherm `/beheerders` toont alle accounts met hun status en inlogmethodes. De
 ### Een beheerder uitnodigen
 
 1. Vul onder **Beheerder uitnodigen** een gebruikersnaam in (2 tot 50 tekens: a-z, cijfers, punt, streepje en onderstreping) en kies **Uitnodigen**.
-2. Geef de link die verschijnt aan de nieuwe beheerder. De link werkt één keer en is 24 uur geldig. Hij staat alleen op dit scherm.
+2. Geef de link die verschijnt aan de nieuwe beheerder. De link werkt één keer en is 24 uur geldig. Hij staat alleen op dit scherm, als tekst en als QR-code. De nieuwe beheerder kan de QR-code met de telefoon scannen in plaats van de link over te typen. Bij **Toegang herstellen** verschijnt dezelfde combinatie.
 3. De nieuwe beheerder opent de link en kiest een passkey, of klapt **Wachtwoord en authenticator-app** uit voor een wachtwoord van 12 tot 128 tekens met de QR-code of sleutel voor de authenticator-app en een eerste code. De link zelf staat in een kader; selecteer hem met één tik.
 
 ![Het scherm Beheerder uitgenodigd met de uitnodigingslink, hier onherkenbaar gemaakt.](afbeeldingen/uitnodiging-link.png)
