@@ -327,6 +327,26 @@ def test_foto_vervangen_met_ongeldig_bestand_noemt_de_vorige_alleen_als_die_er_i
     assert (VORIGE in r.text) is er_is_een
 
 
+@pytest.mark.parametrize("data", [{"foto": (io.BytesIO(b"tekst"), "boot.jpg")}, {}], ids=["ongeldig", "geen-foto"])
+def test_geweigerde_foto_houdt_het_blok_open(ingelogd, data):
+    # #208. Mutant: zonder open=foto bij een weigering valt de eerste assert; altijd open valt op de laatste.
+    b = bezette_plaats().boot
+    r = ingelogd.post(f"/boten/{b.id}/foto", data=data)
+    assert r.status_code == 302 and r.location == f"/boten/{b.id}?open=foto"
+    assert re.search(r'<details class="dj-disclosure" open>\s*<summary id="foto-kop">', ingelogd.get(r.location).text)
+    r = ingelogd.post(f"/boten/{b.id}/foto", data={"foto": (io.BytesIO(png()), "boot.png")})
+    assert r.location == f"/boten/{b.id}"
+
+
+@pytest.mark.parametrize("data", [{"naam": "Fuut", "bootsoort": "1"}, {"naam": "", "bootsoort": "1", "eigenaar": "club"}],
+                         ids=["geen-eigenaar", "geen-naam"])
+def test_geweigerde_nieuwe_boot_houdt_het_blok_open(ingelogd, data):
+    # #208. Mutant: zonder open=nieuw valt de eerste assert, per pad.
+    r = ingelogd.post("/boten", data=data)
+    assert r.status_code == 302 and r.location == "/boten?open=nieuw"
+    assert re.search(r'<details class="bl-nieuw" open>\s*<summary id="nieuw-kop">', ingelogd.get(r.location).text)
+
+
 def test_te_groot_op_een_ander_pad_blijft_een_gewone_413(ingelogd, app):
     groot = b"x" * (app.config["MAX_CONTENT_LENGTH"] + 1)
     assert ingelogd.post("/instellingen", data={"naam": groot}).status_code == 413

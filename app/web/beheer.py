@@ -331,14 +331,15 @@ def _eigenaar(onbekend_mag=True):
 @bp.post("/boten")
 @inloggen_vereist
 def boot_aanmaken():
+    # Na een weigering staat het blok Nieuwe boot open, met de melding erboven (#208).
     if (eigenaar := _eigenaar()) is None:
-        return redirect(url_for("web.boten_overzicht"))
+        return redirect(url_for("web.boten_overzicht", open="nieuw"))
     lid_id, clubboot = eigenaar
     b = uitvoeren(partial(boten.boot_aanmaken, clubboot=clubboot), request.form.get("naam"),
                   request.form.get("bootsoort", type=getal), lid_id, _foto(),
                   gelukt="De boot is vastgelegd.")
     if b is None:
-        return redirect(url_for("web.boten_overzicht"))
+        return redirect(url_for("web.boten_overzicht", open="nieuw"))
     return redirect(url_for("web.boot_detail", boot_id=b.id))
 
 
@@ -405,9 +406,11 @@ def boot_foto(boot_id):
     foto = _foto()
     if foto is None:
         flash("Kies een foto.", "fout")
+        gelukt = False
     else:
-        uitvoeren(boten.foto_vervangen, boot_id, foto, gelukt="De foto is opgeslagen.")
-    return redirect(url_for("web.boot_detail", boot_id=boot_id))
+        gelukt = uitvoeren(boten.foto_vervangen, boot_id, foto, gelukt="De foto is opgeslagen.")
+    # Na een weigering staat het blok Foto vervangen open, met de melding erboven (#208).
+    return redirect(url_for("web.boot_detail", boot_id=boot_id, **({} if gelukt else {"open": "foto"})))
 
 
 @bp.post("/boten/<int:boot_id>/verwijderen")

@@ -209,6 +209,7 @@ def foto_vervangen(boot_id, inhoud, actor):
         db.session.delete(oud)
     log.schrijf(actor, "boot.foto_vervangen" if oud else "boot.foto_toegevoegd", _verwijzingen(b))
     db.session.commit()
+    return True
 
 
 def boot_verwijderen(boot_id, actor):
