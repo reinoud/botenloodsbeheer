@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.73
+**Versie overlay:** v0.5.74
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-12
@@ -153,7 +153,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
 - Tests van de integratiecontainer die `zeep` nodig hebben, draaien met `docker compose -f docker-compose.yml -f compose.dev.yml --profile test run --rm --no-deps --build test-integratie`; het test-image van `app` heeft geen zeep.
 - Maak mutantkopieën in een map met een unieke naam (met tijdstempel) in de scratchpad, zonder `rm -rf`. Een boot van een oud-lid maak je in een test met een directe insert van `Boot`; de helper `boot()` weigert een oud-lid.
-- Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script.
+- Een mutantrun muteert bronbestanden in de werkmap. Niemand anders bewerkt die bestanden tijdens de run; draai mutanten altijd op een kopie die over het testimage gemount is, ook met een eigen script. Voor één bestand volstaat `-v <scratchpad>/<bestand>:/app/<pad>:ro` op `docker compose run`; een kopie van de hele repository is dan niet nodig.
 - Noem bij een geweigerde actie (upload, formulier) per scherm of het blok daarna al open gaat; zo niet, zeg of het in dit issue open moet.
 - Hangt een melding af van een toestand (zoals een vorige afbeelding), noem dan bij elke bestaande en nieuwe test welke toestand geldt.
 - Een live proef die eigen testgegevens maakt (zoals een boot), ruimt die zelf op met een domeinfunctie; `opruimen.sql` kent alleen de stempelaccounts.
@@ -456,6 +456,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.74 | 2026-11-12 | Regel over mutantruns (Review) aangevuld: één bestand over het testimage mounten; uit de terugblik van sentinel bij #255 | Lessen |
 | v0.5.73 | 2026-11-12 | Eén regel (Security en proxy): aantallen van de E2E-runs in het releaseissue; uit de release van v1.0.2 | Lessen |
 | v0.5.72 | 2026-11-12 | Drie regels (Review): verwachte falende assert en gelijkwaardige mutant, mutant op de soortvoorwaarde, ruff zonder cache; één regel (Security en proxy): vorm van het clientadres; uit de terugblikken van sentinel en aegis bij #240, #176, #208 en #243 | Lessen |
 | v0.5.71 | 2026-11-12 | Regel over SendMessage aangepast (subagent levert via de hand-back), pad van de handleiding (Algemeen), versmalde weigering (Bouw), bestaande controles in een securitybrief (Review), Dependabot-configuratie (Security en proxy); uit de terugblikken van apex, bedrock, sentinel, aegis en pipeline bij #214, #230, #240 en #176 | Lessen |
