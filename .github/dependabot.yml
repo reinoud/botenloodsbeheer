@@ -39,10 +39,16 @@ updates:
       - dependency-name: playwright/python
         update-types: ["version-update:semver-major", "version-update:semver-minor", "version-update:semver-patch"]
   # Ook het voorbeeld van een gedeelde Traefik (#230): images op een digest, zoals in de rest.
+  # Twee losse ingangen in plaats van `directories`: met beide mappen in één ingang meldt GitHub
+  # sinds #245 "unknown error" voor docker-compose (lokaal met de Dependabot-CLI niet na te spelen).
   - package-ecosystem: docker-compose
-    directories:
-      - /
-      - /documentatie/beheer/voorbeelden/traefik
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
+  - package-ecosystem: docker-compose
+    directory: /documentatie/beheer/voorbeelden/traefik
     schedule:
       interval: weekly
     cooldown:
