@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.76
+**Versie overlay:** v0.5.77
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-12
@@ -103,6 +103,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een logveld met de naam `code`, `adres`, `telefoon` of `email` staat in het log als `gewijzigd`; kies een andere sleutel als de waarde zichtbaar moet zijn.
 - Geef een nieuwe webmodule geen naam die al bestaat in `app.web` (zoals een domeinmodule of functie); controleer na het toevoegen dat de route bestaat met `flask routes` of een unittest. Een view met meer routes krijgt de route voor `url_for` als onderste decorator; controleer het menu-item met een unittest op de `href`.
 - Een nieuw scherm met een tabel van meer dan zeven kolommen krijgt vóór de bouw een schets van de kolommen; controleer de schermafbeelding op 1100 pixels breed voordat de tests worden uitgebreid.
+- Noemt een opdracht een CSS-klasse, controleer dan met `grep -rn` in `app/web/static/` dat die bestaat, en noem anders de dichtstbijzijnde bestaande klasse. Bij een ontwerp uit Design System gaat de klasse uit de README van het scherm voor.
+- Voegt een wijziging een geheim of een eenmalige code toe aan een scherm met een schermafbeelding, noem dan `verberg_geheimen` in `documentatie/gebruikers/schermafbeeldingen.py`; de bouwer maakt de afbeelding opnieuw en bekijkt hem. Een E2E-assert op de maat van een element toetst de maat uit de CSS, niet alleen dat het in beeld past.
 - Beperkt een wijziging de invoerformaten, zeg dan in de brief welke melding de gebruiker daarna ziet.
 - Een unittest vergelijkt datums met `vandaag()` uit `app.domein`, niet met `date.today()`; de container rekent in UTC, de applicatie in de tijdzone van de installatie.
 - Een test met `filterwarnings("error")` noemt de categorie van de waarschuwing, zodat waarschuwingen uit andere tests hem niet laten falen. Een geparametriseerde test met binaire of grote invoer krijgt `ids=`.
@@ -460,6 +462,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.77 | 2026-11-12 | Twee regels (Bouw): CSS-klasse uit de opdracht met grep controleren, ontwerp van Design System gaat voor; geheim op een scherm met schermafbeelding via `verberg_geheimen`, en een E2E-maat toetst de maat uit de CSS; uit de terugblikken bij #159 | Lessen |
 | v0.5.76 | 2026-11-12 | Twee regels (Review): verwachte waarde per mutant, normalisatie en terugschrijven in de securitybrief; uit de terugblikken van sentinel en aegis bij #226 | Lessen |
 | v0.5.75 | 2026-11-12 | Twee regels (Security en proxy): proef en mutant op de socketproxy, brief voor een update van een afhankelijkheid; uit de terugblikken van pipeline bij #251 en sentinel bij #258 | Lessen |
 | v0.5.74 | 2026-11-12 | Regel over mutantruns (Review) aangevuld: één bestand over het testimage mounten; uit de terugblik van sentinel bij #255 | Lessen |
