@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.71
+**Versie overlay:** v0.5.72
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-11
+**Bijgewerkt:** 2026-11-12
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -255,6 +255,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Wijzigt een diff een regel uit een ADR, laat de reviewer dan in alle ADR's en documentatie zoeken naar verwijzingen naar die regel en naar de oude formulering, ook buiten de gestagede bestanden.
 - Rekent een migratie met `CURRENT_DATE`, noem dan de tijdzone van de database (`SHOW timezone`, Etc/UTC) en die van de installatie (`TZ`, Europe/Amsterdam).
 - Geef bij een nareview de regelnummers van de nieuwe hunks of een diff tussen de eerste en de tweede staging, zodat de reviewer alleen het nieuwe deel leest.
+- Noem per mutant uit een testcommentaar de verwachte falende assert als bestand:regel. Een deel van een voorwaarde dat het domein onbereikbaar maakt (zoals `not clubboot` bij een boot op de wachtlijst), noem je als gelijkwaardige mutant die niet gedraaid hoeft te worden.
+- Noem bij een controle die alleen voor één soort geldt (zoals robottokens) ook de mutant die de soortvoorwaarde weghaalt, met de test die daarop valt.
+- Lint in de testcontainer draai je met `ruff check --no-cache <paden>`; de cache in `/app` is niet beschrijfbaar.
 
 #### E2E
 
@@ -368,6 +371,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een autorisatiecontrole op `actor.soort` alle aanroepers van de functie en waar hun actor wordt gemaakt (bestand:regel).
 - Zet een wijziging meer in de applicatielog (zoals een traceback), dan toetst de test de JSON-logregel na een fout van de database zelf (NOT NULL of UNIQUE op `lid`) met de rol `api` en met een regelovergang in een veldwaarde, en met een fout die de oorspronkelijke tekst zonder keten overneemt (zoals `PendingRollbackError`); `hide_parameters` verbergt de DETAIL van PostgreSQL niet. Een foutmelding in de code bevat geen veldwaarden.
 - Bij een nieuwe GET-parameter: de toegangslog (`app/toegangslog.py`) laat de querystring weg en `app/__init__.py` weigert een NUL-teken centraal. De reviewer controleert alleen of de nieuwe route daar niet omheen gaat.
+- Noem bij een whitelist- of adrescontrole in welke vorm het clientadres binnenkomt (IPv4 als gewone notatie of als `::ffff:`), of zeg dat het onbekend is.
 
 #### Documentatie, backlog en ADR's
 
@@ -451,6 +455,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.72 | 2026-11-12 | Drie regels (Review): verwachte falende assert en gelijkwaardige mutant, mutant op de soortvoorwaarde, ruff zonder cache; één regel (Security en proxy): vorm van het clientadres; uit de terugblikken van sentinel en aegis bij #240, #176, #208 en #243 | Lessen |
 | v0.5.71 | 2026-11-12 | Regel over SendMessage aangepast (subagent levert via de hand-back), pad van de handleiding (Algemeen), versmalde weigering (Bouw), bestaande controles in een securitybrief (Review), Dependabot-configuratie (Security en proxy); uit de terugblikken van apex, bedrock, sentinel, aegis en pipeline bij #214, #230, #240 en #176 | Lessen |
 | v0.5.70 | 2026-11-11 | Regel over E2E-bestandsnamen tot #213 en de wisselvallige tests #172 en #217 weg (opgelost); één regel (E2E) en één (Review) uit de terugblikken van prism, sentinel en aegis: ruis bij een volgordeproef op het log, testbestanden in een securityreview | Lessen |
 | v0.5.69 | 2026-11-11 | Eén regel (Security en proxy) uit de terugblik van probe bij #237: mutant zonder de weigerende optie | Lessen |
