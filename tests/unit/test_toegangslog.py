@@ -25,6 +25,7 @@ def log(capsys, raw_uri, xff=True, methode="GET"):
 
 @pytest.mark.parametrize("raw_uri,pad", [
     ("/leden?zoek=Jansen", "/leden"),
+    ("/zoeken?q=Jansen", "/zoeken"),
     ("/uitnodiging/GEHEIMECODE", "/uitnodiging/..."),
     ("/uitnodiging/GEHEIMECODE/wachtwoord?x=1", "/uitnodiging/..."),
     ("/boten/%0a12", "/boten/..."),

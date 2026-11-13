@@ -35,10 +35,14 @@ def test_zoeken_vanuit_de_kop_geeft_een_lijst_of_opent_de_boot(page):
         page.goto("/rekoverzicht")
         veld = page.locator("header.bl-kop").get_by_label(KOP_LABEL)
         expect(veld).to_have_attribute("placeholder", "Plaats, boot of eigenaar")
-        # Het veld en de knop passen in de kop, ook op een telefoon.
-        for element in (veld, page.locator("header.bl-kop").get_by_role("button", name="Zoeken")):
+        # Het veld, de knop en op een telefoon ook de knop Menu passen in de kop; het veld blijft bruikbaar breed.
+        kop = page.locator("header.bl-kop")
+        menu = (kop.locator("summary.dj-menu__button"),) if breedte == 360 else ()  # breed: menu open, knop weg
+        for element in (veld, kop.get_by_role("button", name="Zoeken"), *menu):
             doos = element.bounding_box()
             assert doos["x"] >= 0 and doos["x"] + doos["width"] <= breedte, (breedte, doos)
+        # De preview van BV-75 (designsystem b0f0f1c) meet op 360 px 97 px; marge voor lettertype en afronding.
+        assert veld.bounding_box()["width"] >= 90, breedte
 
         # Twee treffers: de lijst, met het aantal, de plaatsen en de term nog in het kopveld.
         zoeken_in_de_kop(page, rek)

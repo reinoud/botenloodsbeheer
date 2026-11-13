@@ -150,6 +150,10 @@ def test_plaatsen_op_verdieping_en_vak_niet_op_code(app, database):
     for vak in range(10, 0, -1):  # elke UPDATE zet de rij achteraan: de rijen staan nu van vak 10 naar 1
         with database.begin() as c:
             c.execute(text("UPDATE plaats SET vak = vak WHERE verdieping = 1 AND vak = :v"), {"v": vak})
+    # Zonder statistieken kiest de planner de unieke index en sorteert die al op vak (Sentinel, #154).
+    with database.begin() as c:
+        c.execute(text("ANALYZE plaats"))
+        c.execute(text("ANALYZE rek"))
     codes = [f"M/1/{v}" for v in range(1, 11)] + ["M/2/1"]
     assert kort("m/") == [("plaats", c) for c in codes]
 
