@@ -1,5 +1,15 @@
 {% extends "base.html" %}
 {% from "_log.html" import logblok %}
+{# De vrije plaatsen voor een keuzelijst, voor Plaats toewijzen en Boot verplaatsen; een clubboot krijgt clubplaatsen en gewone plaatsen apart. #}
+{% macro plaatsopties(vrij, clubboot) %}
+{% if clubboot %}
+{% for naam, groep in (("Clubplaatsen", vrij|selectattr("is_clubplaats")|list), ("Gewone plaatsen", vrij|rejectattr("is_clubplaats")|list)) if groep %}
+<optgroup label="{{ naam }}">{% for p in groep %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}</optgroup>
+{% endfor %}
+{% else %}
+{% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
+{% endif %}
+{% endmacro %}
 {% block titel %}{{ boot.naam }} · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 {# Detail Boot (BV-46, 2B): de feiten met een kleine foto, daaronder de ene taak die nu past; de rest staat in dichte uitklapblokken. #}
@@ -19,7 +29,7 @@
 <section class="kaart bl-taak" aria-labelledby="taak-kop">
   {% if boot.plaats %}
   <h2 class="bl-taak__kop" id="taak-kop">Op plaats {{ boot.plaats.code }}</h2>
-  <p>Vrijgeven of verplaatsen doe je op de plaats. <a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">Naar plaats {{ boot.plaats.code }}</a></p>
+  <p>Vrijgeven doe je op de plaats. <a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">Naar plaats {{ boot.plaats.code }}</a></p>
   {% elif verwijderen_in_taak %}
   <h2 class="bl-taak__kop" id="taak-kop">Boot verwijderen</h2>
   {% if boot.wachtlijst %}
@@ -38,15 +48,7 @@
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="plaats">Vrije plaats voor {{ boot.bootsoort.naam|lower }}</label>
-      <select class="dj-select" id="plaats" name="plaats_id" required>
-        {% if boot.clubboot %}
-        {% for naam, groep in (("Clubplaatsen", vrij|selectattr("is_clubplaats")|list), ("Gewone plaatsen", vrij|rejectattr("is_clubplaats")|list)) if groep %}
-        <optgroup label="{{ naam }}">{% for p in groep %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}</optgroup>
-        {% endfor %}
-        {% else %}
-        {% for p in vrij %}<option value="{{ p.id }}">{{ p.code }} (rek {{ p.rek.naam }})</option>{% endfor %}
-        {% endif %}
-      </select>
+      <select class="dj-select" id="plaats" name="plaats_id" required>{{ plaatsopties(vrij, boot.clubboot) }}</select>
     </div>
     <button type="submit" class="ds-btn ds-btn--primary">Wijs toe aan plek</button>
   </form>
@@ -76,6 +78,27 @@
   </div>
   {% endif %}
 </section>
+{% if boot.plaats and not oud_lid %}
+<section class="kaart" aria-labelledby="verplaatsen-kop">
+<details class="dj-disclosure"{% if verplaatsen_open %} open{% endif %}>
+  <summary id="verplaatsen-kop">Boot verplaatsen</summary>
+  <div class="bl-uitklap__inhoud">
+  {% if vrij %}
+  <form class="bl-formulier" method="post" action="{{ url_for('web.boot_verplaatsen', boot_id=boot.id) }}">
+    {% include "_csrf.html" %}
+    <div class="ds-field">
+      <label class="ds-field__label" for="verplaats-plaats">Verplaats naar een vrije plaats voor {{ boot.bootsoort.naam|lower }}</label>
+      <select class="dj-select" id="verplaats-plaats" name="plaats_id" required><option value="">Kies een vrije plaats</option>{{ plaatsopties(vrij, boot.clubboot) }}</select>
+    </div>
+    <button type="submit" class="ds-btn ds-btn--primary">Verplaats</button>
+  </form>
+  {% else %}
+  <p>Er is geen vrije plaats voor {{ boot.bootsoort.naam|lower }}.</p>
+  {% endif %}
+  </div>
+</details>
+</section>
+{% endif %}
 <section class="kaart" aria-labelledby="wijzigen-kop">
 <details class="dj-disclosure">
   <summary id="wijzigen-kop">{{ 'Boot wijzigen' if verwijderen_in_taak else 'Boot wijzigen of verwijderen' }}</summary>

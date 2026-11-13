@@ -2,8 +2,8 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.4.3
-**Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043
+**Versie:** v1.4.4
+**Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043, BLB-047
 
 ## Context
 
@@ -26,7 +26,7 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 
 **Afscherming.** De applicatie heeft geen functie om logregels te wijzigen of te verwijderen. De database-gebruiker van de applicatie heeft op `logregel` alleen `INSERT` en `SELECT`. De opschoning draait in de worker met een aparte database-gebruiker die ook `DELETE` mag. Een fout in de webcode kan het log zo niet aantasten.
 
-**Twee logs.** Er zijn twee logs (BLB-043, besluit stakeholder 2026-11-01). Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto toegevoegd of vervangen, plaats toegewezen of vrijgegeven, en een boot op de wachtlijst gezet of eraf gehaald (besluit stakeholder 2026-11-01, issue #41). Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen), de bootsoorten (`bootsoort.toegevoegd`, `bootsoort.hernoemd` met de oude en de nieuwe naam, `bootsoort.verwijderd`) en de opschoning. Beide staan in dezelfde tabel. De indeling hoort bij de actie en staat in `domein/log` (`BOOTMUTATIES`, `TECHNISCH`); een unittest faalt als een actie bij geen of bij beide hoort. Het veld `soort` blijft `mutatie` of `api` en bepaalt niet in welk log een regel staat. Het technische log toont alles wat geen bootmutatie is, ook acties die de code niet meer schrijft. Een wijziging van een plaats zelf (code, bootsoorten, clubplaats) staat dus in het technische log, niet onder de plaats. De actie `boot.gewijzigd` legt naam, bootsoort en eigenaar vast met oud en nieuw; bij een andere eigenaar verwijst de regel naar beide leden, en de eigenaar staat er met oud en nieuw als `lid:<id>` of `vereniging` in, zonder naam (issue #39).
+**Twee logs.** Er zijn twee logs (BLB-043, besluit stakeholder 2026-11-01). Het log van de bootmutaties bevat boot aangemaakt, gewijzigd of verwijderd, foto toegevoegd of vervangen, plaats toegewezen of vrijgegeven, een boot verplaatst (`boot.verplaatst`: één regel met de oude en de nieuwe plaats, onder beide plaatsen, de boot en het lid; issue #206), en een boot op de wachtlijst gezet of eraf gehaald (besluit stakeholder 2026-11-01, issue #41). Het technische log bevat de rest: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen), de bootsoorten (`bootsoort.toegevoegd`, `bootsoort.hernoemd` met de oude en de nieuwe naam, `bootsoort.verwijderd`) en de opschoning. Beide staan in dezelfde tabel. De indeling hoort bij de actie en staat in `domein/log` (`BOOTMUTATIES`, `TECHNISCH`); een unittest faalt als een actie bij geen of bij beide hoort. Het veld `soort` blijft `mutatie` of `api` en bepaalt niet in welk log een regel staat. Het technische log toont alles wat geen bootmutatie is, ook acties die de code niet meer schrijft. Een wijziging van een plaats zelf (code, bootsoorten, clubplaats) staat dus in het technische log, niet onder de plaats. De actie `boot.gewijzigd` legt naam, bootsoort en eigenaar vast met oud en nieuw; bij een andere eigenaar verwijst de regel naar beide leden, en de eigenaar staat er met oud en nieuw als `lid:<id>` of `vereniging` in, zonder naam (issue #39).
 
 **Tonen.** Elk scherm heeft een vaste filter, altijd binnen één log. Geen overzicht toont regels uit het technische log.
 
@@ -36,9 +36,9 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | `/log/techniek`, eigen menuoptie | Het hele technische log |
 | Boot | Bootmutaties met `boot:<id>` |
 | Lid | Bootmutaties met `lid:<id>`, dus over de boten van dat lid |
-| Plaats | Bootmutaties met `plaats:<id>` (toegewezen, vrijgegeven) |
+| Plaats | Bootmutaties met `plaats:<id>` (toegewezen, vrijgegeven, verplaatst) |
 | Boten | Bootmutaties van boten (`boot.`) |
-| Vrije plaatsen | Toewijzen en vrijgeven (`plaats.`) |
+| Vrije plaatsen | Toewijzen, vrijgeven en verplaatsen (`plaats.`, `boot.verplaatst`) |
 | Wachtlijst | Handelingen op de wachtlijst (`wachtlijst.`) |
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
 | `/indeling`, `/rekoverzicht`, beheerders, profiel, leden, instellingen | Geen log |
@@ -76,6 +76,7 @@ De grens rekent met `jaren_terug`: een startdatum van precies 5 jaar geleden bli
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.4.4 | 2026-11-13 | `boot.verplaatst` in `BOOTMUTATIES`; tabel Tonen (Plaats, Vrije plaatsen) en BLB-047 bij Stories | Issue #206 |
 | v1.4.3 | 2026-11-10 | De grens van de opschoning staat los van de import; de import neemt geen nieuw opgezegd lid op | Issue #203 |
 | v1.4.2 | 2026-11-09 | De opschoning kent de kolommen `adres`, `telefoon` en `email` niet meer; migratie 0018 schrijft een regel `token.ingetrokken` met actor systeem/migratie | Besluiten stakeholder 2026-11-08 en 2026-11-09, issue #180 |
 | v1.4.1 | 2026-11-04 | Rekoverzicht toont geen log | Besluiten stakeholder 2026-11-04, issue #87 |

@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.15
-**Datum:** 2026-11-12
+**Versie:** v0.6.16
+**Datum:** 2026-11-13
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -279,6 +279,18 @@ Als beheerder wil ik een plaats vrijgeven waar een boot lag zodat de plaats weer
 - Gegeven een vrijgegeven plaats, wanneer de beheerder de vrije plaatsen opent (BLB-015), dan staat de plaats in de lijst.
 - Gegeven een plaats die vrijkomt terwijl er een wachtlijst is, wanneer de beheerder niets doet, dan blijft de plaats vrij tot de beheerder een boot kiest. (slice 7, na BLB-013)
 
+#### BLB-047 Boot verplaatsen vanaf de boot
+
+Prioriteit: Should. Bron: issue #206, keuze stakeholder 5B (2026-11-10), ontwerp blok 5 (designsystem `6f4cabb`). Afhankelijk van: BLB-010, BLB-011, BLB-015.
+
+Als beheerder wil ik een boot vanaf zijn eigen pagina naar een andere vrije plaats zetten zodat ik niet eerst op de oude plaats hoef vrij te geven.
+
+- Gegeven een boot met een plaats, wanneer de beheerder de pagina van de boot opent, dan staat tussen de taak en **Boot wijzigen of verwijderen** het dichte blok **Boot verplaatsen**, met een keuzelijst **Verplaats naar een vrije plaats voor** de bootsoort die begint op "Kies een vrije plaats" en de knop **Verplaats**. De taak zegt "Vrijgeven doe je op de plaats." met de link naar de plaats.
+- Gegeven die keuzelijst, dan staan er alleen vrije plaatsen die toewijzen accepteert (dezelfde lijst als **Plaats toewijzen**, BLB-010); voor een clubboot staan ze in de groepen **Clubplaatsen** en **Gewone plaatsen**.
+- Gegeven een vrije, geschikte plaats, wanneer de beheerder **Verplaats** kiest, dan ligt de boot op de nieuwe plaats, is de oude plaats vrij en staat er één logregel `boot.verplaatst` met de oude en de nieuwe plaats, onder beide plaatsen, de boot en het lid, en in het log van de bootmutaties. De wachtlijst verandert niet.
+- Gegeven een plaats die intussen bezet is, de bootsoort niet toelaat of een clubplaats is voor de boot van een lid, wanneer de beheerder **Verplaats** kiest, dan weigert de applicatie met de reden en "De boot blijft op" de oude plaats; het blok staat dan open en de boot blijft liggen. Twee beheerders die tegelijk naar dezelfde plaats verplaatsen: één slaagt, de ander krijgt de melding "niet meer vrij".
+- Gegeven geen vrije plaats voor de bootsoort, dan staat in het blok "Er is geen vrije plaats voor" de bootsoort en is er geen knop. Bij een boot van een oud-lid ontbreekt het blok: die geef je vrij.
+
 #### BLB-012 Plaatsdetail voor de beheerder
 
 Prioriteit: Must. Bron: intake 1. Afhankelijk van: BLB-010.
@@ -488,7 +500,7 @@ Prioriteit: Should. Bron: stakeholder 2026-11-01, intake (Twee logs). Afhankelij
 
 Als beheerder wil ik het log van de bootmutaties los zien van het technische log zodat ik snel vind wat er met de boten in de loods is gebeurd.
 
-- Gegeven het log, wanneer de beheerder het log van de bootmutaties opent, dan staan daar alleen mutaties van boten en hun plaats: een boot aangemaakt, gewijzigd of verwijderd, een foto vervangen, een plaats toegewezen of vrijgegeven, een boot op de wachtlijst gezet of eraf gehaald (besluit 2026-11-01).
+- Gegeven het log, wanneer de beheerder het log van de bootmutaties opent, dan staan daar alleen mutaties van boten en hun plaats: een boot aangemaakt, gewijzigd of verwijderd, een foto vervangen, een plaats toegewezen of vrijgegeven, een boot verplaatst (BLB-047), een boot op de wachtlijst gezet of eraf gehaald (besluit 2026-11-01).
 - Gegeven het log, wanneer de beheerder het technische log opent via de eigen menuoptie, dan staan daar de overige regels: tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken en wijzigingen in de indeling (rekken en plaatsen aanmaken, wijzigen of verwijderen).
 - Gegeven een boot, wanneer de beheerder de pagina van die boot opent, dan staan daaronder de logregels over die boot.
 - Gegeven een lid, wanneer de beheerder de pagina van dat lid opent, dan staan daaronder de bootmutaties over de boten van dat lid.
@@ -798,6 +810,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.16 | 2026-11-13 | Issue #206: BLB-047, een boot verplaatsen vanaf zijn eigen pagina (ontwerp 5B) |
 | v0.6.15 | 2026-11-12 | Issue #243: BLB-033, een robottoken weigert een whitelistreeks breder dan /8 of /32 |
 | v0.6.14 | 2026-11-12 | Issues #240 en #176: melding bij eigenaar onbekend op de wachtlijst (BLB-013); taak van een oud-lid met een boot op de wachtlijst (BLB-008) |
 | v0.6.13 | 2026-11-11 | Issue #233: een boot met een eigenaar kan weer eigenaar onbekend worden; een clubboot op een clubplaats eerst van die plaats af |

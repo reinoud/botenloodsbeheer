@@ -208,6 +208,11 @@ def schermen(browser):
     page.get_by_role("button", name="Plaats toewijzen").click()
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
     o.maak("plaats-toegewezen", hoogte=1000)
+    # Boot verplaatsen (#206): het blok op de pagina van een boot met een plaats, open.
+    page.get_by_role("link", name="Zwaluw 7", exact=True).click()
+    page.get_by_text("Boot verplaatsen", exact=True).click()
+    o.maak("boot-verplaatsen", element=page.locator("section.kaart", has=page.locator("summary#verplaatsen-kop")))
+    page.goto(vrije_plaats)
     openbaar = page.locator("#openbare-link").get_attribute("href")
 
     # Boten zonder eigenaar (#204): een boot waarvan de eigenaar open blijft.

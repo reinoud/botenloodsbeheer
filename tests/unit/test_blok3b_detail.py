@@ -125,14 +125,14 @@ def test_foto_staat_klein_bij_de_feiten_en_ontbreekt_zonder_foto(ingelogd):
 
 
 def test_taak_op_een_bezette_plaats_is_een_volledige_zin_met_link(ingelogd):
-    # BV-60. Mutant: de zin of de link weglaten valt op de derde assert.
+    # BV-60, #206 (5B: verplaatsen staat in een eigen blok). Mutant: de zin of de link weglaten valt op de derde assert.
     p = plaats()
     b = boot(lid().id)
     toewijzing.toewijzen(p.id, b.id, CLI)
     t = taak(ingelogd.get(f"/boten/{b.id}").text)
     assert f'<h2 class="bl-taak__kop" id="taak-kop">Op plaats {p.code}</h2>' in t
     assert 'name="plaats_id"' not in t and "Op de wachtlijst zetten" not in t
-    assert f'<p>Vrijgeven of verplaatsen doe je op de plaats. <a href="/plaatsen/{p.id}">Naar plaats {p.code}</a></p>' in t
+    assert f'<p>Vrijgeven doe je op de plaats. <a href="/plaatsen/{p.id}">Naar plaats {p.code}</a></p>' in t
 
 
 def test_taak_zonder_plaats_heeft_toewijzen_en_wachtlijst_als_onderdelen(ingelogd):

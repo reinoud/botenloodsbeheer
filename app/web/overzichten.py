@@ -17,7 +17,7 @@ def vrije_plaatsen():
     return render_template(
         "vrij.html", plaatsen=indeling.vrije_plaatsen(soort_id), bootsoorten=soorten,
         gekozen=next((s for s in soorten if s.id == soort_id), None),
-        regels=log.regels(acties=("plaats.",)))
+        regels=log.regels(acties=("plaats.", "boot.verplaatst")))
 
 
 @bp.get("/opgezegd")
