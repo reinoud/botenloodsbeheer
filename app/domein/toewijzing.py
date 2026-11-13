@@ -1,4 +1,4 @@
-"""Een boot een plaats geven (BLB-010, BLB-014) en een plaats vrijgeven (BLB-011), ADR-003."""
+"""Een boot een plaats geven (BLB-010, BLB-014), een plaats vrijgeven (BLB-011) en een boot verplaatsen (#206), ADR-003."""
 
 from sqlalchemy import select
 
@@ -77,3 +77,52 @@ def _vrijgeven(p, actor):
     log.schrijf(actor, "plaats.vrijgegeven", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                               *([f"lid:{b.lid_id}"] if b.lid_id else [])],
                 {"plaats": p.code, "boot": b.naam})
+
+
+def verplaatsen(boot_id, plaats_id, actor):
+    """Geeft de oude plaats vrij en wijst de nieuwe toe in één transactie, met dezelfde controles
+    als toewijzen (#206). Eerst de boot, dan beide plaatsen op volgorde van id: twee verplaatsingen
+    in tegengestelde richting vergrendelen zo in dezelfde volgorde. Een weigering laat de boot
+    liggen, ook op de wachtlijst verandert niets. Eén logregel, onder beide plaatsen en de boot.
+    Geeft de code van de nieuwe plaats."""
+    try:
+        b = db.session.get(Boot, boot_id, with_for_update=True)
+        if b is None:
+            raise Regelfout("Deze boot bestaat niet.")
+        if plaats_id is None:
+            raise Regelfout("Kies een vrije plaats.")
+        oud = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id))
+        if oud is None:
+            raise Regelfout(f"Boot {b.naam} heeft geen plaats.")
+        vergrendeld = {p.id: p for p in db.session.scalars(
+            select(Plaats).where(Plaats.id.in_([oud.id, plaats_id])).order_by(Plaats.id)
+            .with_for_update().execution_options(populate_existing=True))}
+        oud, nieuw = vergrendeld[oud.id], vergrendeld.get(plaats_id)
+        if oud.boot_id != b.id:  # intussen vrijgegeven door een andere beheerder
+            raise Regelfout(f"Boot {b.naam} heeft geen plaats.")
+        if nieuw is None:
+            raise Regelfout("Kies een bestaande plaats.")
+        blijft = f" De boot blijft op {oud.code}."
+        if nieuw is oud:
+            raise Regelfout(f"Boot {b.naam} ligt al op plaats {oud.code}.")
+        if nieuw.boot_id is not None:
+            raise Regelfout(f"Plaats {nieuw.code} is niet meer vrij." + blijft)
+        try:
+            controleer_past(nieuw, b.naam, b.bootsoort, b.clubboot)
+        except Regelfout as fout:
+            raise Regelfout(str(fout) + blijft) from None
+        if b.lid is not None and leden.is_oud_lid(b.lid):
+            raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats." + blijft)
+        oud.boot = None
+        db.session.flush()  # boot_id is uniek: eerst vrij, dan toewijzen
+        nieuw.boot = b
+        log.schrijf(actor, "boot.verplaatst",
+                    [f"plaats:{oud.id}", f"plaats:{nieuw.id}", *dict.fromkeys([f"rek:{oud.rek_id}", f"rek:{nieuw.rek_id}"]),
+                     f"boot:{b.id}", *([f"lid:{b.lid_id}"] if b.lid_id else [])],
+                    {"van": oud.code, "naar": nieuw.code, "boot": b.naam})
+        code = nieuw.code
+    except Regelfout:
+        db.session.rollback()
+        raise
+    db.session.commit()
+    return code
