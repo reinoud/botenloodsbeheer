@@ -465,7 +465,7 @@ def test_web_export_geeft_de_weigering_als_melding(ingelogd):  # noqa: F811
     db.session.add(Bootsoort(naam="Zee/kajak"))
     db.session.commit()
     r = ingelogd.get("/rekindeling.csv", follow_redirects=True)
-    assert "Zee/kajak bevat een /" in r.text
+    assert "Zee/kajak bevat een /" in r.text and r.request.path == "/import-export"
 
 
 @pytest.mark.parametrize("methode, pad", [("get", "/rekindeling.csv"), ("post", "/rekindeling/import")])
@@ -484,7 +484,7 @@ def test_web_import_vraagt_een_recente_inlog(ingelogd):  # noqa: F811
 
 def test_web_import_vraagt_een_csrf_token(app, ingelogd):  # noqa: F811
     app.config["WTF_CSRF_ENABLED"] = True  # zoals in productie
-    token = re.search(r'name="csrf-token" content="([^"]+)"', ingelogd.get("/indeling").text)[1]
+    token = re.search(r'name="csrf-token" content="([^"]+)"', ingelogd.get("/import-export").text)[1]
     r = uploaden(ingelogd, bestand("A;;1;1;Kajak;nee"))
     assert r.status_code == 400 and db.session.scalar(select(Rek)) is None
     r = uploaden(ingelogd, bestand("A;;1;1;Kajak;nee"), headers={"X-CSRFToken": token})
@@ -496,7 +496,9 @@ def test_web_import_meldt_het_resultaat_en_toont_het_in_de_indeling(ingelogd):  
                  follow_redirects=True)
     assert ("De indeling is geïmporteerd. Rekken: 1 nieuw, 0 gewijzigd. "
             "Plaatsen: 2 nieuw, 0 gewijzigd.") in r.text
-    assert ">A/1/2</a>" in r.text and "Links" in r.text
+    assert r.request.path == "/import-export"
+    tekst = ingelogd.get("/indeling").text
+    assert ">A/1/2</a>" in tekst and "Links" in tekst
     assert "rek.aangemaakt" not in r.text and "indeling.geimporteerd" in ingelogd.get(
         "/log/techniek").text
 
@@ -504,6 +506,9 @@ def test_web_import_meldt_het_resultaat_en_toont_het_in_de_indeling(ingelogd):  
 def test_web_import_toont_per_foute_regel_het_regelnummer_en_de_reden_geescaped(ingelogd):  # noqa: F811
     r = uploaden(ingelogd, bestand("A;;1;1;Kajak;nee", "A;;1;2;Kajak;vielleicht"))
     assert r.status_code == 422
+    assert "<h1>Import/export</h1>" in r.text and "<h1>Indeling</h1>" not in r.text
+    assert re.findall(r'aria-current="page">([^<]+)</a>', r.text) == ["Import/export"]
+    assert re.search(r'<div class="ds-notice ds-notice--danger melding">.*?role="alert">\s*<p>Het bestand is niet geïmporteerd', r.text, re.DOTALL)
     assert "Het bestand is niet geïmporteerd. Er is niets veranderd." in r.text
     assert "<li>Regel 3: clubplaats moet ja of nee zijn.</li>" in r.text
     r = uploaden(ingelogd, bestand("A;;1;1;<b>x;nee"))  # zonder /, dat scheidt de soorten
@@ -528,8 +533,8 @@ def test_web_import_leest_niet_verder_dan_de_grens(ingelogd):  # noqa: F811
     assert db.session.scalar(select(Rek)) is None
 
 
-def test_indeling_toont_de_knoppen_en_het_formulier(ingelogd):  # noqa: F811
-    tekst = ingelogd.get("/indeling").text
+def test_import_export_toont_de_knoppen_en_het_formulier(ingelogd):  # noqa: F811
+    tekst = ingelogd.get("/import-export").text
     assert 'href="/rekindeling.csv"' in tekst and 'href="/rekindeling.csv?leeg=1"' in tekst
     assert 'action="/rekindeling/import"' in tekst and 'enctype="multipart/form-data"' in tekst
     assert 'name="bestand"' in tekst and 'name="csrf_token"' in tekst

@@ -14,7 +14,7 @@ KOP = "plaats;boot;bootsoort;eigenaar;lidnummer"
 
 
 def uploaden(page, tekst):
-    page.goto("/indeling")
+    page.goto("/import-export")
     page.set_input_files("#bezetting-bestand", {"name": "bezetting.csv", "mimeType": "text/csv",
                                                 "buffer": tekst.encode("utf-8")})
     page.get_by_role("button", name="Bezetting uploaden", exact=True).click()
@@ -45,7 +45,7 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     toewijzen(page, f"{rek}/1/3", f"Kievit {rek}")
     toewijzen(page, f"{rek}/1/4", f"Clubkajak {rek}")
 
-    page.goto("/indeling")
+    page.goto("/import-export")
     with page.expect_download() as download:
         page.get_by_role("link", name="Bezetting exporteren als CSV").click()
     export = Path(download.value.path()).read_text(encoding="utf-8-sig")
@@ -78,10 +78,16 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     page.get_by_role("button", name="Keuzes opslaan").click()
     expect(page.get_by_text("De keuzes zijn opgeslagen.")).to_be_visible()
     expect(regel(page, f"Reiger {rek}")).to_contain_text("ongewijzigd")
+    page.goto("/import-export")  # de lopende import staat in een blok op deze pagina
+    expect(page.get_by_text("Er loopt een bezettingsimport")).to_be_visible()
+    page.get_by_role("link", name="Bekijk het overzicht").click()
     page.get_by_role("button", name="Bezetting importeren", exact=True).click()
     expect(page.get_by_text("De bezetting is geïmporteerd. Nieuwe boten: 1, toegewezen: 0, "
                             "overschreven: 1, verplaatst: 0, ongewijzigd: 2, overgeslagen: 0.")).to_be_visible()
 
+    # Na het bevestigen sta je weer op Import/export; de plaatsen staan op Indeling.
+    expect(page).to_have_url(re.compile(r"/import-export$"))
+    page.goto("/indeling")
     # Controleren op de plaatspagina's en in het log van de bootmutaties.
     page.get_by_role("link", name=f"{rek}/1/2", exact=True).click()
     expect(page.get_by_role("heading", level=1)).to_contain_text(f"{rek}/1/2")
@@ -102,6 +108,8 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     expect(page.get_by_text("te koppelen", exact=True)).to_have_count(0)
     page.get_by_role("button", name="Import annuleren").click()
     expect(page.get_by_text("De import is geannuleerd.")).to_be_visible()
+    expect(page).to_have_url(re.compile(r"/import-export$"))
+    expect(page.get_by_text("Er loopt een bezettingsimport")).to_have_count(0)
 
     # De onthouden koppeling staat op haar scherm en gaat weg met de knop.
     page.get_by_role("link", name="Onthouden koppelingen").click()

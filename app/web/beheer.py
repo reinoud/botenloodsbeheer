@@ -69,9 +69,20 @@ def _indeling_scherm(**extra):
     return render_template("indeling.html", rekken=indeling.rekken(), status=indeling.status,
                            bootsoorten=indeling.bootsoorten(),
                            verdiepingen=indeling.VERDIEPINGEN, vakken=indeling.VAKKEN,
-                           naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX,
+                           naam_max=indeling.NAAM_MAX, omschrijving_max=indeling.OMSCHRIJVING_MAX, **extra)
+
+
+def _import_export_scherm(**extra):
+    # Ook de 422 uit een importroute markeert Import/export in het menu (BV-76).
+    return render_template("import_export.html", huidig="web.import_export_scherm",
                            csv_max=csvbestand.MAX_BYTES // 1024,
                            lopende_import=bezetting_csv.lopend(), **extra)
+
+
+@bp.get("/import-export")
+@inloggen_vereist
+def import_export_scherm():
+    return _import_export_scherm()
 
 
 @bp.get("/indeling")
@@ -88,7 +99,7 @@ def rekindeling_export():
         inhoud = rekindeling_csv.export(leeg)
     except Regelfout as fout:
         flash(str(fout), "fout")
-        return redirect(url_for("web.indeling_overzicht"))
+        return redirect(url_for("web.import_export_scherm"))
     return inhoud, {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": f'attachment; filename="rekindeling{"-leeg" if leeg else ""}.csv"',
@@ -117,14 +128,14 @@ def rekindeling_importeren():
         try:
             n = rekindeling_csv.importeren(data, Actor.van(g.beheerder))
         except CsvFout as fout:
-            return _indeling_scherm(import_fouten=fout.regels), 422
+            return _import_export_scherm(import_fouten=fout.regels), 422
         except Regelfout as fout:
             flash(str(fout), "fout")
         else:
             flash(f"De indeling is geïmporteerd. Rekken: {n['rekken_nieuw']} nieuw, "
                   f"{n['rekken_gewijzigd']} gewijzigd. Plaatsen: {n['plaatsen_nieuw']} nieuw, "
                   f"{n['plaatsen_gewijzigd']} gewijzigd.", "info")
-    return redirect(url_for("web.indeling_overzicht"))
+    return redirect(url_for("web.import_export_scherm"))
 
 
 # Bezetting als CSV (issue #158, ADR-014 §3 en §5). Geen naam of veld uit het bestand in een
@@ -139,7 +150,7 @@ def bezetting_export():
         inhoud = bezetting_csv.export(leeg)
     except Regelfout as fout:
         flash(str(fout), "fout")
-        return redirect(url_for("web.indeling_overzicht"))
+        return redirect(url_for("web.import_export_scherm"))
     return inhoud, {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": f'attachment; filename="bezetting{"-leeg" if leeg else ""}.csv"',
@@ -155,12 +166,12 @@ def bezetting_uploaden():
         try:
             bezetting_csv.uploaden(data, Actor.van(g.beheerder))
         except CsvFout as fout:
-            return _indeling_scherm(import_fouten=fout.regels), 422
+            return _import_export_scherm(import_fouten=fout.regels), 422
         except Regelfout as fout:
             flash(str(fout), "fout")
         else:
             return redirect(url_for("web.bezetting_import"))
-    return redirect(url_for("web.indeling_overzicht"))
+    return redirect(url_for("web.import_export_scherm"))
 
 
 @bp.get("/bezetting/import")
@@ -168,8 +179,8 @@ def bezetting_uploaden():
 def bezetting_import():
     overzicht = bezetting_csv.overzicht()
     if overzicht is None:
-        flash("Er loopt geen bezettingsimport. Upload een bestand op de pagina Indeling.", "info")
-        return redirect(url_for("web.indeling_overzicht"))
+        flash("Er loopt geen bezettingsimport. Upload een bestand op de pagina Import/export.", "info")
+        return redirect(url_for("web.import_export_scherm"))
     return render_template("bezetting_import.html", **overzicht)
 
 
@@ -192,14 +203,14 @@ def bezetting_bevestigen():
     flash(f"De bezetting is geïmporteerd. Nieuwe boten: {n['nieuw']}, toegewezen: "
           f"{n['toegewezen']}, overschreven: {n['overschreven']}, verplaatst: {n['verplaatst']}, "
           f"ongewijzigd: {n['ongewijzigd']}, overgeslagen: {n['overgeslagen']}.", "info")
-    return redirect(url_for("web.indeling_overzicht"))
+    return redirect(url_for("web.import_export_scherm"))
 
 
 @bp.post("/bezetting/import/annuleren")
 @inloggen_vereist
 def bezetting_annuleren():
     uitvoeren(bezetting_csv.annuleren, gelukt="De import is geannuleerd.")
-    return redirect(url_for("web.indeling_overzicht"))
+    return redirect(url_for("web.import_export_scherm"))
 
 
 @bp.get("/bezetting/koppelingen")

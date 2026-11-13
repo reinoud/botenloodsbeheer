@@ -2,7 +2,7 @@
 
 Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van 11 rekken, 229 plaatsen, ongeveer 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
 
-Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft drie groepen: Dagelijks, Registers en Beheer. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
+Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft vier groepen: Dagelijks, Lijsten, Beheer en Account. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
 ## Inloggen
 
@@ -58,7 +58,7 @@ Op `/profiel` staan je inlogmethodes met een knop **Intrekken** per methode. Daa
 
 De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een verdieping heeft geen gaten: de vakken zijn altijd 1 tot en met n. Een verdieping met alleen vak 1 en 3 weigert de applicatie, met een melding die de verdieping en het ontbrekende vak noemt.
 
-De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen.
+De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen. Exporteren en importeren doe je op de pagina Import/export, die in het menu onder Beheer staat.
 
 ![De pagina Indeling met het formulier voor een nieuw rek, met het raster van verdiepingen en vakken, en het eerste rek.](afbeeldingen/indeling.png)
 
@@ -171,11 +171,13 @@ Een lid verhuist van **Gaan opzeggen** naar **Opgezegd** zodra de opzegdatum is 
 
 ## Export naar Excel
 
-Bovenaan `/indeling` staat **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
+Op `/import-export` staat onder **Indeling als Excel** de link **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
+
+![De pagina Import/export met drie panelen: Indeling als Excel, Indeling als CSV en Bezetting als CSV.](afbeeldingen/import-export.png)
 
 ## Indeling als CSV exporteren en importeren
 
-Op `/indeling` staan onder **Indeling als CSV** twee downloads en een uploadformulier. **Indeling exporteren als CSV** geeft `rekindeling.csv` met een regel per plaats. **Leeg sjabloon met uitleg downloaden** geeft `rekindeling-leeg.csv`: de kopregel, de uitleg en een voorbeeldregel, alles als commentaar.
+Op `/import-export` staan onder **Indeling als CSV** twee downloads en een uploadformulier. **Indeling exporteren als CSV** geeft `rekindeling.csv` met een regel per plaats. **Leeg sjabloon met uitleg downloaden** geeft `rekindeling-leeg.csv`: de kopregel, de uitleg en een voorbeeldregel, alles als commentaar.
 
 De kolommen zijn `rek`, `omschrijving`, `verdieping`, `vak`, `bootsoorten` en `clubplaats`. Zet bij `bootsoorten` de namen zoals de applicatie ze toont, gescheiden door een `/`, bijvoorbeeld `Kajak/Surfski`. Een lege cel betekent "geen bootsoort"; dat kan alleen bij een nieuwe plaats of een plaats die al geen bootsoort heeft. Bij `clubplaats` staat `ja` of `nee`. De omschrijving is op alle regels van hetzelfde rek gelijk.
 
@@ -187,7 +189,7 @@ Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elk
 
 ## Bezetting als CSV exporteren en importeren
 
-Op `/indeling` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Heet een lid zelf "clubboot", dan staat in de export het lidnummer erbij en koppelt de import op dat lidnummer. Een clubboot met een lidnummer dat bij geen lid hoort, weigert de import. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
+Op `/import-export` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Heet een lid zelf "clubboot", dan staat in de export het lidnummer erbij en koppelt de import op dat lidnummer. Een clubboot met een lidnummer dat bij geen lid hoort, weigert de import. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
 
 Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heeft een uitkomst:
 
@@ -363,6 +365,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/tokens` | Tokens voor de API |
 | `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken, omschrijvingen en plaatsen |
+| `/import-export` | Indeling en bezetting exporteren en importeren |
 | `/indeling.xlsx` | Export naar Excel |
 | `/rekindeling.csv` | Export van de indeling als CSV, met `?leeg=1` het sjabloon |
 | `/bezetting.csv` | Export van de bezetting als CSV, met `?leeg=1` het sjabloon |
