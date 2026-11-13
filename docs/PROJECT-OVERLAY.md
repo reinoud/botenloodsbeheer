@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.78
+**Versie overlay:** v0.5.79
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-13
@@ -105,6 +105,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Geef een nieuwe webmodule geen naam die al bestaat in `app.web` (zoals een domeinmodule of functie); controleer na het toevoegen dat de route bestaat met `flask routes` of een unittest. Een view met meer routes krijgt de route voor `url_for` als onderste decorator; controleer het menu-item met een unittest op de `href`.
 - Een nieuw scherm met een tabel van meer dan zeven kolommen krijgt vóór de bouw een schets van de kolommen; controleer de schermafbeelding op 1100 pixels breed voordat de tests worden uitgebreid.
 - Noemt een opdracht een CSS-klasse, controleer dan met `grep -rn` in `app/web/static/` dat die bestaat, en noem anders de dichtstbijzijnde bestaande klasse. Bij een ontwerp uit Design System gaat de klasse uit de README van het scherm voor.
+- Draai vóór de oplevering `ruff check --no-cache app tests` in de testcontainer; de repository heeft nul meldingen, en een melding in de diff blokkeert de review (#206).
+- Voegt een wijziging een logactie toe of verandert ze een logfilter, werk dan in ADR-006 de alinea Twee logs en de tabel Tonen bij, en in de handleiding de alinea over de logs per scherm (#206).
+- Een nieuwe stap in `documentatie/gebruikers/schermafbeeldingen.py` eindigt op de pagina waar de volgende stap begint (#206).
 - Voegt een wijziging een geheim of een eenmalige code toe aan een scherm met een schermafbeelding, noem dan `verberg_geheimen` in `documentatie/gebruikers/schermafbeeldingen.py`; de bouwer maakt de afbeelding opnieuw en bekijkt hem. Een E2E-assert op de maat van een element toetst de maat uit de CSS, niet alleen dat het in beeld past.
 - Beperkt een wijziging de invoerformaten, zeg dan in de brief welke melding de gebruiker daarna ziet.
 - Een unittest vergelijkt datums met `vandaag()` uit `app.domein`, niet met `date.today()`; de container rekent in UTC, de applicatie in de tijdzone van de installatie.
@@ -123,7 +126,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een nieuwe webroute krijgt als vaste afwerklijst: het menu-item, een rij in de routetabel van de handleiding (`test_handleiding_noemt_elke_webroute`) en een uitnodigingssoort in `tests/e2e/draai.sh`.
 - `Plaats.bootsoorten` staat op id gesorteerd; "eerste soort" is de laagste id, niet de volgorde van aanvinken. `plaats()` in `tests/unit/hulp.py` weigert een lege soortenlijst; een plaats zonder soort maak je via `rek_aanmaken`.
 - Verandert een wijziging de volgorde of weergave op één scherm, noem dan de andere schermen die hetzelfde gegeven tonen en of die bewust ongewijzigd blijven.
-- Een bron buiten de repository (zoals designsystem) wordt gelezen op een genoemde commit, met `git show <commit>:<pad>`; de werkboom telt niet. Draai na een afname van de Dajaks-basis vóór de oplevering `python3 basis/controleer_product.py <repo> --doel app/web/static/ds --ref main` vanuit designsystem en meld de uitkomst; bestanden die niet uit de afname komen, staan buiten die map.
+- Een bron buiten de repository (zoals designsystem) wordt gelezen op een genoemde commit, met `git show <commit>:<pad>`; noem in de opdracht het volledige pad vanaf de root van die repository, ook voor submappen; de werkboom telt niet. Draai na een afname van de Dajaks-basis vóór de oplevering `python3 basis/controleer_product.py <repo> --doel app/web/static/ds --ref main` vanuit designsystem en meld de uitkomst; bestanden die niet uit de afname komen, staan buiten die map.
 - Wijzigt de HTML-structuur (zoals een wrapper om een tabel), zoek dan eerst met `grep -rn` naar CSS-selectors in `tests/e2e/` die op de structuur leunen (`main > table`, `h2 + p + table`, `section.kaart`) en noem ze. Controleer een scherm ook op 360 pixels breed.
 - Een nieuwe macro of een gewijzigd sjabloon dat gebruikersinvoer toont, krijgt een unittest met `<b>x</b>` die de geëscapete vorm toetst; de mutant met `|safe` op dat veld moet falen. Een fonttest controleert familie plus gewicht.
 - Een test op het aantal migratieheads gebruikt de fixture `database` niet, zodat een tweede head op de eigen assert valt.
@@ -274,7 +277,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`, vóór `passkey`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
-- Een E2E-mutant op een template draai je met `DRAAI_OVERRIDE=<scratchpad>/compose.<mutant>.yml tests/e2e/draai.sh -k <test>`; de override legt het mutant-template als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
+- Een E2E-mutant op een template: leg het mutant-template met een override (`<scratchpad>/compose.<mutant>.yml`) als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`, maak `web` eerst zelf opnieuw aan met die override (`docker compose -f docker-compose.yml -f compose.dev.yml -f <override> up -d --no-deps --force-recreate web`), controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat de mutant draait, en draai dan `tests/e2e/draai.sh -k <test>`. `DRAAI_OVERRIDE` alleen maakt `web` niet opnieuw aan, dan draait de mutant niet (#206). Een mutant die in de test geen verschil kan geven (zoals een `rollback` na een weigering), benoem je als gelijkwaardig in plaats van hem te forceren. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
 - Geeft `schermafbeeldingen.sh` een `FileNotFoundError`, draai hem dan met `DOC_UIT=/documentatie/gebruikers/<tijdelijke map>` en kopieer alleen de eigen afbeeldingen.
 - Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
@@ -465,6 +468,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.79 | 2026-11-13 | Vijf regels: ruff vóór de oplevering; logactie in ADR-006 en handleiding; E2E-mutant op een template eerst `web` met de override opnieuw aanmaken (vervangt `DRAAI_OVERRIDE` alleen), gelijkwaardige mutant benoemen; volledig pad in een externe bron; nieuwe stap in `schermafbeeldingen.py` eindigt waar de volgende begint; uit de terugblikken van bedrock en sentinel bij #206 | Lessen |
 | v0.5.78 | 2026-11-13 | Drie regels (Bouw): netstroom of open klep vóór een lange E2E-run; ontwerp tegen bestaand gedrag en het menu-item bij een scherm uit een andere route; uitsnede voor Indeling op 360 px; uit de terugblikken bij #262 | Lessen |
 | v0.5.77 | 2026-11-12 | Twee regels (Bouw): CSS-klasse uit de opdracht met grep controleren, ontwerp van Design System gaat voor; geheim op een scherm met schermafbeelding via `verberg_geheimen`, en een E2E-maat toetst de maat uit de CSS; uit de terugblikken bij #159 | Lessen |
 | v0.5.76 | 2026-11-12 | Twee regels (Review): verwachte waarde per mutant, normalisatie en terugschrijven in de securitybrief; uit de terugblikken van sentinel en aegis bij #226 | Lessen |
