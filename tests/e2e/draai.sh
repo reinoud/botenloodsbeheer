@@ -83,7 +83,7 @@ for soort in wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
             methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen \
             wachtlijst wachtlijstfout kaartjes status bootaantallen tokens tokenscollega \
             tokensintrekken bootsoorten indelingraster rekoverzicht bootplaats rekindelingcsv \
-            bezettingcsv bezettingsoort eigenaaronbekend weeronbekend clubboot plaatseigenaar bootverplaatsen passkey; do
+            bezettingcsv bezettingsoort eigenaaronbekend weeronbekend clubboot plaatseigenaar bootverplaatsen zoeken passkey; do
   link=$("${c[@]}" exec -T web flask beheerder uitnodigen "e2e-$soort-$stempel" | tail -n 1)
   links+=(-e "E2E_LINK_$(tr '[:lower:]' '[:upper:]' <<<"$soort")=$link")
 done

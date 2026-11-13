@@ -86,6 +86,14 @@ De kleur is niet de enige aanwijzing: elk vak heeft een tekst voor schermlezers,
 
 Welke bootsoorten er zijn, stel je in op `/instellingen` (zie Naam, logo en bootsoorten). Een nieuwe installatie begint met kajak, Canadese kano, surfski, C11 en supboard.
 
+## Zoeken vanuit de kop
+
+In de kop van elk scherm staat een zoekveld. Typ een deel van een plaatscode (zoals `B/2`), een bootnaam, de naam van een eigenaar of een lidnummer en kies **Zoeken**. Je zoekt in boten, in leden zonder boot en in plaatsen zonder boot, ook van oud-leden. Hoofdletters en accenten tellen niet mee, en meer woorden zoeken als één tekst. De zoektekst telt minstens 2 tekens (spaties ervoor en erachter tellen niet mee) en hooguit 100.
+
+Is er precies één treffer, dan opent die meteen: de boot, het lid of de plaats. Een lidnummer van een lid met één boot opent de boot. Zijn er meer treffers, dan staat er een lijst op `/zoeken` met eerst de boten, dan de leden zonder boot en dan de vrije plaatsen en clubplaatsen. Een boot toont zijn eigenaar met lidnummer, en de tag oud-lid als de eigenaar is opgezegd. Bij meer dan 50 treffers staan de eerste 50 in de lijst; zoek dan preciezer. Zonder treffers staat er "Geen treffers voor" met de zoektekst. De zoektekst komt niet in de logs.
+
+![De pagina Zoekresultaten met het zoekveld in de kop en een lijst met boten en leden.](afbeeldingen/zoeken.png)
+
 ## Boten
 
 Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
@@ -387,6 +395,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/boten/{nummer}` | Een boot, een plaats toewijzen of de boot verplaatsen |
 | `/vrij` | Vrije plaatsen |
 | `/wachtlijst` | Wachtlijst per bootsoort |
+| `/zoeken` | Zoeken vanuit de kop, de lijst met treffers |
 | `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, een eigenaar kiezen |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |

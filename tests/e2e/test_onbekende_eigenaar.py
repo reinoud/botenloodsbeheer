@@ -36,8 +36,8 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     page.locator("#nieuw-kop").click()
     page.get_by_label("Naam van de boot").fill(wulp)
     page.get_by_label("Bootsoort").select_option(label="Kajak")
-    expect(page.get_by_label("Eigenaar")).to_have_value("onbekend")
-    expect(page.get_by_label("Eigenaar").locator("option").first).to_have_text("eigenaar onbekend")
+    expect(page.get_by_label("Eigenaar", exact=True)).to_have_value("onbekend")  # exact: het zoekveld in de kop noemt ook de eigenaar
+    expect(page.get_by_label("Eigenaar", exact=True).locator("option").first).to_have_text("eigenaar onbekend")
     page.get_by_role("button", name="Boot vastleggen").click()
     expect(page.get_by_text("De boot is vastgelegd.")).to_be_visible()
     expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")
