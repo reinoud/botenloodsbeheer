@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.77
+**Versie overlay:** v0.5.78
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-12
+**Bijgewerkt:** 2026-11-13
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -88,6 +88,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Versmalt een besluit een weigering, noem dan elk geval dat van fout naar geaccepteerd gaat (ook buiten het issue), met per geval of er een test en een zin in de handleiding komt. Laat de bouwer eerst in `tests/` zoeken op de oude melding en de tests noemen die hij omzet.
 - Controleer vóór een bouwopdracht of Docker draait, en noem in de opdracht welke images al lokaal staan.
+- Laat vóór een lange E2E-run controleren of de Mac open ligt of aan netstroom hangt (`ioreg -r -k AppleClamshellState -d 1`, `pmset -g batt`); zo niet, meldt het agent dat eerst. In slaapstand springt de klok over de inloggrens van 10 minuten en duurt de run uren (#262).
 - Losse controles in Python draaien met `docker compose exec -T web python -c ...`, niet in de lokale `.venv`; dat geldt ook voor reviewers. Een los controlescript in de testcontainer draai je met `-e PYTHONPATH=/app` en een volume uit de scratchpad. Een proef met de fixtures van de unittests krijgt daarbij een `conftest.py` in de scratchpad (`from tests.unit.conftest import *`), gemount op `/app/proef`.
 - Bewerk geen Python-bestanden in de werkmap terwijl een reviewer de log van `web` en `api` controleert (`--reload` laadt halve bestanden); noem het tijdstip van de laatste `up --build` in de brief.
 - Wijzig je templates of CSS, maak `web` dan opnieuw aan met `docker compose -f docker-compose.yml -f compose.dev.yml up -d --no-deps --force-recreate web`, nooit zonder `compose.dev.yml` (dan leidt `:8080` om naar https en valt de hele E2E-suite); `--reload` laadt alleen Python opnieuw. Controleer vóór een E2E-run met `docker inspect -f '{{index .Config.Labels "com.docker.compose.project.config_files"}}' botenloods-web-1` dat `web` met `compose.dev.yml` draait. Na een wijziging of `up --build` die `web`, `api` of `integratie` opnieuw aanmaakt, wacht je tot de containers healthy zijn voordat je E2E-tests of curl-controles draait; tot dan geeft Traefik 404. Een herstart van de proxy is niet nodig.
@@ -173,6 +174,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vervangt een `ds-tag` of andere klasse uit de basis een eigen klasse (zoals `status-vrij`), noem dan de unittests die op de oude klasse toetsen.
 - Noem bij een reeks zoekstappen (zoals lidnummer, koppeling, naam) wat een onbekende waarde in een stap doet: doorvallen naar de volgende stap of een fout.
 - Elk antwoord uit een toets van Design System krijgt een eigen unittest en een mutant, ook zonder preview. Noem in de opdracht welke ontwerpkeuze geldt voor een toestand die de README niet noemt, en welke toestanden uit eerdere issues (zoals #137) een nieuwe tak in een sjabloon anders toont.
+- Beschrijft de README van een ontwerp bestaand gedrag anders dan de code (zoals een flash waar de route al een 422 geeft), noem dan in de opdracht welke van de twee voorgaat. Rendert een andere route een scherm (zoals een 422 uit een importroute), dan toetst een test ook het huidige menu-item op dat antwoord (#262).
+- Een volledige schermafbeelding van Indeling op 360 px is ruim 78000 px hoog; noem voor de visuele controle een uitsnede van de bovenste 1500 px (#262).
 - Een `|safe`-mutant krijgt een testgeval per tak van het sjabloon die het veld toont, ook in een attribuut als `alt` (dan met een foto in de test).
 - Een bouwer met mutanten controleert vóór de oplevering met `ls` dat `commando.txt` naast de mutanten staat. Draai een reeks mutanten met `docker compose run --rm -T` en `</dev/null` in een `while read`-lus.
 - Meet een basislijn of uitlijning aan het begin van de eerste regel van elk element, niet aan het einde van de tekst.
@@ -462,6 +465,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.78 | 2026-11-13 | Drie regels (Bouw): netstroom of open klep vóór een lange E2E-run; ontwerp tegen bestaand gedrag en het menu-item bij een scherm uit een andere route; uitsnede voor Indeling op 360 px; uit de terugblikken bij #262 | Lessen |
 | v0.5.77 | 2026-11-12 | Twee regels (Bouw): CSS-klasse uit de opdracht met grep controleren, ontwerp van Design System gaat voor; geheim op een scherm met schermafbeelding via `verberg_geheimen`, en een E2E-maat toetst de maat uit de CSS; uit de terugblikken bij #159 | Lessen |
 | v0.5.76 | 2026-11-12 | Twee regels (Review): verwachte waarde per mutant, normalisatie en terugschrijven in de securitybrief; uit de terugblikken van sentinel en aegis bij #226 | Lessen |
 | v0.5.75 | 2026-11-12 | Twee regels (Security en proxy): proef en mutant op de socketproxy, brief voor een update van een afhankelijkheid; uit de terugblikken van pipeline bij #251 en sentinel bij #258 | Lessen |
