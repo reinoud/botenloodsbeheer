@@ -1,5 +1,5 @@
 """De webroutes en schermen van de bezetting als CSV (issue #158, ADR-014 §5): inlogplicht, recente
-inlog, CSRF, de zes kolommen van het overzicht, geëscapete bestandsinhoud en de knoppen op /indeling."""
+inlog, CSRF, de zes kolommen van het overzicht, geëscapete bestandsinhoud en de knoppen op /import-export."""
 
 import io
 import re
@@ -49,7 +49,8 @@ def test_web_export_geeft_de_weigering_als_melding(ingelogd):  # noqa: F811
     db.session.add_all([r, Plaats(rek=r, verdieping=1, vak=1, publieke_sleutel="x" * 10,
                                   boot=Boot(naam="Reiger", bootsoort_id=1))])
     db.session.commit()
-    assert "#oud begint met #" in ingelogd.get("/bezetting.csv", follow_redirects=True).text
+    r = ingelogd.get("/bezetting.csv", follow_redirects=True)
+    assert "#oud begint met #" in r.text and r.request.path == "/import-export"
 
 
 # Toegang
@@ -121,15 +122,15 @@ def test_upload_toont_het_overzicht_met_de_zes_kolommen(ingelogd):  # noqa: F811
     assert " style=" not in r.text and "<script" not in r.text
 
 
-def test_het_overzicht_zonder_import_verwijst_terug_naar_de_indeling(ingelogd):  # noqa: F811
+def test_het_overzicht_zonder_import_verwijst_terug_naar_import_export(ingelogd):  # noqa: F811
     r = ingelogd.get("/bezetting/import", follow_redirects=True)
-    assert r.request.path == "/indeling" and "Er loopt geen bezettingsimport" in r.text
+    assert r.request.path == "/import-export" and "Er loopt geen bezettingsimport" in r.text
 
 
 def test_een_tweede_upload_geeft_de_melding_en_laat_de_eerste_staan(ingelogd):  # noqa: F811
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;"))
     r = uploaden(ingelogd, bestand("A/1/2;Fuut;Kajak;;"), follow_redirects=True)
-    assert "Bevestig of annuleer die eerst" in r.text and r.request.path == "/indeling"
+    assert "Bevestig of annuleer die eerst" in r.text and r.request.path == "/import-export"
     assert "Bekijk het overzicht" in r.text
     assert [x["plaats"] for x in db.session.scalar(select(Bezettingsimport)).regels] == ["A/1/1"]
 
@@ -153,7 +154,8 @@ def test_upload_leest_niet_verder_dan_de_grens(ingelogd):  # noqa: F811
 
 def test_upload_met_een_fout_in_de_opbouw_toont_de_regels_geescaped_en_bewaart_niets(ingelogd):  # noqa: F811
     r = uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;", "<b>x</b>;1;2"))
-    assert r.status_code == 422
+    assert r.status_code == 422 and "<h1>Import/export</h1>" in r.text
+    assert re.findall(r'aria-current="page">([^<]+)</a>', r.text) == ["Import/export"]
     assert "Het bestand is niet geïmporteerd. Er is niets veranderd." in r.text
     assert "<li>Regel 3: 5 kolommen verwacht, 3 gevonden.</li>" in r.text
     r = uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;", kop="plaats;<b>x</b>;bootsoort;eigenaar;lidnummer"))
@@ -226,7 +228,7 @@ def test_bevestigen_via_de_route_meldt_aantallen_en_zet_de_boot_op_de_plaats(ing
     lid()
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;1001"))
     r = ingelogd.post("/bezetting/import/bevestigen", follow_redirects=True)
-    assert r.request.path == "/indeling"
+    assert r.request.path == "/import-export"
     assert ("De bezetting is geïmporteerd. Nieuwe boten: 1, toegewezen: 0, overschreven: 0, "
             "verplaatst: 0, ongewijzigd: 0, overgeslagen: 0.") in r.text
     assert "Bekijk het overzicht" not in r.text
@@ -288,18 +290,23 @@ def test_zonder_koppelingen_staat_er_een_melding(ingelogd):  # noqa: F811
     assert "Geen onthouden koppelingen" in ingelogd.get("/bezetting/koppelingen").text
 
 
-# Knoppen op /indeling
+# Knoppen op /import-export
 
 
-def test_indeling_toont_de_knoppen_het_formulier_en_een_lopende_import(ingelogd):  # noqa: F811
-    tekst = ingelogd.get("/indeling").text
+def test_import_export_toont_de_knoppen_het_formulier_en_een_lopende_import(ingelogd):  # noqa: F811
+    tekst = ingelogd.get("/import-export").text
     assert 'href="/bezetting.csv"' in tekst and 'href="/bezetting.csv?leeg=1"' in tekst
     assert 'href="/bezetting/koppelingen"' in tekst
     assert 'action="/bezetting/import"' in tekst and 'id="bezetting-bestand"' in tekst
     assert "Bekijk het overzicht" not in tekst and " style=" not in tekst and "<script" not in tekst
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;"))
-    tekst = ingelogd.get("/indeling").text
+    tekst = ingelogd.get("/import-export").text
     assert 'href="/bezetting/import"' in tekst and "Er loopt een bezettingsimport" in tekst
+
+
+def test_koppelingen_verwijst_naar_import_export(ingelogd):  # noqa: F811
+    tekst = ingelogd.get("/bezetting/koppelingen").text
+    assert re.search(r'<a class="ds-btn" href="/import-export">Naar Import/export</a>', tekst)
 
 
 def test_de_route_voor_het_menu_item_en_de_bestaande_routes_zijn_er(app):

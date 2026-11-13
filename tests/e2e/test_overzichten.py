@@ -57,7 +57,7 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     page.get_by_role("link", name=ski, exact=True).click()
     expect(page.get_by_role("heading", level=1)).to_have_text(f"Plaats {ski}")
 
-    page.goto("/indeling")
+    page.goto("/import-export")
     with page.expect_download() as download:
         page.get_by_role("link", name="Indeling exporteren naar Excel").click()
     with zipfile.ZipFile(io.BytesIO(open(download.value.path(), "rb").read())) as xlsx:

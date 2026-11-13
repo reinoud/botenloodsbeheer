@@ -23,45 +23,6 @@
 {% block titel %}Indeling · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Indeling</h1>
-{% if import_fouten %}
-{% call meldingblok('danger') %}
-<p>Het bestand is niet geïmporteerd. Er is niets veranderd. Herstel dit en probeer het opnieuw:</p>
-<ul>{% for f in import_fouten %}<li>{{ f }}</li>{% endfor %}</ul>
-{% endcall %}
-{% endif %}
-<p><a href="{{ url_for('web.indeling_export') }}" download>Indeling exporteren naar Excel</a></p>
-
-<section class="dj-panel" aria-labelledby="csv-indeling">
-  <h2 class="dj-panel__title" id="csv-indeling">Indeling als CSV</h2>
-  <p><a href="{{ url_for('web.rekindeling_export') }}" download>Indeling exporteren als CSV</a> · <a href="{{ url_for('web.rekindeling_export', leeg=1) }}" download>Leeg sjabloon met uitleg downloaden</a></p>
-  <form class="bl-formulier" method="post" action="{{ url_for('web.rekindeling_importeren') }}" enctype="multipart/form-data">
-    {% include "_csrf.html" %}
-    <div class="ds-field bl-breed">
-      <label class="ds-field__label" for="csv-bestand">CSV-bestand importeren (UTF-8, puntkomma, hooguit {{ csv_max }} kB)</label>
-      <input class="ds-input" id="csv-bestand" name="bestand" type="file" accept=".csv,text/csv" required>
-    </div>
-    <p class="bl-hint">Importeren vult aan en werkt bij. Plaatsen die niet in het bestand staan, blijven. Bij één fout verandert er niets.</p>
-    <button type="submit" class="ds-btn ds-btn--primary">Indeling importeren</button>
-  </form>
-</section>
-
-<section class="dj-panel" aria-labelledby="csv-bezetting">
-  <h2 class="dj-panel__title" id="csv-bezetting">Bezetting als CSV</h2>
-  {% if lopende_import %}
-  {% call meldingblok('info') %}<p>Er loopt een bezettingsimport. <a href="{{ url_for('web.bezetting_import') }}">Bekijk het overzicht</a> om te koppelen, te bevestigen of te annuleren.</p>{% endcall %}
-  {% endif %}
-  <p><a href="{{ url_for('web.bezetting_export') }}" download>Bezetting exporteren als CSV</a> · <a href="{{ url_for('web.bezetting_export', leeg=1) }}" download>Leeg bezettingssjabloon met uitleg downloaden</a> · <a href="{{ url_for('web.bezetting_koppelingen') }}">Onthouden koppelingen</a></p>
-  <form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_uploaden') }}" enctype="multipart/form-data">
-    {% include "_csrf.html" %}
-    <div class="ds-field bl-breed">
-      <label class="ds-field__label" for="bezetting-bestand">CSV-bestand met de bezetting uploaden (UTF-8, puntkomma, hooguit {{ csv_max }} kB)</label>
-      <input class="ds-input" id="bezetting-bestand" name="bestand" type="file" accept=".csv,text/csv" required>
-    </div>
-    <p class="bl-hint">Je ziet eerst een overzicht. Er verandert niets tot je bevestigt.</p>
-    <button type="submit" class="ds-btn ds-btn--primary">Bezetting uploaden</button>
-  </form>
-</section>
-
 <section class="dj-panel" aria-labelledby="nieuw-rek">
   <h2 class="dj-panel__title" id="nieuw-rek">Nieuw rek</h2>
   <form class="bl-formulier" method="post" action="{{ url_for('web.rek_aanmaken') }}">

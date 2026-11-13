@@ -168,6 +168,9 @@ def schermen(browser):
     # Indeling.
     page.goto("/indeling")
     o.maak("indeling", hoogte=1100)
+    page.goto("/import-export")
+    o.maak("import-export", hoogte=1500)
+    page.goto("/indeling")
     sectie = page.locator("section.dj-panel", has=page.get_by_role("heading", name="J", exact=True))
     sectie.get_by_text("Rek wijzigen of verwijderen").click()
     o.maak("rek-wijzigen", element=sectie.locator("details").first)
