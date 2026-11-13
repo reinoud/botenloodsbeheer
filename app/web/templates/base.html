@@ -18,6 +18,12 @@
     <div class="dj-container dj-header__bar">
       {% block logo %}<a class="dj-logo" href="{{ url_for('web.rekoverzicht') }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
       {% block menu %}{% if g.beheerder %}
+      {# Zoekveld van BV-75 (#154). id kop-zoek: leden.html heeft al een eigen id="zoek". Alleen voor een beheerder; de openbare pagina overschrijft dit blok. #}
+      <form class="dj-search" role="search" method="get" action="{{ url_for('web.zoeken') }}">
+        <label class="dj-sr-only" for="kop-zoek">Zoeken naar plaats, boot of eigenaar</label>
+        <input class="ds-input dj-search__field" type="search" id="kop-zoek" name="q" value="{{ zoekterm|default('') }}" maxlength="100" placeholder="Plaats, boot of eigenaar">
+        <button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>
+      </form>
       {# De vier groepen van BV-76 (BV-42); de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}
       {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail"} %}

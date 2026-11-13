@@ -192,7 +192,7 @@ def schermen(browser):
     page.get_by_text("Nieuwe boot", exact=True).click()
     page.get_by_label("Naam van de boot").fill("Zwaluw 7")
     page.get_by_label("Bootsoort").select_option(label="Kajak")
-    page.get_by_label("Eigenaar").select_option(index=3)
+    page.get_by_label("Eigenaar", exact=True).select_option(index=3)  # exact: het zoekveld in de kop noemt ook de eigenaar
     page.get_by_label("Foto (JPEG, PNG of WebP, niet verplicht)").set_input_files(
         {"name": "zwaluw.png", "mimeType": "image/png", "buffer": foto_bytes})
     o.maak("boten", hoogte=900)
@@ -237,6 +237,13 @@ def schermen(browser):
     o.maak("opgezegd", hoogte=900)  # 600 knipt de rijen onder de teller af (#220)
     page.goto("/opzeggend")
     o.maak("opzeggend", hoogte=600)
+
+    # Zoeken vanuit de kop (#154): een term met meer treffers geeft de lijst.
+    kop = page.locator("header.bl-kop")
+    kop.get_by_label("Zoeken naar plaats, boot of eigenaar").fill("bakker")
+    kop.get_by_role("button", name="Zoeken").click()
+    expect(page.get_by_role("heading", level=1)).to_have_text("Zoekresultaten")
+    o.maak("zoeken", hoogte=1000)
 
     # Kaartjes van het eerste rek (BLB-021).
     page.goto("/kaartjes")

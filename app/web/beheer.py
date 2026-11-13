@@ -23,6 +23,7 @@ from app.domein import (
     toewijzing,
     vandaag,
     wachtlijst,
+    zoekopdracht,
 )
 from app.domein.csvbestand import CsvFout
 from app.web import bp, getal, inloggen_vereist, recent_ingelogd, uitvoeren
@@ -354,6 +355,19 @@ def boot_aanmaken():
     if b is None:
         return redirect(url_for("web.boten_overzicht", open="nieuw"))
     return redirect(url_for("web.boot_detail", boot_id=b.id))
+
+
+@bp.get("/zoeken")
+@inloggen_vereist
+def zoeken():
+    """Zoekveld in de kop (#154). Eén treffer gaat direct naar zijn scherm. De term staat niet in een
+    log: Gunicorn laat de querystring weg (toegangslog) en de applicatie logt hem niet."""
+    term = zoekopdracht.schoon(request.args.get("q"))
+    resultaat = zoekopdracht.zoek(term)
+    if resultaat and resultaat.totaal == 1:
+        soort, gevonden = resultaat.treffers[0]
+        return redirect(url_for(f"web.{soort}_detail", **{f"{soort}_id": gevonden.id}))
+    return render_template("zoeken.html", zoekterm=term, resultaat=resultaat, is_oud_lid=leden.is_oud_lid)
 
 
 @bp.get("/boten/zonder-eigenaar")

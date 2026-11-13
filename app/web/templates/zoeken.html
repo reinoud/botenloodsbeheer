@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
+{% block titel %}Zoekresultaten · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Zoekresultaten</h1>
+{% if resultaat is none %}
+{% call meldingblok() %}Typ minstens 2 tekens.{% endcall %}
+{% elif resultaat.totaal == 0 %}
+{% call meldingblok() %}Geen treffers voor "{{ zoekterm }}".{% endcall %}
+<p>Zoek op een deel van een plaatscode (zoals B/2), een bootnaam, de naam van een eigenaar of een lidnummer. Oud-leden tellen mee.</p>
+{% else %}
+<p class="bl-aantal">{% if resultaat.totaal > resultaat.treffers|length %}Eerste {{ resultaat.treffers|length }} van {{ resultaat.totaal }} treffers. Zoek preciezer.{% else %}{{ resultaat.totaal }} treffers voor "{{ zoekterm }}"{% endif %}</p>
+<ul class="bl-lijst">
+  {% for soort, t in resultaat.treffers %}
+  <li class="bl-item">
+    {% if soort == "boot" %}
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=t.id) }}">{{ t.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ t.bootsoort.naam }}</span> · {% if t.lid %}<span data-label="Eigenaar">{{ t.lid.naam }} ({{ t.lid.lidnummer }})</span>{% if is_oud_lid(t.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}<span data-label="Eigenaar">{{ 'clubboot' if t.clubboot else 'eigenaar onbekend' }}</span>{% endif %}</span></div>
+    <p class="bl-item__zijde">{% if t.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=t.plaats.id) }}">{{ t.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
+    {% elif soort == "lid" %}
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=t.id) }}">{{ t.naam }}</a> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ t.lidnummer }}</span> · <span data-label="Boot">geen boot</span></span></div>
+    {% else %}
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=t.id) }}">{{ t.code }}</a> <span class="bl-item__sub">{{ 'clubplaats' if t.is_clubplaats else 'vrije plaats' }}</span></div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}
