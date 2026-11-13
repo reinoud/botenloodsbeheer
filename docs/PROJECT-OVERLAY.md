@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.79
+**Versie overlay:** v0.5.80
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-13
@@ -186,6 +186,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Controleer vóór een opdracht over een schermafbeelding of de afbeelding in `main` het gebrek uit het issue toont; zo niet, zeg welke aanpassing aan het script mag, zoals de hoogte van de uitsnede.
 - Bouwen twee agents tegelijk en werken ze hetzelfde document bij (zoals `architectuur.md`), dan kiezen ze hetzelfde nieuwe versienummer; de regie lost dat op bij de rebase van de tweede branch.
 - Vervalt een regel, zoek dan ook op de omschrijving van het geweigerde geval zelf (zoals "clubboot op een gewone plaats"), niet alleen op de tekst van de oude melding.
+- Een mutant op een sorteersleutel die overleeft omdat de planner een index kiest, is niet gelijkwaardig: draai `ANALYZE` op de tabellen in de test, zodat de planner sorteert zoals bij echte aantallen, en draai als controle de mutant ook tegen de test zonder `ANALYZE` (#154).
+- Een maat uit een toets of aanbeveling (zoals een minimale breedte) meet je eerst in de preview van het ontwerp: `git archive <commit>` van designsystem naar de scratchpad, en Playwright in het e2e-image (`docker run --entrypoint python botenloods-e2e`). Wijkt de aanbeveling af van de preview, dan gaat de preview voor en meld je het aan Design System (#154).
+- Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 
 #### Review
 
@@ -268,6 +271,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem per mutant uit een testcommentaar de verwachte falende assert als bestand:regel. Een deel van een voorwaarde dat het domein onbereikbaar maakt (zoals `not clubboot` bij een boot op de wachtlijst), noem je als gelijkwaardige mutant die niet gedraaid hoeft te worden.
 - Noem bij een controle die alleen voor één soort geldt (zoals robottokens) ook de mutant die de soortvoorwaarde weghaalt, met de test die daarop valt.
 - Lint in de testcontainer draai je met `ruff check --no-cache <paden>`; de cache in `/app` is niet beschrijfbaar.
+- Noem bij een verwachte falende assert de testnaam en de tekst van de assert; het regelnummer alleen als controle, want het verschuift bij elke wijziging in de staging (#154).
+- Verwijder een testaccount na een live proef met een los commando, zonder `rm` van bestanden ernaast; een geblokkeerd gecombineerd commando wordt niet opnieuw geprobeerd (#154).
 
 #### E2E
 
@@ -385,6 +390,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Zet een wijziging meer in de applicatielog (zoals een traceback), dan toetst de test de JSON-logregel na een fout van de database zelf (NOT NULL of UNIQUE op `lid`) met de rol `api` en met een regelovergang in een veldwaarde, en met een fout die de oorspronkelijke tekst zonder keten overneemt (zoals `PendingRollbackError`); `hide_parameters` verbergt de DETAIL van PostgreSQL niet. Een foutmelding in de code bevat geen veldwaarden.
 - Bij een nieuwe GET-parameter: de toegangslog (`app/toegangslog.py`) laat de querystring weg en `app/__init__.py` weigert een NUL-teken centraal. De reviewer controleert alleen of de nieuwe route daar niet omheen gaat.
 - Noem bij een whitelist- of adrescontrole in welke vorm het clientadres binnenkomt (IPv4 als gewone notatie of als `::ffff:`), of zeg dat het onbekend is.
+- Een controle dat Traefik een route niet logt, begint met één verzoek zonder router (onbekende Host) dat wel gelogd moet worden; anders bewijst een lege log niets (#154).
 
 #### Documentatie, backlog en ADR's
 
@@ -468,6 +474,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.80 | 2026-11-13 | Zes regels: sorteermutant met `ANALYZE` en controlerun, maat uit een aanbeveling eerst in de preview meten, compose-project van een gestopte bouwer opruimen (Bouw); falende assert bij naam en tekst, testaccount los verwijderen (Review); positieve controle op de log van Traefik (Security); uit de terugblikken bij #154 | Lessen |
 | v0.5.79 | 2026-11-13 | Vijf regels: ruff vóór de oplevering; logactie in ADR-006 en handleiding; E2E-mutant op een template eerst `web` met de override opnieuw aanmaken (vervangt `DRAAI_OVERRIDE` alleen), gelijkwaardige mutant benoemen; volledig pad in een externe bron; nieuwe stap in `schermafbeeldingen.py` eindigt waar de volgende begint; uit de terugblikken van bedrock en sentinel bij #206 | Lessen |
 | v0.5.78 | 2026-11-13 | Drie regels (Bouw): netstroom of open klep vóór een lange E2E-run; ontwerp tegen bestaand gedrag en het menu-item bij een scherm uit een andere route; uitsnede voor Indeling op 360 px; uit de terugblikken bij #262 | Lessen |
 | v0.5.77 | 2026-11-12 | Twee regels (Bouw): CSS-klasse uit de opdracht met grep controleren, ontwerp van Design System gaat voor; geheim op een scherm met schermafbeelding via `verberg_geheimen`, en een E2E-maat toetst de maat uit de CSS; uit de terugblikken bij #159 | Lessen |
