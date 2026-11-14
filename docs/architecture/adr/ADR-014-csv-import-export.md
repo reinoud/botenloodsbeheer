@@ -2,8 +2,8 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.5
-**Stories:** issue #157 (rekindeling), issue #158 (bezetting), issue #202 (bootsoort kiezen)
+**Versie:** v0.2.6
+**Stories:** issue #157 (rekindeling), issue #158 (bezetting), issue #202 (bootsoort kiezen); backlog BLB-045 (rekindeling) en BLB-048 (bezetting)
 
 ## Context
 
@@ -140,6 +140,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.6 | 2026-11-14 | Verwijzing naar de backlogstories BLB-045 en BLB-048 | Issue #216 |
 | v0.2.5 | 2026-11-12 | Het woord `clubboot` met een bekend lidnummer koppelt op dat lidnummer; met een onbekend lidnummer blijft het een fout | Issue #214, besluit regie 2026-11-12 |
 | v0.2.4 | 2026-11-10 | De beheerder kiest bij een onbekende bootsoort de soort van de plaats in het koppelscherm; de eigenaar wordt ook beoordeeld bij een onbekende soort; `keuzes` krijgt `soort-<regel>` | Issue #202, besluiten stakeholder 2026-11-10 |
 | v0.2.3 | 2026-11-10 | Het woord `clubboot` in `eigenaar` is een clubboot; leeg is een onbekende eigenaar in plaats van een clubboot | Issue #204, besluit stakeholder 2026-11-10 |

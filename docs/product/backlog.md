@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.16
-**Datum:** 2026-11-13
+**Versie:** v0.6.17
+**Datum:** 2026-11-14
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -490,9 +490,24 @@ Als beheerder wil ik de rekindeling als CSV-bestand exporteren en importeren, me
 - Gegeven een export, wanneer de beheerder die ongewijzigd importeert, dan verandert er niets.
 - Gegeven een bestand met een fout (te groot, meer dan 2000 regels, verkeerd scheidingsteken of codering, onbekende bootsoort, gat in een verdieping, bezette plaats die ongeschikt wordt of van clubplaats verandert), wanneer de beheerder het importeert, dan verandert er niets en noemt de melding elke foute regel met regelnummer en reden.
 - Gegeven een import, dan vraagt die een recente inlog en staat in het technische log alleen een regel met aantallen.
-- Gegeven een bezettingsregel (issue #202, ADR-014 §3) met een bootsoort die niet bij precies één soort past, wanneer de beheerder het overzicht opent, dan kiest die bij die regel een van de soorten die de plaats van die regel toelaat, of slaat de regel over; is de plaats onbekend of fout, dan kan de regel alleen overgeslagen worden. Na Keuzes opslaan krijgt de regel de uitkomst die hij met die soort zou hebben (nieuwe boot, overschrijven, ongewijzigd of een andere fout). De soort geldt alleen voor die import; een ongeldige of verdwenen soort wordt geweigerd.
 
 Route voor een mens (issue #157): open de indeling, exporteer, voeg in een spreadsheet een rek toe, importeer en controleer het rekoverzicht. Download het lege sjabloon en lees de uitleg.
+
+#### BLB-048 Bezetting exporteren en importeren als CSV
+
+Prioriteit: Should. Bron: issues #158, #202 en #204, ADR-014 §3. Afhankelijk van: BLB-045, BLB-010, BLB-046.
+
+Als beheerder wil ik de bezetting als CSV exporteren en importeren, met een scherm om namen aan leden te koppelen, zodat ik haar uit een spreadsheet in één keer kan overzetten.
+
+- Gegeven de bezetting, wanneer de beheerder exporteert, dan staat er een regel per bezette plaats: `plaats;boot;bootsoort;eigenaar;lidnummer`. Codering, formulebescherming, grenzen en de lege export zijn die van BLB-045. Een clubboot heeft `clubboot` als eigenaar; leeg is eigenaar onbekend (BLB-046).
+- Gegeven een upload, dan vraagt die een recente inlog en komen alleen aantallen in het technische log. Hooguit één import loopt en verloopt na 2 uur.
+- Gegeven het overzicht, dan heeft elke regel een uitkomst (ongewijzigd, toewijzen, overschrijven, verplaatsen, nieuwe boot, overgeslagen, te koppelen of fout) en bevestigen kan pas zonder te koppelen of foute regels.
+- Gegeven een eigenaar in het bestand, dan koppelt de import op lidnummer, een onthouden koppeling of exacte naam. Zonder precies één treffer kiest de beheerder in het koppelscherm een lid of de vereniging, of slaat de regel over. Een gekozen koppeling wordt onthouden, verdwijnt met het lid of na 5 jaar zonder gebruik, en is te verwijderen.
+- Gegeven een bezettingsregel met een bootsoort die niet bij precies één soort past, wanneer de beheerder het overzicht opent, dan kiest die bij die regel een van de soorten die de plaats van die regel toelaat, of slaat de regel over; is de plaats onbekend of fout, dan kan de regel alleen overgeslagen worden. Na Keuzes opslaan krijgt de regel de uitkomst die hij met die soort zou hebben (nieuwe boot, overschrijven, ongewijzigd of een andere fout). De soort geldt alleen voor die import; een ongeldige of verdwenen soort wordt geweigerd.
+- Gegeven bevestigen, dan gebeurt alles of niets. Een nieuwe boot wordt aangemaakt en krijgt de plaats. Een andere boot op de plaats gaat ervan af en blijft bestaan; een boot elders wordt verplaatst. De controles van toewijzen gelden en elke mutatie staat in het log van de bootmutaties.
+- Gegeven een oud-lid, dan krijgt die via de import geen plaats of nieuwe boot.
+
+Route voor een mens (issue #158): importeer een bestand met een fout gespelde naam, kies het lid, bevestig en importeer opnieuw.
 
 #### BLB-043 Twee logs: bootmutaties en techniek
 
@@ -810,6 +825,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.17 | 2026-11-14 | Issue #216: BLB-048 voor de bezettingsimport; BLB-045 gaat weer alleen over de rekindeling |
 | v0.6.16 | 2026-11-13 | Issue #206: BLB-047, een boot verplaatsen vanaf zijn eigen pagina (ontwerp 5B) |
 | v0.6.15 | 2026-11-12 | Issue #243: BLB-033, een robottoken weigert een whitelistreeks breder dan /8 of /32 |
 | v0.6.14 | 2026-11-12 | Issues #240 en #176: melding bij eigenaar onbekend op de wachtlijst (BLB-013); taak van een oud-lid met een boot op de wachtlijst (BLB-008) |
