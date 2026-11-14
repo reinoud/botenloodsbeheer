@@ -6,7 +6,7 @@
 <h1>Wachtlijst</h1>
 <p>Boten zonder plaats, per bootsoort, de langst wachtende bovenaan. De volgorde is informatie: jij kiest welke boot een vrije plaats krijgt. Een boot zet je op de lijst vanaf de pagina van de boot.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Wachtlijst zoeken en filteren">
+<form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Zoeken in Wachtlijst">
   <div class="ds-field">
     <label class="ds-field__label" for="wacht-zoek">Zoek op boot of lid</label>
     <input class="ds-input" type="search" id="wacht-zoek" name="zoek" value="{{ zoek }}" maxlength="100">

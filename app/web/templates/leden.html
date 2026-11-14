@@ -5,7 +5,7 @@
 <h1>Leden</h1>
 <p>De ledenlijst komt uit de ledenbron. De integratiecontainer haalt haar dagelijks op en stuurt haar naar de applicatie. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.leden_overzicht') }}" role="search" aria-label="Leden zoeken">
+<form class="bl-filter" method="get" action="{{ url_for('web.leden_overzicht') }}" role="search" aria-label="Zoeken in Leden">
   <div class="ds-field">
     <label class="ds-field__label" for="zoek">Zoek op naam of lidnummer</label>
     <input class="ds-input" id="zoek" name="zoek" type="search" value="{{ zoek }}" maxlength="100">

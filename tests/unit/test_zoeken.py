@@ -402,3 +402,13 @@ def test_boot_eigenaar_lidnummer_bootsoort_en_plaatscode_zijn_geescaped(loods):
                  'data-label="Plaats" href="/plaatsen/', f'>{G}/1/1</a>', f'>{G}/1/2</a>',
                  'data-label="Lid" href="/leden/', f'>{G} zonder boot</a>', f'data-label="Lidnummer">{G}2</span>'):
         assert veld in html, veld
+
+
+@pytest.mark.parametrize("pad, naam", [
+    ("/boten", "Zoeken in Boten"), ("/leden", "Zoeken in Leden"), ("/wachtlijst", "Zoeken in Wachtlijst"),
+    ("/opgezegd", "Zoeken in Opgezegd"), ("/opzeggend", "Zoeken in Gaan opzeggen"),
+])
+def test_elk_zoekformulier_heeft_een_eigen_naam(ingelogd, pad, naam):
+    # BV-79 en BV-81 (#267): twee search-landmarks op één pagina, elk met een naam
+    namen = re.findall(r'<form[^>]*role="search"[^>]*aria-label="([^"]+)"', ingelogd.get(pad).text)
+    assert sorted(namen) == sorted(["Overal zoeken", naam])
