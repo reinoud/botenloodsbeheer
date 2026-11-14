@@ -4,9 +4,13 @@ onthouden koppelingen, de opschoning en de webroutes. De migratie en de rechten 
 test_bezetting_csv_migratie.py."""
 
 import threading
+import time
+import traceback
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
+from flask import render_template_string
 from sqlalchemy import create_engine, select, text
 from sqlalchemy.exc import OperationalError
 
@@ -239,6 +243,15 @@ def test_een_tweede_upload_tijdens_een_lopende_import_wordt_geweigerd(app, actor
     with pytest.raises(Regelfout, match="Bevestig of annuleer die eerst"):
         bezetting_csv.uploaden(bestand("A/1/2;Fuut;Kajak;;"), actor)
     assert [r["plaats"] for r in db.session.scalar(select(Bezettingsimport)).regels] == ["A/1/1"]
+
+
+@pytest.mark.parametrize("data", [bestand("A/1/2;Fuut;Kajak"), bestand()], ids=["opbouwfout", "leeg"])
+def test_een_tweede_upload_met_een_fout_noemt_eerst_de_lopende_import(app, actor, data):
+    # mutant M6 (#167): zonder de vroege controle zou de fout in het tweede bestand voorgaan
+    bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;;"), actor)
+    with pytest.raises(Regelfout, match="Bevestig of annuleer die eerst"):
+        bezetting_csv.uploaden(data, actor)
+    assert len(db.session.scalars(select(Bezettingsimport)).all()) == 1
 
 
 def test_twee_gelijktijdige_uploads_laten_de_database_een_weigeren(app, actor):
@@ -737,6 +750,46 @@ def test_het_technische_log_van_een_mislukte_bevestiging_bevat_geen_bestandsinho
     assert not technisch() and "Geheim" not in caplog.text
 
 
+def test_een_oud_lid_bij_het_aanmaken_van_de_boot_geeft_een_melding_zonder_naam(app, actor, anna):
+    """Het lid wordt oud-lid na de beoordeling: de melding van de kern noemt het lid, de melding die
+    in de cookie komt niet (#167)."""
+    plaats("A/1/1")
+    bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;;1001"), actor)
+    echt = boten._boot_aanmaken
+
+    def lid_wordt_oud(*args, **kwargs):
+        eigenaar("UPDATE lid SET opzegdatum = '2020-01-01' WHERE id = :i", i=anna.id)
+        db.session.expire_all()
+        return echt(*args, **kwargs)
+
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(boten, "_boot_aanmaken", lid_wordt_oud)
+        with pytest.raises(Regelfout) as fout:
+            bezetting_csv.bevestigen(actor)
+    assert str(fout.value) == bezetting_csv.NIET_UITGEVOERD and "Anna" not in str(fout.value)
+    assert db.session.scalar(select(Boot).where(Boot.naam == "Reiger")) is None
+    assert db.session.scalar(select(Bezettingsimport)) is not None
+
+
+def test_een_onverwachte_databasefout_bij_het_uploaden_bevat_geen_bestandsinhoud(app, actor):
+    """Een lege uploader schendt NOT NULL; de DETAIL van de database noemt dan de hele rij met de
+    regels uit het bestand. Die komt niet in de fout en niet in de traceback die naar stdout gaat (#167)."""
+    data = bestand("A/1/1;Geheimeboot;Kajak;;")  # niet in de aanroep: de traceback toont de regel van de test
+    with pytest.raises(RuntimeError) as fout:
+        bezetting_csv.uploaden(data, SimpleNamespace(id=None))
+    tekst = "".join(traceback.format_exception(fout.value))
+    assert "Onverwachte databasefout bij het uploaden" in tekst and "Geheimeboot" not in tekst
+    assert db.session.scalar(select(Bezettingsimport)) is None
+
+
+@pytest.mark.parametrize(("soort_naam", "teken"), [("danger", "!"), ("warning", "!"), ("info", "i"), ("success", "i")])
+def test_een_melding_heeft_het_teken_van_haar_soort(app, soort_naam, teken):
+    with app.test_request_context():
+        html = render_template_string('{% from "_melding.html" import meldingblok %}'
+                                      '{% call meldingblok(soort) %}x{% endcall %}', soort=soort_naam)
+    assert f'aria-hidden="true">{teken}</span>' in html
+
+
 # Vergrendelen en races
 
 
@@ -753,16 +806,29 @@ def bevestig_in_thread(app, actor, anders):
     return threading.Thread(target=doe)
 
 
+def wacht_tot_geblokkeerd(verbinding, draad, houder, seconden=10):
+    """Wacht tot een databasesessie op het slot van houder (een pid) wacht, niet een vaste tijd:
+    bevestigen heeft dan de eerdere sloten al, want het neemt ze een voor een. Alleen sessies die
+    op houder wachten tellen, niet sloten van een andere suite op dezelfde server."""
+    einde = time.monotonic() + seconden
+    while time.monotonic() < einde and draad.is_alive():
+        sql = "SELECT count(*) FROM pg_locks WHERE NOT granted AND :houder = ANY(pg_blocking_pids(pid))"
+        if verbinding.execute(text(sql), {"houder": houder}).scalar():
+            return True
+        draad.join(timeout=0.05)
+    return False
+
+
 def wacht_op_slot(app, actor, vergrendel_sql, probe_sql, params):
     """De eerste verbinding houdt een slot (vergrendel_sql). bevestigen moet daarop wachten en
     houdt dan de eerdere sloten al vast: de probe (FOR UPDATE NOWAIT) mag die niet kunnen nemen."""
     anders, engine = [], create_engine(WEB)
     with engine.connect() as eerste, engine.connect() as probe:
         eerste.execute(text(vergrendel_sql), params)
+        houder = eerste.execute(text("SELECT pg_backend_pid()")).scalar()
         draad = bevestig_in_thread(app, actor, anders)
         draad.start()
-        draad.join(timeout=1)
-        assert draad.is_alive(), "bevestigen wacht niet op het slot"
+        assert wacht_tot_geblokkeerd(probe, draad, houder), "bevestigen wacht niet op het slot"
         with pytest.raises(OperationalError, match="could not obtain lock"):
             probe.execute(text(probe_sql), params)
         eerste.commit()
@@ -1007,3 +1073,19 @@ def test_een_fout_in_de_plaats_biedt_alleen_regel_overslaan_in_de_soortlijst(app
     assert uitkomst[2].soortlijst and uitkomst[2].plaats is None
     assert uitkomst[3].soortlijst  # de plaats ontbreekt
     assert not uitkomst[4].soortlijst  # een andere fout: de lijst met alleen overslaan blijft keuze-N
+
+
+def test_een_overgeslagen_regel_houdt_de_soorten_van_de_plaats_en_een_soort_kiezen_werkt_in_een_keer(app, actor, anna):
+    """#218: na Regel overslaan in de soortlijst staan de soorten van de plaats nog in de lijst, en de
+    soort kiezen zonder eerst Geen keuze te zetten is één keer opslaan."""
+    plaats("A/1/1", ("Kajak", "Surfski"))
+    uitkomst = beoordeling(bestand("A/1/1;Reiger;Kayak;Anna de Vries;1001", "Z/9/9;Meeuw;Kajak;;"), actor,
+                           {"soort-2": "overslaan", "soort-3": "overslaan"})
+    assert uitkomst[2].uitkomst == "overgeslagen" and uitkomst[2].soortlijst
+    assert sorted(s.naam for s in uitkomst[2].plaats.bootsoorten) == ["Kajak", "Surfski"]
+    assert uitkomst[3].uitkomst == "overgeslagen" and uitkomst[3].plaats is None  # een onbekende plaats blijft alleen overslaan
+    bezetting_csv.koppelen({"soort-2": str(soort("Surfski")), "soort-3": "overslaan"}, actor)
+    u = bezetting_csv.overzicht()["uitkomsten"][0]
+    assert (u.uitkomst, u.soort.naam) == ("nieuwe boot", "Surfski")
+    bezetting_csv.bevestigen(actor)
+    assert db.session.scalar(select(Boot).where(Boot.naam == "Reiger")).bootsoort.naam == "Surfski"

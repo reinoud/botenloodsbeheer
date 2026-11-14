@@ -19,14 +19,15 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
     wachtwoord_instellen(page, "bezettingsoort")
     rek = reknaam("n")
     (naam1, nr1), _tweede = leden_uit_de_lijst(page)
-    rek_aanmaken(page, rek, vakken=((1, 1), (1, 2)), soorten={1: "Kajak"})
+    rek_aanmaken(page, rek, vakken=((1, 1), (1, 2), (1, 3)), soorten={1: "Kajak"})
     plaats_instellen(page, f"{rek}/1/1", ["Surfski"])  # plaats 1 laat kajak en surfski toe, plaats 2 alleen kajak
-    fuut, meeuw = f"Fuut {rek}", f"Meeuw {rek}"
+    fuut, meeuw, reiger = f"Fuut {rek}", f"Meeuw {rek}", f"Reiger {rek}"
 
     # Regel 2: een verkeerd geschreven soort, de eigenaar is te vinden: één lijst. Regel 3: ook een eigenaar die
     # niet te koppelen is: twee lijsten onder elkaar in een groep.
     uploaden(page, "\r\n".join([KOP, f"{rek}/1/1;{fuut};Kayak;{naam1};{nr1}",
-                                f"{rek}/1/2;{meeuw};Surfsky;Onbekend {rek};"]) + "\r\n")
+                                f"{rek}/1/2;{meeuw};Surfsky;Onbekend {rek};",
+                                f"{rek}/1/3;{reiger};Kayak;{naam1};{nr1}"]) + "\r\n")
     expect(regel(page, fuut)).to_contain_text("De bootsoort Kayak bestaat niet of is dubbelzinnig, kies hem in de lijst.")
     een = page.get_by_label("Keuze voor regel 2", exact=True)
     expect(een).to_be_visible()
@@ -40,14 +41,27 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
         page.set_viewport_size({"width": breedte, "height": 900})
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), breedte
         expect(groep).to_be_visible()
-        # Tab: van de lijst van regel 2 naar Bootsoort, Eigenaar en dan Keuzes opslaan (de laatste regel).
+        # Tab: van de lijst van regel 2 naar Bootsoort, Eigenaar, de lijst van regel 4 en dan Keuzes opslaan.
         een.focus()
         page.keyboard.press("Tab")
         expect(soort).to_be_focused()
         page.keyboard.press("Tab")
         expect(eigenaar).to_be_focused()
         page.keyboard.press("Tab")
+        expect(page.get_by_label("Keuze voor regel 4", exact=True)).to_be_focused()
+        page.keyboard.press("Tab")
         expect(page.get_by_role("button", name="Keuzes opslaan")).to_be_focused()
+
+    # Issue #218: regel 4 overslaan, opslaan: de soorten van de plaats blijven in de lijst en een soort kiezen
+    # (direct, zonder eerst Geen keuze) is een keer opslaan.
+    vier = page.get_by_label("Keuze voor regel 4", exact=True)
+    vier.select_option(label="Regel overslaan")
+    page.get_by_role("button", name="Keuzes opslaan").click()
+    expect(regel(page, reiger)).to_contain_text("overgeslagen")
+    assert opties(page.get_by_label("Keuze voor regel 4", exact=True)) == ["Geen keuze", "Regel overslaan", "Kajak"]
+    page.get_by_label("Keuze voor regel 4", exact=True).select_option(label="Kajak")
+    page.get_by_role("button", name="Keuzes opslaan").click()
+    expect(regel(page, reiger)).to_contain_text("nieuwe boot")
 
     # De juiste soort kiezen en opslaan: beide regels zijn in orde; beide keuzes blijven wijzigbaar.
     een.select_option(label="Surfski")
@@ -60,10 +74,11 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
     expect(page.get_by_label("Keuze voor regel 2", exact=True)).to_have_value(re.compile(r"\d+"))
     expect(page.get_by_role("group", name="Keuze voor regel 3").get_by_label("Bootsoort")).not_to_have_value("")
     page.get_by_role("button", name="Bezetting importeren", exact=True).click()
-    expect(page.get_by_text("De bezetting is geïmporteerd. Nieuwe boten: 2")).to_be_visible()
+    expect(page.get_by_text("De bezetting is geïmporteerd. Nieuwe boten: 3")).to_be_visible()
 
     # De boten hebben de gekozen soort.
-    for boot, gekozen in ((fuut, "Surfski"), (meeuw, "Kajak")):
+    for boot, gekozen in ((fuut, "Surfski"), (meeuw, "Kajak"), (reiger, "Kajak")):
         page.goto("/boten")
         page.get_by_role("link", name=boot, exact=True).click()
         expect(page.locator("dl.bl-feiten > div").filter(has_text="Bootsoort")).to_contain_text(gekozen)
+
