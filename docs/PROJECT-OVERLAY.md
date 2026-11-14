@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.80
+**Versie overlay:** v0.5.81
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-13
+**Bijgewerkt:** 2026-11-14
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -210,6 +210,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Toets een opgehaald of gekoppeld bestand ook met de rechten die de beschreven stap oplevert (zoals 0644 na `curl`), en controleer het resultaat in de database, niet alleen de status `healthy`.
 - Zeg of een reviewer een los script met de unitfixture mag draaien: die maakt `botenloods_test` opnieuw aan en breekt een run die tegelijk loopt.
 - Noem bij een logregel uit een ADR voor welke story hij geldt, en bij een nareview de regel in de ADR die de reviewer moet terugzien.
+- Vraag je een reviewer om met grep naar een term te zoeken, noem dan de exacte zoekstrings (zoals `cache-from|type=gha`), zodat hij geen valse treffers hoeft te filteren (#272).
 - Noem in een brief aan een reviewer de niet-gestagede bestanden in de werkmap en of de review ze negeert.
 - Noem als voorbeeldtest in een brief alleen een naam die `grep -rn "def test_" tests/` oplevert.
 - Citeer een overlayregel in een brief letterlijk, inclusief de afbakening tussen haakjes, en noem welke routes er bewust buiten vallen.
@@ -358,6 +359,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
+- Bouw de images voor die scan met `--no-cache`, zoals de release-workflow sinds #272. Een apt-laag uit de cache mist de beveiligingsupdates van Debian.
 - Het releaseissue noemt per E2E-run vóór de tag de commit en de aantallen geslaagd, mislukt en overgeslagen, ook als de stakeholder de runs draaide. Ontbreken de aantallen, dan zegt het slotcommentaar dat (#257).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
 - Gaat een geëscapete zoektekst in SQL nog door een normalisatie (zoals `unaccent`, `lower` of `translate`), controleer dan of die normalisatie `%`, `_` of `\` kan maken, en escape ná de normalisatie (#232, AEG-01).
@@ -474,6 +476,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.81 | 2026-11-14 | Twee regels: lokale trivyscan vóór de tag met `--no-cache` (Security en proxy); exacte zoekstrings voor een grep in een reviewbrief (Review); uit de release van v1.1.0 en de terugblik van sentinel bij #272 | Lessen |
 | v0.5.80 | 2026-11-13 | Zes regels: sorteermutant met `ANALYZE` en controlerun, maat uit een aanbeveling eerst in de preview meten, compose-project van een gestopte bouwer opruimen (Bouw); falende assert bij naam en tekst, testaccount los verwijderen (Review); positieve controle op de log van Traefik (Security); uit de terugblikken bij #154 | Lessen |
 | v0.5.79 | 2026-11-13 | Vijf regels: ruff vóór de oplevering; logactie in ADR-006 en handleiding; E2E-mutant op een template eerst `web` met de override opnieuw aanmaken (vervangt `DRAAI_OVERRIDE` alleen), gelijkwaardige mutant benoemen; volledig pad in een externe bron; nieuwe stap in `schermafbeeldingen.py` eindigt waar de volgende begint; uit de terugblikken van bedrock en sentinel bij #206 | Lessen |
 | v0.5.78 | 2026-11-13 | Drie regels (Bouw): netstroom of open klep vóór een lange E2E-run; ontwerp tegen bestaand gedrag en het menu-item bij een scherm uit een andere route; uitsnede voor Indeling op 360 px; uit de terugblikken bij #262 | Lessen |
