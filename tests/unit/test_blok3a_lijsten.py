@@ -148,7 +148,7 @@ def opzeggers(ingelogd):
 def test_opgezegd_is_een_lijst_zonder_rek_en_zoekt_op_boot_of_oud_lid(opzeggers):
     tekst = opzeggers.get("/opgezegd").text
     assert titels(tekst) == ["B/1/1", "B/1/2"] and aantal(tekst) == "2 plaatsen"
-    assert 'data-label="Rek"' not in tekst and "Rek" not in tekst.split("<main")[1].split("</main>")[0]
+    assert 'data-label="Rek"' not in tekst and "Rek" not in tekst.split("<main")[1].split('<section class="log"')[0]  # de log noemt "Rek B"
     # Mutant: boot of lid uit de voorwaarde halen valt op de eerste of de tweede assert.
     assert titels(opzeggers.get("/opgezegd?zoek=kievit").text) == ["B/1/1"]
     gevonden = opzeggers.get("/opgezegd?zoek=oud+twee").text

@@ -96,7 +96,7 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
     page.get_by_role("link", name=f"{rek}/1/3", exact=True).click()
     expect(page.get_by_text(f"Meeuw {rek}").first).to_be_visible()
     page.locator("summary", has_text="Log").click()  # het log is een dicht uitklapblok
-    expect(page.get_by_text("plaats.vrijgegeven").first).to_be_visible()
+    expect(page.get_by_text("plaats vrijgegeven").first).to_be_visible()
     page.goto("/boten")
     kievit = page.locator("main > ul.bl-lijst > li").filter(has=page.get_by_role("link", name=f"Kievit {rek}", exact=True))
     expect(kievit).to_contain_text("geen plaats")  # Kievit is overschreven en heeft geen plaats meer

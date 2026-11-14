@@ -172,6 +172,11 @@ def dagkop(dag):
     return f"{DAGEN[dag.weekday()]} {dag.day} {MAANDEN[dag.month - 1]} {dag.year}"
 
 
+bp.add_app_template_filter(log.actietekst, "actietekst")
+bp.add_app_template_filter(log.namen, "lognamen")
+bp.add_app_template_filter(log.betreft, "betreft")
+
+
 @bp.get("/")
 @inloggen_vereist
 def start():

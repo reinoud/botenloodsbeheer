@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.85
+**Versie overlay:** v0.5.86
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -194,6 +194,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een test op een traceback heeft de gevoelige waarde niet in de eigen aanroep staan, alleen in de gegevens die de fout uitlokken (#218).
 - Een mutant die een vroege controle weghaalt, is pas gelijkwaardig als ook invoer die een latere controle laat falen (opbouwfout, lege invoer) dezelfde uitkomst geeft; noem die invoer in de redenering (#218).
 - Noem bij een slotmutant welke test hem hoort te doden; valt hij door een andere test, dan telt de slottest niet als dekking (#218).
+- Verandert de weergave van een veld, zoek dan ook naar `not in` en `not_to_contain_text` op de oude tekst; die asserts slagen daarna altijd. Krijgt een sjabloon nieuwe gegevens in bereik (zoals `namen`), draai dan een mutant die ze in een naburig veld gebruikt en noem de test die hem vangt (#174).
+- Noem bij een vraag over wat een scherm toont welke acties en verwijzingen het kan tonen: het gewone log toont alleen `BOOTMUTATIES`, met verwijzingen naar boot, plaats, rek en lid; de rest staat alleen in het technische log (#174).
+- Een reknaam mag geen `/` bevatten; een escapingtest op een rek gebruikt `<b>x` (#174).
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
@@ -486,6 +489,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.86 | 2026-11-14 | Drie regels (Bouw): ontkenningen op oude tekst, nieuwe gegevens in een sjabloon, wat het gewone log toont, escapingtest op een rek; uit de terugblikken bij #174 | Lessen |
 | v0.5.85 | 2026-11-14 | Vijf regels (Algemeen, Bouw): reknaamletters op, traceback-test, gelijkwaardige mutant bij een vroege controle, slotmutant en zijn test, punten buiten de toets van een reviewer; uit de terugblikken bij #218 | Lessen |
 | v0.5.84 | 2026-11-14 | Bouw: wachten met een until-lus in de voorgrond, niet met Monitor; varianten van een melding en een later ontwerpbesluit noemen; uit de terugblikken van prism en sentinel bij #192 | Lessen |
 | v0.5.83 | 2026-11-14 | Twee regels (Bouw): gegevens voor een overlooptest, bewakermutant bij een overbodig geworden CSS-regel; uit de terugblikken van prism en sentinel bij #270 | Lessen |

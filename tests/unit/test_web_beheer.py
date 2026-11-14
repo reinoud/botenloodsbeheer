@@ -186,13 +186,13 @@ def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
     assert anna.boten == []
     r = ingelogd.post("/boten", data={"naam": "Clubkajak", "bootsoort": "1", "eigenaar": "club"},
                       follow_redirects=True)
-    assert "De boot is vastgelegd." in r.text and "boot.aangemaakt" in r.text
+    assert "De boot is vastgelegd." in r.text and "boot aangemaakt" in r.text
 
 
 def test_plaatsdetail_met_eigenaar_en_log(ingelogd):
     p = bezette_plaats()
     tekst = ingelogd.get(f"/plaatsen/{p.id}").text
-    for waarde in ("Zeemeeuw", "Anna de Vries", "1001", "plaats.toegewezen", f"/p/{p.publieke_sleutel}"):
+    for waarde in ("Zeemeeuw", "Anna de Vries", "1001", "plaats toegewezen", f"/p/{p.publieke_sleutel}"):
         assert waarde in tekst
 
 
@@ -238,7 +238,7 @@ def test_openbare_pagina_alleen_openbare_gegevens(client):
     assert r.status_code == 200
     assert "A/1/1" in r.text and "Zeemeeuw" in r.text and "Anna de Vries" in r.text
     assert "/afbeelding/" in r.text
-    for verboden in ("1001", "Log", "plaats.toegewezen"):
+    for verboden in ("1001", "Log", "plaats toegewezen", "plaats.toegewezen"):
         assert verboden not in r.text
 
 
@@ -359,7 +359,7 @@ def test_plaats_wijzigen_en_vrijgeven(ingelogd):
     assert "Op plaats A/1/1 ligt Zeemeeuw, een kajak" in r.text
     r = ingelogd.post(f"/plaatsen/{p.id}", data={"code": "B09", "bootsoort": ["1", "3"]},
                       follow_redirects=True)
-    assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" not in r.text
+    assert "De plaats is opgeslagen." in r.text and "plaats.gewijzigd" not in r.text and "plaats gewijzigd" not in r.text
     assert "Plaats A/1/1" in r.text  # een meegestuurde code wordt genegeerd
     assert "plaats.gewijzigd" in ingelogd.get("/log/techniek").text
     # De aanduiding wijzigt alleen met de naam van het rek; de QR-link blijft werken.
@@ -367,7 +367,7 @@ def test_plaats_wijzigen_en_vrijgeven(ingelogd):
     assert "Plaats B/1/1" in ingelogd.get(f"/p/{sleutel}").text
     r = ingelogd.post(f"/plaatsen/{p.id}/vrijgeven", follow_redirects=True)
     assert "De plaats is vrijgegeven." in r.text and "Deze plaats is vrij" in r.text
-    assert "plaats.vrijgegeven" in r.text
+    assert "plaats vrijgegeven" in r.text
     assert db.session.get(Plaats, p.id).boot_id is None
 
 
@@ -377,11 +377,12 @@ def test_twee_logs_gescheiden(ingelogd):
     p = bezette_plaats()
     boot, lid_id = p.boot.id, p.boot.lid_id
     mutaties, techniek = ingelogd.get("/log").text, ingelogd.get("/log/techniek").text
-    assert "plaats.toegewezen" in mutaties and "plaats.aangemaakt" not in mutaties
-    assert "plaats.aangemaakt" in techniek and "plaats.toegewezen" not in techniek
+    assert "plaats toegewezen" in mutaties and "plaats aangemaakt" not in mutaties
+    assert "plaats.aangemaakt" in techniek and "plaats toegewezen" not in techniek  # techniek blijft opgeslagen
+    assert "plaats.toegewezen" not in techniek
     for pad in (f"/plaatsen/{p.id}", f"/boten/{boot}", f"/leden/{lid_id}"):
         tekst = ingelogd.get(pad).text
-        assert "plaats.toegewezen" in tekst and "plaats.aangemaakt" not in tekst, pad
+        assert "plaats toegewezen" in tekst and "plaats aangemaakt" not in tekst, pad
     assert "beheerder." not in ingelogd.get("/rekoverzicht").text
 
 
@@ -426,10 +427,11 @@ def test_boot_wijzigen_via_het_formulier_en_log_op_alle_plaatsen(ingelogd):
     assert 'value="Zeemeeuw"' in form and "Boot opslaan" in form
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": "3", "eigenaar": str(bert.id)},
                       follow_redirects=True)
-    assert "De boot is opgeslagen." in r.text and "Fuut" in r.text and "boot.gewijzigd" in r.text
+    assert "De boot is opgeslagen." in r.text and "Fuut" in r.text and "boot gewijzigd" in r.text
     for pad in (f"/boten/{b.id}", f"/leden/{anna.id}", f"/leden/{bert.id}", "/boten", "/log"):
-        assert "boot.gewijzigd" in ingelogd.get(pad).text, pad
+        assert "boot gewijzigd" in ingelogd.get(pad).text, pad
     assert "boot.gewijzigd" not in ingelogd.get("/log/techniek").text
+    assert "boot gewijzigd" not in ingelogd.get("/log/techniek").text
 
 
 def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):

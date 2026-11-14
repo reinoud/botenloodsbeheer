@@ -35,7 +35,7 @@ def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
     datums = [d.split("-")[::-1] for d in
               surfski.locator("[data-label='Aangemeld op']").all_inner_texts()]
     assert datums == sorted(datums)  # langst wachtende bovenaan; eerdere runs staan er ook op
-    expect(page.locator("section.log")).to_contain_text("wachtlijst.toegevoegd")
+    expect(page.locator("section.log")).to_contain_text("wachtlijst toegevoegd")
 
     # BLB-019: de lijst per lid zegt dat de boot op de wachtlijst staat.
     page.get_by_role("link", name=eigenaar).first.click()
@@ -57,7 +57,7 @@ def test_wachtlijst_erop_vrijgeven_en_toewijzen(page):
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
     page.goto(boot)
     log = page.locator("section.log")
-    expect(log).to_contain_text("wachtlijst.verwijderd")
+    expect(log).to_contain_text("wachtlijst verwijderd")
     expect(log).to_contain_text("plaats toegewezen")
     page.goto("/wachtlijst")
     expect(page.get_by_role("link", name=wachter)).to_have_count(0)
@@ -78,7 +78,7 @@ def test_wachtende_boot_krijgt_plaats_vanaf_de_bootpagina(page):
     page.get_by_role("button", name="Wijs toe aan plek").click()
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
     expect(page.get_by_role("link", name=code, exact=True)).to_be_visible()
-    expect(page.locator("section.log")).to_contain_text("wachtlijst.verwijderd")
+    expect(page.locator("section.log")).to_contain_text("wachtlijst verwijderd")
     page.goto("/wachtlijst")
     expect(page.get_by_role("link", name=wachter)).to_have_count(0)
 
@@ -105,4 +105,4 @@ def test_wachtlijst_weigert_toekomst_en_clubboot_en_eraf_halen(page):
     rij.get_by_role("button", name=f"{boot} van de lijst halen").click()
     expect(page.get_by_text("De boot is van de wachtlijst gehaald.")).to_be_visible()
     expect(page.get_by_role("link", name=boot)).to_have_count(0)
-    expect(page.locator("section.log")).to_contain_text("wachtlijst.verwijderd")
+    expect(page.locator("section.log")).to_contain_text("wachtlijst verwijderd")

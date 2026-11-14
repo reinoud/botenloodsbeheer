@@ -247,10 +247,10 @@ def test_clubboot_ziet_clubplaatsen_en_gewone_plaatsen_apart(ingelogd):  # noqa:
 
 
 def test_boot_verplaatst_staat_in_het_bootlog_en_op_de_overzichten(ingelogd):  # noqa: F811
-    # Mutant: boot.verplaatst uit acties=("plaats.", ...) van /vrij halen valt op de tweede assert.
+    # Mutant: boot verplaatst uit acties=("plaats.", ...) van /vrij halen valt op de tweede assert.
     oud, b = liggen()
     nieuw = plaats("A/1/2")
     ingelogd.post(f"/boten/{b.id}/verplaatsen", data={"plaats_id": nieuw.id})
     for pad in ("/log", f"/boten/{b.id}", f"/plaatsen/{oud.id}", f"/plaatsen/{nieuw.id}", "/vrij", "/boten"):
-        assert "boot.verplaatst" in ingelogd.get(pad).text, pad
+        assert "boot verplaatst" in ingelogd.get(pad).text, pad
     assert re.search(r"van: A/1/1; \w+: Zeemeeuw; naar: A/1/2|van: A/1/1; naar: A/1/2", ingelogd.get("/log").text)

@@ -2,7 +2,8 @@
 
 from sqlalchemy import or_, select
 
-from app.models import Logregel, db
+from app import INT_MAX
+from app.models import Beheerder, Boot, Bootsoort, Lid, Logregel, Plaats, Rek, Token, db
 
 # Velden waarvan de waarde nooit in het log komt; alleen "gewijzigd".
 VERBODEN = frozenset(
@@ -58,3 +59,54 @@ def regels(verwijzingen=None, acties=None, limiet=50, technisch=False, overslaan
     if acties:
         q = q.where(or_(*(Logregel.actie.startswith(a, autoescape=True) for a in acties)))
     return db.session.scalars(q).all()
+
+
+# Leesbaar log (BV-82, #174): de opgeslagen actie en verwijzing blijven zoals ze zijn (ADR-006),
+# alleen het tonen vertaalt.
+
+
+def actietekst(actie):
+    """'plaats.toegewezen' wordt 'plaats toegewezen'; een onbekende actie blijft zoals opgeslagen."""
+    if actie not in BOOTMUTATIES | TECHNISCH:
+        return actie
+    return actie.replace(".", " ").replace("_", " ")
+
+
+def _rek(naam):
+    return naam if naam.lower() == "rek" or naam.lower().startswith("rek ") else f"Rek {naam}"
+
+
+# soort -> (kolommen na id, tekst uit die kolommen)
+_SOORTEN = {
+    "plaats": ((Plaats.code,), lambda code: f"Plaats {code}"),
+    "boot": ((Boot.naam,), lambda naam: f"Boot {naam}"),
+    "lid": ((Lid.naam, Lid.lidnummer), lambda naam, nummer: f"Lid {naam} ({nummer})"),
+    "rek": ((Rek.naam,), _rek),
+    "bootsoort": ((Bootsoort.naam,), lambda naam: f"Bootsoort {naam}"),
+    "beheerder": ((Beheerder.naam,), lambda naam: f"Beheerder {naam}"),
+    "token": ((Token.naam,), lambda naam: f"Token {naam}"),
+}
+
+
+def namen(regels):
+    """Verwijzing -> leesbare tekst voor alle regels, met één query per soort (geen N+1). Een
+    verwijzing zonder object of van een andere soort ontbreekt; betreft() toont die zoals opgeslagen."""
+    ids = {soort: set() for soort in _SOORTEN}
+    for r in regels:
+        for v in r.verwijzingen:
+            soort, _, nr = v.partition(":")
+            if soort in ids and nr.isdecimal() and int(nr) <= INT_MAX:
+                ids[soort].add(int(nr))
+    uit = {}
+    for soort, nrs in ids.items():
+        if not nrs:
+            continue
+        kolommen, tekst = _SOORTEN[soort]
+        model = kolommen[0].class_
+        for id_, *rest in db.session.execute(select(model.id, *kolommen).where(model.id.in_(nrs))):
+            uit[f"{soort}:{id_}"] = tekst(*rest)
+    return uit
+
+
+def betreft(verwijzingen, namen):
+    return ", ".join(namen.get(v, v) for v in verwijzingen)

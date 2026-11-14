@@ -129,7 +129,8 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
 
     toewijzen(page, code, bootnaam)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
-    expect(page.locator("section.log")).to_contain_text("plaats.toegewezen")
+    # #174: actie en verwijzingen als tekst: plaats, rek, boot en lid met naam en lidnummer.
+    expect(page.locator("section.log")).to_contain_text(f"plaats toegewezen Plaats {code}, Rek {rek}, Boot {bootnaam}, Lid ")
     detail = page.url
     # BLB-043: de toewijzing staat alleen in het log van de bootmutaties, het nieuwe token (vlak
     # voor deze aanroep gemaakt door draai.sh) alleen in het technische log.
@@ -139,7 +140,7 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     expect(page.locator("section.log")).not_to_contain_text(token)
     page.get_by_role("link", name="Technisch log").click()
     expect(page.locator("section.log")).to_contain_text(token)
-    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")  # technisch log: opgeslagen namen
     page.goto(detail)
     prive = {veld: page.locator(f"[data-veld={veld}]").inner_text() for veld in ("naam", "lidnummer")}
     assert all(prive.values())
@@ -173,14 +174,14 @@ def test_ledenboot_op_clubplaats_en_verkeerde_bootsoort_geweigerd(page):
     boot_vastleggen(page, f"Kajak {rek}", "Kajak", eigenaar_index=2)
     toewijzen_buiten_lijst(page, code, f"Kajak {rek}")
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een kajak")
-    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+    expect(page.locator("section.log")).not_to_contain_text("plaats toegewezen")
 
     # #205: een clubplaats blijft voor clubboten; een ledenboot staat niet in de keuzelijst en de server weigert hem.
     club = rek_met_plaats(page, f"{rek}c", ["Supboard"], club=True)
     boot_vastleggen(page, f"Lid {rek}", "Supboard", eigenaar_index=2)
     toewijzen_buiten_lijst(page, club, f"Lid {rek}")
     expect(page.get_by_role("alert")).to_contain_text("is een clubplaats en alleen voor clubboten")
-    expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")
+    expect(page.locator("section.log")).not_to_contain_text("plaats toegewezen")
 
 
 def test_clubboot_krijgt_via_het_scherm_boot_een_gewone_plaats(page):
@@ -244,7 +245,7 @@ def test_plaats_wijzigen_vrijgeven_en_clubplaats(page):
     page.get_by_role("button", name=f"Plaats {code} vrijgeven").click()
     expect(page.get_by_text("De plaats is vrijgegeven.")).to_be_visible()
     expect(page.get_by_role("heading", name="Deze plaats is vrij")).to_be_visible()
-    expect(page.locator("section.log")).to_contain_text("plaats.vrijgegeven")
+    expect(page.locator("section.log")).to_contain_text("plaats vrijgegeven")
 
     page.get_by_label("Clubplaats (alleen voor clubboten)").check()
     page.get_by_role("button", name="Plaats opslaan").click()
@@ -276,7 +277,7 @@ def test_boot_wijzigen_en_weigeren_met_log(page):
     formulier.get_by_label("Bootsoort").select_option(label="C11")
     formulier.get_by_role("button", name="Boot opslaan").click()
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {code} is niet geschikt voor een c11")
-    expect(page.locator("section.log")).not_to_contain_text("boot.gewijzigd")
+    expect(page.locator("section.log")).not_to_contain_text("boot gewijzigd")
     page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()  # na het herladen is het blok weer dicht
 
     formulier.get_by_label("Naam van de boot").fill(nieuw)
@@ -284,4 +285,4 @@ def test_boot_wijzigen_en_weigeren_met_log(page):
     expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
     expect(page.get_by_role("heading", level=1)).to_have_text(nieuw)
     expect(page.locator("section.log")).to_contain_text(f"naam: ['{bootnaam}', '{nieuw}']")
-    expect(page.locator("section.log")).to_contain_text("boot.gewijzigd")
+    expect(page.locator("section.log")).to_contain_text("boot gewijzigd")
