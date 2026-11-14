@@ -29,6 +29,8 @@ SOORT = "soort-"  # voorvoegsel in imp.keuzes voor de gekozen bootsoort van een 
 EIGENAAR_ONGEKOPPELD = "Geen lid gevonden, of meer dan één. Kies een lid of de vereniging."
 GEEN_ACTIE = ("ongewijzigd", OVERGESLAGEN)
 BLOKKEERT = (TE_KOPPELEN, FOUT)
+NIET_UITGEVOERD = ("De import is niet uitgevoerd: een regel kon niet worden uitgevoerd. "
+                   "Kijk in het overzicht en probeer het opnieuw.")
 
 UITLEG = (
     "# Bezetting van de botenloods. Regels die met # beginnen zijn commentaar en worden genegeerd.",
@@ -128,8 +130,10 @@ def uploaden(data, actor):
         db.session.commit()
     except IntegrityError as fout:
         db.session.rollback()
-        if fout.orig.diag.constraint_name != "bezettingsimport_enige_key":
-            raise
+        naam = fout.orig.diag.constraint_name
+        if naam != "bezettingsimport_enige_key":
+            # fout.orig kan in DETAIL de hele rij met de regels uit het bestand noemen: niet opnieuw opwerpen.
+            raise RuntimeError(f"Onverwachte databasefout bij het uploaden (constraint {naam}).") from None
         raise Regelfout("Er loopt al een bezettingsimport. Bevestig of annuleer die eerst.") from None
 
 
@@ -255,6 +259,7 @@ def beoordeel(imp, vers=False):
         if "overslaan" in (u.keuze, u.soortkeuze):
             u.uitkomst = OVERGESLAGEN
             u.soortlijst = u.soortkeuze == "overslaan"  # de lijst waarin de keuze staat blijft zichtbaar
+            u.plaats = _plaats_zoeken(u.tekst["plaats"], w.rekken, w.plaatsen)  # de lijst toont zijn soorten (#218)
         else:
             _beoordeel_regel(u, w)
     return uitkomsten
@@ -415,11 +420,14 @@ def bevestigen(actor):
         eerste = beoordeel(imp)
         _blokkade(eerste)
         boot_ids, plaats_ids = _betrokken(eerste)
-        for u in eerste:
-            if u.uitkomst == "nieuwe boot":
-                b = boten._boot_aanmaken(u.tekst["boot"], u.soort.id, u.lid.id if u.lid else None,
-                                         None, actor, u.club)
-                boot_ids.add(b.id)
+        try:
+            for u in eerste:
+                if u.uitkomst == "nieuwe boot":
+                    b = boten._boot_aanmaken(u.tekst["boot"], u.soort.id, u.lid.id if u.lid else None,
+                                             None, actor, u.club)
+                    boot_ids.add(b.id)
+        except Regelfout:
+            raise Regelfout(NIET_UITGEVOERD) from None  # de melding van de kern kan een naam uit de database noemen
         _vergrendel(boot_ids, plaats_ids)
         uitkomsten = beoordeel(imp, vers=True)
         _blokkade(uitkomsten)
@@ -439,8 +447,7 @@ def bevestigen(actor):
                 toewijzing._toewijzen(u.plaats, u.boot, actor)
         except Regelfout:
             # De regels zijn net gecontroleerd; de melding van de kern noemt een boot uit het bestand.
-            raise Regelfout("De import is niet uitgevoerd: een regel kon niet worden uitgevoerd. "
-                            "Kijk in het overzicht en probeer het opnieuw.") from None
+            raise Regelfout(NIET_UITGEVOERD) from None
         aantallen = _afronden(imp, eerste, uitkomsten, actor)
     except Exception:
         db.session.rollback()

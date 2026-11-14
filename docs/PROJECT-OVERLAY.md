@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.84
+**Versie overlay:** v0.5.85
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -73,6 +73,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem per ADR-zin die de opdracht als gebouwd aanneemt (zoals een kolom of een check) of die al in `app/models.py` en de migraties staat; zo niet, dan is het een ontwerppunt van de opdracht.
 - Kijk bij een bouwopdracht aan het begin en halverwege met `git log --oneline` of er commits op de leidende bronnen zijn bijgekomen, en draai vóór elke oplevering `git diff` op die bronnen. Een besluit dat tijdens het werk binnenkomt, gaat voor de opdracht: verwerk het direct en meld het in je antwoord.
 - Staat er een eis over prereleases in een opdracht, zeg dan of het vinkje op GitHub of een tagachtervoegsel als `-rc1` bepalend is.
+- Bevat de gestagede diff ook punten die een reviewer niet toetst, noem die dan in de brief en zeg dat hij ze overslaat (#218).
 - Noem in een reviewbrief de niet-gestagede bestanden in de werkmap (`git status --short`, tweede kolom) en of de review ze negeert.
 - Commit alleen de gereviewde paden; parallelle agents wijzigen documenten in dezelfde werkmap.
 - Noem bij een filter op tekst uit een externe bron de waarden die in de praktijk voorkomen, of zeg dat ze onbekend zijn, zodat bouwer en reviewer weten of "begint met", "bevat" of "is gelijk aan" bedoeld is.
@@ -189,6 +190,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant op een sorteersleutel die overleeft omdat de planner een index kiest, is niet gelijkwaardig: draai `ANALYZE` op de tabellen in de test, zodat de planner sorteert zoals bij echte aantallen, en draai als controle de mutant ook tegen de test zonder `ANALYZE` (#154).
 - Een maat uit een toets of aanbeveling (zoals een minimale breedte) meet je eerst in de preview van het ontwerp: `git archive <commit>` van designsystem naar de scratchpad, en Playwright in het e2e-image (`docker run --entrypoint python botenloods-e2e`). Wijkt de aanbeveling af van de preview, dan gaat de preview voor en meld je het aan Design System (#154).
 - Wijzigt een opdracht een melding, noem dan welke varianten mee veranderen en welke niet, met het besluit waar elke variant uit komt. Controleer in designsystem `docs/besluiten.md` of een later besluit (zoals BV-71 na BV-68) het ontwerp op dat punt vervangt (#192).
+- Alle reknaamletters a tot en met z zijn in gebruik (#218). Een nieuwe E2E-test breidt een bestaande test uit, of de opdracht geeft een besluit over een ruimere letterset in `opruimen.sql`. Draai na een nieuwe E2E-test de hele suite één keer, niet alleen `-k`.
+- Een test op een traceback heeft de gevoelige waarde niet in de eigen aanroep staan, alleen in de gegevens die de fout uitlokken (#218).
+- Een mutant die een vroege controle weghaalt, is pas gelijkwaardig als ook invoer die een latere controle laat falen (opbouwfout, lege invoer) dezelfde uitkomst geeft; noem die invoer in de redenering (#218).
+- Noem bij een slotmutant welke test hem hoort te doden; valt hij door een andere test, dan telt de slottest niet als dekking (#218).
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
@@ -481,6 +486,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.85 | 2026-11-14 | Vijf regels (Algemeen, Bouw): reknaamletters op, traceback-test, gelijkwaardige mutant bij een vroege controle, slotmutant en zijn test, punten buiten de toets van een reviewer; uit de terugblikken bij #218 | Lessen |
 | v0.5.84 | 2026-11-14 | Bouw: wachten met een until-lus in de voorgrond, niet met Monitor; varianten van een melding en een later ontwerpbesluit noemen; uit de terugblikken van prism en sentinel bij #192 | Lessen |
 | v0.5.83 | 2026-11-14 | Twee regels (Bouw): gegevens voor een overlooptest, bewakermutant bij een overbodig geworden CSS-regel; uit de terugblikken van prism en sentinel bij #270 | Lessen |
 | v0.5.82 | 2026-11-14 | Twee regels (Documentatie, backlog en ADR's): verplaatste tekst in een woordbudget, issue tegen ADR; uit de terugblik van apex bij #216 | Lessen |
