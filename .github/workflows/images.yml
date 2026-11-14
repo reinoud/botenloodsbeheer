@@ -51,8 +51,7 @@ jobs:
           load: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha,scope=${{ matrix.naam }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.naam }}
+          # Geen buildcache: anders haalt apt-get geen beveiligingsupdates (#272).
       # Het image staat in docker/Dockerfile.trivy, zodat Dependabot het bijhoudt (#105).
       - name: Trivy
         run: >
