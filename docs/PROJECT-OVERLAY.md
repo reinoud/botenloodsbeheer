@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.82
+**Versie overlay:** v0.5.83
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -189,6 +189,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een mutant op een sorteersleutel die overleeft omdat de planner een index kiest, is niet gelijkwaardig: draai `ANALYZE` op de tabellen in de test, zodat de planner sorteert zoals bij echte aantallen, en draai als controle de mutant ook tegen de test zonder `ANALYZE` (#154).
 - Een maat uit een toets of aanbeveling (zoals een minimale breedte) meet je eerst in de preview van het ontwerp: `git archive <commit>` van designsystem naar de scratchpad, en Playwright in het e2e-image (`docker run --entrypoint python botenloods-e2e`). Wijkt de aanbeveling af van de preview, dan gaat de preview voor en meld je het aan Design System (#154).
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
+- Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
+- Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
 
 #### Review
 
@@ -478,6 +480,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.83 | 2026-11-14 | Twee regels (Bouw): gegevens voor een overlooptest, bewakermutant bij een overbodig geworden CSS-regel; uit de terugblikken van prism en sentinel bij #270 | Lessen |
 | v0.5.82 | 2026-11-14 | Twee regels (Documentatie, backlog en ADR's): verplaatste tekst in een woordbudget, issue tegen ADR; uit de terugblik van apex bij #216 | Lessen |
 | v0.5.81 | 2026-11-14 | Twee regels: lokale trivyscan vóór de tag met `--no-cache` (Security en proxy); exacte zoekstrings voor een grep in een reviewbrief (Review); uit de release van v1.1.0 en de terugblik van sentinel bij #272 | Lessen |
 | v0.5.80 | 2026-11-13 | Zes regels: sorteermutant met `ANALYZE` en controlerun, maat uit een aanbeveling eerst in de preview meten, compose-project van een gestopte bouwer opruimen (Bouw); falende assert bij naam en tekst, testaccount los verwijderen (Review); positieve controle op de log van Traefik (Security); uit de terugblikken bij #154 | Lessen |
