@@ -186,7 +186,6 @@ td form { gap: var(--space-2); }
 .bl-item__sub { color: var(--ink-muted); font: var(--type-body-sm); }
 .bl-item__zijde { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); text-align: right; }
 .bl-item__actie { grid-column: 1 / -1; padding-block: var(--space-2); }
-.bl-item__actie .ds-btn, .bl-taak .ds-btn { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
 
 /* Plaatscode als losse link in de zijkant: aanraakdoel van een knop. Alleen in de zijkant: vrij/schermen.css heeft dezelfde klasse, alleen op een telefoon */
 .bl-item__zijde .bl-plaatslink { display: inline-flex; align-items: center; min-height: var(--control-height); font: var(--type-control); }
@@ -229,7 +228,7 @@ td form { gap: var(--space-2); }
 }
 
 /* Toegang en beheer (blok 4, BV-64), uit blok-4/schermen.css van het designsystem (38d6463).
-   Niet overgenomen: [hidden] en .bl-main code (staan al hierboven) en .bl-main a.ds-btn: sinds #181 slaat .bl-main :where(a:not(.ds-btn)) knoppen over. */
+   Niet overgenomen: [hidden] en .bl-main code (staan al hierboven) en de oude regel `.bl-main a.ds-btn` uit blok 4: sinds #181 slaat .bl-main :where(a:not(.ds-btn)) knoppen over. */
 /* Paneel met meerdere onderdelen: een kolom met ruimte ertussen; de titel zet zelf geen marge */
 .bl-paneel { display: grid; gap: var(--space-4); }
 .bl-paneel > * { min-width: 0; margin-block: 0; }
@@ -248,7 +247,16 @@ td form { gap: var(--space-2); }
 /* Een tokennaam zonder afbreekpunt (tot 50 tekens) duwt Intrekken anders buiten beeld, en onder "Rechten wijzigen" de pagina breder dan 360 px */
 .bl-tabel td:first-child, .dj-disclosure summary, .dj-disclosure legend { overflow-wrap: anywhere; }
 .bl-tabel td > form { display: inline-block; margin: 0 var(--space-2) var(--space-2) 0; }
-.bl-tabel .ds-btn { box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
+
+/* Acht kolommen (Tokens): stapelt als kaart vanaf 67rem naar beneden in plaats van 40rem (gh#40, designsystem 7503a1c).
+   Herhaalt de stapelregel van .dj-table--stack in aanvulling/dj-components.css voor .bl-tabel--breed */
+@media (width < 67rem) {
+  .bl-tabel--breed .dj-table--stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .bl-tabel--breed .dj-table--stack, .bl-tabel--breed .dj-table--stack tbody, .bl-tabel--breed .dj-table--stack tr, .bl-tabel--breed .dj-table--stack td { display: block; }
+  .bl-tabel--breed .dj-table--stack tr { margin-bottom: var(--space-4); padding: var(--space-2) var(--space-4); border: var(--stroke-2) solid var(--line-strong); }
+  .bl-tabel--breed .dj-table--stack td { display: grid; gap: var(--space-1); padding: var(--space-2) 0; border: 0; }
+  .bl-tabel--breed .dj-table--stack td::before { content: attr(data-label); color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+}
 
 /* Wachtwoord in drie delen (2B): op een laptop twee kolommen, de code eronder over de volle breedte; de nummers staan alleen in CSS */
 .bl-stappen { display: grid; gap: var(--space-5); counter-reset: bl-stap; }

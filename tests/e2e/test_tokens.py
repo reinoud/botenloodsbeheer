@@ -88,12 +88,21 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
         gebruikersnaam("tokenscollega"))
     intrekken = rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}")
     page.locator("summary", has_text=naam).click()  # "Rechten van <naam>" telt ook mee
-    for breedte in (1100, 360):
+    cel = "td[data-label='Naam']"
+    for breedte, gestapeld in ((660, True), (800, True), (1100, False), (360, True)):  # gh#192: 67rem
         page.set_viewport_size({"width": breedte, "height": 900})
         assert page.evaluate("""() => [document.documentElement, document.querySelector('.ds-table-wrap')]
             .every(el => el.scrollWidth <= el.clientWidth)"""), breedte
         vak = intrekken.bounding_box()
         assert vak["x"] >= 0 and vak["x"] + vak["width"] <= breedte, breedte
+        # Een gestapelde cel is een raster, een tabelcel niet.
+        expect(page.locator(cel).first).to_have_css("display", "grid" if gestapeld else "table-cell")
+    # De andere tabellen blijven tot 40rem een tabel (640 px) en stapelen daaronder.
+    page.goto("/beheerders")
+    for breedte, gestapeld in ((660, False), (800, False), (360, True)):
+        page.set_viewport_size({"width": breedte, "height": 900})
+        expect(page.locator(".bl-tabel td").first).to_have_css("display", "grid" if gestapeld else "table-cell")
+    page.goto("/tokens")
     page.set_viewport_size({"width": 1280, "height": 720})  # standaard van Playwright
     intrekken.click()
     expect(page.get_by_text("Het token is ingetrokken.")).to_be_visible()

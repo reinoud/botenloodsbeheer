@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.83
+**Versie overlay:** v0.5.84
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -137,7 +137,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Sluit een agentopdracht af met het eindrapport als laatste bericht; een terugblik in een bestand vervangt het rapport niet.
 - Bewerk geen bestanden die een lopende testrun leest (handleiding, ADR) tot die run klaar is, en draai de documentatietest na de laatste tekstwijziging opnieuw.
 - Draai de volledige unitsuite vlak vóór de oplevering opnieuw en meld ook errors (niet alleen failures). Een test die los slaagt maar in de suite een error geeft, telt niet als geslaagd.
-- Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht.
+- Schrijf de uitvoer van elke testrun naar een nieuw bestand met een tijdstempel in de naam. Bij een run in de achtergrond wacht je niet op een melding, maar kijk je naar het uitvoerbestand en naar `docker ps`; bij een subagent komt de melding vaak niet aan. Zet deze regel letterlijk in elke bouwopdracht. Wacht met een until-lus in de voorgrond (timeout 600000 per Bash-aanroep, zo nodig herhalen), niet met Monitor of een achtergrondmelding: een subagent die daarop wacht, valt stil (#192).
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
 - Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`.
 - Controleer of een schermafbeelding van het scherm bestaat voordat de opdracht haar opnieuw laat maken.
@@ -188,6 +188,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Vervalt een regel, zoek dan ook op de omschrijving van het geweigerde geval zelf (zoals "clubboot op een gewone plaats"), niet alleen op de tekst van de oude melding.
 - Een mutant op een sorteersleutel die overleeft omdat de planner een index kiest, is niet gelijkwaardig: draai `ANALYZE` op de tabellen in de test, zodat de planner sorteert zoals bij echte aantallen, en draai als controle de mutant ook tegen de test zonder `ANALYZE` (#154).
 - Een maat uit een toets of aanbeveling (zoals een minimale breedte) meet je eerst in de preview van het ontwerp: `git archive <commit>` van designsystem naar de scratchpad, en Playwright in het e2e-image (`docker run --entrypoint python botenloods-e2e`). Wijkt de aanbeveling af van de preview, dan gaat de preview voor en meld je het aan Design System (#154).
+- Wijzigt een opdracht een melding, noem dan welke varianten mee veranderen en welke niet, met het besluit waar elke variant uit komt. Controleer in designsystem `docs/besluiten.md` of een later besluit (zoals BV-71 na BV-68) het ontwerp op dat punt vervangt (#192).
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
@@ -480,6 +481,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.84 | 2026-11-14 | Bouw: wachten met een until-lus in de voorgrond, niet met Monitor; varianten van een melding en een later ontwerpbesluit noemen; uit de terugblikken van prism en sentinel bij #192 | Lessen |
 | v0.5.83 | 2026-11-14 | Twee regels (Bouw): gegevens voor een overlooptest, bewakermutant bij een overbodig geworden CSS-regel; uit de terugblikken van prism en sentinel bij #270 | Lessen |
 | v0.5.82 | 2026-11-14 | Twee regels (Documentatie, backlog en ADR's): verplaatste tekst in een woordbudget, issue tegen ADR; uit de terugblik van apex bij #216 | Lessen |
 | v0.5.81 | 2026-11-14 | Twee regels: lokale trivyscan vóór de tag met `--no-cache` (Security en proxy); exacte zoekstrings voor een grep in een reviewbrief (Review); uit de release van v1.1.0 en de terugblik van sentinel bij #272 | Lessen |
