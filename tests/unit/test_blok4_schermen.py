@@ -310,10 +310,11 @@ def test_kaartjesscherm_zonder_plaatsen_zegt_dat_er_geen_zijn(ingelogd):
 
 @pytest.mark.parametrize("pad", ["/beheerders", "/tokens", "/status"])
 def test_tabellen_staan_in_bl_tabel(ingelogd, pad):
-    # Mutant: de wrapperklasse terug naar tabel.
+    # Mutant: de wrapperklasse terug naar tabel, of --breed op een andere tabel dan Tokens (gh#40).
     tokens.robot_maken("koppeling", ["boten:lezen"], ["192.0.2.1"], None, CLI)
     tekst = main(ingelogd.get(pad).text)
-    assert '<div class="ds-table-wrap bl-tabel">' in tekst and 'class="ds-table-wrap tabel"' not in tekst
+    klasse = "bl-tabel bl-tabel--breed" if pad == "/tokens" else "bl-tabel"
+    assert f'<div class="ds-table-wrap {klasse}">' in tekst and 'class="ds-table-wrap tabel"' not in tekst
 
 
 # Escapen van invoer in de nieuwe macro en de nieuwe knoppen
