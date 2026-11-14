@@ -39,8 +39,7 @@ td form { gap: var(--space-2); }
 
 .log { margin-top: var(--space-6); }
 
-/* Schermen van blok 1 (issue #150, designsystem fbd54dd, schermen.css): pagina, kop, menu, paneel, plaatsscherm, rekraster en indelingsformulier.
-   Afwijking van schermen.css: `position: relative` op .bl-vak en .bl-vakje, anders valt de dj-sr-only in de cel buiten de scroller en rekt de pagina op een telefoon op. */
+/* Schermen van blok 1 (issue #150, designsystem fbd54dd, schermen.css): pagina, kop, menu, paneel, plaatsscherm, rekraster en indelingsformulier. */
 /* Pagina */
 .bl-main { display: grid; gap: var(--space-5); padding-block: var(--space-5) var(--space-8); }
 .bl-main > * { min-width: 0; margin-block: 0; }
@@ -48,7 +47,10 @@ td form { gap: var(--space-2); }
 .bl-main :where(a:not(.ds-btn)) { color: var(--brand-mid); text-underline-offset: 3px; }
 .bl-main a:hover { text-decoration-thickness: 2px; }
 .bl-main a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.bl-main .ds-btn { justify-self: start; }
+/* een lange knopnaam breekt af: een knop met white-space: nowrap rekt anders de kolom van elke grid om hem heen (gh#50) */
+.bl-main .ds-btn { justify-self: start; box-sizing: border-box; height: auto; max-width: 100%; min-height: var(--control-height); padding-block: var(--space-2); text-align: center; white-space: normal; }
+/* een link in de vorm van een knop is content-box en houdt zijn hoogte: control-height plus de rand */
+.bl-main a.ds-btn { min-height: calc(var(--control-height) + 2 * var(--stroke-2)); }
 .bl-meldingen { display: grid; gap: var(--space-3); }
 .bl-main .ds-tag { justify-self: start; }
 .bl-hint { margin: 0; color: var(--ink-muted); font: var(--type-body-sm); }
@@ -95,12 +97,13 @@ td form { gap: var(--space-2); }
 
 /* Raster van een rek: een rij per verdieping, een kolom per vak. De kolommen komen uit de volgorde van de cellen
    (grid-auto-flow), dus 1 tot en met 12 vakken vragen geen eigen klasse en geen inline stijl. */
-.bl-schuif { overflow-x: auto; padding-bottom: var(--space-2); }
+/* position: relative maakt het vak de bevattende blok van een dj-sr-only in een cel; anders loopt de pagina over (gh#50) */
+.bl-schuif { position: relative; overflow-x: auto; padding-bottom: var(--space-2); }
 .bl-rek { display: grid; gap: var(--space-1); width: max-content; }
 .bl-rek__rij { display: grid; grid-template-columns: 6.5rem; grid-auto-flow: column; grid-auto-columns: calc(var(--control-height) + var(--space-2)); gap: var(--space-1); align-items: center; width: max-content; }
 .bl-rek__label { position: sticky; left: 0; z-index: 1; display: flex; align-self: stretch; align-items: center; padding-right: var(--space-2); background: var(--surface-raised); color: var(--ink); font: var(--type-caption); }
 .bl-rek__nr { color: var(--ink-muted); font: var(--type-caption); text-align: center; }
-.bl-vak { position: relative; display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(var(--control-height) + var(--space-2)); height: calc(var(--control-height) + var(--space-2)); overflow: hidden; border: var(--stroke-2) solid var(--ink); border-radius: var(--radius-control); background: var(--surface-raised); color: var(--ink); text-decoration: none; }
+.bl-vak { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: calc(var(--control-height) + var(--space-2)); height: calc(var(--control-height) + var(--space-2)); overflow: hidden; border: var(--stroke-2) solid var(--ink); border-radius: var(--radius-control); background: var(--surface-raised); color: var(--ink); text-decoration: none; }
 .bl-vak > img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .bl-vak--leeg { border-style: dashed; }
 .bl-vak--bezet { background: var(--ink); color: var(--ink-inverse); }
@@ -112,7 +115,7 @@ td form { gap: var(--space-2); }
 .bl-legenda .bl-vak { width: 2rem; height: 2rem; }
 
 /* Vakje van het indelingsformulier: een keuzevak in de maat van een cel van het rek */
-.bl-vakje { position: relative; display: flex; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); margin: 0; }
+.bl-vakje { display: flex; align-items: center; justify-content: center; width: var(--control-height); height: var(--control-height); margin: 0; }
 .bl-vakje input { margin: 0; }
 
 @media (width >= 60rem) {
