@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.81
+**Versie overlay:** v0.5.82
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -412,6 +412,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Schermafbeeldingen tonen het testlogo (`tests/fixtures/logo.png`, door `schermafbeeldingen.py` geüpload op Instellingen na het inloggen); de reviewer vergelijkt de kopbalk van één afbeelding met de versie in `HEAD`. Werk niet met twee agents tegelijk in `documentatie/gebruikers/afbeeldingen/` en draai tijdens het script geen checkout of stash. Geeft het script een `FileNotFoundError` op de mount, draai het opnieuw en meld een oorzaak pas als die bewezen is.
 - Screenshots en andere opnamen komen uit een eigen stack met een lege, geseede database, nooit uit de gedeelde lokale stack; het agent kiest een eigen projectnaam en een vrij subnet. Noem bij een review van screenshots welke schermen geheimen of persoonsgegevens kunnen tonen; de reviewer bekijkt die eerst en de rest steekproefsgewijs.
 - Zeg bij het opschonen van een tekst of regels korter geformuleerd mogen of alleen samengevoegd, met een doel in woorden (bijvoorbeeld 25 procent korter).
+- Zeg bij een woordbudget of verplaatste tekst meetelt; de telling met `--word-diff` telt verplaatste tekst als nieuw. Laat het agent de omvang van verplaatste tekst apart noemen (#216).
+- Botst een issue met de ADR, dan gaat de ADR voor; het agent noemt de issues waarin de verouderde regel nog staat, zodat de regie daar een opmerking zet (#216).
 
 ## 5. Projectcontracten
 
@@ -476,6 +478,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.82 | 2026-11-14 | Twee regels (Documentatie, backlog en ADR's): verplaatste tekst in een woordbudget, issue tegen ADR; uit de terugblik van apex bij #216 | Lessen |
 | v0.5.81 | 2026-11-14 | Twee regels: lokale trivyscan vóór de tag met `--no-cache` (Security en proxy); exacte zoekstrings voor een grep in een reviewbrief (Review); uit de release van v1.1.0 en de terugblik van sentinel bij #272 | Lessen |
 | v0.5.80 | 2026-11-13 | Zes regels: sorteermutant met `ANALYZE` en controlerun, maat uit een aanbeveling eerst in de preview meten, compose-project van een gestopte bouwer opruimen (Bouw); falende assert bij naam en tekst, testaccount los verwijderen (Review); positieve controle op de log van Traefik (Security); uit de terugblikken bij #154 | Lessen |
 | v0.5.79 | 2026-11-13 | Vijf regels: ruff vóór de oplevering; logactie in ADR-006 en handleiding; E2E-mutant op een template eerst `web` met de override opnieuw aanmaken (vervangt `DRAAI_OVERRIDE` alleen), gelijkwaardige mutant benoemen; volledig pad in een externe bron; nieuwe stap in `schermafbeeldingen.py` eindigt waar de volgende begint; uit de terugblikken van bedrock en sentinel bij #206 | Lessen |
