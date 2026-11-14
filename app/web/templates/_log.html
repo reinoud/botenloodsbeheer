@@ -1,13 +1,15 @@
 {# Gedeelde weergave van het mutatielog (ADR-002, ADR-006): een kop per dag, een regel per mutatie.
    Onder een overzicht staat het log in een dicht uitklapblok; op de logpagina zelf (op_logpagina) niet,
-   daar is de kop van de pagina de naam van de sectie. #}
-{% macro logblok(regels, op_logpagina=false) %}
+   daar is de kop van de pagina de naam van de sectie. Leesbaar (BV-82): actie en verwijzingen als tekst;
+   het technische log toont ze zoals opgeslagen. #}
+{% macro logblok(regels, op_logpagina=false, leesbaar=true) %}
 <section class="log" aria-labelledby="log-kop">
 {% if not op_logpagina %}
 <details class="dj-disclosure">
   <summary id="log-kop">Log</summary>
 {% endif %}
 {% if regels %}
+{% set namen = regels|lognamen if leesbaar else {} %}
 <div class="bl-log">
   {% for dag, dagregels in regels|per_dag %}
   <div class="bl-logdag">
@@ -15,7 +17,7 @@
     <ol class="bl-logregels">
       {% for r in dagregels %}
       {% set lokaal = r.tijdstip|lokaal %}
-      <li class="bl-logregel"><time class="bl-logtijd" datetime="{{ lokaal.strftime('%Y-%m-%dT%H:%M') }}">{{ lokaal.strftime('%H:%M') }}</time> <p class="bl-logwat"><span class="bl-logdoor">{{ r.actor_naam }}</span> <span class="bl-logactie">{{ r.actie }}</span>{% if r.verwijzingen %} <span class="bl-logbetreft">{{ r.verwijzingen|join(', ') }}</span>{% endif %}{% if r.gegevens %} <span class="bl-loggeg">{% for k, v in r.gegevens.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</span>{% endif %}</p></li>
+      <li class="bl-logregel"><time class="bl-logtijd" datetime="{{ lokaal.strftime('%Y-%m-%dT%H:%M') }}">{{ lokaal.strftime('%H:%M') }}</time> <p class="bl-logwat"><span class="bl-logdoor">{{ r.actor_naam }}</span> <span class="bl-logactie">{{ r.actie|actietekst if leesbaar else r.actie }}</span>{% if r.verwijzingen %} <span class="bl-logbetreft">{{ r.verwijzingen|betreft(namen) }}</span>{% endif %}{% if r.gegevens %} <span class="bl-loggeg">{% for k, v in r.gegevens.items() %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</span>{% endif %}</p></li>
       {% endfor %}
     </ol>
   </div>

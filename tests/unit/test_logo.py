@@ -71,7 +71,8 @@ def test_uploaden_toont_het_logo_overal_zonder_metadata_en_logt_zonder_inhoud(ap
     assert regel.actie == "instelling.logo_toegevoegd" and regel.verwijzingen == ["instelling:huisstijl"]
     assert regel.gegevens == {"breedte": 800, "hoogte": 200}  # geen inhoud, geen bestandsnaam
     assert "instelling.logo_toegevoegd" in ingelogd.get("/log/techniek").text
-    assert "instelling.logo" not in ingelogd.get("/log").text  # geen bootmutatie
+    gewoon = ingelogd.get("/log").text  # geen bootmutatie, ook niet leesbaar
+    assert "instelling.logo" not in gewoon and "instelling logo" not in gewoon
 
 
 def test_vervangen_geeft_een_nieuw_kenmerk_en_het_oude_geeft_404(app, ingelogd):  # noqa: F811

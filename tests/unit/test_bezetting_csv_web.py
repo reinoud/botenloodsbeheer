@@ -234,7 +234,7 @@ def test_bevestigen_via_de_route_meldt_aantallen_en_zet_de_boot_op_de_plaats(ing
     assert "Bekijk het overzicht" not in r.text
     assert "Reiger" in ingelogd.get(f"/plaatsen/{p.id}").text
     assert "bezetting.geimporteerd" in ingelogd.get("/log/techniek").text
-    assert "plaats.toegewezen" in ingelogd.get("/log").text
+    assert "plaats toegewezen" in ingelogd.get("/log").text
 
 
 def test_bevestigen_met_een_open_regel_geeft_de_melding_zonder_bestandsinhoud_in_de_sessie(ingelogd):  # noqa: F811

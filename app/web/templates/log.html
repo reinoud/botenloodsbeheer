@@ -9,7 +9,7 @@
 <h1 id="log-kop">Mutatielog</h1>
 <p>Per pagina 50 mutaties van boten en hun plaats, de nieuwste eerst. Tokens, beheerders, instellingen en de indeling staan in het <a href="{{ url_for('web.technisch_log') }}">technische log</a>.</p>
 {% endif %}
-{{ logblok(regels, op_logpagina=true) }}
+{{ logblok(regels, op_logpagina=true, leesbaar=not technisch) }}
 {% set eigen = 'web.technisch_log' if technisch else 'web.logboek' %}
 {% if pagina > 1 or ouder %}
 <nav aria-label="Pagina's van het log">

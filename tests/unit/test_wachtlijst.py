@@ -324,7 +324,7 @@ def test_schermen_wachtlijst_boot_en_lid(ingelogd):  # noqa: F811
     assert "mag niet in de toekomst" in r.text and op_lijst(c) is None
     r = ingelogd.get("/wachtlijst").text
     assert "Zeemeeuw" in r and "Anna de Vries" in r and "01-03-2024" in r
-    assert "wachtlijst.toegevoegd" in r  # bootmutaties onder de wachtlijst
+    assert "wachtlijst toegevoegd" in r  # bootmutaties onder de wachtlijst
     lidpagina = ingelogd.get(f"/leden/{anna.id}").text  # BLB-019 criterium 1
     assert "Sinds 01-03-2024" in lidpagina and lidpagina.count("Wachtlijst: ") == 1  # alleen bij de boot op de lijst
     r = ingelogd.post(f"/boten/{b.id}/wachtlijst/verwijderen", data={"terug": "wachtlijst"})

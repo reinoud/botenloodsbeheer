@@ -72,7 +72,7 @@ def test_boot_verplaatsen(page):
     expect(page.get_by_role("heading", name=f"Op plaats {rek}/1/2")).to_be_visible()
     expect(page.locator("details.dj-disclosure", has=page.locator("summary#verplaatsen-kop"))).not_to_have_attribute("open", "")
     blok_openen(page, "Log")
-    expect(page.locator("section.log")).to_contain_text("boot.verplaatst")
+    expect(page.locator("section.log")).to_contain_text("boot verplaatst")
     page.get_by_role("link", name=f"Naar plaats {rek}/1/2").click()
     expect(page.get_by_role("link", name=bootnaam, exact=True)).to_be_visible()  # de boot ligt op de nieuwe plaats
     page.goto("/indeling")

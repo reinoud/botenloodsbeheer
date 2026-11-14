@@ -229,7 +229,8 @@ def test_scherm_toevoegen_hernoemen_verwijderen(app, ingelogd):  # noqa: F811
     r = ingelogd.post(f"/bootsoorten/{s.id}/naam", data={"naam": "Pedalo"}, follow_redirects=True)
     assert "De naam van de bootsoort is opgeslagen." in r.text and ">Pedalo<" in r.text
     assert "bootsoort.hernoemd" in ingelogd.get("/log/techniek").text
-    assert "bootsoort.hernoemd" not in ingelogd.get("/log").text  # niet bij de bootmutaties
+    gewoon = ingelogd.get("/log").text  # niet bij de bootmutaties, ook niet leesbaar
+    assert "bootsoort.hernoemd" not in gewoon and "bootsoort hernoemd" not in gewoon
     boten.boot_aanmaken("Pedaalpiet", s.id, None, None, CLI)
     r = ingelogd.post(f"/bootsoorten/{s.id}/verwijderen", follow_redirects=True)
     assert "in gebruik bij 1 boot" in r.text
