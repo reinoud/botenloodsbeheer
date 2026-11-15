@@ -106,7 +106,13 @@ def toewijzen_buiten_lijst(page, code, bootnaam):
     boot_id = page.get_by_role("link", name=bootnaam, exact=True).get_attribute("href").rsplit("/", 1)[1]
     page.goto("/indeling")
     page.get_by_role("link", name=code, exact=True).click()
-    expect(page.locator("#boot option", has_text=bootnaam)).to_have_count(0)
+    # Er is een keuzelijst #boot, of (past geen enkele boot) de melding; zonder beide had de toets op
+    # een lege lijst altijd geslaagd (#149). Staat er een lijst, dan staat de boot er niet in.
+    lijst = page.locator("#boot")
+    melding = page.get_by_text("Er zijn geen boten zonder plaats die op deze plaats passen.")
+    expect(lijst.or_(melding)).to_be_visible()
+    if lijst.count():
+        expect(lijst.locator("option", has_text=bootnaam)).to_have_count(0)
     with page.expect_navigation():
         page.evaluate("""boot => {
             const f = document.createElement("form");

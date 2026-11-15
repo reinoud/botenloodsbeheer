@@ -7,7 +7,7 @@ import segno
 
 from app.domein import CLI, indeling, instellingen, toewijzing
 from tests.unit.hulp import logo_zetten
-from tests.unit.test_indeling_en_toewijzing import boot, plaats
+from tests.unit.test_indeling_en_toewijzing import boot, plaats, soort
 from tests.unit.test_overzichten_en_instellingen import loods
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
@@ -47,13 +47,17 @@ def test_kaartje_met_logo_code_bootsoort_en_qr_naar_openbare_pagina(app, ingelog
 def test_bootsoorten_op_id_zonder_eigenaar_vrij_of_vereniging(ingelogd):  # noqa: F811
     _vrij, _bezet, club, _c11, _anna = loods()
     zonder = indeling.rek_aanmaken("B", "", {(1, 1)}, CLI)  # een nieuw vak heeft geen bootsoort
+    # Kajak heeft een lager id dan Canadese kano: id en alfabet lopen uiteen. De namen staan in
+    # omgekeerde volgorde opgegeven, dus ook de volgorde van opgave telt niet (#153).
+    assert soort("Kajak") < soort("Canadese kano")
+    plaats("B/1/2", ("Canadese kano", "Kajak"))
     toewijzing.toewijzen(club.id, boot(None, "Surfski", "Clubski").id, CLI)
     instellingen.opslaan("KV De Fuut", CLI)
     kaarten = kaartjes(ingelogd.get(f"/kaartjes/print?rek={club.rek_id}&rek={zonder.id}").text)
     soorten = {code: re.findall(r'kaartje-soorten">([^<]*)<', html) for code, html in kaarten.items()}
     assert soorten == {"A/1/1": ["Geschikt voor Kajak/Surfski"], "A/1/2": ["Geschikt voor Kajak"],
                        "A/1/3": ["Geschikt voor Surfski"], "A/1/4": ["Geschikt voor C11"],
-                       "B/1/1": []}  # zonder bootsoort geen regel
+                       "B/1/1": [], "B/1/2": ["Geschikt voor Kajak/Canadese kano"]}  # zonder bootsoort geen regel
     for html in kaarten.values():
         assert "vrij" not in html and "Anna de Vries" not in html and "kaartje-eigenaar" not in html
     # Zonder logo de naam van de vereniging bovenaan (BLB-027 criterium 3), en alleen daar.
