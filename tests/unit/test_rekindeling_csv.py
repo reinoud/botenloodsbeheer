@@ -157,7 +157,8 @@ def test_lege_bootsoorten_op_een_bezette_plaats_wordt_geweigerd(app):
 
 
 def test_stuurteken_in_naam_of_omschrijving_wordt_niet_opgeslagen(app):
-    for naam, omschrijving in (("A\x07", ""), ("A", "a\tb"), ("A", "a\x00b"), ("A", "a\x1fb")):
+    for naam, omschrijving in (("A\x07", ""), ("A", "a\tb"), ("A", "a\x00b"), ("A", "a\x1fb"),
+                            ("A", "a\x7fb"), ("A", "a\x85b"), ("A\x85B", "")):
         with pytest.raises(Regelfout, match="stuurtekens"):
             indeling.rek_aanmaken(naam, omschrijving, {(1, 1)}, CLI)
     rek = indeling.rek_aanmaken("A", "", {(1, 1)}, CLI)
@@ -166,7 +167,7 @@ def test_stuurteken_in_naam_of_omschrijving_wordt_niet_opgeslagen(app):
 
 
 def test_stuurteken_in_een_bootsoortnaam_wordt_niet_opgeslagen(app):
-    for naam in ("Zee\x07kajak", "Zee\tkajak"):
+    for naam in ("Zee\x07kajak", "Zee\tkajak", "Zee\x7fkajak", "Zee\x85kajak"):
         with pytest.raises(Regelfout, match="stuurtekens"):
             indeling.bootsoort_toevoegen(naam, CLI)
     with pytest.raises(Regelfout, match="stuurtekens"):
@@ -322,10 +323,12 @@ def test_nul_en_stuurtekens_en_regeleinden_in_een_veld_zijn_een_fout(app):
         "A;a\x07b;1;1;Kajak;nee",
         'A;"twee\r\nregels";1;2;Kajak;nee',
         "A;tab\there;1;3;Kajak;nee",
-        "A;;1;4;Kajak"))
+        "A;;1;4;Ka\x7fjak;nee",  # in bootsoorten: alleen de CSV-lezer kent dit veld als tekst
+        "A;;1;5;Ka\x85jak;nee",
+        "A;;1;6;Kajak"))
     # Een veld met regeleinde telt vanaf de regel waar het begint (regel 3 en 4).
-    assert [r.split(":")[0] for r in regels] == ["Regel 2", "Regel 3", "Regel 5", "Regel 6"]
-    assert all("stuurteken" in r for r in regels[:3]) and "6 kolommen verwacht, 5" in regels[3]
+    assert [r.split(":")[0] for r in regels] == [f"Regel {n}" for n in (2, 3, 5, 6, 7, 8)]
+    assert all("stuurteken" in r for r in regels[:5]) and "6 kolommen verwacht, 5" in regels[5]
 
 
 # Importeren: validatie per regel (ADR-014 §2)
@@ -442,6 +445,32 @@ def test_gelijktijdig_toewijzen_en_import(app):
     assert [s.naam for s in db.session.get(Plaats, p.id).bootsoorten] == ["Kajak", "Surfski"]
 
 
+def test_gelijktijdig_indeling_instellen_en_import_wachten_op_het_slot_van_het_rek(app):
+    """Eerste sessie zoals indeling_instellen: rek en plaatsen vergrendeld, dan een plaats erbij.
+    De import wacht en werkt de nieuwe plaats bij. Doodt de mutant zonder with_for_update op Rek in
+    _vergrendel: de import voegt dezelfde plaats dan zelf toe (UniqueViolation, of 'wacht niet')."""
+    r = plaats("A/1/1", ("Kajak",)).rek
+    fouten = race(app, ["SELECT r.id FROM rek r JOIN plaats p ON p.rek_id = r.id WHERE r.id = :r FOR UPDATE",
+                        "INSERT INTO plaats (rek_id, verdieping, vak, publieke_sleutel) VALUES (:r, 1, 2, 'S164TEST')"],
+                  {"r": r.id}, lambda: importeer(bestand("A;;1;1;Kajak;nee", "A;;1;2;Kajak;nee")))
+    assert fouten == []
+    p = db.session.scalars(select(Plaats).where(Plaats.rek_id == r.id, Plaats.vak == 2)).one()
+    assert [s.naam for s in p.bootsoorten] == ["Kajak"]
+
+
+def test_gelijktijdig_bootsoort_verwijderen_en_import_wachten_op_het_slot_van_de_soort(app):
+    """Eerste sessie: het slot en de verwijdering van bootsoort_verwijderen. De import wacht en
+    meldt daarna dat de soort niet bestaat; zonder KEY SHARE geeft de FK een IntegrityError.
+    Doodt de mutant zonder key_share in _vergrendel op de assert len(fouten) == 1: de insert van de
+    FK wacht zelf ook op het slot, dus 'wacht niet' in race valt niet."""
+    s = indeling.bootsoort_toevoegen("Waterfiets", CLI)
+    plaats("A/1/1", ("Kajak",))
+    fouten = race(app, ["SELECT id FROM bootsoort WHERE id = :s FOR UPDATE",
+                        "DELETE FROM bootsoort WHERE id = :s"], {"s": s.id},
+                  lambda: importeer(bestand("A;;1;2;Waterfiets;nee")))
+    assert len(fouten) == 1 and fouten[0].endswith("Regel 2: de bootsoort Waterfiets bestaat niet.")
+
+
 # Webroutes
 
 
@@ -459,6 +488,8 @@ def test_web_export_en_sjabloon(ingelogd):  # noqa: F811
     r = ingelogd.get("/rekindeling.csv?leeg=1")
     assert r.headers["Content-Disposition"] == 'attachment; filename="rekindeling-leeg.csv"'
     assert r.data == rekindeling_csv.export(leeg=True) and b"# Voorbeeld" in r.data
+    assert r.headers["X-Content-Type-Options"] == "nosniff"
+    assert ingelogd.get("/rekindeling.csv").headers["X-Content-Type-Options"] == "nosniff"
 
 
 def test_web_export_geeft_de_weigering_als_melding(ingelogd):  # noqa: F811

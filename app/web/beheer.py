@@ -104,6 +104,7 @@ def rekindeling_export():
     return inhoud, {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": f'attachment; filename="rekindeling{"-leeg" if leeg else ""}.csv"',
+        "X-Content-Type-Options": "nosniff",
     }
 
 
