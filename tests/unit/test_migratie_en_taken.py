@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from alembic import command
+from alembic.config import Config
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.exc import IntegrityError, ProgrammingError
@@ -139,8 +140,10 @@ def test_migratie_0015_verwijdert_de_kleurrijen_en_laat_de_naam(database):
     engine.dispose()
 
 
-def test_precies_een_migratiehead(database):
-    scripts = ScriptDirectory.from_config(nieuwe_database("botenloods_migratie"))
+def test_precies_een_migratiehead():
+    """Leest de scriptmap rechtstreeks: bij een tweede head faalt de assert hieronder, niet de
+    fixture `database` (#161)."""
+    scripts = ScriptDirectory.from_config(Config("alembic.ini"))
     assert scripts.get_heads() == ["0021"]
 
 
