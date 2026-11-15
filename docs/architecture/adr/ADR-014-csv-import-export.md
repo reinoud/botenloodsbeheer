@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.7
+**Versie:** v0.2.8
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting), issue #202 (bootsoort kiezen); backlog BLB-045 (rekindeling) en BLB-048 (bezetting)
 
 ## Context
@@ -36,6 +36,8 @@ Omdat `/` de bootsoorten scheidt, weigert `_soortnaam` voortaan een `/`; een bes
 **Alles of niets.** De import valideert het hele bestand en verzamelt per regel de reden van elke fout, in twee rondes: eerst de opbouw van elke regel, daarna de controles die de database vragen (bootsoort, gat, bezette plaats), hooguit 50 meldingen. Bij één fout verandert er niets en toont het scherm de lijst. Anders volgt alles in één transactie met één commit. Een lege export verandert niets.
 
 **Herkennen.** Een rek aan zijn naam zonder verschil in hoofdletters (ADR-003), een plaats aan rek, verdieping en vak. Een andere naam is een nieuw rek; hernoemen kan alleen in het scherm. De omschrijving is binnen één rek gelijk. Plaatsen buiten het bestand blijven (besluit stakeholder).
+
+**Standaardbootsoort per verdieping.** Die gaat niet mee in de CSV (besluit stakeholder 2026-11-14, issue #164). De kolom `bootsoorten` heeft alleen de soorten per plaats. Een rek dat de import aanmaakt, heeft dus geen standaard per verdieping. Een vak dat een beheerder later in het raster aanzet, krijgt daar geen bootsoort; de beheerder kiest die per plaats. De standaard is alleen te kiezen bij Nieuw rek (besluit stakeholder 2026-11-15).
 
 **Hergebruik.** `rek_aanmaken`, `rek_wijzigen` en `plaats_wijzigen` krijgen een kern zonder commit en rollback; de publieke functies roepen die aan en houden hun gedrag. De import gebruikt de kernen, `_plaatsen_erbij`, `_naam`, `_omschrijving`, `_vakken` (geen gat na samenvoegen van bestaande en nieuwe vakken) en de controles uit `plaats_wijzigen` (een bezette plaats blijft geschikt voor haar boot en houdt haar clubplaats), die naar één gedeelde functie gaan.
 
@@ -140,6 +142,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.8 | 2026-11-15 | De standaardbootsoort per verdieping gaat niet mee in de CSV van de rekindeling; een rek uit een import heeft geen standaard | Issue #164, besluit stakeholder 2026-11-14, herzien 2026-11-15 |
 | v0.2.7 | 2026-11-14 | Na Regel overslaan houdt de soortlijst de soorten van de plaats; een onverwachte databasefout bij het uploaden lekt geen bestandsinhoud; het aanmaken van een nieuwe boot valt onder de algemene melding | Issues #218 en #167 |
 | v0.2.6 | 2026-11-14 | Verwijzing naar de backlogstories BLB-045 en BLB-048 | Issue #216 |
 | v0.2.5 | 2026-11-12 | Het woord `clubboot` met een bekend lidnummer koppelt op dat lidnummer; met een onbekend lidnummer blijft het een fout | Issue #214, besluit regie 2026-11-12 |

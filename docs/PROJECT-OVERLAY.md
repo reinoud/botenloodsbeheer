@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.86
+**Versie overlay:** v0.5.87
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-14
@@ -59,6 +59,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Zeg welke open vragen blokkerend zijn, of laat het agent dat expliciet per vraag markeren.
 - Noem de overlayregels uit §4 die op een proef van toepassing zijn, en zeg per regel of de proef er in dit issue aan moet voldoen of dat het een restpunt mag worden.
 - Tel een woordbudget voor nieuwe of gewijzigde tekst met `git diff --word-diff=porcelain <bestand> | grep '^+[^+]' | wc -w`; `wc -w` op de plusregels telt ongewijzigde woorden in aangepaste regels mee.
+- Vraagt een besluit de gebruiker een handeling ("stel dat opnieuw in"), controleer dan vóór de vraag aan de stakeholder in de code dat die handeling bestaat, als route of scherm. Een vraag die een functie veronderstelt die er niet is, levert een besluit op dat opnieuw moet (#164).
 - Noem bij elk besluit in de bron of het in deze ronde verwerkt moet worden; een besluit dat niet genoemd is, komt als open vraag terug.
 - Noem welke ongecommitte bestanden (model, migratie) nog een oud besluit bevatten, zodat het agent ze als ontwerppunt meeneemt.
 - Haal een issue op met `gh issue view <nr> -R reinoud/botenloodsbeheer --json title,body,comments`; `--comments` alleen toont de tekst van het issue niet.
@@ -197,6 +198,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Verandert de weergave van een veld, zoek dan ook naar `not in` en `not_to_contain_text` op de oude tekst; die asserts slagen daarna altijd. Krijgt een sjabloon nieuwe gegevens in bereik (zoals `namen`), draai dan een mutant die ze in een naburig veld gebruikt en noem de test die hem vangt (#174).
 - Noem bij een vraag over wat een scherm toont welke acties en verwijzingen het kan tonen: het gewone log toont alleen `BOOTMUTATIES`, met verwijzingen naar boot, plaats, rek en lid; de rest staat alleen in het technische log (#174).
 - Een reknaam mag geen `/` bevatten; een escapingtest op een rek gebruikt `<b>x` (#174).
+- Een racetest die naar een functie is genoemd, laat de eerste sessie dezelfde sloten en dezelfde wijziging doen als die functie. Noem in de opdracht welke assert de mutant moet laten vallen: `wacht niet` van `race()` of een eigen assert (#164).
+- Een stuurtekentest op een gedeelde lezer zet het teken in een kolom zonder domeinvalidatie erachter; anders vangt een tweede laag de mutant (#164).
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
@@ -489,6 +492,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.87 | 2026-11-15 | Drie regels (Algemeen, Bouw): een gevraagde handeling eerst in de code nagaan, racetest volgt de functie, stuurtekentest op een kolom zonder domeinvalidatie; uit de terugblikken bij #164 | Lessen |
 | v0.5.86 | 2026-11-14 | Drie regels (Bouw): ontkenningen op oude tekst, nieuwe gegevens in een sjabloon, wat het gewone log toont, escapingtest op een rek; uit de terugblikken bij #174 | Lessen |
 | v0.5.85 | 2026-11-14 | Vijf regels (Algemeen, Bouw): reknaamletters op, traceback-test, gelijkwaardige mutant bij een vroege controle, slotmutant en zijn test, punten buiten de toets van een reviewer; uit de terugblikken bij #218 | Lessen |
 | v0.5.84 | 2026-11-14 | Bouw: wachten met een until-lus in de voorgrond, niet met Monitor; varianten van een melding en een later ontwerpbesluit noemen; uit de terugblikken van prism en sentinel bij #192 | Lessen |

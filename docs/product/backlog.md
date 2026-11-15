@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.17
-**Datum:** 2026-11-14
+**Versie:** v0.6.18
+**Datum:** 2026-11-15
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -488,6 +488,7 @@ Als beheerder wil ik de rekindeling als CSV-bestand exporteren en importeren, me
 - Gegeven de lege export, wanneer de beheerder die downloadt, dan staan daarin uitleg, de toegestane bootsoorten en een voorbeeldregel als commentaar, en de kopregel. Importeert de beheerder dit bestand, dan verandert er niets.
 - Gegeven een bestand, wanneer de beheerder het importeert, dan komen nieuwe rekken en plaatsen erbij, krijgen bestaande plaatsen de waarden uit het bestand en blijven plaatsen buiten het bestand staan.
 - Gegeven een export, wanneer de beheerder die ongewijzigd importeert, dan verandert er niets.
+- Gegeven een export, dan staat de standaardbootsoort per verdieping er niet in (besluit stakeholder 2026-11-14, issue #164). Een rek dat de import aanmaakt, heeft geen standaard per verdieping; een vak dat een beheerder later in het raster aanzet, krijgt geen bootsoort (besluit stakeholder 2026-11-15).
 - Gegeven een bestand met een fout (te groot, meer dan 2000 regels, verkeerd scheidingsteken of codering, onbekende bootsoort, gat in een verdieping, bezette plaats die ongeschikt wordt of van clubplaats verandert), wanneer de beheerder het importeert, dan verandert er niets en noemt de melding elke foute regel met regelnummer en reden.
 - Gegeven een import, dan vraagt die een recente inlog en staat in het technische log alleen een regel met aantallen.
 
@@ -825,6 +826,7 @@ De stakeholder besloot deze vragen op 2026-10-31. Ze staan ook in `docs/business
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.18 | 2026-11-15 | Issue #164: BLB-045 zegt dat de standaardbootsoort per verdieping niet in de CSV staat en dat een rek uit een import geen standaard heeft (besluit stakeholder 2026-11-14, herzien 2026-11-15) |
 | v0.6.17 | 2026-11-14 | Issue #216: BLB-048 voor de bezettingsimport; BLB-045 gaat weer alleen over de rekindeling |
 | v0.6.16 | 2026-11-13 | Issue #206: BLB-047, een boot verplaatsen vanaf zijn eigen pagina (ontwerp 5B) |
 | v0.6.15 | 2026-11-12 | Issue #243: BLB-033, een robottoken weigert een whitelistreeks breder dan /8 of /32 |
