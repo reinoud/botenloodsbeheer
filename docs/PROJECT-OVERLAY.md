@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.88
+**Versie overlay:** v0.5.89
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-16
@@ -117,6 +117,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen, ook bij een nieuwe E2E-vergelijking, en meld pas daarna groen.
+- Een reviewer draait een mutant met een kopie van `app` in zijn scratchpad als volume: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <kopie>:/app/app:ro test pytest ...`. Hij kiest een verse mapnaam en gebruikt geen `rm -rf` (#268).
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
@@ -493,6 +494,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.89 | 2026-11-16 | Regel (Bouw): mutant van een reviewer met een kopie van `app` als volume, verse mapnaam, geen `rm -rf`; uit de terugblik bij #268 | Lessen |
 | v0.5.88 | 2026-11-16 | Regel (Review): tegelijk of na elkaar draaien, en vergelijken met `cmp` zonder tijdelijke bestanden; uit de terugblik bij #275 | Lessen |
 | v0.5.87 | 2026-11-15 | Drie regels (Algemeen, Bouw): een gevraagde handeling eerst in de code nagaan, racetest volgt de functie, stuurtekentest op een kolom zonder domeinvalidatie; uit de terugblikken bij #164 | Lessen |
 | v0.5.86 | 2026-11-14 | Drie regels (Bouw): ontkenningen op oude tekst, nieuwe gegevens in een sjabloon, wat het gewone log toont, escapingtest op een rek; uit de terugblikken bij #174 | Lessen |

@@ -17,7 +17,7 @@
     <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=t.id) }}">{{ t.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ t.bootsoort.naam }}</span> · {% if t.lid %}<span data-label="Eigenaar">{{ t.lid.naam }} ({{ t.lid.lidnummer }})</span>{% if is_oud_lid(t.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}<span data-label="Eigenaar">{{ 'clubboot' if t.clubboot else 'eigenaar onbekend' }}</span>{% endif %}</span></div>
     <p class="bl-item__zijde">{% if t.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=t.plaats.id) }}">{{ t.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
     {% elif soort == "lid" %}
-    <div class="bl-item__main"><a class="bl-item__titel" data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=t.id) }}">{{ t.naam }}</a> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ t.lidnummer }}</span> · <span data-label="Boot">geen boot</span></span></div>
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=t.id) }}">{{ t.naam }}</a>{% if is_oud_lid(t) %} <span class="ds-tag">oud-lid</span>{% endif %} <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ t.lidnummer }}</span> · <span data-label="Boot">geen boot</span></span></div>
     {% else %}
     <div class="bl-item__main"><a class="bl-item__titel" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=t.id) }}">{{ t.code }}</a> <span class="bl-item__sub">{{ 'clubplaats' if t.is_clubplaats else 'vrije plaats' }}</span></div>
     {% endif %}
