@@ -41,8 +41,10 @@ def test_zoeken_vanuit_de_kop_geeft_een_lijst_of_opent_de_boot(page):
         for element in (veld, kop.get_by_role("button", name="Zoeken"), *menu):
             doos = element.bounding_box()
             assert doos["x"] >= 0 and doos["x"] + doos["width"] <= breedte, (breedte, doos)
-        # De preview van BV-75 (designsystem b0f0f1c) meet op 360 px 97 px; marge voor lettertype en afronding.
-        assert veld.bounding_box()["width"] >= 90, breedte
+        # BV-78 (designsystem 7503a1c): onder 30rem een vergrootglas, het veld meet dan 157 px op 360 px.
+        assert veld.bounding_box()["width"] >= 150, breedte
+        knop = kop.get_by_role("button", name="Zoeken").bounding_box()
+        assert knop["width"] >= 44 and knop["height"] >= 44, (breedte, knop)
 
         # Twee treffers: de lijst, met het aantal, de plaatsen en de term nog in het kopveld.
         zoeken_in_de_kop(page, rek)

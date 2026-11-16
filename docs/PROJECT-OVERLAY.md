@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.87
+**Versie overlay:** v0.5.88
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-14
+**Bijgewerkt:** 2026-11-16
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -288,6 +288,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Lint in de testcontainer draai je met `ruff check --no-cache <paden>`; de cache in `/app` is niet beschrijfbaar.
 - Noem bij een verwachte falende assert de testnaam en de tekst van de assert; het regelnummer alleen als controle, want het verschuift bij elke wijziging in de staging (#154).
 - Verwijder een testaccount na een live proef met een los commando, zonder `rm` van bestanden ernaast; een geblokkeerd gecombineerd commando wordt niet opnieuw geprobeerd (#154).
+- Zeg in een reviewopdracht of de unitsuite en `draai.sh -k <test>` tegelijk mogen draaien of na elkaar, en laat een overname uit designsystem vergelijken met `cmp <(git show :<pad>) <(git -C /Users/reinoud/git/designsystem show <commit>:<pad>)`, zonder tijdelijke bestanden en zonder `rm`.
 
 #### E2E
 
@@ -492,6 +493,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.88 | 2026-11-16 | Regel (Review): tegelijk of na elkaar draaien, en vergelijken met `cmp` zonder tijdelijke bestanden; uit de terugblik bij #275 | Lessen |
 | v0.5.87 | 2026-11-15 | Drie regels (Algemeen, Bouw): een gevraagde handeling eerst in de code nagaan, racetest volgt de functie, stuurtekentest op een kolom zonder domeinvalidatie; uit de terugblikken bij #164 | Lessen |
 | v0.5.86 | 2026-11-14 | Drie regels (Bouw): ontkenningen op oude tekst, nieuwe gegevens in een sjabloon, wat het gewone log toont, escapingtest op een rek; uit de terugblikken bij #174 | Lessen |
 | v0.5.85 | 2026-11-14 | Vijf regels (Algemeen, Bouw): reknaamletters op, traceback-test, gelijkwaardige mutant bij een vroege controle, slotmutant en zijn test, punten buiten de toets van een reviewer; uit de terugblikken bij #218 | Lessen |

@@ -1,6 +1,7 @@
 """Blok 1 van het nieuwe ontwerp (issue #150): het menu in vier groepen (BV-76), de plaats in twee kolommen,
 de indeling in panelen. Gebruikersinvoer blijft geëscapet."""
 
+import pathlib
 import re
 
 import pytest
@@ -109,3 +110,11 @@ def test_menu_telt_boten_zonder_eigenaar_ook_op_import_export(ingelogd):
     toewijzing.toewijzen(plaats("A/1/1").id, onbekend("Wulp").id, CLI)
     tekst = ingelogd.get("/import-export").text
     assert re.search(r'Boten zonder eigenaar <span class="ds-tag ds-tag--telling bl-nav__aantal">1</span>', tekst)
+
+
+def test_elke_url_in_de_css_wijst_naar_een_bestand_in_static():
+    # #162: dj-components.css verwees naar icons/*.svg die niet waren afgenomen.
+    static = pathlib.Path(__file__).parents[2] / "app/web/static"
+    for css in static.rglob("*.css"):
+        for ref in re.findall(r'url\("([^"]+)"\)', css.read_text()):
+            assert (css.parent / ref).resolve().is_file(), (css.name, ref)

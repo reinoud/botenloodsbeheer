@@ -22,7 +22,7 @@
       <form class="dj-search" role="search" aria-label="Overal zoeken" method="get" action="{{ url_for('web.zoeken') }}">
         <label class="dj-sr-only" for="kop-zoek">Zoeken naar plaats, boot of eigenaar</label>
         <input class="ds-input dj-search__field" type="search" id="kop-zoek" name="q" value="{{ zoekterm|default('') }}" maxlength="100" placeholder="Plaats, boot of eigenaar">
-        <button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>
+        <button type="submit" class="ds-btn ds-btn--primary"><span class="dj-icon dj-icon--zoek" aria-hidden="true"></span> <span class="dj-search__tekst">Zoeken</span></button>
       </form>
       {# De vier groepen van BV-76 (BV-42); de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}
