@@ -89,7 +89,7 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
     intrekken = rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}")
     page.locator("summary", has_text=naam).click()  # "Rechten van <naam>" telt ook mee
     cel = "td[data-label='Naam']"
-    for breedte, gestapeld in ((660, True), (800, True), (1100, False), (360, True)):  # gh#192: 67rem
+    for breedte, gestapeld in ((660, True), (800, True), (1060, True), (1100, False), (360, True)):  # gh#192: 67rem (1072 px)
         page.set_viewport_size({"width": breedte, "height": 900})
         assert page.evaluate("""() => [document.documentElement, document.querySelector('.ds-table-wrap')]
             .every(el => el.scrollWidth <= el.clientWidth)"""), breedte
