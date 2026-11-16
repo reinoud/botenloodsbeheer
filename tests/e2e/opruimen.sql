@@ -73,8 +73,10 @@ BEGIN
         n_rek, n_plaats, n_boot, n_foto, n_soort, n_token, n_beheerder, n_koppeling;
 
     -- Wat op een E2E-rest lijkt maar niet aan een bekende stempel hangt: laten staan en melden.
-    SELECT string_agg(naam, ', ') INTO rest FROM rek WHERE naam ~ '^[a-z]{1,3}[0-9a-z]{6}$';
+    SELECT string_agg(naam, ', ') INTO rest FROM rek WHERE naam ~ '^[a-z]{1,3}[0-9a-z]{6}c?$';
     IF rest IS NOT NULL THEN RAISE NOTICE 'Twijfel, laten staan (rekken): %', rest; END IF;
+    SELECT string_agg(naam, ', ') INTO rest FROM naamkoppeling WHERE naam ~ ' [a-z]{1,3}[0-9a-z]{6}$';
+    IF rest IS NOT NULL THEN RAISE NOTICE 'Twijfel, laten staan (koppelingen): %', rest; END IF;
     SELECT string_agg(gebruikersnaam, ', ') INTO rest FROM beheerder WHERE gebruikersnaam LIKE 'e2e-%';
     IF rest IS NOT NULL THEN RAISE NOTICE 'Twijfel, laten staan (beheerders): %', rest; END IF;
     SELECT string_agg(naam, ', ') INTO rest FROM token WHERE naam LIKE 'e2e-%';
