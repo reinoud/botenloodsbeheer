@@ -870,6 +870,24 @@ def test_bevestigen_vergrendelt_de_plaatsen_oplopend_op_id(app, actor, anna):
                   {"hoog": hoog.id, "laag": laag.id})
 
 
+@pytest.mark.parametrize("tabel", ["boot", "plaats"])
+def test_vergrendel_houdt_zowel_de_boten_als_de_plaatsen_vast(app, anna, tabel):
+    """_vergrendel direct: toewijzen vergrendelt de plaatsen later ook, dus alleen zo valt een
+    ontbrekend slot op boten of op plaatsen op. Een tweede sessie kan de rij niet nemen."""
+    p = plaats("A/1/1")
+    b = boot(anna.id, "Kajak", "Reiger")
+    rij = {"boot": b.id, "plaats": p.id}[tabel]
+    engine = create_engine(WEB)
+    try:
+        with engine.connect() as probe:
+            bezetting_csv._vergrendel({b.id}, {p.id})
+            with pytest.raises(OperationalError, match="could not obtain lock"):
+                probe.execute(text(f"SELECT id FROM {tabel} WHERE id = :id FOR UPDATE NOWAIT"), {"id": rij})
+    finally:
+        db.session.rollback()
+        engine.dispose()
+
+
 def test_twee_beheerders_bevestigen_niet_tegelijk_de_tweede_wacht_op_de_lopende_import(app, actor, anna):
     plaats("A/1/1")
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;;1001"), actor)
