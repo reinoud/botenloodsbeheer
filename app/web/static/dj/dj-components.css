@@ -128,6 +128,7 @@
 .dj-icon--agenda { -webkit-mask-image: url("icons/agenda.svg"); mask-image: url("icons/agenda.svg"); }
 .dj-icon--leden { -webkit-mask-image: url("icons/leden.svg"); mask-image: url("icons/leden.svg"); }
 .dj-icon--profiel { -webkit-mask-image: url("icons/profiel.svg"); mask-image: url("icons/profiel.svg"); }
+.dj-icon--zoek { -webkit-mask-image: url("icons/zoek.svg"); mask-image: url("icons/zoek.svg"); }
 
 /* Lijstrij: label met detail, chevron als de rij een link is, schakelaar als de rij een label is */
 .dj-list { margin: 0; padding: 0; list-style: none; border-top: var(--stroke-1) solid var(--line); }
@@ -193,6 +194,13 @@
 
 .dj-search { display: flex; align-items: center; gap: var(--space-2); margin: 0; }
 .dj-search__field { flex: 1; min-width: 0; }
+.dj-search .dj-icon { display: none; }
+/* BV-78: onder 30rem (480px) geeft de tekstknop het veld minder dan 150px; dan toont de knop een vergrootglas en staat "Zoeken" alleen nog voor schermlezers (dezelfde regels als dj-sr-only, want die klasse zou ook de tekstknop leegmaken) */
+@media (width < 30rem) {
+  .dj-search .dj-icon { display: block; }
+  .dj-search button { width: var(--control-height); padding: 0; }
+  .dj-search__tekst { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+}
 
 @media (width >= 40rem) {
   .dj-choices--columns { grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); column-gap: var(--space-5); }

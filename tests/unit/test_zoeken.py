@@ -345,7 +345,7 @@ def test_kopveld_staat_op_elke_beheerpagina_met_label_knop_en_unieke_id(loods):
         assert '<label class="dj-sr-only" for="kop-zoek">Zoeken naar plaats, boot of eigenaar</label>' in kop
         assert 'type="search" id="kop-zoek" name="q"' in kop and 'maxlength="100"' in kop
         assert 'placeholder="Plaats, boot of eigenaar"' in kop and 'action="/zoeken"' in kop and 'method="get"' in kop
-        assert '<button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>' in kop
+        assert '<button type="submit" class="ds-btn ds-btn--primary"><span class="dj-icon dj-icon--zoek" aria-hidden="true"></span> <span class="dj-search__tekst">Zoeken</span></button>' in kop  # BV-78
         # Tussen het logo en het menu.
         assert kop.index("dj-logo") < kop.index("dj-search") < kop.index("dj-menu")
     assert 'id="zoek"' in loods.get("/leden").text
