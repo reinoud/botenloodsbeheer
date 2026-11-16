@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.90
+**Versie overlay:** v0.5.91
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-16
+**Bijgewerkt:** 2026-11-17
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -118,6 +118,12 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen, ook bij een nieuwe E2E-vergelijking, en meld pas daarna groen.
 - Een reviewer draait een mutant met een kopie van `app` in zijn scratchpad als volume: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <kopie>:/app/app:ro test pytest ...`. Hij kiest een verse mapnaam en gebruikt geen `rm -rf` (#268).
+- Een slottest op een slot in een domeinfunctie roept die functie direct aan en probeert het slot met een tweede verbinding (`FOR UPDATE NOWAIT`). Een test via de hele flow laat de mutant overleven als een latere stap hetzelfde slot neemt (#283).
+- Een mutant op `app/config.py` vraagt een nieuwe `web` (`up -d --no-deps --force-recreate web` met `compose.dev.yml`); gunicorn `--reload` laadt de config niet opnieuw (#285). Noem bij een mutant op globale staat (zoals het logo) hoe de reviewer die staat zet en uitleest.
+- ruff draait in de testcontainer (`... run --rm test ruff check --no-cache app tests`), niet op de host (#283).
+- `draai.sh` draait pytest meer dan eens: tel geslaagd, gefaald en overgeslagen met een script over alle samenvattingen in het log (#278).
+- Na een wijziging van een herkenningsregel in `tests/e2e/opruimen.sql` telt de bouwer in de lokale database wat de nieuwe regel extra raakt of meldt. De opdracht zegt vooraf of resten van onbekende stempels eenmalig weg mogen (#278).
+- Een agent die een lange run in de achtergrond start, leest de uitvoer zelf zodra de run klaar is en wacht niet op een melding. Hoort de regie na een uur niets, dan vraagt ze naar het oordeel (#278, #283).
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
@@ -495,6 +501,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.91 | 2026-11-17 | Zes regels (Bouw): slottest direct op de domeinfunctie, mutant op config met een nieuwe web, ruff in de container, tellen over alle pytest-samenvattingen, opruimregex tellen, uitvoer van een achtergrondrun zelf lezen; uit de terugblikken bij #278, #283 en #285 | Lessen |
 | v0.5.90 | 2026-11-16 | Regel (Release): releasenotes ook in `CHANGELOG.md` | Besluit stakeholder |
 | v0.5.89 | 2026-11-16 | Regel (Bouw): mutant van een reviewer met een kopie van `app` als volume, verse mapnaam, geen `rm -rf`; uit de terugblik bij #268 | Lessen |
 | v0.5.88 | 2026-11-16 | Regel (Review): tegelijk of na elkaar draaien, en vergelijken met `cmp` zonder tijdelijke bestanden; uit de terugblik bij #275 | Lessen |
