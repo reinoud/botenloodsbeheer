@@ -2,6 +2,7 @@
 uitnodigingen aanmaakt met de echte CLI en de links als omgevingsvariabelen doorgeeft."""
 
 import os
+import re
 
 import pyotp
 import pytest
@@ -12,10 +13,11 @@ WACHTWOORD = "e2e wachtwoord voor de loods"
 
 
 def reknaam(letter):
-    """Een reknaam van hooguit 10 tekens (ADR-003), uniek per run en per letter: de letter van de
-    test plus de stempel in 36-tallig (6 tekens). draai.sh ruimt na de run de rekken op die op
-    deze naam passen bij een bekende stempel (opruimen.sql, issue #142); pas die SQL aan als dit
-    schema van de naam verandert."""
+    """Een reknaam van hooguit 10 tekens (ADR-003), uniek per run en per letter: één tot drie
+    letters van de test (a tot en met z, kleine letters) plus de stempel in 36-tallig (6 tekens).
+    draai.sh ruimt na de run de rekken op die op deze naam passen bij een bekende stempel
+    (opruimen.sql, issue #142); pas die SQL aan als dit schema van de naam verandert."""
+    assert re.fullmatch("[a-z]{1,3}", letter), letter
     cijfers, n = "", int(STEMPEL)
     while n:
         n, rest = divmod(n, 36)
