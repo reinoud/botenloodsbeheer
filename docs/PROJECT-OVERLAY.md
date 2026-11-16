@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.89
+**Versie overlay:** v0.5.90
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-16
@@ -387,6 +387,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
+- Bij elke release komt de tekst van de releasenotes ook in `CHANGELOG.md` in de root, als nieuwe paragraaf `## <versie> (<datum>)` bovenaan. Notes en changelog zijn gelijk; wijzig je de notes na de release, werk dan ook de changelog bij. Besluit van de stakeholder, 2026-11-16.
 - `uv` staat niet op de host. Draai `uv lock` in `python:3.14-slim` met het binaire bestand uit het uv-image in de eerste `FROM`-regel van `docker/Dockerfile` (`docker create` en `docker cp`) en de werkmap als volume; noem dat commando in de brief, zodat een reviewer `uv lock --check` kan draaien. Staat de binary al in de scratchpad, noem dan het pad van de map en dat die op `/uvbin` gemount wordt (`/uvbin/uv`).
 - Noem bij een proef op een overlayregel over de rate limit welke eigenschap de proef bewijst, als die een andere middleware toetst (zoals de whitelist).
 - Noem bij een review op de grens van de API elke router naar de dienst `api`, dus ook `api-extern` uit `compose.api-extern.yml`.
@@ -494,6 +495,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.90 | 2026-11-16 | Regel (Release): releasenotes ook in `CHANGELOG.md` | Besluit stakeholder |
 | v0.5.89 | 2026-11-16 | Regel (Bouw): mutant van een reviewer met een kopie van `app` als volume, verse mapnaam, geen `rm -rf`; uit de terugblik bij #268 | Lessen |
 | v0.5.88 | 2026-11-16 | Regel (Review): tegelijk of na elkaar draaien, en vergelijken met `cmp` zonder tijdelijke bestanden; uit de terugblik bij #275 | Lessen |
 | v0.5.87 | 2026-11-15 | Drie regels (Algemeen, Bouw): een gevraagde handeling eerst in de code nagaan, racetest volgt de functie, stuurtekentest op een kolom zonder domeinvalidatie; uit de terugblikken bij #164 | Lessen |
