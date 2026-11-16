@@ -2,13 +2,14 @@
 -- eigenaar van de database, in de db-container van de dev-stack, in één transactie: een fout
 -- laat alles staan. Geen applicatiecode; de logregels blijven staan (besluit 2026-11-06).
 --
--- Kenmerk van een run: de stempel. Een stempel is bekend als er een beheerder `e2e-<soort>-<stempel>`
+-- Kenmerk van een run: de stempel. Een stempel is bekend als er een beheerder `e2e-<soort>-<stempel>[-n]`
 -- of een token `e2e-<soort>-<stempel>[-n]` met die stempel is, of als draai.sh hem meegeeft
 -- (-v stempel=...). Wat niet aan een bekende stempel hangt, blijft staan en wordt gemeld.
---   rek         <letter> + stempel in 36-tallig (reknaam() in conftest.py); plaatsen gaan mee
+--   rek         <1 tot 3 letters> + stempel in 36-tallig (reknaam() in conftest.py), eventueel met een c
+--               erachter voor het clubrek van test_loods.py; plaatsen gaan mee
 --   boot        naam eindigt op een spatie plus de stempel of zo'n reknaam; foto en wachtlijstregel mee
 --   bootsoort   "Waterfiets <stempel>" en "Pedalo <stempel>" (test_bootsoorten.py)
---   token, beheerder   naam met de stempel; uitnodiging, passkeys en een lopende bezettingsimport gaan mee (ON DELETE CASCADE)
+--   token, beheerder   naam met de stempel (ook `e2e-ruis-<stempel>-<n>`); uitnodiging, passkeys en een lopende bezettingsimport gaan mee (ON DELETE CASCADE)
 --   naamkoppeling      naam eindigt op een spatie plus zo'n reknaam (test_bezetting_csv.py)
 \set ON_ERROR_STOP on
 BEGIN;
@@ -21,7 +22,7 @@ DECLARE
 BEGIN
     CREATE TEMP TABLE e2e_stempel ON COMMIT DROP AS
         SELECT DISTINCT s FROM (
-            SELECT substring(gebruikersnaam from '^e2e-[a-z]+-([0-9]{9,10})$') AS s FROM beheerder
+            SELECT substring(gebruikersnaam from '^e2e-[a-z]+-([0-9]{9,10})(-[0-9]+)?$') AS s FROM beheerder
             UNION SELECT substring(naam from '^e2e-[a-z]+-([0-9]{9,10})(-[0-9]+)?$') FROM token
             UNION SELECT current_setting('e2e.stempel')
         ) x WHERE s ~ '^[0-9]{9,10}$';
@@ -35,12 +36,12 @@ BEGIN
         SELECT s, r AS b36 FROM b WHERE n = 0;
 
     CREATE TEMP TABLE e2e_rek ON COMMIT DROP AS
-        SELECT rek.id FROM rek JOIN e2e_b36 ON lower(rek.naam) ~ ('^[a-z]' || b36 || '$');
+        SELECT rek.id FROM rek JOIN e2e_b36 ON lower(rek.naam) ~ ('^[a-z]{1,3}' || b36 || 'c?$');
 
     CREATE TEMP TABLE e2e_boot ON COMMIT DROP AS
         SELECT boot.id, boot.afbeelding_id FROM boot
         WHERE EXISTS (SELECT 1 FROM e2e_stempel WHERE boot.naam ~ (' ' || s || '$'))
-           OR EXISTS (SELECT 1 FROM e2e_b36 WHERE boot.naam ~ (' [a-z]' || b36 || '$'));
+           OR EXISTS (SELECT 1 FROM e2e_b36 WHERE boot.naam ~ (' [a-z]{1,3}' || b36 || '$'));
 
     -- Een boot die niet van de run is maar op een rek van de run staat: niets doen.
     IF EXISTS (SELECT 1 FROM plaats WHERE rek_id IN (SELECT id FROM e2e_rek)
@@ -62,17 +63,17 @@ BEGIN
     DELETE FROM token WHERE EXISTS (
         SELECT 1 FROM e2e_stempel WHERE token.naam ~ ('^e2e-[a-z]+-' || s || '(-[0-9]+)?$'));
     GET DIAGNOSTICS n_token = ROW_COUNT;
-    DELETE FROM naamkoppeling WHERE EXISTS (SELECT 1 FROM e2e_b36 WHERE naam ~ (' [a-z]' || b36 || '$'));
+    DELETE FROM naamkoppeling WHERE EXISTS (SELECT 1 FROM e2e_b36 WHERE naam ~ (' [a-z]{1,3}' || b36 || '$'));
     GET DIAGNOSTICS n_koppeling = ROW_COUNT;
     DELETE FROM beheerder WHERE EXISTS (
-        SELECT 1 FROM e2e_stempel WHERE beheerder.gebruikersnaam ~ ('^e2e-[a-z]+-' || s || '$'));
+        SELECT 1 FROM e2e_stempel WHERE beheerder.gebruikersnaam ~ ('^e2e-[a-z]+-' || s || '(-[0-9]+)?$'));
     GET DIAGNOSTICS n_beheerder = ROW_COUNT;
 
     RAISE NOTICE 'Opgeruimd: % rekken, % plaatsen, % boten, % foto''s, % bootsoorten, % tokens, % beheerders, % koppelingen',
         n_rek, n_plaats, n_boot, n_foto, n_soort, n_token, n_beheerder, n_koppeling;
 
     -- Wat op een E2E-rest lijkt maar niet aan een bekende stempel hangt: laten staan en melden.
-    SELECT string_agg(naam, ', ') INTO rest FROM rek WHERE naam ~ '^[a-z][0-9a-z]{6}$';
+    SELECT string_agg(naam, ', ') INTO rest FROM rek WHERE naam ~ '^[a-z]{1,3}[0-9a-z]{6}$';
     IF rest IS NOT NULL THEN RAISE NOTICE 'Twijfel, laten staan (rekken): %', rest; END IF;
     SELECT string_agg(gebruikersnaam, ', ') INTO rest FROM beheerder WHERE gebruikersnaam LIKE 'e2e-%';
     IF rest IS NOT NULL THEN RAISE NOTICE 'Twijfel, laten staan (beheerders): %', rest; END IF;
