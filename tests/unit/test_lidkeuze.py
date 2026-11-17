@@ -1,14 +1,16 @@
 """Een lid kiezen met zoeken en een tussenstap (#295, BV-85 en BV-86): het zoeken zelf (domein) en de vier
 schermen waar een beheerder een lid kiest: de bezettingsimport, Nieuwe boot, Boot wijzigen en Boten zonder
-eigenaar. Elke test noemt de mutant die hem laat falen. Oud-leden als treffer zijn #298; hier geldt dat
-de server ze nooit toont of accepteert."""
+eigenaar. Elke test noemt de mutant die hem laat falen. Een oud-lid binnen de bewaartermijn is een treffer
+bij de drie schermen met één keuze (#298, test_oud_lid_boot.py); de bezettingsimport toont en accepteert
+nooit een oud-lid."""
 
 import re
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.domein import lidkeuze, vandaag
+from app.domein import leden, lidkeuze, vandaag
 from app.models import Bezettingsimport, Boot, db
 from tests.unit.hulp import lid
 from tests.unit.test_bezetting_csv import bestand, plaats
@@ -335,9 +337,10 @@ def test_nieuwe_boot_met_het_gekozen_rondje_en_de_clubboot(ingelogd):  # noqa: F
     assert boten == {"Fuut": (anna.id, False), "Clubkajak": (None, True)}
 
 
-def test_nieuwe_boot_met_een_oud_lid_als_rondje_wordt_geweigerd(ingelogd):  # noqa: F811
-    # BV-86 (#298) komt later: nu is een oud-lid hier niet kiesbaar. Mutant: lid_van_waarde over alle leden.
-    oud = lid("1002", "Oud", opzegdatum=vandaag())
+def test_nieuwe_boot_met_een_oud_lid_buiten_de_termijn_als_rondje_wordt_geweigerd(ingelogd):  # noqa: F811
+    # BV-86 (#298): binnen de termijn is een oud-lid kiesbaar (test_oud_lid_boot.py). Mutant: lid_van_waarde
+    # over alle leden.
+    oud = lid("1002", "Oud", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": oud.lidnummer})
     assert r.status_code == 422 and lidkeuze.ONGELDIG in r.text and db.session.scalar(select(Boot)) is None
 
@@ -403,8 +406,8 @@ def test_zonder_eigenaar_zonder_treffer_en_met_een_gekozen_rondje(ingelogd):  # 
     assert wulp.lid_id == anna.id
 
 
-def test_zonder_eigenaar_met_een_oud_lid_als_rondje_wordt_geweigerd(ingelogd):  # noqa: F811
-    oud = lid("1002", "Oud", opzegdatum=vandaag())
+def test_zonder_eigenaar_met_een_oud_lid_buiten_de_termijn_als_rondje_wordt_geweigerd(ingelogd):  # noqa: F811
+    oud = lid("1002", "Oud", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
     wulp = boot(None, "Kajak", "Wulp", onbekend=True)
     r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"eigenaar": oud.lidnummer})
     assert r.status_code == 422 and lidkeuze.ONGELDIG in r.text and wulp.lid_id is None

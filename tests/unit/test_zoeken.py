@@ -250,7 +250,7 @@ def test_oud_lid_met_boot_heeft_een_tag_en_een_lid_van_nu_niet(loods):
 def test_oud_lid_zonder_boot_heeft_de_tag_achter_de_naam_en_een_lid_van_nu_niet(loods):
     # BV-80. Mutant: de tag in de lidrij weglaten of altijd tonen valt op een van beide asserts.
     lid("1004", "Cor Meeuw 2")
-    assert '>Dirk Oud</a> <span class="ds-tag">oud-lid</span> <span class="bl-item__sub">' in rij(
+    assert '>Dirk Oud</a> <span class="ds-tag">oud-lid</span></span> <span class="bl-item__sub">' in rij(
         pagina(loods, "oud").text, "Dirk Oud")
     assert "ds-tag" not in rij(pagina(loods, "cor meeuw").text, "Cor Meeuw")
 

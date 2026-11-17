@@ -23,6 +23,7 @@ from app.domein import (
     indeling,
     log,
     toewijzing,
+    vandaag,
     wachtlijst,
 )
 from app.domein.csvbestand import CsvFout
@@ -406,7 +407,8 @@ def test_elke_foutsoort_geeft_de_uitkomst_fout_met_de_reden_en_blokkeert_bevesti
     boot(anna.id, "Kajak", "Tweeling")
     boot(anna.id, "Kajak", "Tweeling")
     boot(oud.id, "Kajak", "Fuutje")  # de boot van een oud-lid zonder plaats
-    eigenaar("UPDATE lid SET opzegdatum = '2020-01-01' WHERE id = :i", i=oud.id)
+    # #298: binnen de termijn; sinds #298 weigert alleen de bezettingsimport dit oud-lid (AEG-01)
+    eigenaar("UPDATE lid SET opzegdatum = :d WHERE id = :i", d=vandaag() - timedelta(days=1), i=oud.id)
     regels, melding = FOUTEN[sleutel]
     uitkomst = beoordeling(bestand(*regels.split("\r\n")), actor)
     fout = uitkomst[3] if sleutel in ("plaats-dubbel", "boot-dubbel") else uitkomst[2]
@@ -567,7 +569,8 @@ def test_koppelen_weigert_een_onbekende_regel_of_lid_en_laat_de_oude_keuzes_staa
 
 def test_koppelen_weigert_een_oud_lid_want_die_staat_niet_in_de_keuzelijst(app, actor):
     oud = lid("1002", "Oud Lid")
-    eigenaar("UPDATE lid SET opzegdatum = '2020-01-01' WHERE id = :i", i=oud.id)
+    # #298: binnen de termijn; sinds #298 weigert alleen de bezettingsimport dit oud-lid (AEG-01)
+    eigenaar("UPDATE lid SET opzegdatum = :d WHERE id = :i", d=vandaag() - timedelta(days=1), i=oud.id)
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;X;"), actor)
     with pytest.raises(Regelfout, match="keuzes kloppen niet"):
         bezetting_csv.koppelen({"2": str(oud.id)}, actor)

@@ -2,6 +2,7 @@
 De tests draaien als botenloods_taken, de rol van de worker; één test laat zien dat de webrol het
 niet kan."""
 
+import threading
 from datetime import UTC, datetime, time, timedelta
 from unittest import mock
 from zoneinfo import ZoneInfo
@@ -13,7 +14,7 @@ from sqlalchemy.exc import ProgrammingError
 from app import create_app, taken
 from app.domein import CLI, leden, log, opschonen, toewijzing, vandaag, wachtlijst
 from app.models import Afbeelding, Boot, Lid, Logregel, Taakrun, Wachtlijst, db
-from tests.unit.conftest import TAKEN
+from tests.unit.conftest import TAKEN, WEB
 from tests.unit.hulp import als_api, lid, png
 from tests.unit.test_indeling_en_toewijzing import boot, plaats
 from tests.unit.test_leden import record
@@ -154,6 +155,43 @@ def test_opgeschoond_oud_lid_komt_niet_terug_via_de_import(app):
                               record("2", opzegdatum=vandaag().isoformat())], CLI)
     db.session.expire_all()
     assert db.session.scalars(select(Lid.lidnummer)).all() == ["2"]
+
+
+def test_gelijktijdig_toewijzen_en_opschonen_faalt_veilig(app):
+    """ADR-006, #298: het oud-lid valt vandaag nog binnen de termijn (toewijzen mag) en morgen erbuiten
+    (de opschoning van morgen kiest het). De toewijzing houdt het slot op de boot; de DELETE van de opschoning
+    wacht en raakt daarna een boot met een plaats. `plaats.boot_id` heeft geen ON DELETE, dus de database
+    weigert: de hele opschoning rolt terug, het oud-lid en zijn boot blijven en de run staat als mislukt.
+    Mutant: ON DELETE CASCADE of SET NULL op plaats.boot_id zou de plaats of de boot stil weghalen; die
+    migratie is niet gemuteerd."""
+    oud = opgezegd(grens())
+    b = boot(oud.id)
+    p = plaats()
+    morgen = vandaag() + timedelta(days=1)
+    uitkomst = []
+
+    def opschonen_morgen():
+        with app.app_context():
+            try:
+                opschonen.draai(morgen)
+            except Exception as fout:  # noqa: BLE001 (de thread meldt elke fout aan de test)
+                uitkomst.append(type(fout).__name__)
+
+    engine = create_engine(WEB)
+    with engine.connect() as toewijzen:
+        toewijzen.execute(text("SELECT id FROM boot WHERE id = :b FOR UPDATE"), {"b": b.id})
+        draad = threading.Thread(target=opschonen_morgen)
+        draad.start()
+        draad.join(timeout=2)
+        assert draad.is_alive(), "de opschoning wacht niet op het slot van de toewijzing"
+        toewijzen.execute(text("UPDATE plaats SET boot_id = :b WHERE id = :p"), {"b": b.id, "p": p.id})
+        toewijzen.commit()
+    draad.join(timeout=10)
+    engine.dispose()
+    db.session.expire_all()
+    assert uitkomst == ["IntegrityError"]
+    assert bestaat(oud.id) and db.session.get(Boot, b.id).plaats.id == p.id
+    assert runs() == ["mislukt"]
 
 
 # Planning in de worker (ADR-007)

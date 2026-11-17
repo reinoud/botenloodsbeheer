@@ -48,18 +48,36 @@ def jaren_terug(dag, jaren):
         return dag.replace(year=dag.year - jaren, day=28)
 
 
+def buiten_termijn(begin, dag=None):
+    """De ene regel voor de bewaartermijn (ADR-006, #298): begin is de opzegdatum, of uit_bron_op als die
+    ontbreekt. Een begin van precies BEWAARJAREN jaar geleden valt er nog binnen; leeg of in de
+    toekomst ook. Gebruikt door de ledenimport en de keuze; opschonen gebruikt `termijn_verlopen`."""
+    return begin is not None and begin < jaren_terug(dag or vandaag(), BEWAARJAREN)
+
+
+def lid_buiten_termijn(lid, dag=None):
+    return buiten_termijn(lid.opzegdatum or lid.uit_bron_op, dag)
+
+
+def termijn_verlopen(dag=None):
+    """SQL-voorwaarde van dezelfde regel als `buiten_termijn`, voor een query op Lid."""
+    return func.coalesce(Lid.opzegdatum, Lid.uit_bron_op) < jaren_terug(dag or vandaag(), BEWAARJAREN)
+
+
 def is_oud_lid(lid, dag=None):
     """Oud-lid: opzegdatum of uit_bron_op is gevuld en is niet later dan vandaag."""
     dag = dag or vandaag()
     return any(d is not None and d <= dag for d in (lid.opzegdatum, lid.uit_bron_op))
 
 
-def actieve_leden(zoek=""):
-    """De leden die geen oud-lid zijn; met zoek alleen die waarvan naam of lidnummer de tekst bevat."""
+def actieve_leden(zoek="", met_oud=False):
+    """De leden die geen oud-lid zijn; met zoek alleen die waarvan naam of lidnummer de tekst bevat.
+    Met met_oud ook de oud-leden binnen de bewaartermijn (#298)."""
     dag = vandaag()
     niet_opgezegd = or_(Lid.opzegdatum.is_(None), Lid.opzegdatum > dag)
     in_bron = or_(Lid.uit_bron_op.is_(None), Lid.uit_bron_op > dag)
-    q = select(Lid).where(niet_opgezegd, in_bron).order_by(Lid.naam, Lid.lidnummer)
+    q = select(Lid).order_by(Lid.naam, Lid.lidnummer)
+    q = q.where(termijn_verlopen(dag).is_not(True)) if met_oud else q.where(niet_opgezegd, in_bron)
     if zoek:
         q = q.where(or_(bevat(Lid.naam, zoek), bevat(Lid.lidnummer, zoek)))
     return db.session.scalars(q).all()
@@ -183,8 +201,8 @@ def synchroniseer(records, actor):
     for nummer, velden in geldig.items():
         lid = bestaand.get(nummer)
         if lid is None:
-            # Een oud-lid dat nog niet bestond, komt er niet in (ADR-004 stap 4, #203).
-            if velden["opzegdatum"] and velden["opzegdatum"] <= dag:
+            # Een oud-lid dat nog niet bestond, komt er alleen in binnen de bewaartermijn (#298).
+            if buiten_termijn(velden["opzegdatum"], dag):
                 aantallen["overgeslagen"] += 1
                 continue
             db.session.add(Lid(lidnummer=nummer, **velden))

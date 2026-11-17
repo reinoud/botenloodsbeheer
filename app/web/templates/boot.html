@@ -26,7 +26,7 @@
   </div>
   {% if boot.afbeelding %}<img class="bl-kopfoto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}" width="96" height="72">{% endif %}
 </div>
-{% set verwijderen_in_taak = oud_lid and not boot.plaats %}
+{% set verwijderen_in_taak = buiten_termijn and not boot.plaats %}
 <section class="kaart bl-taak" aria-labelledby="taak-kop">
   {% if boot.plaats %}
   <h2 class="bl-taak__kop" id="taak-kop">Op plaats {{ boot.plaats.code }}</h2>
@@ -34,9 +34,9 @@
   {% elif verwijderen_in_taak %}
   <h2 class="bl-taak__kop" id="taak-kop">Boot verwijderen</h2>
   {% if boot.wachtlijst %}
-  <p>De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst.</p>
+  <p>De eigenaar is oud-lid. Bij de volgende ledenimport gaat de boot van de wachtlijst.</p>
   {% else %}
-  <p>De eigenaar is oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst.</p>
+  <p>De eigenaar is al meer dan 5 jaar oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst.</p>
   {% endif %}
   <form method="post" action="{{ url_for('web.boot_verwijderen', boot_id=boot.id) }}">
     {% include "_csrf.html" %}
@@ -58,7 +58,13 @@
   {% endif %}
   <div class="bl-taak__regel">
     <h3 class="bl-subkop">Wachtlijst</h3>
-    {% if boot.wachtlijst %}
+    {% if boot.wachtlijst and oud_lid %}
+    <p>De eigenaar is oud-lid. Bij de volgende ledenimport gaat de boot van de wachtlijst.</p>
+    <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=boot.id) }}">
+      {% include "_csrf.html" %}
+      <button type="submit" class="ds-btn">Van de wachtlijst halen</button>
+    </form>
+    {% elif boot.wachtlijst %}
     <p>{{ boot.naam }} staat sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }} op de wachtlijst voor {{ boot.bootsoort.naam|lower }}. De aanmelddatum is niet te wijzigen.</p>
     <form method="post" action="{{ url_for('web.boot_van_wachtlijst', boot_id=boot.id) }}">
       {% include "_csrf.html" %}
@@ -66,6 +72,8 @@
     </form>
     {% elif boot.clubboot %}
     <p>Een clubboot kan niet op de wachtlijst.</p>
+    {% elif oud_lid %}
+    <p>Een oud-lid kan niet op de wachtlijst.</p>
     {% else %}
     <form class="bl-formulier" method="post" action="{{ url_for('web.boot_op_wachtlijst', boot_id=boot.id) }}">
       {% include "_csrf.html" %}
@@ -79,7 +87,7 @@
   </div>
   {% endif %}
 </section>
-{% if boot.plaats and not oud_lid %}
+{% if boot.plaats %}
 <section class="kaart" aria-labelledby="verplaatsen-kop">
 <details class="dj-disclosure"{% if verplaatsen_open %} open{% endif %}>
   <summary id="verplaatsen-kop">Boot verplaatsen</summary>

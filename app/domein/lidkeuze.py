@@ -31,6 +31,11 @@ class Treffer:
     waarde: str  # het lidnummer, of CLUBBOOT
     lid: object = None  # het Lid; None voor de clubboot
 
+    @property
+    def oud(self):
+        """Een oud-lid krijgt de ds-tag "oud-lid" achter het label (BV-86)."""
+        return self.lid is not None and leden.is_oud_lid(self.lid)
+
 
 @dataclass
 class Keuzeveld:
@@ -45,9 +50,9 @@ class Keuzeveld:
 
 def kiesbare_leden(zoek="", oud=False):
     """De leden die een keuze mag opleveren, eventueel gefilterd op naam of lidnummer. Dit is de enige
-    plek die bepaalt wie kiesbaar is: nu de actieve leden; #298 voegt voor oud=True de oud-leden toe.
-    De bezettingsimport vraagt altijd oud=False."""
-    return leden.actieve_leden(zoek)
+    plek die bepaalt wie kiesbaar is: de actieve leden, en met oud=True ook de oud-leden binnen de
+    bewaartermijn (#298). De bezettingsimport vraagt altijd oud=False."""
+    return leden.actieve_leden(zoek, met_oud=oud)
 
 
 def lid_van_waarde(waarde, oud=False):
@@ -94,7 +99,7 @@ def eigenaar(keuze, term, boot=None, boot_tekst="", verplicht=False):
     if keuze == CLUBBOOT:
         return (None, True), None
     if keuze:
-        lid = lid_van_waarde(keuze)
+        lid = lid_van_waarde(keuze, oud=True)
         return ((lid.id, False), None) if lid else (None, Keuzeveld(term, fout=ONGELDIG))
     if term:
         if boot is not None and term == boot_tekst:

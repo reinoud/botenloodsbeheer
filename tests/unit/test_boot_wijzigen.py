@@ -1,12 +1,12 @@
 """Boot wijzigen: naam, bootsoort en eigenaar (BLB-005, issue #39). Een wijziging geeft één
 logregel boot.gewijzigd met alleen de gewijzigde velden; een weigering of gelijke invoer geen."""
 
-from datetime import date, timedelta
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.domein import CLI, Regelfout, boten, log, toewijzing
+from app.domein import CLI, Regelfout, boten, leden, log, toewijzing, vandaag
 from app.models import Boot, Logregel, db
 from tests.unit.hulp import lid, race
 from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats, soort
@@ -61,8 +61,9 @@ def test_onbekend_lid_en_onbekende_boot_geweigerd(app):
 
 
 @pytest.mark.parametrize("veld", ["opzegdatum", "uit_bron_op"])
-def test_oud_lid_wordt_geen_nieuwe_eigenaar_maar_blijft_eigenaar(app, veld):
-    oud = lid("2001", "Oud Lid", **{veld: date.today() - timedelta(days=1)})
+def test_oud_lid_buiten_de_termijn_wordt_geen_nieuwe_eigenaar_maar_blijft_eigenaar(app, veld):
+    # #298: binnen de termijn mag een oud-lid wel eigenaar worden (test_oud_lid_boot.py).
+    oud = lid("2001", "Oud Lid", **{veld: leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1)})
     nieuw = lid("2002", "Nieuw Lid")
     b = Boot(naam="Zeemeeuw", bootsoort_id=soort("Kajak"), lid_id=oud.id)  # van vóór de opzegging
     db.session.add(b)
@@ -70,7 +71,7 @@ def test_oud_lid_wordt_geen_nieuwe_eigenaar_maar_blijft_eigenaar(app, veld):
     wijzig(b, naam="Fuut")  # eigenaar wijzigt niet: een oud-lid mag blijven staan
     assert db.session.get(Boot, b.id).lid_id == oud.id
     c = boot(nieuw.id, naam="Kievit")
-    with pytest.raises(Regelfout, match="is oud-lid en krijgt geen nieuwe boot"):
+    with pytest.raises(Regelfout, match="is meer dan 5 jaar oud-lid en krijgt geen nieuwe boot"):
         wijzig(c, lid_id=oud.id)
     assert db.session.get(Boot, c.id).lid_id == nieuw.id
     wijzig(b, lid_id=nieuw.id)  # van een oud-lid af naar een actief lid mag

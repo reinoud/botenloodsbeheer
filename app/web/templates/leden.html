@@ -17,8 +17,8 @@
 <ul class="bl-lijst">
   {% for l in leden %}
   <li class="bl-item">
-    <div class="bl-item__main"><a class="bl-item__titel" data-label="Naam" href="{{ url_for('web.lid_detail', lid_id=l.id) }}">{{ l.naam }}</a> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ l.lidnummer }}</span>{% if l.lid_sinds %} · lid sinds <span data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') }}</span>{% endif %}</span></div>
-    <p class="bl-item__zijde"><span class="ds-tag" data-label="Status">{{ 'oud-lid' if is_oud_lid(l) else 'lid' }}</span></p>
+    <div class="bl-item__main"><span><a class="bl-item__titel" data-label="Naam" href="{{ url_for('web.lid_detail', lid_id=l.id) }}">{{ l.naam }}</a>{% if is_oud_lid(l) %} <span class="ds-tag" data-label="Status">oud-lid</span>{% endif %}</span> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{{ l.lidnummer }}</span>{% if l.lid_sinds %} · lid sinds <span data-label="Lid sinds">{{ l.lid_sinds.strftime('%d-%m-%Y') }}</span>{% endif %}</span></div>
+    {% if not is_oud_lid(l) %}<p class="bl-item__zijde"><span class="ds-tag" data-label="Status">lid</span></p>{% endif %}
   </li>
   {% endfor %}
 </ul>

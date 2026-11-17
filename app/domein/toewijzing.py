@@ -21,7 +21,7 @@ def past(p, b):
         controleer_past(p, b.naam, b.bootsoort, b.clubboot)
     except Regelfout:
         return False
-    return b.lid is None or not leden.is_oud_lid(b.lid)
+    return b.lid is None or not leden.lid_buiten_termijn(b.lid)
 
 
 def toewijzen(plaats_id, boot_id, actor):
@@ -49,8 +49,9 @@ def _toewijzen(p, b, actor):
     if andere is not None:
         raise Regelfout(f"Boot {b.naam} heeft al een plaats: {andere.code}.")
     controleer_past(p, b.naam, b.bootsoort, b.clubboot)
-    if b.lid is not None and leden.is_oud_lid(b.lid):
-        raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats.")
+    if b.lid is not None and leden.lid_buiten_termijn(b.lid):
+        raise Regelfout(f"De eigenaar van boot {b.naam} is meer dan {leden.BEWAARJAREN} jaar oud-lid. "
+                        "De boot krijgt geen plaats.")
     p.boot = b
     log.schrijf(actor, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}", f"boot:{b.id}",
                                              *([f"lid:{b.lid_id}"] if b.lid_id else [])],
@@ -84,7 +85,8 @@ def verplaatsen(boot_id, plaats_id, actor):
     als toewijzen (#206). Eerst de boot, dan beide plaatsen op volgorde van id: twee verplaatsingen
     in tegengestelde richting vergrendelen zo in dezelfde volgorde. Een weigering laat de boot
     liggen, ook op de wachtlijst verandert niets. Eén logregel, onder beide plaatsen en de boot.
-    Geeft de code van de nieuwe plaats."""
+    Geeft de code van de nieuwe plaats. Een boot van een oud-lid buiten de bewaartermijn mag ook
+    verplaatsen: alleen toewijzen weigert hem (#298, vraag 11)."""
     try:
         b = db.session.get(Boot, boot_id, with_for_update=True)
         if b is None:
@@ -111,8 +113,6 @@ def verplaatsen(boot_id, plaats_id, actor):
             controleer_past(nieuw, b.naam, b.bootsoort, b.clubboot)
         except Regelfout as fout:
             raise Regelfout(str(fout) + blijft) from None
-        if b.lid is not None and leden.is_oud_lid(b.lid):
-            raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot krijgt geen plaats." + blijft)
         oud.boot = None
         db.session.flush()  # boot_id is uniek: eerst vrij, dan toewijzen
         nieuw.boot = b

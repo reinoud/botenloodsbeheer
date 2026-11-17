@@ -3,11 +3,12 @@ wachtlijst, de pagina Boten zonder eigenaar, het menu, het formulier Nieuwe boot
 staat in test_bezetting_csv.py, de migratie in test_migratie_en_taken.py."""
 
 import re
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.domein import CLI, Regelfout, boten, toewijzing, uitlezen, vandaag, wachtlijst
+from app.domein import CLI, Regelfout, boten, leden, toewijzing, uitlezen, vandaag, wachtlijst
 from app.models import Boot, Logregel, db
 from tests.unit.hulp import lid, race
 from tests.unit.test_boot_wijzigen import regels, wijzig
@@ -163,12 +164,13 @@ def test_eigenaar_kiezen_alleen_zolang_de_eigenaar_onbekend_is(app):
     assert o.clubboot is False  # de tweede keuze is niet toegepast
 
 
-def test_eigenaar_kiezen_weigert_geen_keuze_oud_lid_en_onbekend_lid(app):
-    oud = lid("1002", "Oud", opzegdatum=vandaag())
+def test_eigenaar_kiezen_weigert_geen_keuze_oud_lid_buiten_de_termijn_en_onbekend_lid(app):
+    # #298: een oud-lid binnen de termijn mag wel (test_oud_lid_boot.py).
+    oud = lid("1002", "Oud", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
     o = onbekend()
     with pytest.raises(Regelfout, match="Kies een eigenaar"):
         boten.eigenaar_kiezen(o.id, None, CLI)
-    with pytest.raises(Regelfout, match="intussen opgezegd"):
+    with pytest.raises(Regelfout, match="langer dan 5 jaar opgezegd"):
         boten.eigenaar_kiezen(o.id, oud.id, CLI)
     with pytest.raises(Regelfout, match="bestaat niet"):
         boten.eigenaar_kiezen(o.id, 424242, CLI)
