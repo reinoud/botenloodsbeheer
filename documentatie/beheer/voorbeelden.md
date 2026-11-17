@@ -8,6 +8,8 @@ Er zijn twee manieren om de images te krijgen. Beide gebruiken `docker-compose.y
 
 Bij elke release zet GitHub Actions de images openbaar in ghcr.io: `ghcr.io/reinoud/botenloods-app` en `ghcr.io/reinoud/botenloods-integratie`, alleen voor linux/amd64. Release `v1.2.3` geeft de tags `1.2.3`, `1.2` en `latest`. De eerste release is `v0.1.0`.
 
+Bij elke release staat per image een SBOM als bijlage, in CycloneDX JSON: `botenloods-app-1.2.3.cdx.json` en `botenloods-integratie-1.2.3.cdx.json`. Een SBOM noemt de pakketten met hun versie in precies het image dat de release scande en pushte. Leg hem naast een nieuwe kwetsbaarheidsmelding om te zien of een versie van de images het geraakte pakket bevat.
+
 Haal de bestanden op bij de tag van de release, hier `v1.2.3`:
 
 ```sh

@@ -1,6 +1,8 @@
 # Bouwt bij elke gepubliceerde release de images en pusht ze naar ghcr.io (alleen amd64).
 # Tag v1.2.3 levert 1.2.3, 1.2 en latest; een prerelease krijgt alleen zijn eigen tag.
 # Trivy scant elk image vóór de push; critical of high met een oplossing stopt de release (#59).
+# Van hetzelfde image maakt Trivy vóór de push een SBOM (CycloneDX JSON); de job sbom zet die
+# na de push als bijlage bij de release (#297). Alleen die job mag de release wijzigen.
 # Actions staan op een commit-SHA (#61); Dependabot houdt ze bij.
 name: Images
 
@@ -10,11 +12,13 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     strategy:
       matrix:
         include:
@@ -59,6 +63,39 @@ jobs:
           "$(awk '/^FROM/ {print $2}' docker/Dockerfile.trivy)"
           image --ignore-unfixed --severity CRITICAL,HIGH --exit-code 1
           ghcr.io/${{ github.repository_owner }}/${{ matrix.naam }}:${{ steps.meta.outputs.version }}
+      # Vóór de push: een fout hier pusht niets. Alleen pakketten, geen kwetsbaarheden (#297).
+      - name: SBOM
+        run: |
+          f=${{ matrix.naam }}-${{ steps.meta.outputs.version }}.cdx.json
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            "$(awk '/^FROM/ {print $2}' docker/Dockerfile.trivy)" \
+            image --format cyclonedx \
+            ghcr.io/${{ github.repository_owner }}/${{ matrix.naam }}:${{ steps.meta.outputs.version }} > "$f"
+          jq -e '.bomFormat == "CycloneDX" and (.components | length > 0)' "$f"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: sbom-${{ matrix.naam }}
+          path: ${{ matrix.naam }}-${{ steps.meta.outputs.version }}.cdx.json
+          if-no-files-found: error
+          overwrite: true  # een herhaalde poging na een mislukte push uploadt opnieuw
       # Precies het gescande image, met al zijn tags.
       - name: Push
         run: docker push --all-tags ghcr.io/${{ github.repository_owner }}/${{ matrix.naam }}
+
+  # Na beide pushes, zodat de release alleen een SBOM krijgt van een image dat in ghcr.io staat.
+  # Mislukt deze job, draai hem dan opnieuw; --clobber vervangt een half geüploade bijlage.
+  sbom:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: sbom-*
+          merge-multiple: true
+      - name: Bijlage bij de release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" ./*.cdx.json --clobber --repo "$GITHUB_REPOSITORY"

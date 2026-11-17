@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.91
+**Versie overlay:** v0.5.92
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-17
@@ -379,7 +379,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Leg bij een update van het lockbestand eerst de uploaddatum van elke doelversie naast `exclude-newer`. Is een versie jonger dan twee weken, dan wacht de update (ernst laag of middel) of beslist de stakeholder (ernst hoog). Een uitzondering in `exclude-newer-package` krijgt een einddatum in het commentaar en verdwijnt zodra `exclude-newer` die datum passeert.
 - Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
-- De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59).
+- De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59). Van hetzelfde image maakt hetzelfde Trivy-image vóór de push een SBOM in CycloneDX JSON. De job `sbom` zet die na de push als `botenloods-app-<versie>.cdx.json` en `botenloods-integratie-<versie>.cdx.json` bij de release; alleen die job heeft `contents: write`. Mist een bijlage, draai dan die job opnieuw (#297).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
 - Bouw de images voor die scan met `--no-cache`, zoals de release-workflow sinds #272. Een apt-laag uit de cache mist de beveiligingsupdates van Debian.
 - Het releaseissue noemt per E2E-run vóór de tag de commit en de aantallen geslaagd, mislukt en overgeslagen, ook als de stakeholder de runs draaide. Ontbreken de aantallen, dan zegt het slotcommentaar dat (#257).
@@ -501,6 +501,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.92 | 2026-11-17 | Regel (Release): SBOM per image in CycloneDX JSON als bijlage bij de release | Besluit stakeholder (#297) |
 | v0.5.91 | 2026-11-17 | Zes regels (Bouw): slottest direct op de domeinfunctie, mutant op config met een nieuwe web, ruff in de container, tellen over alle pytest-samenvattingen, opruimregex tellen, uitvoer van een achtergrondrun zelf lezen; uit de terugblikken bij #278, #283 en #285 | Lessen |
 | v0.5.90 | 2026-11-16 | Regel (Release): releasenotes ook in `CHANGELOG.md` | Besluit stakeholder |
 | v0.5.89 | 2026-11-16 | Regel (Bouw): mutant van een reviewer met een kopie van `app` als volume, verse mapnaam, geen `rm -rf`; uit de terugblik bij #268 | Lessen |
