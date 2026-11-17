@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.94
+**Versie overlay:** v0.5.95
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-17
@@ -91,6 +91,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bouw je op een ontwerp van Design System, lees dan vóór de opdracht `docs/besluiten.md` op main van designsystem: een later BV-nummer kan het genoemde besluit vervangen (BV-84 keurde BV-83 af; #295).
 - Raakt een besluit een API-aanroep, noem dan ook `app/api/openapi.yaml` en de beheerdocumentatie, en zeg of die in deze ronde of in de bouw worden bijgewerkt (#298).
 - Een eigen testdatabase maak je met een sed-kopie van `tests/unit/conftest.py` waarin `TEST_DB` is vervangen, als bind mount; `from ... import *` werkt niet, want `db_url` legt de naam als standaardargument vast. Draai docker compose vanuit een worktree via een script in de scratchpad (#307).
+- Bij een besluit dat een keuzelijst vervangt door een zoekveld: beschrijf vóór de bouw per formulier wat Zoeken bewaart (andere velden, bestanden, keuzes), wat een gevuld veld bij een bestaand object betekent en welke statuscode een foutregel krijgt. Een zoekveld met een opgeslagen keuze bevat een term die die keuze bij opnieuw zoeken als treffer teruggeeft (#295).
+- Een keuze die het formulier meestuurt en nog geldig is, vervalt nooit doordat de lijst met treffers is afgekapt. Herstel de oorzaak van een bevinding, niet alleen de reproductie (#295).
+- Hangt een criterium af van een ander issue, noem dat issue en zeg of de test het nu al moet bewijzen of pas daarna (#295).
 
 #### Bouw
 
@@ -307,6 +310,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Zoek na een wijziging van een ADR-regel het hele ADR af, ook Gevolgen en Risico's, op de oude formulering, en noem per rand de test die hem bewijst of dat die ontbreekt (#307).
 - Noem per mutant het uitvoerbestand dat het bewijs is, en controleer met grep of diff dat de mutatie in de kopie staat voordat de run als bewijs telt (#307).
 - Een proef met code van de app in de webcontainer draait de hoofdwerkmap, niet een worktree: controleer eerst dat de geraakte functies in de diff niet gewijzigd zijn (#307).
+- Een herstel dat een lijst herordent of afkapt, krijgt naast de schermtest een test op de functie zelf: lengte, hint en gekozen waarde in het herstelde geval (#295).
+- Een proef die bewijst dat iets niet verandert, toont eerst met hetzelfde verzoek en een geldige keuze dat het wel verandert (positieve controle) (#295).
+- Elke reviewer die zelf unittests draait, gebruikt een eigen `TEST_DB`, ook als de regie zegt dat ze de suite draait: een gedeelde `botenloods_test` verdween bij #295 midden in een run (#295).
 
 #### E2E
 
@@ -514,6 +520,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.95 | 2026-11-17 | Zes regels: zoekveld in plaats van keuzelijst, geldige keuze vervalt niet, afhankelijk criterium (Bouw); functietest bij afkappen, positieve controle, eigen TEST_DB voor elke reviewer (Review); uit de terugblikken bij #295 | Lessen |
 | v0.5.94 | 2026-11-17 | Zeven regels: besluiten van Design System nalezen, API-documentatie noemen, eigen testdatabase met sed-kopie (Bouw); heel ADR afzoeken, mutant met bewijsbestand, proef in de webcontainer (Review); veilige kant bij een veiligheidsgrens (Security en proxy); uit de terugblikken bij #295, #298 en #307 | Lessen |
 | v0.5.93 | 2026-11-17 | Zes regels: besluiten uit een ander issue, plek van een issuesectie, terugblik in een worktree (Algemeen); regex met letterlijke waarden, actionlint (Review); rechten van GITHUB_TOKEN per job (Security en proxy); uit de terugblikken bij #297, #298 en #300 | Lessen |
 | v0.5.92 | 2026-11-17 | Regel (Release): SBOM per image in CycloneDX JSON als bijlage bij de release | Besluit stakeholder (#297) |
