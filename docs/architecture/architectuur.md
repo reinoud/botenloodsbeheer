@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.9.1
+**Versie:** v0.10.0
 **Datum:** 2026-11-17
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -269,8 +269,9 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | 7 | Een 429 van Traefik en een 413 boven 3 MB komen in geen toegangslog, omdat de toegangslog van Traefik per router uit staat (ADR-013). Is dat aanvaardbaar, of komt er een tweede logroute (metrics van Traefik, of de `errors`-middleware naar de applicatie)? | Stakeholder | M | Nee; standaard geen log van deze weigeringen |
 | 8 | Werkt `observability.accesslogs=false` per router in `traefik:v3.7.17`? | Forge, proef bij de bouw | H | Ja, voor productie: zonder deze eigenschap komen codes en zoektermen in de log van de gedeelde Traefik |
 | 9 | De veiligheidsgrens van de ledenimport telt ook records met een opzegdatum op of vóór vandaag (ADR-004 stap 3). Een lijst zonder de helft van de actieve leden komt zo door de grens als de bron genoeg opgezegde relaties levert. Tellen we alleen records zonder opzegdatum of met een opzegdatum na vandaag? | Stakeholder | H | Besloten 2026-11-17: ja, alleen records zonder opzegdatum of met een opzegdatum na vandaag tellen mee (issue #307, ADR-004 v2.9.1) |
-| 10 | `GET /api/v1/bootaantallen` levert elk lid, dus ook elk oud-lid tot 5 jaar (issue #298); met `BOOTAANTALLEN_SCHRIJVEN=aan` krijgen die relaties `Def10` in e-boekhouden. Een boot van een oud-lid op een plaats telt mee. Is dat de bedoeling? | Stakeholder | M | Nee. Advies: ja, zo laten; nul is juist en de contributie volgt de boot op de plaats |
-| 11 | Mag een boot van een oud-lid buiten de bewaartermijn een plaats krijgen (toewijzen)? Besluit 2 van #298 staat een plaats toe, besluit 5 houdt zo'n oud-lid buiten de keuze Eigenaar. Een bestaande plaats houdt de boot; verplaatsen blijft mogelijk. | Stakeholder | M | Nee; de standaard tot het besluit is het advies. Advies: weigeren met de reden, want de plaats houdt de gegevens van het oud-lid dan onbeperkt vast (ADR-006) |
+| 10 | `GET /api/v1/bootaantallen` levert elk lid, dus ook elk oud-lid tot 5 jaar (issue #298); met `BOOTAANTALLEN_SCHRIJVEN=aan` krijgen die relaties `Def10` in e-boekhouden. Een boot van een oud-lid op een plaats telt mee. Is dat de bedoeling? | Stakeholder | Besloten | Besluit stakeholder 2026-11-17, bevestigd dezelfde dag: voor oud-leden schrijft de applicatie geen bootaantal naar e-boekhouden, ook niet als hun boot een plaats heeft. `GET /api/v1/bootaantallen` levert geen oud-leden; het filter zit in `domein/boten.bootaantallen` (ADR-004 v2.10.0, ADR-012 v1.11.0) |
+| 11 | Mag een boot van een oud-lid buiten de bewaartermijn een plaats krijgen (toewijzen)? Besluit 2 van #298 staat een plaats toe, besluit 5 houdt zo'n oud-lid buiten de keuze Eigenaar. Een bestaande plaats houdt de boot; verplaatsen blijft mogelijk. | Stakeholder | Besloten | Besluit stakeholder 2026-11-17: zo'n boot krijgt geen plaats; toewijzen geeft een foutregel met de reden. Een bestaande plaats blijft, en verplaatsen blijft mogelijk (ADR-003 v2.4.0, ADR-006 v1.6.1) |
+| 12 | Een waarde in `Def10` die de container schreef vóór het lid oud-lid werd, blijft in e-boekhouden staan, want voor een oud-lid schrijft de applicatie niets meer (vraag 10). Moet de container die waarde eenmalig leegmaken? | Stakeholder | Besloten | Besluit stakeholder 2026-11-17: laten staan; de relatie staat op "opgezegd" en leegmaken is ook een schrijfactie naar e-boekhouden |
 
 ## 11. Proactieve bevindingen
 
@@ -287,6 +288,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.10.0 | 2026-11-17 | Issue #298: §10.2 vragen 10, 11 en 12 besloten (verplaatsen buiten de bewaartermijn blijft mogelijk); ADR-003 v2.4.0, ADR-004 v2.10.0, ADR-006 v1.6.1, ADR-012 v1.11.0 |
 | v0.9.1 | 2026-11-17 | Issue #307: de teller van de veiligheidsgrens telt geen opgezegde records (§11 bevinding 2, §10.2 vraag 9 besloten); ADR-004 v2.9.1 |
 | v0.9.0 | 2026-11-17 | Issue #298: de import neemt oud-leden tot 5 jaar op (§6.2, §6.3, §11 bevinding 1 en 2); open vragen 9 tot en met 11 (§10.2); ADR-004 v2.9.0, ADR-006 v1.6.0, ADR-012 v1.10.2, ADR-014 v0.2.9 |
 | v0.8.8 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats (§3; ADR-003 v2.3.2) |
