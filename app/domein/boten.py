@@ -91,8 +91,8 @@ def _boot_aanmaken(naam, bootsoort_id, lid_id, foto, actor, clubboot=False):
     eigenaar = db.session.get(Lid, lid_id) if lid_id is not None else None
     if lid_id is not None and eigenaar is None:
         raise Regelfout("Dit lid bestaat niet.")
-    if eigenaar is not None and leden.is_oud_lid(eigenaar):
-        raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
+    if eigenaar is not None:
+        _controleer_termijn(eigenaar)
     b = Boot(naam=naam, bootsoort=soort, lid_id=lid_id, clubboot=clubboot)
     if foto:
         b.afbeelding = afbeeldingen.verwerk(foto)
@@ -110,6 +110,12 @@ def _controleer_eigenaar(lid_id, clubboot):
         raise Regelfout("Een clubboot heeft geen lid als eigenaar.")
 
 
+def _controleer_termijn(lid):
+    """Een oud-lid buiten de bewaartermijn krijgt geen nieuwe boot (#298); binnen de termijn mag het."""
+    if leden.lid_buiten_termijn(lid):
+        raise Regelfout(f"{lid.naam} is meer dan {leden.BEWAARJAREN} jaar oud-lid en krijgt geen nieuwe boot.")
+
+
 def _eigenaar_tekst(lid_id, clubboot):
     """Voor het log: een verwijzing, geen naam (BLB-005, ADR-006)."""
     return f"lid:{lid_id}" if lid_id else "vereniging" if clubboot else "onbekend"
@@ -119,7 +125,9 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
     """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend, ook bij een clubboot
     (#233), maar niet bij een boot van een lid of oud-lid: dat geeft een foutregel, #295). Een boot met een plaats blijft passen bij die plaats; een clubboot
     op een clubplaats wordt dus pas onbekend nadat hij van die plaats af is. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
-    eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
+    eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`), en met een oud-lid als
+    eigenaar altijd, met reden `oud-lid` (#298). Een oud-lid buiten de bewaartermijn is geen geldige nieuwe
+    eigenaar; een bestaande eigenaar blijft staan.
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
     toewijzing die vlak ervoor is gecommit (READ COMMITTED)."""
     try:
@@ -138,8 +146,8 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
                                    .execution_options(populate_existing=True))
         if lid_id is None and not clubboot and b.lid_id is not None:
             raise Regelfout(lidkeuze.EIGENAAR_LEEG)
-        if eigenaar is not None and lid_id != b.lid_id and leden.is_oud_lid(eigenaar):
-            raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
+        if eigenaar is not None and lid_id != b.lid_id:  # een bestaande eigenaar blijft staan
+            _controleer_termijn(eigenaar)
         if clubboot and b.wachtlijst is not None:
             raise Regelfout(f"Boot {b.naam} staat op de wachtlijst. Een clubboot kan daar niet "
                             "op; haal de boot eerst van de wachtlijst.")
@@ -160,9 +168,13 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
         db.session.rollback()  # geen verschil: geen logregel, en het slot vrij
         return b
     # Besluit stakeholder 2026-11-01: een andere eigenaar haalt de boot van de wachtlijst. Een boot
-    # waarvan de eigenaar onbekend was, houdt zijn plek: er verandert dan niemand (#204).
-    if lid_id != oud_lid_id and oud_lid_id is not None and b.wachtlijst is not None:
-        wachtlijst._eraf(b.wachtlijst, actor, "andere eigenaar")
+    # waarvan de eigenaar onbekend was, houdt zijn plek: er verandert dan niemand (#204). Een oud-lid
+    # als nieuwe eigenaar haalt hem er altijd af, met reden oud-lid (#298, besluit 27).
+    if b.wachtlijst is not None:
+        if eigenaar is not None and lid_id != oud_lid_id and leden.is_oud_lid(eigenaar):
+            wachtlijst._eraf(b.wachtlijst, actor, "oud-lid")
+        elif lid_id != oud_lid_id and oud_lid_id is not None:
+            wachtlijst._eraf(b.wachtlijst, actor, "andere eigenaar")
     b.naam, b.bootsoort, b.lid_id, b.clubboot = naam, soort, lid_id, clubboot
     leden_ids = dict.fromkeys(i for i in (oud_lid_id, lid_id) if i is not None)
     log.schrijf(actor, "boot.gewijzigd", [f"boot:{b.id}", *(f"lid:{i}" for i in leden_ids)], gegevens)
@@ -184,9 +196,9 @@ def eigenaar_kiezen(boot_id, lid_id, actor, clubboot=False):
         if lid_id is None and not clubboot:
             raise Regelfout("Kies een eigenaar.")
         lid = db.session.get(Lid, lid_id) if lid_id is not None else None
-        if lid is not None and leden.is_oud_lid(lid):
-            raise Regelfout(f"Het gekozen lid van boot {b.naam} is intussen opgezegd. "
-                            "Er is niets gewijzigd.")
+        if lid is not None and leden.lid_buiten_termijn(lid):
+            raise Regelfout(f"Het gekozen lid van boot {b.naam} is intussen langer dan "
+                            f"{leden.BEWAARJAREN} jaar opgezegd. Er is niets gewijzigd.")
     except Regelfout:
         db.session.rollback()
         raise
@@ -232,13 +244,13 @@ def boot_verwijderen(boot_id, actor):
 
 def bootaantallen():
     """Per lid elke bootsoort met het aantal, ook 0 (ADR-004, ADR-012). Alleen boten met een
-    plaats tellen; clubboten hebben geen lid en vallen dus weg (besluit 2026-10-31)."""
+    plaats tellen; clubboten hebben geen lid en vallen dus weg (besluit 2026-10-31). Een oud-lid
+    staat er niet in: de bron krijgt geen aantal voor een oud-lid (#298, vraag 10)."""
     soorten = db.session.scalars(select(Bootsoort.naam).order_by(Bootsoort.id)).all()
     telling = Counter(db.session.execute(
         select(Boot.lid_id, Bootsoort.naam).join(Boot.bootsoort).join(Boot.plaats)).all())
-    leden = db.session.execute(select(Lid.id, Lid.lidnummer).order_by(Lid.lidnummer))
-    return [{"lidnummer": nummer, "aantallen": {s: telling[(i, s)] for s in soorten}}
-            for i, nummer in leden]
+    return [{"lidnummer": lid.lidnummer, "aantallen": {s: telling[(lid.id, s)] for s in soorten}}
+            for lid in sorted(leden.actieve_leden(), key=lambda lid: lid.lidnummer)]
 
 
 def bootaantallen_ophalen():

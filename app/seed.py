@@ -83,7 +83,8 @@ def seed(echo=print):
     def boot(eigenaar, oud_lid=False, soorten=SOORTEN, club=False):
         naam = f"{r.choice(NAMEN)} {r.randint(1, 99)}"
         if oud_lid:
-            # De boot bestond al voor de opzegging; boot_aanmaken weigert een oud-lid.
+            # De boot bestond al voor de opzegging; de seed legt hem rechtstreeks vast, ook voor een oud-lid
+            # buiten de bewaartermijn (boot_aanmaken weigert die, #298).
             b = Boot(naam=naam, bootsoort_id=soort[r.choice(soorten)], lid_id=eigenaar)
             db.session.add(b)
             db.session.flush()
@@ -112,7 +113,7 @@ def seed(echo=print):
             continue
         if b in oud_boten:
             # Een oud-lid met een plaats ontstaat in het echt door opzegging na toewijzen;
-            # toewijzen zelf weigert een oud-lid.
+            # toewijzen zelf weigert alleen een oud-lid buiten de bewaartermijn (#298).
             p.boot = b
             log.schrijf(CLI, "plaats.toegewezen", [f"plaats:{p.id}", f"rek:{p.rek_id}",
                                                    f"boot:{b.id}", f"lid:{b.lid_id}"],

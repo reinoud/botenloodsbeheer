@@ -54,11 +54,16 @@ def test_fixture_importeren_met_aantallen_volgens_het_contract(importeer):
     r = importeer(FIXTURE)
     assert r.status_code == 200
     jsonschema.validate(r.json, SPEC["components"]["schemas"]["Importuitkomst"])
-    assert r.json == {"ontvangen": 210, "nieuw": 198, "bijgewerkt": 0, "uit_bron": 0,
-                      "ongeldig": 0, "overgeslagen": 12}  # 12 met een opzegdatum in het verleden (#203)
-    assert len(alle()) == 198
+    # #298: alleen een nieuw record met een opzegdatum van meer dan 5 jaar geleden wordt overgeslagen.
+    # De fixture heeft er twee uit 2019; de rest valt pas jaren later buiten de termijn, dus rekenen met vandaag().
+    grens = leden.jaren_terug(vandaag(), leden.BEWAARJAREN).isoformat()
+    buiten = sum(1 for lid in FIXTURE if lid["opzegdatum"] and lid["opzegdatum"] < grens)
+    assert buiten >= 2
+    assert r.json == {"ontvangen": 210, "nieuw": 210 - buiten, "bijgewerkt": 0, "uit_bron": 0,
+                      "ongeldig": 0, "overgeslagen": buiten}
+    assert len(alle()) == 210 - buiten
     [run] = runs()
-    assert (run.status, run.aantallen["nieuw"]) == ("geslaagd", 198)
+    assert (run.status, run.aantallen["nieuw"]) == ("geslaagd", 210 - buiten)
 
 
 def test_nieuwe_en_gewijzigde_leden_op_lidnummer_met_alle_velden(importeer):
@@ -228,12 +233,13 @@ def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
         return p1.id, p2.id, b1.id, b2.id
 
     p1, p2, b1, b2 = als_web(loods)
-    gisteren = (vandaag() - timedelta(days=1)).isoformat()
-    importeer([record("1", opzegdatum=gisteren), record("2")])
+    # #298: binnen de termijn mag toewijzen wel (test_oud_lid_boot.py); daarbuiten niet.
+    lang = (leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1)).isoformat()
+    importeer([record("1", opzegdatum=lang), record("2")])
     lid = alle()["1"]
     assert leden.is_oud_lid(lid) and lid.naam == "Lid 1"
     assert als_web(lambda: db.session.get(Plaats, p1).boot_id) == b1
-    with pytest.raises(Regelfout, match="is oud-lid"):
+    with pytest.raises(Regelfout, match="meer dan 5 jaar oud-lid"):
         als_web(lambda: toewijzing.toewijzen(p2, b2, CLI))
 
 
@@ -291,16 +297,19 @@ def test_import_haalt_boot_eraf_als_de_opzegdatum_inmiddels_verstreken_is(import
     assert db.session.get(Wachtlijst, b) is None
 
 
-def test_nieuw_lid_met_opzegdatum_vandaag_of_eerder_komt_er_niet_in(importeer):
-    """#203, beide kanten van de grens: vandaag en gisteren overgeslagen, morgen komt binnen. Ook
-    een opzegdatum van meer dan 5 jaar geleden (BLB-008 criterium 4) blijft overgeslagen."""
+def test_nieuw_oud_lid_komt_er_alleen_binnen_de_bewaartermijn_in(importeer):
+    """#298 (vervangt #203), beide kanten van de grens: vandaag, gisteren, morgen en precies 5 jaar geleden
+    komen binnen; 5 jaar en 1 dag geleden (BLB-008 criterium 4) blijft overgeslagen. Mutant: `<` in `<=`
+    in leden.buiten_termijn valt op `grens`; de oude controle (opzegdatum <= vandaag) op vandaag en gisteren."""
     dag = vandaag()
-    lang = leden.jaren_terug(dag, leden.BEWAARJAREN) - timedelta(days=1)
+    grens = leden.jaren_terug(dag, leden.BEWAARJAREN)
     r = importeer([record("vandaag", opzegdatum=dag.isoformat()),
                    record("gisteren", opzegdatum=(dag - timedelta(days=1)).isoformat()),
-                   record("lang", opzegdatum=lang.isoformat()),
+                   record("grens", opzegdatum=grens.isoformat()),
+                   record("lang", opzegdatum=(grens - timedelta(days=1)).isoformat()),
                    record("morgen", opzegdatum=(dag + timedelta(days=1)).isoformat())])
-    assert (r.json["nieuw"], r.json["overgeslagen"]) == (1, 3) and set(alle()) == {"morgen"}
+    assert (r.json["nieuw"], r.json["overgeslagen"]) == (4, 1)
+    assert set(alle()) == {"vandaag", "gisteren", "grens", "morgen"}
 
 
 def test_bestaand_lid_dat_opzegt_blijft_staan_met_de_opzegdatum(importeer):

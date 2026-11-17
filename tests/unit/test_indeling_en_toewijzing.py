@@ -10,7 +10,17 @@ import pytest
 from PIL import Image
 from sqlalchemy import create_engine, func, select, text
 
-from app.domein import CLI, Regelfout, afbeeldingen, boten, indeling, log, toewijzing
+from app.domein import (
+    CLI,
+    Regelfout,
+    afbeeldingen,
+    boten,
+    indeling,
+    leden,
+    log,
+    toewijzing,
+    vandaag,
+)
 from app.models import Afbeelding, Boot, Logregel, Plaats, Rek, db
 from tests.unit.conftest import WEB
 from tests.unit.hulp import lid, png
@@ -84,9 +94,10 @@ def test_plaats_verwijderen_bestaat_niet_meer(app):
 
 
 @pytest.mark.parametrize("veld", ["opzegdatum", "uit_bron_op"])
-def test_geen_nieuwe_boot_voor_oud_lid(app, veld):
-    oud = lid(**{veld: date.today() - timedelta(days=1)})
-    with pytest.raises(Regelfout, match="is oud-lid en krijgt geen nieuwe boot"):
+def test_geen_nieuwe_boot_voor_oud_lid_buiten_de_termijn(app, veld):
+    # #298: een oud-lid binnen de termijn krijgt wel een boot (test_oud_lid_boot.py).
+    oud = lid(**{veld: leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1)})
+    with pytest.raises(Regelfout, match="is meer dan 5 jaar oud-lid en krijgt geen nieuwe boot"):
         boot(oud.id)
     assert db.session.scalar(select(func.count()).select_from(Boot)) == 0
 
@@ -208,15 +219,15 @@ def test_clubboot_op_plaats_met_verkeerde_bootsoort_geweigerd(app):
     ("al_plaats", "heeft al een plaats"),
     ("ledenboot_op_clubplaats", "alleen voor clubboten"),
     ("verkeerde_soort", "niet geschikt voor een supboard"),
-    ("oud_lid", "is oud-lid"),
-    ("uit_bron", "is oud-lid"),
+    ("oud_lid", "meer dan 5 jaar oud-lid"),  # #298: binnen de termijn mag het wel (test_oud_lid_boot.py)
+    ("uit_bron", "meer dan 5 jaar oud-lid"),
 ])
 def test_toewijzen_geweigerd(app, geval, melding):
     p = plaats("A/1/1", club=geval == "ledenboot_op_clubplaats")
-    gisteren = date.today() - timedelta(days=1)
+    lang = leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1)
     eigenaar = lid(
-        opzegdatum=gisteren if geval == "oud_lid" else None,
-        uit_bron_op=gisteren if geval == "uit_bron" else None).id
+        opzegdatum=lang if geval == "oud_lid" else None,
+        uit_bron_op=lang if geval == "uit_bron" else None).id
     if geval in ("oud_lid", "uit_bron"):  # de boot bestond al voor de opzegging
         b = Boot(naam="Zeemeeuw", bootsoort_id=soort("Kajak"), lid_id=eigenaar)
         db.session.add(b)

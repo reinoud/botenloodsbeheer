@@ -60,6 +60,12 @@ def test_bootaantallen_api_gelijk_aan_de_boten_met_plaats(page):
         met_plaats = page.locator("li.bl-item").filter(has=page.locator("a[data-label='Plaats']"))
         getoond = Counter(met_plaats.locator("[data-label='Bootsoort']").all_inner_texts())
         assert {s: getoond[s] for s in regel["aantallen"]} == regel["aantallen"], regel["lidnummer"]
+    # #298, vraag 10: voor een oud-lid, ook met een plaats (de seed heeft er), schrijft de koppeling niets.
+    page.goto("/leden")
+    oud = page.locator("main li.bl-item").filter(has=page.locator("[data-label='Status']", has_text="oud-lid")) \
+        .locator("[data-label='Lidnummer']").all_inner_texts()
+    assert oud, "de stack heeft geen oud-leden"
+    assert not set(oud) & {r["lidnummer"] for r in json.loads(tekst)}
 
 
 def test_bootaantallen_zonder_recht_403():

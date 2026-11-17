@@ -412,7 +412,7 @@ def _eigenaar(boot=None, verplicht=False):
 
 def _na_zoeken():
     """Het veld Eigenaar na de knop Zoeken: de treffers van de term, met het rondje dat nog geldt."""
-    return lidkeuze.veld(request.form.get("zoek"), request.form.get("eigenaar", ""))
+    return lidkeuze.veld(request.form.get("zoek"), request.form.get("eigenaar", ""), oud=True)
 
 
 @bp.post("/boten")
@@ -461,15 +461,17 @@ def boten_zonder_eigenaar():
 @bp.post("/boten/<int:boot_id>/eigenaar")
 @inloggen_vereist
 def boot_eigenaar_kiezen(boot_id):
-    naam = _of_404(boten.boot, boot_id).naam
+    b = _of_404(boten.boot, boot_id)
+    naam, was_wachtend = b.naam, b.wachtlijst is not None
     if request.form.get("actie") == "zoeken":
         return _zonder_eigenaar_scherm(velden={boot_id: _na_zoeken()})
     eigenaar, veld = _eigenaar(verplicht=True)
     if veld:
         return _zonder_eigenaar_scherm(422, {boot_id: veld})
     lid_id, clubboot = eigenaar
-    uitvoeren(partial(boten.eigenaar_kiezen, clubboot=clubboot), boot_id, lid_id,
-              gelukt=f"De eigenaar van {naam} is opgeslagen.")
+    if uitvoeren(partial(boten.eigenaar_kiezen, clubboot=clubboot), boot_id, lid_id,
+                 gelukt=f"De eigenaar van {naam} is opgeslagen.") is not None and was_wachtend:
+        _melding_wachtlijst(boot_id)
     return redirect(url_for("web.boten_zonder_eigenaar"))
 
 
@@ -479,11 +481,12 @@ def _boot_scherm(boot_id, code=200, eigenaarveld=None):
     b = _of_404(boten.boot, boot_id)
     oud_lid = b.lid is not None and leden.is_oud_lid(b.lid)
     # #132, #205: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert;
-    # een clubboot ook uit de clubplaatsen.
-    vrij = [] if oud_lid else indeling.vrije_plaatsen(b.bootsoort_id, ook_club=b.clubboot)
+    # een clubboot ook uit de clubplaatsen. Een boot van een oud-lid buiten de termijn kiest ze niet (#298).
+    vrij = indeling.vrije_plaatsen(b.bootsoort_id, ook_club=b.clubboot)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
                            bootsoorten=indeling.bootsoorten(),
-                           oud_lid=oud_lid, vrij=vrij, vandaag=vandaag(),
+                           oud_lid=oud_lid, buiten_termijn=b.lid is not None and leden.lid_buiten_termijn(b.lid),
+                           vrij=vrij, vandaag=vandaag(),
                            foto_open=request.args.get("open") == "foto",
                            verplaatsen_open=request.args.get("open") == "verplaatsen",
                            wijzigen_open=eigenaarveld is not None, invoer=request.form if eigenaarveld else {},
@@ -514,6 +517,15 @@ def boot_verplaatsen(boot_id):
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 
+def _melding_wachtlijst(boot_id):
+    """Na een nieuwe eigenaar van een boot die op de wachtlijst stond: zegt dat hij eraf is, en waarom."""
+    b = boten.boot(boot_id)
+    if b.wachtlijst is None:
+        flash("De eigenaar is oud-lid. De boot is van de wachtlijst gehaald."
+              if b.lid is not None and leden.is_oud_lid(b.lid)
+              else "De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
+
+
 @bp.post("/boten/<int:boot_id>")
 @inloggen_vereist
 def boot_wijzigen(boot_id):
@@ -527,9 +539,8 @@ def boot_wijzigen(boot_id):
     was_wachtend = b.wachtlijst is not None
     if uitvoeren(partial(boten.boot_wijzigen, clubboot=clubboot), boot_id, request.form.get("naam"),
                  request.form.get("bootsoort", type=getal), lid_id,
-                 gelukt="De boot is opgeslagen.") and was_wachtend \
-            and boten.boot(boot_id).wachtlijst is None:
-        flash("De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
+                 gelukt="De boot is opgeslagen.") and was_wachtend:
+        _melding_wachtlijst(boot_id)
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 

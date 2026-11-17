@@ -383,13 +383,17 @@ def test_keuzelijst_alleen_met_boten_die_toewijzen_accepteert(ingelogd):  # noqa
     p, club = plaats(), plaats("A/1/2", club=True)
     boot(lid().id, naam="Kievit")
     boot(None, naam="Clubkajak")
-    oud = lid("1002", opzegdatum=vandaag())  # de boot bestond al voor de opzegging
-    db.session.add(Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=oud.id))
+    # De boten bestonden al voor de opzegging. #298: een oud-lid binnen de termijn krijgt een gewone plaats,
+    # daarbuiten niet.
+    binnen = lid("1002", opzegdatum=vandaag())
+    buiten = lid("1003", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
+    db.session.add_all([Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=binnen.id),
+                        Boot(naam="Oudst", bootsoort_id=soort("Kajak"), lid_id=buiten.id)])
     db.session.commit()
     r = ingelogd.get(f"/plaatsen/{p.id}").text
-    assert "Kievit" in r and "Clubkajak (Kajak, clubboot)" in r and "Oudje" not in r  # #205
+    assert "Kievit" in r and "Clubkajak (Kajak, clubboot)" in r and "Oudje" in r and "Oudst" not in r  # #205
     r = ingelogd.get(f"/plaatsen/{club.id}").text
-    assert "Clubkajak" in r and "Kievit" not in r and "Oudje" not in r
+    assert "Clubkajak" in r and "Kievit" not in r and "Oudje" not in r and "Oudst" not in r
     leeg = plaats("A/1/3", soorten=("Surfski",))
     r = ingelogd.get(f"/plaatsen/{leeg.id}").text
     assert "Er zijn geen boten zonder plaats die op deze plaats passen." in r
@@ -480,7 +484,8 @@ def test_toewijzen_vanaf_bootpagina_weigert_bezet_en_niet_passend(ingelogd):  # 
     assert db.session.get(Boot, b.id).plaats is None
 
 
-def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid(ingelogd):  # noqa: F811
+def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid_buiten_de_termijn(ingelogd):  # noqa: F811
+    # #298: een oud-lid binnen de termijn heeft de keuzelijst wel (test_oud_lid_boot.py).
     p = plaats()
     met = boot(lid().id, naam="Bezetter")
     toewijzing.toewijzen(p.id, met.id, CLI)
@@ -491,12 +496,12 @@ def test_bootpagina_zonder_keuzelijst_met_plaats_zonder_vrije_plaats_of_oud_lid(
     r = ingelogd.get(f"/boten/{zonder.id}").text
     assert 'name="plaats_id"' not in r and "Er is geen vrije plaats voor kajak." in r
     plaats("A/1/3")
-    oud = lid("1003", opzegdatum=vandaag())  # de boot bestond al voor de opzegging
+    oud = lid("1003", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))  # de boot bestond al voor de opzegging
     db.session.add(Boot(naam="Oudje", bootsoort_id=soort("Kajak"), lid_id=oud.id))
     db.session.commit()
     oudje = db.session.scalar(select(Boot).where(Boot.naam == "Oudje"))
     r = ingelogd.get(f"/boten/{oudje.id}").text
-    assert 'name="plaats_id"' not in r and "De eigenaar is oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst." in r
+    assert 'name="plaats_id"' not in r and "De eigenaar is al meer dan 5 jaar oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst." in r
 
 
 def test_bootpagina_zonder_plaats_geeft_200(ingelogd):  # noqa: F811

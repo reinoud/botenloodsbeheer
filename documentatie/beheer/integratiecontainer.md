@@ -1,7 +1,7 @@
 # Integratiecontainer
 
-**Versie:** v2.4.0
-**Datum:** 2026-11-08
+**Versie:** v2.5.0
+**Datum:** 2026-11-17
 **Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`; de globale werking staat in [integratie-werking](integratie-werking.md)
 
 De integratiecontainer haalt de leden uit de ledenbron en stuurt ze naar de API, via het entrypoint `intern` van Traefik over het netwerk `koppeling`. De database en de dienst `api` bereikt hij niet. De inloggegevens van de bron staan alleen in zijn omgeving.
@@ -74,11 +74,11 @@ roep("GET", "/bootaantallen")
 #                                             "C11": 0, "Supboard": 0}}])
 ```
 
-Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import of opschoning (409, "Er loopt al een import."; de opschoning houdt hetzelfde slot), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum op of vóór vandaag telt als `overgeslagen`: een oud-lid dat nog niet in de applicatie stond, komt er niet in en een opgeschoond oud-lid komt niet terug. Een bestaand lid dat opzegt, blijft staan.
+Stuur altijd de volledige lijst: een lid dat ontbreekt, wordt oud-lid. De API weigert de hele lijst, zonder iets te wijzigen, bij een lopende import of opschoning (409, "Er loopt al een import."; de opschoning houdt hetzelfde slot), bij minder dan de helft van het aantal actieve leden (409, de veiligheidsgrens), boven 2 MB (413) en bij meer dan 5000 records (422). Een ongeldig record telt als `ongeldig`. Een nieuw record met een opzegdatum van meer dan 5 jaar geleden telt als `overgeslagen`: zo'n oud-lid komt er niet in en een opgeschoond oud-lid komt niet terug. Een nieuw record met een opzegdatum van hooguit 5 jaar geleden (precies 5 jaar valt er nog binnen) komt er wel in, zodat de beheerder het oud-lid kan kiezen als eigenaar van een boot. Een bestaand lid dat opzegt, blijft staan.
 
 ## Bootaantallen
 
-`GET /bootaantallen` levert voor elk lid elke bootsoort met het aantal boten, ook 0, op lidnummer gesorteerd. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst en een clubboot tellen niet (besluit 2026-10-31). De beheerder ziet dezelfde aantallen bij elk lid op `/leden/`, en op de statuspagina wanneer ze voor het laatst zijn opgehaald.
+`GET /bootaantallen` levert voor elk lid elke bootsoort met het aantal boten, ook 0, op lidnummer gesorteerd. Alleen boten met een toegewezen plaats tellen; een boot op de wachtlijst en een clubboot tellen niet (besluit 2026-10-31). Een oud-lid staat er niet in, ook niet als zijn boot een plaats heeft (besluit 2026-11-17, #298): de applicatie schrijft voor een oud-lid geen aantal naar e-boekhouden, en een oude waarde uit de tijd dat het lid nog lid was, blijft daar staan. De beheerder ziet dezelfde aantallen bij elk lid op `/leden/`, en op de statuspagina wanneer ze voor het laatst zijn opgehaald.
 
 Terugschrijven naar e-boekhouden staat standaard uit. Met `BOOTAANTALLEN_SCHRIJVEN=aan` roept de meegeleverde container `GET /bootaantallen` aan na elke geslaagde import en zet hij per lid de aantallen als JSON-tekst in vrij veld 10, zoals beschreven in [integratie-werking](integratie-werking.md). Zet de schakelaar pas aan na een proef op een testrelatie. Een eigen container mag de aanroep gebruiken om de aantallen in de eigen ledenadministratie te zetten.
 
@@ -100,6 +100,7 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.5.0 | 2026-11-17 | De import neemt oud-leden binnen 5 jaar op; `GET /bootaantallen` laat oud-leden weg | Issue #298 |
 | v2.4.0 | 2026-11-08 | Bron `eboekhouden`, inloggegevens en schakelaar voor terugschrijven | Issue #178 |
 | v2.3.0 | 2026-11-05 | Na een 409 door een lopende import een uur stil | Issue #31 |
 | v2.2.0 | 2026-11-03 | 409 ook tijdens de opschoning | Restpunt review #49, issue #51 |

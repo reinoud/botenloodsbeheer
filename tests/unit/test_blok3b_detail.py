@@ -2,10 +2,11 @@
 De feiten bovenaan, de taak die nu past, de rest in dichte uitklapblokken; gebruikersinvoer blijft geëscapet."""
 
 import re
+from datetime import timedelta
 
 import pytest
 
-from app.domein import CLI, toewijzing, vandaag, wachtlijst
+from app.domein import CLI, leden, toewijzing, vandaag, wachtlijst
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats, png
 from tests.unit.test_blok3a_lijsten import GEESCAPET, XSS
 from tests.unit.test_indeling_en_toewijzing import boot
@@ -30,10 +31,11 @@ def taak(tekst):
     return re.search(r'<section class="kaart bl-taak".*?</section>', tekst, re.DOTALL).group(0)
 
 
-def oud_lid_boot():
+def oud_lid_boot(dagen_buiten_termijn=1):
+    """Een boot van een oud-lid buiten de bewaartermijn (#298): zonder plaats is de taak Boot verwijderen."""
     oud = lid("1003", "Oud Lid")
     b = boot(oud.id, naam="Oudje")
-    opzeggen(oud.id, opzegdatum=vandaag())  # een opzegdatum van vandaag telt als oud-lid
+    opzeggen(oud.id, opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=dagen_buiten_termijn))
     return b
 
 
@@ -59,7 +61,7 @@ def eigenaar_blok(tekst):
 
 
 def test_plaats_linkt_de_naam_van_een_lid_en_een_oud_lid_naar_het_lid(ingelogd):
-    # Mutant: de <a> in plaats.html weghalen valt op de eerste assert; "(oud-lid)" binnen de link zetten op de tweede.
+    # Mutant: de <a> in plaats.html weghalen valt op de eerste assert; de tag oud-lid binnen de link zetten op de tweede (BV-89).
     anna = lid()
     p = plaats("A/1/1")
     toewijzing.toewijzen(p.id, boot(anna.id).id, CLI)
@@ -67,7 +69,7 @@ def test_plaats_linkt_de_naam_van_een_lid_en_een_oud_lid_naar_het_lid(ingelogd):
     oud, q = lid("1003", "Oud Lid"), plaats("A/1/2")
     toewijzing.toewijzen(q.id, boot(oud.id, naam="Oudje").id, CLI)
     opzeggen(oud.id, opzegdatum=vandaag())  # een opzegdatum van vandaag telt als oud-lid
-    assert f'<a href="/leden/{oud.id}">Oud Lid</a> (oud-lid)</dd>' in eigenaar_blok(ingelogd.get(f"/plaatsen/{q.id}").text)
+    assert f'<a href="/leden/{oud.id}">Oud Lid</a> <span class="ds-tag">oud-lid</span></dd>' in eigenaar_blok(ingelogd.get(f"/plaatsen/{q.id}").text)
 
 
 def test_plaats_laat_clubboot_en_onbekende_eigenaar_zonder_link(ingelogd):
@@ -171,7 +173,7 @@ def test_oud_lid_heeft_boot_verwijderen_als_taak_en_het_blok_heet_boot_wijzigen(
     b = oud_lid_boot()
     tekst = ingelogd.get(f"/boten/{b.id}").text
     t = taak(tekst)
-    assert '>Boot verwijderen</h2>' in t and "De eigenaar is oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst." in t
+    assert '>Boot verwijderen</h2>' in t and "De eigenaar is al meer dan 5 jaar oud-lid. De boot krijgt geen plaats en kan niet op de wachtlijst." in t
     assert tekst.count("Boot Oudje verwijderen") == 1 and "Boot Oudje verwijderen" in t
     assert '<summary id="wijzigen-kop">Boot wijzigen</summary>' in tekst and 'name="plaats_id"' not in tekst
     assert feiten(tekst)["Wachtlijst"] == "nee"
@@ -182,10 +184,11 @@ def test_oud_lid_met_een_boot_op_de_wachtlijst_ziet_dat_de_import_hem_eraf_haalt
     oud = lid("1003", "Oud Lid")
     b = boot(oud.id, naam="Oudje")
     wachtlijst.erop_zetten(b.id, "2024-03-01", CLI)
-    opzeggen(oud.id, opzegdatum=vandaag())
+    opzeggen(oud.id, opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
     tekst = ingelogd.get(f"/boten/{b.id}").text
     t = taak(tekst)
-    assert "De eigenaar is oud-lid. De boot krijgt geen plaats. Bij de volgende ledenimport gaat de boot van de wachtlijst." in t
+    # Besluit 31 (#298): de taaktekst. Buiten de termijn staat de knop Boot verwijderen in de taak.
+    assert "De eigenaar is oud-lid. Bij de volgende ledenimport gaat de boot van de wachtlijst." in t
     assert "kan niet op de wachtlijst" not in t and "Van de wachtlijst halen" not in t
     assert feiten(tekst)["Wachtlijst"] == "sinds 01-03-2024"
 
@@ -229,8 +232,8 @@ def test_boot_geeft_bootnaam_en_eigenaar_geescapet_terug(ingelogd):
     assert f"Boot {GEESCAPET} verwijderen" in tekst
     oud = lid("1003", "Oud Lid")
     b = boot(oud.id, naam=XSS)
-    opzeggen(oud.id, opzegdatum=vandaag())
-    tekst = ingelogd.get(f"/boten/{b.id}").text  # de gevaarknop in de taak van een oud-lid
+    opzeggen(oud.id, opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
+    tekst = ingelogd.get(f"/boten/{b.id}").text  # de gevaarknop in de taak van een oud-lid buiten de termijn
     assert XSS not in tekst and f"Boot {GEESCAPET} verwijderen" in tekst
 
 

@@ -5,7 +5,7 @@ enige rol die logregels mag verwijderen (ADR-007).
 
 Kopieën: een lid staat in het log alleen als `lid:<id>`, zonder naam; foto's staan in de database
 (ADR-008), niet op schijf; de wachtlijst volgt de boot via de cascade; de import maakt een
-opgeschoond oud-lid niet opnieuw aan (leden.synchroniseer, ADR-004 stap 4). Back-ups vallen
+opgeschoond oud-lid niet opnieuw aan: het valt buiten de termijn (leden.synchroniseer, #298). Back-ups vallen
 buiten de applicatie (besluit stakeholder 2026-10-30).
 """
 
@@ -16,7 +16,7 @@ from flask import current_app
 from sqlalchemy import delete, func, select
 
 from app.domein import Actor, log, vandaag
-from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug
+from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug, termijn_verlopen
 from app.models import Afbeelding, Bezettingsimport, Boot, Lid, Logregel, Naamkoppeling, Taakrun, db
 
 TAAK = "opschoning"
@@ -30,13 +30,12 @@ def opschonen(dag):
     Begin van de termijn: de opzegdatum, of uit_bron_op als die ontbreekt (architectuur §9
     besluit 4). Alleen een boot met een plaats houdt het opschonen tegen (besluit 2026-10-30).
     """
-    grens = jaren_terug(dag, BEWAARJAREN)
     logregels = db.session.execute(
         delete(Logregel).where(Logregel.tijdstip < jaren_terug(datetime.now(UTC), BEWAARJAREN))
     ).rowcount
     op_een_plaats = select(Boot.lid_id).join(Boot.plaats).where(Boot.lid_id.is_not(None))
     ids = db.session.scalars(select(Lid.id).where(
-        func.coalesce(Lid.opzegdatum, Lid.uit_bron_op) < grens, Lid.id.not_in(op_een_plaats))
+        termijn_verlopen(dag), Lid.id.not_in(op_een_plaats))
     ).all()
     # Een boot die intussen een andere eigenaar kreeg, valt hier buiten: DELETE leest de rij
     # opnieuw na het slot. Een oud-lid krijgt geen nieuwe boot of plaats (BLB-005, BLB-008); alleen

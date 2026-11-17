@@ -2,11 +2,12 @@
 dezelfde controles als toewijzen. Een weigering laat de boot liggen en schrijft geen log (ADR-006)."""
 
 import re
+from datetime import timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.domein import CLI, Regelfout, toewijzing, vandaag, wachtlijst
+from app.domein import CLI, Regelfout, leden, toewijzing, vandaag, wachtlijst
 from app.models import Logregel, Plaats, Wachtlijst, db
 from tests.unit.hulp import lid, race
 from tests.unit.test_blok3b_detail import ingelogd, oud_lid_boot, taak  # noqa: F401 (fixture)
@@ -118,17 +119,17 @@ def test_oud_lid_boot_en_boot_zonder_plaats_en_dezelfde_plaats_en_onbekende_plaa
     assert "boot.verplaatst" not in acties()
 
 
-def test_boot_van_oud_lid_wordt_niet_verplaatst(app):
-    # Mutant: de oud-lidcontrole weglaten valt hier.
+def test_boot_van_oud_lid_buiten_de_termijn_wordt_wel_verplaatst(app):
+    # #298, vraag 11: alleen toewijzen weigert een oud-lid buiten de termijn. Mutant: de oude
+    # oud-lidcontrole terugzetten in verplaatsen valt hier. Binnen de termijn: test_oud_lid_boot.py.
     p = plaats()
     anna = lid()
     b = boot(anna.id)
     toewijzing.toewijzen(p.id, b.id, CLI)
-    opzeggen(anna.id, opzegdatum=vandaag())
+    opzeggen(anna.id, opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
     nieuw = plaats("A/1/2")
-    with pytest.raises(Regelfout, match=r"is oud-lid\. De boot krijgt geen plaats\. De boot blijft op A/1/1"):
-        toewijzing.verplaatsen(b.id, nieuw.id, CLI)
-    assert bezetter(p) == b.id
+    toewijzing.verplaatsen(b.id, nieuw.id, CLI)
+    assert bezetter(nieuw) == b.id and bezetter(p) is None
 
 
 # Gelijktijdig (ADR-003): de nieuwe plaats vergrendelen zodat één van twee slaagt
