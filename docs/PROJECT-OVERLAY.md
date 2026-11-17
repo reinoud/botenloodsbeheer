@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.95
+**Versie overlay:** v0.5.96
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-17
@@ -219,6 +219,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een bouwer die stopt of wordt overgenomen, laat geen eigen compose-project achter; de opvolger ruimt het op met `down -v` en controleert met `docker ps -a`, `docker volume ls` en `docker network ls` (#154).
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
+- Versoepelt de wijziging een regel in de kern, noem dan elke andere route die op de oude weigering leunde (zoals de bezettingsimport), en eis per route een test met een geval binnen de nieuwe grens, met een mutant (#298).
 
 #### Review
 
@@ -313,6 +314,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een herstel dat een lijst herordent of afkapt, krijgt naast de schermtest een test op de functie zelf: lengte, hint en gekozen waarde in het herstelde geval (#295).
 - Een proef die bewijst dat iets niet verandert, toont eerst met hetzelfde verzoek en een geldige keuze dat het wel verandert (positieve controle) (#295).
 - Elke reviewer die zelf unittests draait, gebruikt een eigen `TEST_DB`, ook als de regie zegt dat ze de suite draait: een gedeelde `botenloods_test` verdween bij #295 midden in een run (#295).
+- Noem bij een regelnummer in een brief altijd het bestand (`app/domein/bezetting_csv.py:155`), en zeg bij een oordeel dat steunt op een mutant van een ander agent of het oordeel op die uitkomst mag wachten of statisch moet zijn (#298).
 
 #### E2E
 
@@ -340,6 +342,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een subagent wacht op een achtergrondrun met een `until grep -q`-lus op een eindregel in het uitvoerbestand, en telt het E2E-totaal met een script uit de losse `passed`-regels van `draai.sh`.
 - Een E2E-assert op een keuzelijst filtert op de eigen plaatscode; de seed heeft ook vrije plaatsen.
 - Een nieuwe foutroute in `draai.sh` toetst ook welke toestand het script achterlaat (integratiecontainer gestart, `secrets/api_token`), niet alleen dat het stopt.
+- Zet in de opdracht voor een E2E-test van een gegeven dat de stack niet meebrengt (zoals een oud-lid binnen de bewaartermijn): hoe de test dat gegeven maakt, of het de stack vervuilt, en welke `reknaam`-letter vrij is (alle letters a tot en met z zijn bezet; kies een groep van twee of drie letters) (#298).
 
 #### Migratie en database
 
@@ -520,6 +523,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.96 | 2026-11-17 | Drie regels: andere routes bij een versoepelde regel (Bouw); bestand bij een regelnummer en mutant van een ander agent (Review); gegeven dat de stack niet meebrengt (E2E); uit de terugblikken bij #298 | Lessen |
 | v0.5.95 | 2026-11-17 | Zes regels: zoekveld in plaats van keuzelijst, geldige keuze vervalt niet, afhankelijk criterium (Bouw); functietest bij afkappen, positieve controle, eigen TEST_DB voor elke reviewer (Review); uit de terugblikken bij #295 | Lessen |
 | v0.5.94 | 2026-11-17 | Zeven regels: besluiten van Design System nalezen, API-documentatie noemen, eigen testdatabase met sed-kopie (Bouw); heel ADR afzoeken, mutant met bewijsbestand, proef in de webcontainer (Review); veilige kant bij een veiligheidsgrens (Security en proxy); uit de terugblikken bij #295, #298 en #307 | Lessen |
 | v0.5.93 | 2026-11-17 | Zes regels: besluiten uit een ander issue, plek van een issuesectie, terugblik in een worktree (Algemeen); regex met letterlijke waarden, actionlint (Review); rechten van GITHUB_TOKEN per job (Security en proxy); uit de terugblikken bij #297, #298 en #300 | Lessen |
