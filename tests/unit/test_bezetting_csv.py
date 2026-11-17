@@ -299,7 +299,7 @@ def test_elke_beheerder_kan_de_lopende_import_koppelen_bevestigen_en_annuleren(a
     leg("A/1/1", "Clubkajak")
     bezetting_csv.uploaden(bestand("A/1/1;Clubkajak;Kajak;;"), actor)
     assert bezetting_csv.overzicht()["lopend"].beheerder_id == actor.id
-    bezetting_csv.koppelen({"2": "overslaan"}, ander)
+    bezetting_csv.koppelen({"overslaan-2": "1"}, ander)
     bezetting_csv.bevestigen(ander)
     assert technisch()[0].actor_id == ander.id
 
@@ -358,7 +358,7 @@ def test_overgeslagen_regel_telt_niet_mee_en_een_nieuwe_keuze_draait_het_terug(a
     plaats("A/1/2")
     data = bestand("A/1/1;Reiger;Kajak;;1001", "A/1/1;Fuut;Kajak;;1001")
     assert beoordeling(data, actor)[3].uitkomst == "fout"  # plaats dubbel
-    bezetting_csv.koppelen({"2": "overslaan"}, actor)
+    bezetting_csv.koppelen({"overslaan-2": "1"}, actor)
     uitkomst = {u.regel: u for u in bezetting_csv.overzicht()["uitkomsten"]}
     assert (uitkomst[2].uitkomst, uitkomst[3].uitkomst) == ("overgeslagen", "nieuwe boot")
     bezetting_csv.koppelen({}, actor)
@@ -541,7 +541,7 @@ def test_keuze_lid_of_clubboot_koppelt_de_regel_en_overslaan_laat_hem_weg(app, a
     plaats("C/1/1", club=True)
     plaats("A/1/2")
     data = bestand("A/1/1;Reiger;Kajak;Onbekend;", "C/1/1;Fuut;Kajak;Onbekend;", "A/1/2;Meeuw;Kajak;Onbekend;")
-    uitkomst = beoordeling(data, actor, {"2": str(anna.id), "3": "club", "4": "overslaan"})
+    uitkomst = beoordeling(data, actor, {"2": str(anna.id), "3": "club", "overslaan-4": "1"})
     assert [(u.uitkomst, u.via) for u in uitkomst.values()] == [
         ("nieuwe boot", "keuze"), ("nieuwe boot", "keuze"), ("overgeslagen", "")]
     assert uitkomst[2].lid.id == anna.id and uitkomst[3].club
@@ -551,18 +551,18 @@ def test_koppelen_slaat_de_keuzes_op_en_vervangt_wat_er_stond(app, actor, anna):
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;X;", "A/1/2;Fuut;Kajak;Y;"), actor)
     bezetting_csv.koppelen({"2": str(anna.id), "3": "club"}, actor)
     assert db.session.scalar(select(Bezettingsimport)).keuzes == {"2": str(anna.id), "3": "club"}
-    bezetting_csv.koppelen({"2": "", "3": "overslaan"}, actor)
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"3": "overslaan"}
+    bezetting_csv.koppelen({"2": "", "overslaan-3": "1"}, actor)
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-3": "1"}
 
 
 @pytest.mark.parametrize("keuzes", [{"9": "club"}, {"2": "424242"}, {"2": "abc"}, {"2": "club", "3": "club"}],
                          ids=["regel", "lid", "tekst", "tweede-regel"])
 def test_koppelen_weigert_een_onbekende_regel_of_lid_en_laat_de_oude_keuzes_staan(app, actor, anna, keuzes):
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;X;"), actor)
-    bezetting_csv.koppelen({"2": "overslaan"}, actor)
+    bezetting_csv.koppelen({"overslaan-2": "1"}, actor)
     with pytest.raises(Regelfout, match="keuzes kloppen niet"):
         bezetting_csv.koppelen(keuzes, actor)
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"2": "overslaan"}
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-2": "1"}
 
 
 def test_koppelen_weigert_een_oud_lid_want_die_staat_niet_in_de_keuzelijst(app, actor):
@@ -592,7 +592,7 @@ def test_bevestigen_voert_elke_uitkomst_uit_met_het_log_van_de_bootmutaties(app,
         "A/1/1;Reiger;Kajak;;1001", "A/1/2;Fuut;Kajak;;1001", "A/1/3;Kievit;Kajak;;1001",
         "A/1/5;Spreeuw;Kajak;;1001", "A/1/6;Nieuwkomer;Kajak;Anna de Vries;", "A/1/7;Overslaan;Kajak;;1001"),
         actor)
-    bezetting_csv.koppelen({"7": "overslaan"}, actor)
+    bezetting_csv.koppelen({"overslaan-7": "1"}, actor)
     voor = len(acties())
 
     assert bezetting_csv.bevestigen(actor) == {
@@ -704,7 +704,7 @@ def test_bevestigen_onthoudt_de_gekozen_koppeling_en_een_tweede_import_gebruikt_
     plaats("C/1/1", club=True)
     beoordeling(bestand("A/1/1;Reiger;Kajak;Anna Vries;", "C/1/1;Clubkajak;Kajak;Clubkajakker;",
                         "A/1/2;Fuut;Kajak;Overslaan Man;"), actor,
-                {"2": str(anna.id), "3": "club", "4": "overslaan"})
+                {"2": str(anna.id), "3": "club", "overslaan-4": "1"})
     assert bezetting_csv.bevestigen(actor)["koppelingen"] == 2
     ks = {k.naam: (k.lid_id, k.clubboot) for k in bezetting_csv.koppelingen()}
     assert ks == {"Anna Vries": (anna.id, False), "Clubkajakker": (None, True)}  # overslaan niet
@@ -904,7 +904,7 @@ def test_koppelen_en_annuleren_wachten_op_een_lopende_bevestiging(app, actor, an
     """De eerste sessie bevestigt (verwijdert de import); de tweede ziet daarna geen import."""
     plaats("A/1/1")
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;;1001"), actor)
-    actie = {"koppelen": lambda: bezetting_csv.koppelen({"2": "overslaan"}, actor),
+    actie = {"koppelen": lambda: bezetting_csv.koppelen({"overslaan-2": "1"}, actor),
              "annuleren": lambda: bezetting_csv.annuleren(actor)}[wat]
     fouten = race(app, ["SELECT id FROM bezettingsimport FOR UPDATE",
                         "DELETE FROM bezettingsimport"], {}, actie)
@@ -990,16 +990,17 @@ def test_een_gekozen_soort_wordt_bij_bevestigen_de_soort_van_de_nieuwe_boot(app,
     {"soort-2": "424242"},  # bestaat niet
     {"soort-2": "abc"},
     {"soort-2": "club"},  # een eigenaarwaarde is geen soort
-    {"soort-9": "overslaan"},  # onbekende regel
+    {"soort-9": "1"},  # onbekende regel
+    {"soort-2": "overslaan"},  # overslaan is geen soort meer maar een vakje (#295)
     {"soort-3": "1"},  # regel 3 heeft een onbekende plaats: alleen overslaan
-], ids=["onbekend-id", "geen-getal", "club", "onbekende-regel", "onbekende-plaats"])
+], ids=["onbekend-id", "geen-getal", "club", "onbekende-regel", "oude-overslaanwaarde", "onbekende-plaats"])
 def test_koppelen_weigert_een_ongeldige_soort_en_laat_de_oude_keuzes_staan(app, actor, keuzes):
     plaats("A/1/1")
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kayak;;", "Z/9/9;Meeuw;Kajak;;"), actor)
-    bezetting_csv.koppelen({"2": "overslaan"}, actor)
+    bezetting_csv.koppelen({"overslaan-2": "1"}, actor)
     with pytest.raises(Regelfout, match="keuzes kloppen niet"):
         bezetting_csv.koppelen(keuzes, actor)
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"2": "overslaan"}
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-2": "1"}
 
 
 def test_koppelen_weigert_een_soort_die_de_plaats_niet_toelaat(app, actor):
@@ -1011,17 +1012,26 @@ def test_koppelen_weigert_een_soort_die_de_plaats_niet_toelaat(app, actor):
     assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-2": str(soort("Kajak"))}
 
 
-def test_koppelen_bewaart_overslaan_in_de_soortlijst_en_wist_een_lege_keuze(app, actor):
+def test_koppelen_bewaart_het_vakje_overslaan_en_wist_een_lege_keuze(app, actor):
     plaats("A/1/1")
     plaats("A/1/2")
     bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kayak;;", "Z/9/9;Meeuw;Kajak;;"), actor)
-    bezetting_csv.koppelen({"soort-2": str(soort("Kajak")), "soort-3": "overslaan"}, actor)
+    bezetting_csv.koppelen({"soort-2": str(soort("Kajak")), "overslaan-3": "on"}, actor)
     assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-2": str(soort("Kajak")),
-                                                                  "soort-3": "overslaan"}
-    bezetting_csv.koppelen({"soort-2": "", "soort-3": "overslaan"}, actor)
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-3": "overslaan"}
+                                                                  "overslaan-3": "1"}
+    bezetting_csv.koppelen({"soort-2": "", "overslaan-3": "on"}, actor)
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-3": "1"}
+    bezetting_csv.koppelen({"soort-2": "", "overslaan-3": ""}, actor)  # een uitgevinkt vakje wordt niet bewaard
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {}
     u = {u.regel: u for u in bezetting_csv.overzicht()["uitkomsten"]}
-    assert u[3].uitkomst == "overgeslagen" and u[3].soortlijst  # de lijst met de keuze blijft staan
+    assert u[3].uitkomst == "fout"
+
+
+@pytest.mark.parametrize("sleutel", ["overslaan-9", "overslaan-x", "overslaan-"], ids=["onbekende-regel", "tekst", "leeg"])
+def test_koppelen_weigert_een_vakje_overslaan_zonder_regel(app, actor, sleutel):
+    bezetting_csv.uploaden(bestand("A/1/1;Reiger;Kajak;X;"), actor)
+    with pytest.raises(Regelfout, match="keuzes kloppen niet"):
+        bezetting_csv.koppelen({sleutel: "1"}, actor)
 
 
 def test_een_verdwenen_soort_geeft_een_fout_en_bevestigen_weigert(app, actor, anna):
@@ -1051,28 +1061,32 @@ def test_een_regel_met_een_onbekende_soort_en_een_onbekende_eigenaar_vraagt_twee
     assert u.uitkomst == "nieuwe boot" and u.lid == anna and u.via == "keuze"
 
 
-def test_de_eigenaar_blijft_bewaard_als_de_regel_via_de_soortlijst_wordt_overgeslagen(app, actor, anna):
-    """Toets Design System (a): na overslaan via de soortlijst toont het scherm alleen soort-N;
-    een eerder gekozen eigenaar komt terug als de beheerder het overslaan terugzet."""
+def test_de_eigenaar_en_de_soort_blijven_bewaard_als_de_regel_wordt_overgeslagen(app, actor, anna):
+    """Toets Design System (a): een overgeslagen regel toont alleen het vakje; de eerder gekozen
+    soort en eigenaar komen terug als de beheerder het vakje uitvinkt."""
     plaats("A/1/1")
     beoordeling(bestand("A/1/1;Reiger;Kayak;S. de Vrees;"), actor, {**soortkeuze(2, "Kajak"), "2": str(anna.id)})
-    bezetting_csv.koppelen({"soort-2": "overslaan", "2": str(anna.id)}, actor)  # beide lijsten op het scherm
-    bezetting_csv.koppelen({"soort-2": "overslaan"}, actor)  # nu staat alleen soort-2 op het scherm
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-2": "overslaan", "2": str(anna.id)}
-    bezetting_csv.koppelen(soortkeuze(2, "Kajak"), actor)  # terugzetten: de eigenaarlijst is weer zichtbaar
+    bezetting_csv.koppelen({**soortkeuze(2, "Kajak"), "2": str(anna.id), "overslaan-2": "on"}, actor)  # alle velden op het scherm
+    bezetting_csv.koppelen({"overslaan-2": "on"}, actor)  # nu staat alleen het vakje op het scherm
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {
+        "overslaan-2": "1", "2": str(anna.id), **soortkeuze(2, "Kajak")}
+    assert bezetting_csv.overzicht()["uitkomsten"][0].uitkomst == "overgeslagen"
+    bezetting_csv.koppelen({}, actor)  # uitgevinkt: het scherm toonde de velden niet, de keuzes blijven
     u = bezetting_csv.overzicht()["uitkomsten"][0]
     assert (u.uitkomst, u.lid, u.via) == ("nieuwe boot", anna, "keuze") and u.soortlijst
-    bezetting_csv.koppelen({"soort-2": "overslaan", "2": str(anna.id)}, actor)  # weer overgeslagen
-    bezetting_csv.koppelen({"soort-2": "overslaan", "2": "club"}, actor)  # gepost (oud tabblad) gaat voor bewaard
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-2": "overslaan", "2": "club"}
+    bezetting_csv.koppelen({"overslaan-2": "on", "2": "club"}, actor)  # gepost (oud tabblad) gaat voor bewaard
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-2": "1", "2": "club"}
 
 
-def test_een_bewaarde_eigenaar_die_oud_lid_is_geworden_vervalt(app, actor, anna):
+def test_een_bewaarde_eigenaar_die_oud_lid_is_geworden_blijft_niet_kiesbaar(app, actor, anna):
     plaats("A/1/1")
-    beoordeling(bestand("A/1/1;Reiger;Kayak;S. de Vrees;"), actor, {"soort-2": "overslaan", "2": str(anna.id)})
+    beoordeling(bestand("A/1/1;Reiger;Kayak;S. de Vrees;"), actor, {"overslaan-2": "on", "2": str(anna.id)})
     eigenaar("UPDATE lid SET opzegdatum = '2020-01-01' WHERE id = :i", i=anna.id)
-    bezetting_csv.koppelen({"soort-2": "overslaan"}, actor)
-    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"soort-2": "overslaan"}
+    bezetting_csv.koppelen({"overslaan-2": "on"}, actor)
+    assert db.session.scalar(select(Bezettingsimport)).keuzes == {"overslaan-2": "1"}  # het oud-lid vervalt
+    bezetting_csv.koppelen({}, actor)
+    u = bezetting_csv.overzicht()["uitkomsten"][0]
+    assert u.uitkomst == "fout" and u.lid is None
 
 
 def test_een_regel_met_een_onbekende_soort_en_een_leeg_eigenaar_vraagt_een_keuze(app, actor, anna):
@@ -1085,24 +1099,22 @@ def test_een_regel_met_een_onbekende_soort_en_een_leeg_eigenaar_vraagt_een_keuze
     assert u.soortlijst and not u.eigenaar_open and u.lid.lidnummer == "1001"
 
 
-def test_een_fout_in_de_plaats_biedt_alleen_regel_overslaan_in_de_soortlijst(app, actor):
+def test_een_fout_in_de_plaats_toont_geen_lijst_maar_alleen_het_vakje_overslaan(app, actor):
     plaats("A/1/1")
     uitkomst = beoordeling(bestand("Z/9/9;Reiger;Kayak;;", ";Meeuw;Kajak;;", "A/1/1;;Kajak;;"), actor)
-    assert uitkomst[2].soortlijst and uitkomst[2].plaats is None
-    assert uitkomst[3].soortlijst  # de plaats ontbreekt
-    assert not uitkomst[4].soortlijst  # een andere fout: de lijst met alleen overslaan blijft keuze-N
+    assert not uitkomst[2].soortlijst and not uitkomst[2].eigenaar_open  # de plaats bestaat niet
+    assert not uitkomst[3].soortlijst  # de plaats ontbreekt
+    assert not uitkomst[4].soortlijst  # een andere fout
 
 
-def test_een_overgeslagen_regel_houdt_de_soorten_van_de_plaats_en_een_soort_kiezen_werkt_in_een_keer(app, actor, anna):
-    """#218: na Regel overslaan in de soortlijst staan de soorten van de plaats nog in de lijst, en de
-    soort kiezen zonder eerst Geen keuze te zetten is één keer opslaan."""
+def test_een_overgeslagen_regel_telt_als_overgeslagen_en_een_soort_kiezen_werkt_in_een_keer(app, actor, anna):
+    """#218 en #295: het vakje Overslaan laat de regel buiten de import; uitvinken en een soort kiezen
+    is één keer opslaan."""
     plaats("A/1/1", ("Kajak", "Surfski"))
     uitkomst = beoordeling(bestand("A/1/1;Reiger;Kayak;Anna de Vries;1001", "Z/9/9;Meeuw;Kajak;;"), actor,
-                           {"soort-2": "overslaan", "soort-3": "overslaan"})
-    assert uitkomst[2].uitkomst == "overgeslagen" and uitkomst[2].soortlijst
-    assert sorted(s.naam for s in uitkomst[2].plaats.bootsoorten) == ["Kajak", "Surfski"]
-    assert uitkomst[3].uitkomst == "overgeslagen" and uitkomst[3].plaats is None  # een onbekende plaats blijft alleen overslaan
-    bezetting_csv.koppelen({"soort-2": str(soort("Surfski")), "soort-3": "overslaan"}, actor)
+                           {"overslaan-2": "on", "overslaan-3": "on"})
+    assert uitkomst[2].uitkomst == "overgeslagen" and uitkomst[3].uitkomst == "overgeslagen"
+    bezetting_csv.koppelen({"soort-2": str(soort("Surfski")), "overslaan-3": "on"}, actor)
     u = bezetting_csv.overzicht()["uitkomsten"][0]
     assert (u.uitkomst, u.soort.naam) == ("nieuwe boot", "Surfski")
     bezetting_csv.bevestigen(actor)

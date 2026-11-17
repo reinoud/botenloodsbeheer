@@ -187,12 +187,18 @@ def schermen(browser):
     o.maak("plaats-vrij", hoogte=900)
     vrije_plaats = page.url
 
-    # Boten: nieuwe boot met foto, daarna toewijzen aan de vrije plaats.
+    # Boten: nieuwe boot met foto, daarna toewijzen aan de vrije plaats. De eigenaar is het tweede lid dat je kunt kiezen.
+    page.goto("/leden")
+    nummer = page.locator("main li.bl-item").filter(has_not_text="oud-lid").nth(1).locator(
+        '[data-label="Lidnummer"]').inner_text()
     page.goto("/boten")
     page.get_by_text("Nieuwe boot", exact=True).click()
     page.get_by_label("Naam van de boot").fill("Zwaluw 7")
     page.get_by_label("Bootsoort").select_option(label="Kajak")
-    page.get_by_label("Eigenaar", exact=True).select_option(index=3)  # exact: het zoekveld in de kop noemt ook de eigenaar
+    # Eigenaar zoeken (BV-85). exact: het zoekveld in de kop noemt ook de eigenaar.
+    page.get_by_label("Eigenaar", exact=True).fill(nummer)
+    page.locator("details.bl-nieuw").get_by_role("button", name="Zoeken", exact=True).click()
+    page.locator(f'input[type="radio"][value="{nummer}"]').check()
     page.get_by_label("Foto (JPEG, PNG of WebP, niet verplicht)").set_input_files(
         {"name": "zwaluw.png", "mimeType": "image/png", "buffer": foto_bytes})
     o.maak("boten", hoogte=900)

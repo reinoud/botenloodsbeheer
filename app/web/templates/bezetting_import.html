@@ -1,44 +1,41 @@
 {% extends "base.html" %}
 {% from "_melding.html" import meldingblok %}
 {# Overzicht en koppelscherm van de lopende bezettingsimport (ADR-014 §3). Alles wat uit het bestand komt (plaats, boot, bootsoort, eigenaar, lidnummer en de meldingen) wordt geëscapet. #}
+{% from "_lidkeuze.html" import zoekveld with context %}
 {% macro soort_lijst(u) %}
 <select class="dj-select" id="soort-{{ u.regel }}" name="soort-{{ u.regel }}">
   <option value=""{% if not u.soortkeuze %} selected{% endif %}>Geen keuze</option>
-  <option value="overslaan"{% if u.soortkeuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>
   {% if u.plaats %}{% for s in u.plaats.bootsoorten %}<option value="{{ s.id }}"{% if u.soortkeuze == s.id|string %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}{% endif %}
 </select>
 {% endmacro %}
-{% macro leden_lijst(u, overslaan) %}
-<select class="dj-select" id="keuze-{{ u.regel }}" name="keuze-{{ u.regel }}">
-  <option value=""{% if not u.keuze %} selected{% endif %}>Geen keuze</option>
-  {% if overslaan %}<option value="overslaan"{% if u.keuze == 'overslaan' %} selected{% endif %}>Regel overslaan</option>{% endif %}
-  {% if u.eigenaar_open or u.via == 'keuze' %}
-  <option value="club"{% if u.keuze == 'club' %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
-  {% for l in leden %}<option value="{{ l.id }}"{% if u.keuze == l.id|string %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-  {% endif %}
-</select>
+{% macro overslaan(u) %}
+<div class="ds-check"><input type="checkbox" id="over-{{ u.regel }}" name="overslaan-{{ u.regel }}"{% if u.uitkomst == 'overgeslagen' %} checked{% endif %}><label for="over-{{ u.regel }}">Regel overslaan</label></div>
 {% endmacro %}
-{# Eén lijst: label "Keuze voor regel N". Twee lijsten (soort en eigenaar): een fieldset met verborgen legend en zichtbare labels. #}
+{# Wat een regel nodig heeft: een lijst Bootsoort, een zoekveld Eigenaar of beide, en altijd het vakje Regel overslaan. Een overgeslagen regel toont alleen het vakje. Twee velden staan in een fieldset met verborgen legend en zichtbare labels; één veld heeft het label "Keuze voor regel N". #}
 {% macro keuze(u) %}
 {% set eigenaar = u.eigenaar_open or u.via == 'keuze' %}
-{% if u.soortlijst and eigenaar %}
+{% if u.uitkomst == 'overgeslagen' %}
+{{ overslaan(u) }}
+{% elif u.soortlijst and eigenaar %}
 <fieldset class="bl-formulier bl-keuzepaar">
   <legend class="dj-sr-only">Keuze voor regel {{ u.regel }}</legend>
   <div class="ds-field">
   <label class="ds-field__label" for="soort-{{ u.regel }}">Bootsoort</label>
   {{ soort_lijst(u) }}
   </div>
-  <div class="ds-field">
-  <label class="ds-field__label" for="keuze-{{ u.regel }}">Eigenaar</label>
-  {{ leden_lijst(u, false) }}
-  </div>
+  {{ zoekveld(velden[u.regel], 'zoek-' ~ u.regel, 'zoek-' ~ u.regel, 'keuze-' ~ u.regel, 'Eigenaar', legend='regel ' ~ u.regel) }}
+  {{ overslaan(u) }}
 </fieldset>
 {% elif u.soortlijst %}
+<div class="ds-field">
 <label class="dj-sr-only" for="soort-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
 {{ soort_lijst(u) }}
+{{ overslaan(u) }}
+</div>
+{% elif eigenaar %}
+{% call zoekveld(velden[u.regel], 'zoek-' ~ u.regel, 'zoek-' ~ u.regel, 'keuze-' ~ u.regel, 'Keuze voor regel ' ~ u.regel, verborgen=true, legend='regel ' ~ u.regel) %}{{ overslaan(u) }}{% endcall %}
 {% else %}
-<label class="dj-sr-only" for="keuze-{{ u.regel }}">Keuze voor regel {{ u.regel }}</label>
-{{ leden_lijst(u, true) }}
+{{ overslaan(u) }}
 {% endif %}
 {% endmacro %}
 {% block titel %}Bezetting importeren · {{ vereniging }}{% endblock %}
@@ -54,9 +51,12 @@
 
 <form class="bl-formulier" method="post" action="{{ url_for('web.bezetting_koppelen') }}">
   {% include "_csrf.html" %}
+  {% if open_regels %}
+  {% call meldingblok('warning') %}<p>{{ open_regels|length }} {{ 'regel heeft' if open_regels|length == 1 else 'regels hebben' }} nog een keuze nodig: {% for r in open_regels %}<a href="#zoek-{{ r }}">regel {{ r }}</a>{% if loop.revindex == 2 %} en {% elif not loop.last %}, {% endif %}{% endfor %}.</p>{% endcall %}
+  {% endif %}
   <div class="ds-table-wrap bl-tabel">
   <table class="ds-table dj-table--stack" role="table">
-    <thead role="rowgroup"><tr role="row"><th role="columnheader">Regel</th><th role="columnheader">Plaats</th><th role="columnheader">Boot (bootsoort)</th><th role="columnheader">Eigenaar (lidnummer)</th><th role="columnheader">Uitkomst</th><th role="columnheader">Keuze</th></tr></thead>
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Regel</th><th role="columnheader">Plaats</th><th role="columnheader">Boot (bootsoort)</th><th role="columnheader">Eigenaar (lidnummer)</th><th role="columnheader">Uitkomst</th><th role="columnheader">Keuze (naam of lidnummer)</th></tr></thead>
     <tbody role="rowgroup">
     {% for u in uitkomsten %}
       <tr role="row">
@@ -65,12 +65,13 @@
         <td role="cell" data-label="Boot (bootsoort)">{{ u.tekst.boot }} ({{ u.tekst.bootsoort }})</td>
         <td role="cell" data-label="Eigenaar (lidnummer)">{% if u.tekst.eigenaar or u.tekst.lidnummer %}{{ u.tekst.eigenaar }}{% if u.tekst.lidnummer %}{% if u.tekst.eigenaar %} ({{ u.tekst.lidnummer }}){% else %}{{ u.tekst.lidnummer }}{% endif %}{% endif %}{% else %}eigenaar onbekend{% endif %}{% if u.lid and u.via != 'naam' %}<br>Gekoppeld: {{ u.lid.naam }} ({{ u.lid.lidnummer }}){% endif %}</td>
         <td role="cell" data-label="Uitkomst"><span class="ds-tag">{{ u.uitkomst }}</span>{% if u.melding %}<br>{{ u.melding }}{% endif %}</td>
-        <td role="cell" data-label="Keuze">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.soortlijst or u.via == 'keuze' %}{{ keuze(u) }}{% else %}-{% endif %}</td>
+        <td role="cell" data-label="Keuze (naam of lidnummer)">{% if u.uitkomst in ('te koppelen', 'fout', 'overgeslagen') or u.soortlijst or u.via == 'keuze' %}{{ keuze(u) }}{% else %}-{% endif %}</td>
       </tr>
     {% endfor %}
     </tbody>
   </table>
   </div>
+  <button type="submit" class="ds-btn" name="actie" value="zoeken">Zoeken</button>
   <button type="submit" class="ds-btn">Keuzes opslaan</button>
 </form>
 

@@ -16,7 +16,9 @@ from app.domein import (
     boten,
     csvbestand,
     indeling,
+    instellingen,
     leden,
+    lidkeuze,
     log,
     rekindeling_csv,
     status,
@@ -176,22 +178,77 @@ def bezetting_uploaden():
     return redirect(url_for("web.import_export_scherm"))
 
 
-@bp.get("/bezetting/import")
-@inloggen_vereist
-def bezetting_import():
+def _importvelden(uitkomsten, gezocht):
+    """{regel: Keuzeveld} voor elke regel met een zoekveld Eigenaar. Het veld toont de naam uit het
+    bestand; na Zoeken (gezocht, per regel als tekst) staat de gezochte term erin met zijn treffers;
+    bij een opgeslagen keuze staat "Naam (lidnummer)" erin, met dat ene rondje."""
+    velden = {}
+    for u in uitkomsten:
+        if u.uitkomst == bezetting_csv.OVERGESLAGEN or not (u.eigenaar_open or u.via == "keuze"):
+            continue
+        # Een opgeslagen keuze krijgt een term die haar terugvindt: Zoeken elders laat haar zo staan.
+        start = _lidtekst(u.lid) if u.via == "keuze" else u.tekst["eigenaar"] or u.tekst["lidnummer"]
+        velden[u.regel] = gezocht.get(str(u.regel)) or (
+            lidkeuze.veld_gekozen(start, u.lid) if u.via == "keuze" else lidkeuze.Keuzeveld(start))
+    return velden
+
+
+def _importscherm(gezocht=None):
+    """Het overzicht van de lopende import. Na Zoeken (gezocht) noemt een melding de regels die nog
+    een keuze nodig hebben."""
     overzicht = bezetting_csv.overzicht()
     if overzicht is None:
         flash("Er loopt geen bezettingsimport. Upload een bestand op de pagina Import/export.", "info")
         return redirect(url_for("web.import_export_scherm"))
-    return render_template("bezetting_import.html", **overzicht)
+    velden = _importvelden(overzicht["uitkomsten"], gezocht or {})
+    open_regels = [r for r, veld in velden.items() if gezocht and not veld.gekozen]
+    return render_template("bezetting_import.html", velden=velden, open_regels=open_regels, **overzicht)
+
+
+@bp.get("/bezetting/import")
+@inloggen_vereist
+def bezetting_import():
+    return _importscherm()
+
+
+def _importkeuzes(form, gezocht):
+    """Het formulier als keuzes voor bezetting_csv.koppelen. Een rondje keuze-N heeft het lidnummer als
+    waarde: de server zoekt het lid zelf op, alleen onder de kiesbare leden (nooit een oud-lid), en
+    weigert een ander nummer. Na Zoeken vervalt een rondje dat geen treffer van de nieuwe zoekterm is."""
+    per_nummer = {lid.lidnummer: str(lid.id) for lid in lidkeuze.kiesbare_leden()}
+    keuzes = {}
+    for naam, waarde in form.items():
+        if naam.startswith("keuze-"):
+            regel = naam.removeprefix("keuze-")
+            if regel in gezocht and gezocht[regel].gekozen != waarde:
+                continue
+            if waarde and waarde != lidkeuze.CLUBBOOT and waarde not in per_nummer:
+                raise Regelfout(lidkeuze.KEUZES_ONGELDIG)
+            keuzes[regel] = "club" if waarde == lidkeuze.CLUBBOOT else per_nummer.get(waarde, "")
+        elif naam.startswith(("soort-", "overslaan-")):
+            keuzes[naam] = waarde
+    return keuzes
 
 
 @bp.post("/bezetting/import/koppelen")
 @inloggen_vereist
 def bezetting_koppelen():
-    keuzes = {naam.removeprefix("keuze-") if naam.startswith("keuze-") else naam: waarde
-              for naam, waarde in request.form.items() if naam.startswith(("keuze-", "soort-"))}
-    uitvoeren(bezetting_csv.koppelen, keuzes, gelukt="De keuzes zijn opgeslagen.")
+    """Keuzes opslaan; na de knop Zoeken ook de treffers per regel tonen. De zoektermen worden alleen
+    gelezen voor de regels van de lopende import."""
+    zoeken = request.form.get("actie") == "zoeken"
+    gezocht = {}
+    if zoeken and (imp := bezetting_csv.lopend()) is not None:
+        for r in (str(regel["regel"]) for regel in imp.regels):
+            if (term := request.form.get("zoek-" + r)) is not None:
+                gezocht[r] = lidkeuze.veld(term, request.form.get("keuze-" + r, ""))
+    try:
+        bezetting_csv.koppelen(_importkeuzes(request.form, gezocht), Actor.van(g.beheerder))
+    except Regelfout as fout:
+        flash(str(fout), "fout")
+        return redirect(url_for("web.bezetting_import"))
+    if zoeken:
+        return _importscherm(gezocht)
+    flash("De keuzes zijn opgeslagen.", "info")
     return redirect(url_for("web.bezetting_import"))
 
 
@@ -318,37 +375,55 @@ def _foto():
     return bestand.read() if bestand and bestand.filename else None
 
 
+def _boten_scherm(code=200, **extra):
+    """Boten met het blok Nieuwe boot. Na Zoeken of een foutregel bij het veld Eigenaar staat het blok
+    open, met de ingevulde waarden (invoer) en het zoekveld (eigenaarveld)."""
+    zoek = request.args.get("zoek", "")
+    soort_id = request.args.get("bootsoort", type=getal)
+    context = {"nieuw_open": request.args.get("open") == "nieuw", "invoer": {},
+               "eigenaarveld": lidkeuze.Keuzeveld()} | extra
+    return render_template("boten.html", boten=boten.boten(zoek, soort_id), zoek=zoek, soort_id=soort_id,
+                           bootsoorten=indeling.bootsoorten(), regels=log.regels(acties=("boot.",)),
+                           **context), code
+
+
 @bp.get("/boten")
 @inloggen_vereist
 def boten_overzicht():
-    zoek = request.args.get("zoek", "")
-    soort_id = request.args.get("bootsoort", type=getal)
-    return render_template("boten.html", boten=boten.boten(zoek, soort_id), zoek=zoek, soort_id=soort_id,
-                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
-                           regels=log.regels(acties=("boot.",)),
-                           nieuw_open=request.args.get("open") == "nieuw")
+    return _boten_scherm()
 
 
-def _eigenaar(onbekend_mag=True):
-    """(lid_id, clubboot) uit het veld eigenaar: een lid, `club`, of `onbekend`. Anders None en
-    een melding; de waarde onbekend telt alleen waar de keuzelijst hem biedt (#204)."""
-    waarde = request.form.get("eigenaar", "")
-    if waarde == "club":
-        return None, True
-    if waarde == "onbekend" and onbekend_mag:
-        return None, False
-    if (lid_id := request.form.get("eigenaar", type=getal)) is not None:
-        return lid_id, False
-    flash("Kies een eigenaar.", "fout")
-    return None
+def _lidtekst(lid):
+    """"Naam (lidnummer)", of "Vereniging (clubboot)" bij lid None: een term die lidkeuze.veld terugvindt."""
+    return f"{lid.naam} ({lid.lidnummer})" if lid else f"{instellingen.huidig()['naam']} (clubboot)"
+
+
+def _eigenaar_tekst(b):
+    """Het zoekveld Eigenaar van een bestaande boot: wat het scherm nu toont."""
+    return _lidtekst(b.lid) if b.lid or b.clubboot else ""
+
+
+def _eigenaar(boot=None, verplicht=False):
+    """((lid_id, clubboot), None) uit de velden eigenaar (rondje) en zoek van het formulier, of
+    (None, Keuzeveld met foutregel). Zie lidkeuze.eigenaar."""
+    return lidkeuze.eigenaar(request.form.get("eigenaar"), request.form.get("zoek"), boot,
+                             _eigenaar_tekst(boot) if boot else "", verplicht)
+
+
+def _na_zoeken():
+    """Het veld Eigenaar na de knop Zoeken: de treffers van de term, met het rondje dat nog geldt."""
+    return lidkeuze.veld(request.form.get("zoek"), request.form.get("eigenaar", ""))
 
 
 @bp.post("/boten")
 @inloggen_vereist
 def boot_aanmaken():
-    # Na een weigering staat het blok Nieuwe boot open, met de melding erboven (#208).
-    if (eigenaar := _eigenaar()) is None:
-        return redirect(url_for("web.boten_overzicht", open="nieuw"))
+    # Na een weigering of Zoeken staat het blok Nieuwe boot open, met de melding erboven (#208).
+    if request.form.get("actie") == "zoeken":
+        return _boten_scherm(nieuw_open=True, invoer=request.form, eigenaarveld=_na_zoeken())
+    eigenaar, veld = _eigenaar()
+    if veld:
+        return _boten_scherm(422, nieuw_open=True, invoer=request.form, eigenaarveld=veld)
     lid_id, clubboot = eigenaar
     b = uitvoeren(partial(boten.boot_aanmaken, clubboot=clubboot), request.form.get("naam"),
                   request.form.get("bootsoort", type=getal), lid_id, _foto(),
@@ -371,37 +446,54 @@ def zoeken():
     return render_template("zoeken.html", zoekterm=term, resultaat=resultaat, is_oud_lid=leden.is_oud_lid)
 
 
+def _zonder_eigenaar_scherm(code=200, velden=None):
+    lijst = boten.zonder_eigenaar()
+    velden = {b.id: lidkeuze.Keuzeveld() for b in lijst} | (velden or {})
+    return render_template("boten_zonder_eigenaar.html", boten=lijst, velden=velden), code
+
+
 @bp.get("/boten/zonder-eigenaar")
 @inloggen_vereist
 def boten_zonder_eigenaar():
-    return render_template("boten_zonder_eigenaar.html", boten=boten.zonder_eigenaar(),
-                           leden=leden.actieve_leden())
+    return _zonder_eigenaar_scherm()
 
 
 @bp.post("/boten/<int:boot_id>/eigenaar")
 @inloggen_vereist
 def boot_eigenaar_kiezen(boot_id):
     naam = _of_404(boten.boot, boot_id).naam
-    if (eigenaar := _eigenaar(onbekend_mag=False)) is not None:
-        lid_id, clubboot = eigenaar
-        uitvoeren(partial(boten.eigenaar_kiezen, clubboot=clubboot), boot_id, lid_id,
-                  gelukt=f"De eigenaar van {naam} is opgeslagen.")
+    if request.form.get("actie") == "zoeken":
+        return _zonder_eigenaar_scherm(velden={boot_id: _na_zoeken()})
+    eigenaar, veld = _eigenaar(verplicht=True)
+    if veld:
+        return _zonder_eigenaar_scherm(422, {boot_id: veld})
+    lid_id, clubboot = eigenaar
+    uitvoeren(partial(boten.eigenaar_kiezen, clubboot=clubboot), boot_id, lid_id,
+              gelukt=f"De eigenaar van {naam} is opgeslagen.")
     return redirect(url_for("web.boten_zonder_eigenaar"))
 
 
-@bp.get("/boten/<int:boot_id>")
-@inloggen_vereist
-def boot_detail(boot_id):
+def _boot_scherm(boot_id, code=200, eigenaarveld=None):
+    """Detail Boot. Na Zoeken of een foutregel bij het veld Eigenaar (eigenaarveld) staat het blok
+    Boot wijzigen open; anders toont het veld de huidige eigenaar."""
     b = _of_404(boten.boot, boot_id)
     oud_lid = b.lid is not None and leden.is_oud_lid(b.lid)
     # #132, #205: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert;
     # een clubboot ook uit de clubplaatsen.
     vrij = [] if oud_lid else indeling.vrije_plaatsen(b.bootsoort_id, ook_club=b.clubboot)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
-                           bootsoorten=indeling.bootsoorten(), leden=leden.actieve_leden(),
+                           bootsoorten=indeling.bootsoorten(),
                            oud_lid=oud_lid, vrij=vrij, vandaag=vandaag(),
                            foto_open=request.args.get("open") == "foto",
-                           verplaatsen_open=request.args.get("open") == "verplaatsen")
+                           verplaatsen_open=request.args.get("open") == "verplaatsen",
+                           wijzigen_open=eigenaarveld is not None, invoer=request.form if eigenaarveld else {},
+                           eigenaarveld=eigenaarveld or lidkeuze.Keuzeveld(_eigenaar_tekst(b))), code
+
+
+@bp.get("/boten/<int:boot_id>")
+@inloggen_vereist
+def boot_detail(boot_id):
+    return _boot_scherm(boot_id)
 
 
 @bp.post("/boten/<int:boot_id>/toewijzen")
@@ -425,17 +517,19 @@ def boot_verplaatsen(boot_id):
 @bp.post("/boten/<int:boot_id>")
 @inloggen_vereist
 def boot_wijzigen(boot_id):
-    _of_404(boten.boot, boot_id)
-    if (eigenaar := _eigenaar()) is not None:
-        lid_id, clubboot = eigenaar
-        was_wachtend = boten.boot(boot_id).wachtlijst is not None
-        if uitvoeren(partial(boten.boot_wijzigen, clubboot=clubboot), boot_id, request.form.get("naam"),
-                     request.form.get("bootsoort", type=getal), lid_id,
-                     gelukt="De boot is opgeslagen.") and was_wachtend \
-                and boten.boot(boot_id).wachtlijst is None:
-            flash("De eigenaar is nu onbekend en de boot is van de wachtlijst gehaald."
-                  if lid_id is None and not clubboot else
-                  "De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
+    b = _of_404(boten.boot, boot_id)
+    if request.form.get("actie") == "zoeken":
+        return _boot_scherm(boot_id, eigenaarveld=_na_zoeken())
+    eigenaar, veld = _eigenaar(b)
+    if veld:
+        return _boot_scherm(boot_id, 422, veld)
+    lid_id, clubboot = eigenaar
+    was_wachtend = b.wachtlijst is not None
+    if uitvoeren(partial(boten.boot_wijzigen, clubboot=clubboot), boot_id, request.form.get("naam"),
+                 request.form.get("bootsoort", type=getal), lid_id,
+                 gelukt="De boot is opgeslagen.") and was_wachtend \
+            and boten.boot(boot_id).wachtlijst is None:
+        flash("De boot heeft een andere eigenaar en is van de wachtlijst gehaald.", "info")
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 

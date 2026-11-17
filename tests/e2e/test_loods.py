@@ -73,18 +73,33 @@ def rek_hernoemen(page, rek, nieuw):
     expect(page.get_by_text("Het rek is opgeslagen.")).to_be_visible()
 
 
+def kiesbare_leden(page, aantal=3):
+    """(naam, lidnummer) van de eerste leden op /leden die geen oud-lid zijn, in de volgorde van de keuze."""
+    page.goto("/leden")
+    items = page.locator("main li.bl-item").filter(has_not_text="oud-lid")
+    return [(items.nth(i).locator("a.bl-item__titel").inner_text(),
+             items.nth(i).locator('[data-label="Lidnummer"]').inner_text()) for i in range(aantal)]
+
+
+def lid_zoeken_en_kiezen(veld, knop, lidnummer):
+    """Zoek op het lidnummer (BV-85) en kies de treffer met dat lidnummer; `lidnummer` clubboot kiest de
+    vereniging. veld is het zoekveld, knop de bijbehorende knop Zoeken. De pagina laadt na Zoeken opnieuw."""
+    veld.fill(lidnummer)
+    knop.click()
+    veld.page.locator(f'input[type="radio"][value="{lidnummer}"]').check()
+
+
 def boot_vastleggen(page, naam, soort, eigenaar_index=None, foto=None):
-    """eigenaar_index None is een clubboot; anders de positie in de ledenlijst."""
+    """eigenaar_index None is een clubboot; anders de positie in de keuze (2 is het eerste lid, 3 het tweede)."""
+    nummer = "clubboot" if eigenaar_index is None else kiesbare_leden(page, eigenaar_index - 1)[-1][1]
     page.goto("/boten")
     page.get_by_text("Nieuwe boot", exact=True).click()
-    page.get_by_label("Naam van de boot").fill(naam)
-    page.get_by_label("Bootsoort").select_option(label=soort)
-    eigenaar = page.get_by_label("Eigenaar", exact=True)  # de kop heeft een zoekveld met "eigenaar" in het label
-    if eigenaar_index is None:
-        eigenaar.select_option(value="club")
-    else:
-        eigenaar.select_option(index=eigenaar_index)
-    if foto:
+    formulier = page.locator("details.bl-nieuw form")
+    formulier.get_by_label("Naam van de boot").fill(naam)
+    formulier.get_by_label("Bootsoort").select_option(label=soort)
+    lid_zoeken_en_kiezen(formulier.get_by_label("Eigenaar", exact=True),
+                         formulier.get_by_role("button", name="Zoeken", exact=True), nummer)
+    if foto:  # na Zoeken: een gekozen bestand blijft niet staan
         page.get_by_label("Foto (JPEG, PNG of WebP, niet verplicht)").set_input_files(
             {"name": "boot.png", "mimeType": "image/png", "buffer": foto})
     page.get_by_role("button", name="Boot vastleggen").click()

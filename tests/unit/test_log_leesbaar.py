@@ -100,5 +100,5 @@ def test_gegevens_blijven_zoals_opgeslagen(ingelogd):  # noqa: F811
     # BV-82 punt 4: alleen betreft wordt leesbaar; een mutant die namen ook in de gegevens zet, valt hier
     anna, bert = lid(naam="Anna de Vries", lidnummer="1001"), lid(naam="Bert Jansen", lidnummer="1002")
     b = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
-    ingelogd.post(f"/boten/{b.id}", data={"naam": "Zeemeeuw", "bootsoort": "1", "eigenaar": str(bert.id)})
+    ingelogd.post(f"/boten/{b.id}", data={"naam": "Zeemeeuw", "bootsoort": "1", "eigenaar": bert.lidnummer})
     assert f"eigenaar: [&#39;lid:{anna.id}&#39;, &#39;lid:{bert.id}&#39;]" in ingelogd.get("/log").text

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% from "_melding.html" import meldingblok %}
+{% from "_lidkeuze.html" import zoekveld with context %}
 {% block titel %}Boten zonder eigenaar · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten zonder eigenaar</h1>
@@ -13,14 +14,8 @@
     <p class="bl-item__zijde">{% if b.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
     <form class="bl-formulier bl-item__actie bl-eigenaarkeuze" method="post" action="{{ url_for('web.boot_eigenaar_kiezen', boot_id=b.id) }}">
       {% include "_csrf.html" %}
-      <div class="ds-field">
-        <label class="ds-field__label" for="eigenaar-{{ loop.index0 }}">Eigenaar van {{ b.naam }}</label>
-        <select class="dj-select" id="eigenaar-{{ loop.index0 }}" name="eigenaar" required>
-          <option value="" selected>Geen keuze</option>
-          <option value="club">{{ vereniging }} (clubboot)</option>
-          {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-        </select>
-      </div>
+      {{ zoekveld(velden[b.id], 'eigenaar-' ~ loop.index0, 'zoek', 'eigenaar', 'Eigenaar van ' ~ b.naam, verplicht=true) }}
+      <button type="submit" class="ds-btn" name="actie" value="zoeken">Zoeken: {{ b.naam }}</button>
       <button type="submit" class="ds-btn ds-btn--primary">Eigenaar opslaan: {{ b.naam }}</button>
     </form>
   </li>

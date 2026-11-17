@@ -13,7 +13,7 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, boten, csvbestand, indeling, leden, log, toewijzing
+from app.domein import Regelfout, boten, csvbestand, indeling, leden, lidkeuze, log, toewijzing
 from app.domein.csvbestand import CsvFout
 from app.models import Bezettingsimport, Boot, Bootsoort, Lid, Naamkoppeling, Plaats, Rek, db
 
@@ -26,6 +26,7 @@ _GETAL = re.compile(r"\d{1,2}", re.ASCII)
 
 OVERGESLAGEN, TE_KOPPELEN, FOUT = "overgeslagen", "te koppelen", "fout"
 SOORT = "soort-"  # voorvoegsel in imp.keuzes voor de gekozen bootsoort van een regel (#202)
+OVERSLAAN = "overslaan-"  # voorvoegsel in imp.keuzes voor het vakje Regel overslaan (#295)
 EIGENAAR_ONGEKOPPELD = "Geen lid gevonden, of meer dan één. Kies een lid of de vereniging."
 GEEN_ACTIE = ("ongewijzigd", OVERGESLAGEN)
 BLOKKEERT = (TE_KOPPELEN, FOUT)
@@ -144,11 +145,11 @@ def annuleren(actor):
 
 
 def koppelen(keuzes, actor):
-    """Slaat de keuzes op: {regelnummer: "" | "overslaan" | "club" | id van een actief lid} voor de
-    eigenaar en {"soort-<regelnummer>": "" | "overslaan" | id van een soort die de plaats toelaat}
-    voor de bootsoort (#202). Alles wat er niet in staat vervalt, behalve de eigenaar van een regel
-    die bij de vorige opslag via de soortlijst was overgeslagen: het scherm toonde die lijst niet.
-    Een onbekende regel, lid of soort weigert alles."""
+    """Slaat de keuzes op: {regelnummer: "" | "club" | id van een actief lid} voor de eigenaar,
+    {"soort-<regelnummer>": "" | id van een soort die de plaats toelaat} voor de bootsoort (#202) en
+    {"overslaan-<regelnummer>": waarde} voor het vakje Regel overslaan (#295). Alles wat er niet in
+    staat vervalt, behalve de eigenaar en de soort van een regel die bij de vorige opslag werd
+    overgeslagen: het scherm toonde die velden niet. Een onbekende regel, lid of soort weigert alles."""
     imp = _lopend_of_fout()
     regels = {str(r["regel"]): r for r in imp.regels}
     actief = {str(lid.id) for lid in leden.actieve_leden()}
@@ -156,25 +157,26 @@ def koppelen(keuzes, actor):
     schoon = {}
     for sleutel, waarde in keuzes.items():
         if sleutel in regels:
-            geldig = not waarde or waarde in {"overslaan", "club"} | actief
+            geldig = not waarde or waarde in {"club"} | actief
+        elif sleutel.startswith(OVERSLAAN) and sleutel.removeprefix(OVERSLAAN) in regels:
+            geldig, waarde = True, "1" if waarde else ""
         elif sleutel.startswith(SOORT) and sleutel.removeprefix(SOORT) in regels:
             p = _plaats_zoeken(regels[sleutel.removeprefix(SOORT)]["plaats"], rekken, plaatsen)
-            geldig = not waarde or waarde == "overslaan" or (
-                p is not None and waarde in {str(s.id) for s in p.bootsoorten})
+            geldig = not waarde or (p is not None and waarde in {str(s.id) for s in p.bootsoorten})
         else:
             geldig = False
         if not geldig:
             db.session.rollback()
-            raise Regelfout("De keuzes kloppen niet meer. Ververs de pagina en probeer het opnieuw.")
+            raise Regelfout(lidkeuze.KEUZES_ONGELDIG)
         if waarde:
             schoon[sleutel] = waarde
-    # Was een regel via de soortlijst overgeslagen, dan stond de eigenaarlijst niet op het scherm en is
-    # er geen eigenaar gepost; de eerder gekozen eigenaar blijft dan staan (toets Design System).
     vorige = imp.keuzes or {}
-    for regel, waarde in vorige.items():
-        if regel in regels and regel not in keuzes and vorige.get(SOORT + regel) == "overslaan" \
-                and waarde in {"overslaan", "club"} | actief:
-            schoon[regel] = waarde
+    for regel in regels:
+        if OVERSLAAN + regel in vorige:  # het scherm toonde de velden niet, ook niet bij uitvinken
+            if regel not in keuzes and vorige.get(regel) in {"club"} | actief:  # een oud-lid vervalt
+                schoon[regel] = vorige[regel]
+            if SOORT + regel not in keuzes and SOORT + regel in vorige:
+                schoon[SOORT + regel] = vorige[SOORT + regel]
     imp.keuzes = schoon
     db.session.commit()
 
@@ -190,8 +192,8 @@ class Uitkomst:
     tekst: dict
     uitkomst: str = ""
     melding: str = ""
-    keuze: str = ""  # de keuze voor de eigenaar: overslaan, club of een lid-id
-    soortkeuze: str = ""  # de keuze voor de bootsoort: overslaan of een soort-id (#202)
+    keuze: str = ""  # de keuze voor de eigenaar: club of een lid-id
+    soortkeuze: str = ""  # de keuze voor de bootsoort: een soort-id (#202)
     soortlijst: bool = False  # toon de lijst voor de bootsoort
     eigenaar_open: bool = False  # de eigenaar is niet te koppelen: toon de lijst voor de eigenaar
     plaats: Plaats | None = None
@@ -256,10 +258,10 @@ def beoordeel(imp, vers=False):
         u = Uitkomst(r["regel"], {k: r[k] for k in KOLOMMEN}, keuze=imp.keuzes.get(nr, ""),
                      soortkeuze=imp.keuzes.get(SOORT + nr, ""))
         uitkomsten.append(u)
-        if "overslaan" in (u.keuze, u.soortkeuze):
+        # shortcut: "overslaan" als eigenaar- of soortwaarde is de oude opslag van een import die bij de
+        # upgrade liep (hooguit 2 uur); weghalen na de uitrol van #295.
+        if imp.keuzes.get(OVERSLAAN + nr) or "overslaan" in (u.keuze, u.soortkeuze):
             u.uitkomst = OVERGESLAGEN
-            u.soortlijst = u.soortkeuze == "overslaan"  # de lijst waarin de keuze staat blijft zichtbaar
-            u.plaats = _plaats_zoeken(u.tekst["plaats"], w.rekken, w.plaatsen)  # de lijst toont zijn soorten (#218)
         else:
             _beoordeel_regel(u, w)
     return uitkomsten
@@ -293,7 +295,6 @@ def _eigenaar(u, w):
 def _beoordeel_regel(u, w):
     t = u.tekst
     if not t["plaats"]:
-        u.soortlijst = True  # alleen Regel overslaan
         return _fout(u, "De plaats ontbreekt.")
     if not 1 <= len(t["boot"]) <= BOOT_MAX:
         return _fout(u, f"De naam van de boot ontbreekt of is langer dan {BOOT_MAX} tekens.")
@@ -307,7 +308,6 @@ def _beoordeel_regel(u, w):
         return _fout(u, "Een clubboot heeft geen lidnummer. Maak het lidnummer leeg.")
     u.plaats = _plaats_zoeken(t["plaats"], w.rekken, w.plaatsen)
     if u.plaats is None:
-        u.soortlijst = True  # alleen Regel overslaan
         return _fout(u, f"Plaats {_kort(t['plaats'])} bestaat niet.")
     if u.soortkeuze:  # externe invoer: alleen een soort die de plaats nu toelaat
         u.soortlijst = True

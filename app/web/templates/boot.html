@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_lidkeuze.html" import zoekveld with context %}
 {% from "_log.html" import logblok %}
 {# De vrije plaatsen voor een keuzelijst, voor Plaats toewijzen en Boot verplaatsen; een clubboot krijgt clubplaatsen en gewone plaatsen apart. #}
 {% macro plaatsopties(vrij, clubboot) %}
@@ -100,7 +101,7 @@
 </section>
 {% endif %}
 <section class="kaart" aria-labelledby="wijzigen-kop">
-<details class="dj-disclosure">
+<details class="dj-disclosure"{% if wijzigen_open %} open{% endif %}>
   <summary id="wijzigen-kop">{{ 'Boot wijzigen' if verwijderen_in_taak else 'Boot wijzigen of verwijderen' }}</summary>
   <div class="bl-uitklap__inhoud">
   <div class="bl-formulier">
@@ -109,23 +110,17 @@
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
-      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" value="{{ boot.naam }}" required>
+      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" value="{{ invoer.get('naam', boot.naam) }}" required>
     </div>
     <div class="ds-field">
       <label class="ds-field__label" for="bootsoort">Bootsoort</label>
       <select class="dj-select" id="bootsoort" name="bootsoort" required>
-        {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id == boot.bootsoort_id %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
+        {% for s in bootsoorten %}<option value="{{ s.id }}"{% if s.id|string == invoer.get('bootsoort', boot.bootsoort_id|string) %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
       </select>
     </div>
-    <div class="ds-field">
-      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
-      <select class="dj-select" id="eigenaar" name="eigenaar" required>
-        <option value="onbekend"{% if not boot.lid_id and not boot.clubboot %} selected{% endif %}>eigenaar onbekend</option>
-        <option value="club"{% if boot.clubboot %} selected{% endif %}>{{ vereniging }} (clubboot)</option>
-        {% if boot.lid and boot.lid not in leden %}<option value="{{ boot.lid_id }}" selected>{{ boot.lid.naam }} ({{ boot.lid.lidnummer }}, oud-lid)</option>{% endif %}
-        {% for l in leden %}<option value="{{ l.id }}"{% if l.id == boot.lid_id %} selected{% endif %}>{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-      </select>
-    </div>
+    {{ zoekveld(eigenaarveld, 'eigenaar', 'zoek', 'eigenaar', 'Eigenaar', hint='eigenaar-hint') }}
+    <p class="bl-hint" id="eigenaar-hint">Laat de eigenaar open als die nog niet bekend is. De boot staat dan op Boten zonder eigenaar.</p>
+    <button type="submit" class="ds-btn" name="actie" value="zoeken">Zoeken</button>
     <button type="submit" class="ds-btn ds-btn--primary">Boot opslaan</button>
   </form>
   </div>

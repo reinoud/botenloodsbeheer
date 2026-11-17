@@ -54,13 +54,15 @@ def is_oud_lid(lid, dag=None):
     return any(d is not None and d <= dag for d in (lid.opzegdatum, lid.uit_bron_op))
 
 
-def actieve_leden():
+def actieve_leden(zoek=""):
+    """De leden die geen oud-lid zijn; met zoek alleen die waarvan naam of lidnummer de tekst bevat."""
     dag = vandaag()
     niet_opgezegd = or_(Lid.opzegdatum.is_(None), Lid.opzegdatum > dag)
     in_bron = or_(Lid.uit_bron_op.is_(None), Lid.uit_bron_op > dag)
-    return db.session.scalars(
-        select(Lid).where(niet_opgezegd, in_bron).order_by(Lid.naam, Lid.lidnummer)
-    ).all()
+    q = select(Lid).where(niet_opgezegd, in_bron).order_by(Lid.naam, Lid.lidnummer)
+    if zoek:
+        q = q.where(or_(bevat(Lid.naam, zoek), bevat(Lid.lidnummer, zoek)))
+    return db.session.scalars(q).all()
 
 
 def bevat(kolom, zoek):

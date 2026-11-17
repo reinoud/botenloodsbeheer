@@ -179,12 +179,12 @@ def test_plaats_aanmaken_route_bestaat_niet_meer(ingelogd):
 
 def test_boot_vastleggen_met_ongeldige_foto(ingelogd):
     anna = lid()
-    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": str(anna.id),
+    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": anna.lidnummer,
                                       "foto": (io.BytesIO(b"tekst"), "boot.jpg")},
                       follow_redirects=True)
     assert "geen geldige afbeelding in JPEG, PNG of WebP." in r.text and VORIGE not in r.text
     assert anna.boten == []
-    r = ingelogd.post("/boten", data={"naam": "Clubkajak", "bootsoort": "1", "eigenaar": "club"},
+    r = ingelogd.post("/boten", data={"naam": "Clubkajak", "bootsoort": "1", "eigenaar": "clubboot"},
                       follow_redirects=True)
     assert "De boot is vastgelegd." in r.text and "boot aangemaakt" in r.text
 
@@ -294,7 +294,7 @@ VORIGE = " De vorige blijft staan."
 
 def test_nieuwe_boot_met_foto_boven_de_grens_geeft_een_melding_met_het_formulier_open(ingelogd, app):
     groot = b"x" * (app.config["MAX_CONTENT_LENGTH"] + 1)
-    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club",
+    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "clubboot",
                                       "foto": (io.BytesIO(groot), "groot.jpg")})
     assert r.status_code == 302 and r.location == "/boten?open=nieuw"
     r = ingelogd.get(r.location)
@@ -338,11 +338,10 @@ def test_geweigerde_foto_houdt_het_blok_open(ingelogd, data):
     assert r.location == f"/boten/{b.id}"
 
 
-@pytest.mark.parametrize("data", [{"naam": "Fuut", "bootsoort": "1"}, {"naam": "", "bootsoort": "1", "eigenaar": "club"}],
-                         ids=["geen-eigenaar", "geen-naam"])
-def test_geweigerde_nieuwe_boot_houdt_het_blok_open(ingelogd, data):
-    # #208. Mutant: zonder open=nieuw valt de eerste assert, per pad.
-    r = ingelogd.post("/boten", data=data)
+def test_geweigerde_nieuwe_boot_houdt_het_blok_open(ingelogd):
+    # #208. Mutant: zonder open=nieuw valt de eerste assert. Een ongeldige keuze van de eigenaar rendert het
+    # blok zelf open met een foutregel (test_eigenaar_onbekend.py).
+    r = ingelogd.post("/boten", data={"naam": "", "bootsoort": "1", "eigenaar": "clubboot"})
     assert r.status_code == 302 and r.location == "/boten?open=nieuw"
     assert re.search(r'<details class="bl-nieuw" open>\s*<summary id="nieuw-kop">', ingelogd.get(r.location).text)
 
@@ -425,7 +424,7 @@ def test_boot_wijzigen_via_het_formulier_en_log_op_alle_plaatsen(ingelogd):
     b = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
     form = ingelogd.get(f"/boten/{b.id}").text
     assert 'value="Zeemeeuw"' in form and "Boot opslaan" in form
-    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": "3", "eigenaar": str(bert.id)},
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": "3", "eigenaar": bert.lidnummer},
                       follow_redirects=True)
     assert "De boot is opgeslagen." in r.text and "Fuut" in r.text and "boot gewijzigd" in r.text
     for pad in (f"/boten/{b.id}", f"/leden/{anna.id}", f"/leden/{bert.id}", "/boten", "/log"):
@@ -437,15 +436,15 @@ def test_boot_wijzigen_via_het_formulier_en_log_op_alle_plaatsen(ingelogd):
 def test_boot_wijzigen_weigeringen_via_het_formulier(ingelogd):
     p = bezette_plaats()  # kajak van een lid op een plaats voor kajaks
     boot_id = p.boot_id
-    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4", "eigenaar": "club"},
+    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4", "eigenaar": "clubboot"},
                       follow_redirects=True)
     assert "niet geschikt voor een c11" in r.text and "De boot is opgeslagen." not in r.text
     r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "4",
-                                                   "eigenaar": str(p.boot.lid_id)}, follow_redirects=True)
+                                                   "eigenaar": p.boot.lid.lidnummer}, follow_redirects=True)
     assert "niet geschikt voor een c11" in r.text
-    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "1"}, follow_redirects=True)
-    assert "Kies een eigenaar." in r.text
-    assert ingelogd.post("/boten/999", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "club"}).status_code == 404
+    r = ingelogd.post(f"/boten/{boot_id}", data={"naam": "Zeemeeuw", "bootsoort": "1"})  # veld Eigenaar leeg
+    assert r.status_code == 422 and "kan niet zonder eigenaar" in r.text
+    assert ingelogd.post("/boten/999", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": "clubboot"}).status_code == 404
 
 
 # Id buiten het bereik van integer en een NUL-teken (#67). Met TESTING komt een onafgevangen fout
@@ -474,10 +473,9 @@ def test_getal_binnen_integer_van_postgresql(waarde, goed):
 
 # Te groot getal in querystring of formulier (#74): een gewone melding, geen DataError (500).
 # 2147483647 komt wel bij de database en geeft daar "bestaat niet".
-@pytest.mark.parametrize("eigenaar,melding", [
-    ("2147483647", "Dit lid bestaat niet."), ("2147483648", "Kies een eigenaar."),
-], ids=["eigenaar_binnen", "eigenaar_buiten"])
-def test_te_groot_getal_in_formulier_geeft_melding(ingelogd, eigenaar, melding):
+@pytest.mark.parametrize("eigenaar", ["2147483647", "2147483648"], ids=["eigenaar_binnen", "eigenaar_buiten"])
+def test_te_groot_getal_in_formulier_geeft_melding(ingelogd, eigenaar):
+    melding = "Dit lid kan niet worden gekozen. Zoek opnieuw."  # het rondje is een lidnummer, geen id
     p = bezette_plaats()
     r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Fuut", "bootsoort": "1",
                                                    "eigenaar": eigenaar}, follow_redirects=True)
@@ -487,14 +485,14 @@ def test_te_groot_getal_in_formulier_geeft_melding(ingelogd, eigenaar, melding):
 def test_te_groot_getal_bij_toewijzen_bootsoort_en_overzicht(ingelogd):
     p = bezette_plaats()
     groot = "2147483648"
-    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": groot, "eigenaar": "club"},
+    r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": groot, "eigenaar": "clubboot"},
                       follow_redirects=True)
     assert "Kies een bootsoort." in r.text
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": groot},
                       follow_redirects=True)
-    assert "Kies een eigenaar." in r.text
+    assert "Dit lid kan niet worden gekozen." in r.text
     r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Fuut", "bootsoort": groot,
-                                                   "eigenaar": "club"}, follow_redirects=True)
+                                                   "eigenaar": "clubboot"}, follow_redirects=True)
     assert "Kies een bootsoort." in r.text
     assert ingelogd.post(f"/plaatsen/{p.id}", data={"bootsoort": groot}).status_code == 302
     assert ingelogd.post(f"/plaatsen/{p.id}/toewijzen", data={"boot_id": groot}).status_code == 302
@@ -506,5 +504,5 @@ def test_te_groot_getal_bij_toewijzen_bootsoort_en_overzicht(ingelogd):
 def test_nul_teken_in_formulier_geeft_400(ingelogd):
     p = bezette_plaats()
     r = ingelogd.post(f"/boten/{p.boot_id}", data={"naam": "Zee\x00meeuw", "bootsoort": "1",
-                                                   "eigenaar": "club"})
+                                                   "eigenaar": "clubboot"})
     assert r.status_code == 400

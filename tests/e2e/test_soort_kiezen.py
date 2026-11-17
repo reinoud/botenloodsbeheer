@@ -7,7 +7,7 @@ import re
 
 from conftest import reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_bezetting_csv import KOP, leden_uit_de_lijst, regel, uploaden
+from test_bezetting_csv import KOP, leden_uit_de_lijst, lid_kiezen_bij_regel, regel, uploaden
 from test_loods import plaats_instellen, rek_aanmaken
 
 
@@ -31,34 +31,36 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
     expect(regel(page, fuut)).to_contain_text("De bootsoort Kayak bestaat niet of is dubbelzinnig, kies hem in de lijst.")
     een = page.get_by_label("Keuze voor regel 2", exact=True)
     expect(een).to_be_visible()
-    assert opties(een) == ["Geen keuze", "Regel overslaan", "Kajak", "Surfski"]  # de soorten van plaats 1
+    assert opties(een) == ["Geen keuze", "Kajak", "Surfski"]  # de soorten van plaats 1, zonder Regel overslaan
     groep = page.get_by_role("group", name="Keuze voor regel 3")
-    soort, eigenaar = groep.get_by_label("Bootsoort"), groep.get_by_label("Eigenaar")
-    assert opties(soort) == ["Geen keuze", "Regel overslaan", "Kajak"]  # plaats 2 laat alleen kajak toe
-    assert "Regel overslaan" not in opties(eigenaar) and f"{naam1} ({nr1})" in opties(eigenaar)
+    soort, eigenaar = groep.get_by_label("Bootsoort"), groep.get_by_label("Eigenaar", exact=True)
+    assert opties(soort) == ["Geen keuze", "Kajak"]  # plaats 2 laat alleen kajak toe
+    expect(eigenaar).to_have_value(f"Onbekend {rek}")  # het zoekveld begint met de naam uit het bestand
     expect(page.get_by_role("button", name="Bezetting importeren", exact=True)).to_be_disabled()
     for breedte in (1100, 360):
         page.set_viewport_size({"width": breedte, "height": 900})
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), breedte
         expect(groep).to_be_visible()
-        # Tab: van de lijst van regel 2 naar Bootsoort, Eigenaar, de lijst van regel 4 en dan Keuzes opslaan.
+        # Tab: van de lijst van regel 2 naar zijn vakje, dan Bootsoort, Eigenaar, het vakje van regel 3,
+        # de lijst van regel 4, zijn vakje, Zoeken en Keuzes opslaan.
         een.focus()
-        page.keyboard.press("Tab")
-        expect(soort).to_be_focused()
-        page.keyboard.press("Tab")
-        expect(eigenaar).to_be_focused()
-        page.keyboard.press("Tab")
-        expect(page.get_by_label("Keuze voor regel 4", exact=True)).to_be_focused()
-        page.keyboard.press("Tab")
-        expect(page.get_by_role("button", name="Keuzes opslaan")).to_be_focused()
+        for veld in (regel(page, fuut).get_by_label("Regel overslaan"), soort, eigenaar,
+                     groep.get_by_label("Regel overslaan"), page.get_by_label("Keuze voor regel 4", exact=True),
+                     regel(page, reiger).get_by_label("Regel overslaan"),
+                     page.locator('form[action="/bezetting/import/koppelen"]').get_by_role("button", name="Zoeken", exact=True),
+                     page.get_by_role("button", name="Keuzes opslaan")):
+            page.keyboard.press("Tab")
+            expect(veld).to_be_focused()
 
-    # Issue #218: regel 4 overslaan, opslaan: de soorten van de plaats blijven in de lijst en een soort kiezen
-    # (direct, zonder eerst Geen keuze) is een keer opslaan.
-    vier = page.get_by_label("Keuze voor regel 4", exact=True)
-    vier.select_option(label="Regel overslaan")
+    # Issue #218 en #295: regel 4 overslaan met het vakje, opslaan: alleen het aangevinkte vakje blijft; uitvinken
+    # brengt de lijst met de soorten van de plaats terug en een soort kiezen is een keer opslaan.
+    regel(page, reiger).get_by_label("Regel overslaan").check()
     page.get_by_role("button", name="Keuzes opslaan").click()
     expect(regel(page, reiger)).to_contain_text("overgeslagen")
-    assert opties(page.get_by_label("Keuze voor regel 4", exact=True)) == ["Geen keuze", "Regel overslaan", "Kajak"]
+    expect(page.get_by_label("Keuze voor regel 4", exact=True)).to_have_count(0)
+    regel(page, reiger).get_by_label("Regel overslaan").uncheck()
+    page.get_by_role("button", name="Keuzes opslaan").click()
+    assert opties(page.get_by_label("Keuze voor regel 4", exact=True)) == ["Geen keuze", "Kajak"]
     page.get_by_label("Keuze voor regel 4", exact=True).select_option(label="Kajak")
     page.get_by_role("button", name="Keuzes opslaan").click()
     expect(regel(page, reiger)).to_contain_text("nieuwe boot")
@@ -66,7 +68,7 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
     # De juiste soort kiezen en opslaan: beide regels zijn in orde; beide keuzes blijven wijzigbaar.
     een.select_option(label="Surfski")
     soort.select_option(label="Kajak")
-    eigenaar.select_option(label=f"{naam1} ({nr1})")
+    lid_kiezen_bij_regel(page, meeuw, "Eigenaar", nr1)
     page.get_by_role("button", name="Keuzes opslaan").click()
     expect(page.get_by_text("De keuzes zijn opgeslagen.")).to_be_visible()
     expect(regel(page, fuut)).to_contain_text("nieuwe boot")
