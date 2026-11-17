@@ -40,7 +40,7 @@ Voor een oud-lid schrijft de applicatie geen bootaantal naar e-boekhouden, ook n
 
 Het filter hoort in de applicatie en niet in de integratiecontainer. De container kent de oud-ledenstatus niet: het antwoord bevat alleen lidnummers en het robottoken heeft geen `leden:lezen`. Een filter in de container moet `is_oud_lid` nabouwen uit `Def2` en `Def7`, en elke vervangende container (ADR-012) moet dat opnieuw doen. Volgens `documentatie/beheer/api-van-buiten.md` mag een eigen container de aanroep gebruiken voor de eigen ledenadministratie; ook die afnemer volgt zo het besluit. `GET /api/v1/wachtlijst` levert om dezelfde reden al geen boten van oud-leden.
 
-Een waarde in `Def10` die de container schreef vóór het lid oud-lid werd, blijft in e-boekhouden staan. Of de container die waarde eenmalig leegmaakt, is architectuur §10.2, vraag 12; tot het besluit schrijft hij voor een oud-lid niets.
+Een waarde in `Def10` die de container schreef vóór het lid oud-lid werd, blijft in e-boekhouden staan. De container maakt die waarde niet leeg en schrijft voor een oud-lid niets (besluit stakeholder 2026-11-17, architectuur §10.2, vraag 12).
 
 ## Alternatieven
 
