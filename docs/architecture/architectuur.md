@@ -287,7 +287,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
-| v0.9.1 | 2026-11-17 | Issue #307: de teller van de veiligheidsgrens telt geen opgezegde records (§8.1 dreiging 2, §10.2 vraag 9 besloten); ADR-004 v2.9.1 |
+| v0.9.1 | 2026-11-17 | Issue #307: de teller van de veiligheidsgrens telt geen opgezegde records (§11 bevinding 2, §10.2 vraag 9 besloten); ADR-004 v2.9.1 |
 | v0.9.0 | 2026-11-17 | Issue #298: de import neemt oud-leden tot 5 jaar op (§6.2, §6.3, §11 bevinding 1 en 2); open vragen 9 tot en met 11 (§10.2); ADR-004 v2.9.0, ADR-006 v1.6.0, ADR-012 v1.10.2, ADR-014 v0.2.9 |
 | v0.8.8 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats (§3; ADR-003 v2.3.2) |
 | v0.8.7 | 2026-11-10 | Issue #220: een verse stack importeert de leden twee keer (eerst zonder opzegdatums), zodat de seed oud-leden heeft (§6.2, §6.3) |

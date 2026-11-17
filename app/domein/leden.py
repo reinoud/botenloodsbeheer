@@ -162,8 +162,9 @@ def synchroniseer(records, actor):
         try:
             geldig[nummer] = valideer(record)
         except Ongeldig:
-            aantallen["ongeldig"] += 1  # zonder de inhoud te loggen
-            tellend += 1  # opzegdatum onbekend: telt mee, zoals bij gezien hierboven (#307)
+            # Zonder de inhoud te loggen. Telt niet mee voor de grens: een opzegdatum in een ander
+            # formaat mag een halve lijst niet doorlaten; een 409 wijzigt niets (#307).
+            aantallen["ongeldig"] += 1
         else:
             # Een opgezegde relatie is geen actief lid: ze telt niet mee voor de grens (#307).
             opzegdatum = geldig[nummer]["opzegdatum"]

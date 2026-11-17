@@ -153,6 +153,19 @@ def test_volledige_bron_met_veel_opgezegde_relaties_komt_door_de_grens(importeer
     assert r.status_code == 200 and r.json["uit_bron"] == 0
 
 
+def test_ongeldige_opzegdatum_telt_niet_mee_voor_de_grens(importeer):
+    """#307, review aegis: een opzegdatum in een ander formaat laat een halve lijst niet door.
+    Het record telt wel als gezien: het lid krijgt geen uit_bron_op. Mutant: ongeldig telt mee."""
+    importeer([record(str(n)) for n in range(1, 11)])
+    fout = [record(f"o{n}", opzegdatum="31-12-2020") for n in range(8)]
+    r = importeer([record(str(n), naam="Anders") for n in range(1, 5)] + fout)
+    assert r.status_code == 409 and "minder dan de helft" in r.json["fout"]
+    r = importeer([record("1", opzegdatum="17-11-2026")] + [record(str(n)) for n in range(2, 6)])
+    assert r.status_code == 409  # 4 van 10 tellen
+    r = importeer([record("1", opzegdatum="17-11-2026")] + [record(str(n)) for n in range(2, 7)])
+    assert r.status_code == 200 and alle()["1"].uit_bron_op is None
+
+
 def test_grens_telt_opzegdatum_vandaag_niet_en_morgen_wel(importeer):
     """#307: precies de helft van de tellende records gaat door; één minder niet."""
     importeer([record(str(n)) for n in range(1, 5)])
