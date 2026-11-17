@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.8.8
-**Datum:** 2026-11-10
+**Versie:** v0.9.0
+**Datum:** 2026-11-17
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -74,7 +74,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 
 Daarnaast zijn er twee kleine technische tabellen: `instelling` (sleutel en waarde, voor de naam die de beheerder instelt, ADR-009) en `taakrun` (taak, start, einde, resultaat, aantallen, foutmelding, en de verzoeken om handmatig te starten, ADR-007).
 
-De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort, oud-lid), staan in `domein/toewijzing`. Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna alle plaatsen van dat rek. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
+De regels die de database zelf kan bewaken, staan als constraint in de database: unieke reknaam, verdieping en vak binnen hun grenzen en uniek per rek, unieke publieke sleutel, een boot op hooguit één plaats (`plaats.boot_id` uniek), een boot hooguit één keer op de wachtlijst. De regels die gegevens uit meerdere tabellen vragen (clubplaats tegen clubboot, geschikte bootsoort), staan in `domein/toewijzing`; de bezettingsimport weigert daarnaast een oud-lid (ADR-014). Die functie leest de plaats met `SELECT ... FOR UPDATE`, zodat twee beheerders niet tegelijk dezelfde plaats toewijzen. Plaats wijzigen (bootsoorten, clubplaats) en vrijgeven vergrendelen de plaats op dezelfde manier; de indeling van een rek wijzigen vergrendelt eerst het rek en daarna alle plaatsen van dat rek. Blokkeren, verwijderen en herstellen van een beheerder vergrendelen alle actieve accounts, en het intrekken van een eigen inlogmethode het eigen account; zo blijft er altijd een actieve beheerder met minstens één methode.
 
 Verplaatsen van een boot is vrijgeven gevolgd door toewijzen, binnen één domeinfunctie en één transactie (aanname uit de backlog §8).
 
@@ -131,7 +131,7 @@ Lokaal start de ontwikkelaar de stack met:
 5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
 6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
-`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, importeert op een verse stack eerst de leden zonder opzegdatums via de API (§6.3), zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
+`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, importeert op een verse stack eerst de leden zonder opzegdatums via de API, zodat ook de oud-leden met een opzegdatum van meer dan 5 jaar geleden er komen (§6.3), zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
@@ -140,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
-- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum op of vóór vandaag slaat de import over (ADR-004, issue #203). Oud-leden ontstaan dus alleen als een lid eerst zonder opzegdatum is geïmporteerd; de seedtest importeert daarom eerst de fixture zonder opzegdatums. Een verse stack importeert de leden daarom twee keer: eerst zonder opzegdatums (`tests/e2e/eerste_import.py`, via de API), daarna met, door de integratiecontainer of de API. `tests/e2e/draai.sh` en `documentatie/gebruikers/schermafbeeldingen.sh` doen dat zelf (issue #220); met één import heeft de seed geen oud-leden. Een test voor de opschoning maakt zulke leden zelf aan;
+- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum van meer dan 5 jaar geleden slaat de import over (ADR-004 stap 4, issue #298); een opzegdatum van hooguit 5 jaar geleden komt binnen als oud-lid. De fixture heeft 2 opzegdatums in 2019, die vallen buiten de termijn; die oud-leden ontstaan alleen als het lid eerst zonder opzegdatum is geïmporteerd. De seedtest importeert daarom eerst de fixture zonder opzegdatums. De 10 opzegdatums in 2024 vallen vanaf 2029 buiten de termijn; een test die een oud-lid binnen de termijn nodig heeft, rekent de datum vanaf vandaag uit en leunt niet op de fixture. Een verse stack importeert de leden daarom twee keer: eerst zonder opzegdatums (`tests/e2e/eerste_import.py`, via de API), daarna met, door de integratiecontainer of de API. `tests/e2e/draai.sh` en `documentatie/gebruikers/schermafbeeldingen.sh` doen dat zelf (issue #220); met één import heeft de seed geen oud-leden. Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
@@ -268,13 +268,16 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | 6 | Mag een import ook leden met een `opzegdatum` in de toekomst aanmaken? | Stakeholder | L | Besloten 2026-10-31: ja, e-boekhouden kan dat leveren. De beheerder ziet een lijst met boten van deze leden en de opzegdatum (story volgt van apex) |
 | 7 | Een 429 van Traefik en een 413 boven 3 MB komen in geen toegangslog, omdat de toegangslog van Traefik per router uit staat (ADR-013). Is dat aanvaardbaar, of komt er een tweede logroute (metrics van Traefik, of de `errors`-middleware naar de applicatie)? | Stakeholder | M | Nee; standaard geen log van deze weigeringen |
 | 8 | Werkt `observability.accesslogs=false` per router in `traefik:v3.7.17`? | Forge, proef bij de bouw | H | Ja, voor productie: zonder deze eigenschap komen codes en zoektermen in de log van de gedeelde Traefik |
+| 9 | De veiligheidsgrens van de ledenimport telt ook records met een opzegdatum op of vóór vandaag (ADR-004 stap 3). Een lijst zonder de helft van de actieve leden komt zo door de grens als de bron genoeg opgezegde relaties levert. Tellen we alleen records zonder opzegdatum of met een opzegdatum na vandaag? | Stakeholder | H | Nee voor #298 (bestaat sinds issue #178). Advies: ja, kleine wijziging in `leden.synchroniseer` met een test |
+| 10 | `GET /api/v1/bootaantallen` levert elk lid, dus ook elk oud-lid tot 5 jaar (issue #298); met `BOOTAANTALLEN_SCHRIJVEN=aan` krijgen die relaties `Def10` in e-boekhouden. Een boot van een oud-lid op een plaats telt mee. Is dat de bedoeling? | Stakeholder | M | Nee. Advies: ja, zo laten; nul is juist en de contributie volgt de boot op de plaats |
+| 11 | Mag een boot van een oud-lid buiten de bewaartermijn een plaats krijgen (toewijzen)? Besluit 2 van #298 staat een plaats toe, besluit 5 houdt zo'n oud-lid buiten de keuze Eigenaar. Een bestaande plaats houdt de boot; verplaatsen blijft mogelijk. | Stakeholder | M | Nee; de standaard tot het besluit is het advies. Advies: weigeren met de reden, want de plaats houdt de gegevens van het oud-lid dan onbeperkt vast (ADR-006) |
 
 ## 11. Proactieve bevindingen
 
 | # | Bevinding | Categorie | Zekerheid | Actie | Prioriteit |
 |---|-----------|-----------|-----------|-------|------------|
-| 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De import slaat records over met een opzegdatum op of vóór vandaag die lokaal niet bestaan (ADR-004, issue #203). | H |
-| 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). | H |
+| 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De import slaat records over met een opzegdatum van meer dan 5 jaar geleden die lokaal niet bestaan, met dezelfde grens als de opschoning (ADR-004 stap 4, ADR-006, issue #298). | H |
+| 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). De teller telt ook opgezegde records; zie §10.2, vraag 9. | H |
 | 3 | Elke API-aanroep in het log zou bij een robot die elke minuut vraagt ongeveer 2,6 miljoen regels in 5 jaar geven. | Schaal | Opgelost | Besluit stakeholder 2026-10-31: geslaagde aanroepen en wijzigingen in leden door de import niet in het log (ADR-005 v1.2.0, ADR-006). | L |
 | 5 | Het netwerk `achterkant` is `internal: true`; `web`, `api` en `worker` hebben dan geen uitgaand verkeer. | Betrouwbaarheid | Probable | Geen van de drie heeft dat nu nodig; forge controleert dat bij slice B. | L |
 | 4 | De QR-codes op geprinte kaartjes hangen aan de domeinnaam. | Onderhoudbaarheid | Confirmed | Besluit 2 in §9. | M |
@@ -284,6 +287,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.9.0 | 2026-11-17 | Issue #298: de import neemt oud-leden tot 5 jaar op (§6.2, §6.3, §11 bevinding 1 en 2); open vragen 9 tot en met 11 (§10.2); ADR-004 v2.9.0, ADR-006 v1.6.0, ADR-012 v1.10.2, ADR-014 v0.2.9 |
 | v0.8.8 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats (§3; ADR-003 v2.3.2) |
 | v0.8.7 | 2026-11-10 | Issue #220: een verse stack importeert de leden twee keer (eerst zonder opzegdatums), zodat de seed oud-leden heeft (§6.2, §6.3) |
 | v0.8.6 | 2026-11-10 | Issue #203: de import neemt geen nieuw opgezegd lid op; seed en bevinding 1 bijgewerkt (§6.3, §11); verse stack zonder oud-leden in issue #220 |
