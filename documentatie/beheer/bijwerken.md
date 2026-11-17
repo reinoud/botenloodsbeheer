@@ -25,6 +25,8 @@ Migratie 0017 zet het logo in de database. Het logo in `huisstijl/logo.png` en d
 
 Versie 0.4.0 bevat migratie 0017 hierboven en migratie 0018. Migratie 0018 haalt adres, telefoon en e-mail van leden weg en het tokenrecht `persoonsgegevens`. Een actief token met alleen dat recht wordt ingetrokken, met een regel in het technische log; andere tokens verliezen alleen dat recht. De downgrade zet de kolommen leeg terug; de gegevens en het recht komen niet terug. `.env` kent nieuwe variabelen voor de koppeling met e-boekhouden (`EBOEKHOUDEN_USERNAME`, `EBOEKHOUDEN_CODE1`, `EBOEKHOUDEN_CODE2`, `BOOTAANTALLEN_SCHRIJVEN`), alleen nodig bij `LEDENBRON=eboekhouden` (`integratiecontainer.md`). `LOGO_BESTAND` kan uit `.env` weg.
 
+Versie 1.3.0 heeft geen migratie. De eerste ledenimport daarna neemt oud-leden op van wie de opzegdatum hooguit 5 jaar geleden is, ook oud-leden zonder boot die eerder zijn verwijderd. Levert de ledenbron `lid_sinds` of de opzegdatum niet als JJJJ-MM-DD, dan stopt de import met een 409 en blijven de leden ongewijzigd; kijk die eerste import daarom na.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding.

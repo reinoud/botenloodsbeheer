@@ -2,6 +2,33 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 1.3.0 (2026-11-17)
+
+Versie met oud-leden als eigenaar en een SBOM per image (milestone "Oud-leden als eigenaar en SBOM"). Neemt ook twee zichtbare wijzigingen uit milestone 7 mee.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:1.3.0`
+- `ghcr.io/reinoud/botenloods-integratie:1.3.0`
+
+Ook beschikbaar onder de tags `1.3` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-1.3.0.cdx.json` en `botenloods-integratie-1.3.0.cdx.json` (#297).
+
+**Nieuw sinds 1.2.0**
+- Een boot van een oud-lid is vast te leggen en krijgt een plaats, maar geen clubplaats en geen plek op de wachtlijst. Een oud-lid van wie de opzegdatum hooguit 5 jaar geleden is, staat met de tag oud-lid in de keuze Eigenaar en op Leden. Daarbuiten is het oud-lid niet te kiezen en krijgt zijn boot geen nieuwe plaats; verplaatsen mag wel (#298).
+- De ledenimport neemt oud-leden op tot 5 jaar na hun opzegdatum. Voor oud-leden schrijft de applicatie geen bootaantal naar e-boekhouden (#298).
+- Een lid kiezen gaat met een zoekveld en een tussenstap, bij Nieuwe boot, Boot wijzigen, Boten zonder eigenaar en de bezettingsimport, in plaats van een lijst met ruim 200 namen (#295).
+- Per image een SBOM als bijlage bij de release (#297).
+
+**Gewijzigd**
+- De veiligheidsgrens van de ledenimport telt opgezegde en ongeldige records niet meer mee (#307).
+- De bezettingsimport en het koppelscherm blijven een oud-lid weigeren (#298).
+- Op de pagina van een plaats en in de zoekresultaten staat de tag oud-lid achter de naam (#268, #298).
+- De knop Zoeken in de kop toont op een smal scherm een vergrootglas (#275).
+- Testonderhoud: opruimen van E2E-gegevens en een slottest op vergrendelen (#278, #283, #300).
+
+**Bijwerken vanaf 1.2.0** (zie `documentatie/beheer/bijwerken.md`). Er is geen migratie; `docker-compose.yml` en `.env` zijn niet gewijzigd. Let op bij de eerste ledenimport na het bijwerken:
+- Oud-leden met een opzegdatum van hooguit 5 jaar geleden komen erbij, ook oud-leden zonder boot die eerder zijn verwijderd. Na 5 jaar ruimt de opschoning ze weer op.
+- Levert e-boekhouden `lid_sinds` of de opzegdatum niet als JJJJ-MM-DD, dan stopt de import met een 409 en blijven de leden ongewijzigd (#307).
+
 ## 1.2.0 (2026-11-15)
 
 Versie met schermverbeteringen en een leesbaar log na 1.1.0 (milestone "Schermen en log na v1.1.0").
