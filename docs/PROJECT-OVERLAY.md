@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.92
+**Versie overlay:** v0.5.93
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-17
@@ -85,6 +85,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Geef bij een externe SOAP-dienst de WSDL vooraf mee in de scratchpad, en noem het adresschema (http of https) dat de dienst gebruikt.
 - Kiest een besluit een bibliotheek, controleer dan vóór het besluit in de broncode van de vastgepinde versie dat elke nodige aanroep bestaat, voor lezen én schrijven, en noem die aanroepen in de opdracht.
 - Wordt een pakket of afhankelijkheid vervangen, zoek dan ook in `docs/status/status.html` en in open issues naar de oude naam, en werk die in dezelfde ronde bij.
+- Raakt een issue de besluiten van een ander issue, zeg dan welke besluiten uit dat issue deze ronde verwerkt en welke niet; het agent meldt welke het verwerkte (#298).
+- Verwijs naar een sectie van een issue met de plek: de issuetekst (`gh issue view <nr> --json body -q .body`) of een commentaar (`--comments`) (#297).
+- Een agent in een worktree schrijft zijn terugblik in `werk/terugblik/` van de worktree; die komt via de branch in `main` (#297).
 
 #### Bouw
 
@@ -296,6 +299,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een verwachte falende assert de testnaam en de tekst van de assert; het regelnummer alleen als controle, want het verschuift bij elke wijziging in de staging (#154).
 - Verwijder een testaccount na een live proef met een los commando, zonder `rm` van bestanden ernaast; een geblokkeerd gecombineerd commando wordt niet opnieuw geprobeerd (#154).
 - Zeg in een reviewopdracht of de unitsuite en `draai.sh -k <test>` tegelijk mogen draaien of na elkaar, en laat een overname uit designsystem vergelijken met `cmp <(git show :<pad>) <(git -C /Users/reinoud/git/designsystem show <commit>:<pad>)`, zonder tijdelijke bestanden en zonder `rm`.
+- Een regex toets je met letterlijke waarden in één SELECT; proefrijen alleen als het gedrag van het hele script getoetst moet worden (#300).
+- Een review van een workflow draait actionlint met `docker run --rm -v <werkmap>:/repo -w /repo rhysd/actionlint:1.7.7 -no-color <workflow>` (#297).
 
 #### E2E
 
@@ -416,6 +421,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een nieuwe GET-parameter: de toegangslog (`app/toegangslog.py`) laat de querystring weg en `app/__init__.py` weigert een NUL-teken centraal. De reviewer controleert alleen of de nieuwe route daar niet omheen gaat.
 - Noem bij een whitelist- of adrescontrole in welke vorm het clientadres binnenkomt (IPv4 als gewone notatie of als `::ffff:`), of zeg dat het onbekend is.
 - Een controle dat Traefik een route niet logt, begint met één verzoek zonder router (onbekende Host) dat wel gelogd moet worden; anders bewijst een lege log niets (#154).
+- Rechten van GITHUB_TOKEN gelden per job, niet per stap. Heeft een stap meer rechten nodig, vraag dan om een aparte job en noem welke actions daarvoor bij mogen komen (#297).
 
 #### Documentatie, backlog en ADR's
 
@@ -501,6 +507,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.93 | 2026-11-17 | Zes regels: besluiten uit een ander issue, plek van een issuesectie, terugblik in een worktree (Algemeen); regex met letterlijke waarden, actionlint (Review); rechten van GITHUB_TOKEN per job (Security en proxy); uit de terugblikken bij #297, #298 en #300 | Lessen |
 | v0.5.92 | 2026-11-17 | Regel (Release): SBOM per image in CycloneDX JSON als bijlage bij de release | Besluit stakeholder (#297) |
 | v0.5.91 | 2026-11-17 | Zes regels (Bouw): slottest direct op de domeinfunctie, mutant op config met een nieuwe web, ruff in de container, tellen over alle pytest-samenvattingen, opruimregex tellen, uitvoer van een achtergrondrun zelf lezen; uit de terugblikken bij #278, #283 en #285 | Lessen |
 | v0.5.90 | 2026-11-16 | Regel (Release): releasenotes ook in `CHANGELOG.md` | Besluit stakeholder |
