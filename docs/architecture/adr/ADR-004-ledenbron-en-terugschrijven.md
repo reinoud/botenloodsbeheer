@@ -1,8 +1,8 @@
 # ADR-004 Interface van de ledenbron en terugschrijven
 
-**Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012) 2026-11-08 (e-boekhouden, issue #178) en 2026-11-17 (oud-leden tot 5 jaar, issue #298)
+**Status:** Aanvaard, 2026-10-30; herzien 2026-10-31 (integratiecontainer, ADR-012) 2026-11-08 (e-boekhouden, issue #178) en 2026-11-17 (oud-leden tot 5 jaar en geen bootaantallen voor oud-leden, issue #298)
 **Datum:** 2026-10-30
-**Versie:** v2.9.1
+**Versie:** v2.10.0
 **Stories:** BLB-006, BLB-007, BLB-008, BLB-009, BLB-026
 
 ## Context
@@ -34,7 +34,13 @@ De bron e-boekhouden (`koppeling/eboekhouden.py`, issue #178) logt in met `EBOEK
 
 De stub in de integratiecontainer leest leden uit een JSON-bestand (`LEDENBRON_STUB_BESTAND`). De tests van de applicatie sturen het fixturebestand `tests/fixtures/leden.json` rechtstreeks naar `PUT /api/v1/leden`; dat is de nepbron.
 
-Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, alleen voor boten met een toegewezen plaats en zonder clubboten (besluit stakeholder 2026-10-31); de vereniging rekent de contributie daarmee elders af per bootsoort; `GET /api/v1/bootaantallen` levert ze, uit één functie (`domein/boten.bootaantallen`, BLB-009). De instelling "terugschrijven" in de applicatie vervalt. In de integratiecontainer schrijft `schrijf_bootaantallen` van de bron e-boekhouden na elke geslaagde import, en alleen als `BOOTAANTALLEN_SCHRIJVEN=aan` staat (standaard `uit`; `aan` zonder deze bron weigert de container bij het starten). Per lid wordt het record vers opgehaald (GetRelaties) en met alleen `Def10` gewijzigd teruggestuurd (UpdateRelatie), als JSON-tekst met `ensure_ascii=False` en de sleutels zoals de API ze geeft. Een gelijke waarde wordt niet geschreven, een onbekend lidnummer wordt overgeslagen en geteld, en na drie fouten achter elkaar stopt het schrijven. Er is geen herhaling: de volgende poging is de volgende geslaagde import. Het record verlaat de container niet en komt niet in het log.
+Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, alleen voor boten met een toegewezen plaats, zonder clubboten (besluit stakeholder 2026-10-31) en zonder oud-leden (besluit stakeholder 2026-11-17); de vereniging rekent de contributie daarmee elders af per bootsoort; `GET /api/v1/bootaantallen` levert ze, uit één functie (`domein/boten.bootaantallen`, BLB-009). De instelling "terugschrijven" in de applicatie vervalt. In de integratiecontainer schrijft `schrijf_bootaantallen` van de bron e-boekhouden na elke geslaagde import, en alleen als `BOOTAANTALLEN_SCHRIJVEN=aan` staat (standaard `uit`; `aan` zonder deze bron weigert de container bij het starten). Per lid wordt het record vers opgehaald (GetRelaties) en met alleen `Def10` gewijzigd teruggestuurd (UpdateRelatie), als JSON-tekst met `ensure_ascii=False` en de sleutels zoals de API ze geeft. Een gelijke waarde wordt niet geschreven, een onbekend lidnummer wordt overgeslagen en geteld, en na drie fouten achter elkaar stopt het schrijven. Er is geen herhaling: de volgende poging is de volgende geslaagde import. Het record verlaat de container niet en komt niet in het log.
+
+Voor een oud-lid schrijft de applicatie geen bootaantal naar e-boekhouden, ook niet als zijn boot een plaats heeft (besluit en bevestiging van de stakeholder, 2026-11-17, architectuur §10.2, vraag 10). Het filter zit in `domein/boten.bootaantallen`: `GET /api/v1/bootaantallen` levert geen regel voor een oud-lid. Oud-lid is dezelfde afleiding als overal (`leden.is_oud_lid`): opzegdatum of `uit_bron_op` op of vóór vandaag. Een lid met een opzegdatum in de toekomst staat er dus nog in.
+
+Het filter hoort in de applicatie en niet in de integratiecontainer. De container kent de oud-ledenstatus niet: het antwoord bevat alleen lidnummers en het robottoken heeft geen `leden:lezen`. Een filter in de container moet `is_oud_lid` nabouwen uit `Def2` en `Def7`, en elke vervangende container (ADR-012) moet dat opnieuw doen. Volgens `documentatie/beheer/api-van-buiten.md` mag een eigen container de aanroep gebruiken voor de eigen ledenadministratie; ook die afnemer volgt zo het besluit. `GET /api/v1/wachtlijst` levert om dezelfde reden al geen boten van oud-leden.
+
+Een waarde in `Def10` die de container schreef vóór het lid oud-lid werd, blijft in e-boekhouden staan. De container maakt die waarde niet leeg en schrijft voor een oud-lid niets (besluit stakeholder 2026-11-17, architectuur §10.2, vraag 12).
 
 ## Alternatieven
 
@@ -50,14 +56,15 @@ Terugschrijven: de domeinlaag berekent de aantallen per lid per bootsoort, allee
 - Een nieuwe bron is één klasse en een waarde voor `LEDENBRON` in de integratiecontainer, of een eigen container met de aanroepen uit ADR-012. Aegis beoordeelt de echte e-boekhoudenkoppeling vóór de commit.
 - De oud-ledenstatus is afgeleid uit opzegdatum en `uit_bron_op`; verdwijnt een lid zonder opzegdatum uit de bron, dan telt de datum waarop de synchronisatie het lid niet meer vond als opzegdatum (besloten door de stakeholder, 2026-10-30, architectuur §9 besluit 4).
 - De veiligheidsgrens kan een echte massale opzegging tegenhouden. Bij 210 leden is dat onwaarschijnlijk; de beheerder ziet de afbreking op de statuspagina.
-- De import bewaart meer persoonsgegevens: naam, lidnummer en datums van oud-leden tot 5 jaar na de opzegdatum, ook zonder boot. Doel, termijn en grondslag staan in de intake (besluit 30 van de stakeholder, 2026-11-17). `GET /api/v1/leden` en `GET /api/v1/bootaantallen` leveren die oud-leden ook; zie architectuur §10.2, vraag 10.
+- De import bewaart meer persoonsgegevens: naam, lidnummer en datums van oud-leden tot 5 jaar na de opzegdatum, ook zonder boot. Doel, termijn en grondslag staan in de intake (besluit 30 van de stakeholder, 2026-11-17). `GET /api/v1/leden` levert die oud-leden ook, met `oud_lid`; `GET /api/v1/bootaantallen` levert ze niet (architectuur §10.2, vraag 10).
 - Architectuur §10.2, vraag 9: de teller van de veiligheidsgrens telt alleen records zonder opzegdatum of met een opzegdatum na vandaag (stap 3; issue #307, besluit stakeholder 2026-11-17).
-- Architectuur §10.2, vraag 10 (voor de stakeholder): `bootaantallen` geeft elk lid in de applicatie, dus straks ook elk oud-lid tot 5 jaar met nullen. Met `BOOTAANTALLEN_SCHRIJVEN=aan` schrijft de container dan `Def10` bij opgezegde relaties die de applicatie eerder niet kende. Een boot van een oud-lid met een plaats telt mee voor de contributie. Advies: zo laten, want nul is juist en de vereniging rekent elders af; de stakeholder bevestigt dat een oud-lid met een boot op een plaats in de telling hoort.
+- Het filter op oud-leden geldt ook voor een lid dat al vóór #298 in de applicatie stond en daarna opzegde. Tot nu toe kreeg zo'n lid na het opzeggen nog `Def10`; vanaf de bouw van #298 niet meer. De statuspagina telt bij Bootaantallen alleen de geleverde leden.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.10.0 | 2026-11-17 | Terugschrijven: `bootaantallen` levert geen oud-leden; het filter zit in de applicatie, niet in de integratiecontainer | Besluit stakeholder 2026-11-17, architectuur §10.2, vraag 10, issue #298 |
 | v2.9.1 | 2026-11-17 | Stap 3: de teller van de veiligheidsgrens telt alleen records zonder opzegdatum of met een opzegdatum na vandaag; een record met ongeldige velden telt niet mee maar wel als gezien (review aegis); architectuur §10.2, vraag 9 besloten | Besluit stakeholder 2026-11-17, issue #307 |
 | v2.9.0 | 2026-11-17 | Stap 4: de import neemt een nieuw lid op met een opzegdatum van hooguit 5 jaar geleden, met dezelfde grens als de opschoning; een bestaand lid wordt altijd bijgewerkt. Stap 3: noemer en teller van de veiligheidsgrens uitgeschreven; architectuur §10.2, vragen 9 en 10 | Besluit stakeholder 2026-11-16, issue #298, besluit 3; vervangt v2.7.0 |
 | v2.8.0 | 2026-11-10 | Bron e-boekhouden slaat een relatie op "opgezegd" zonder opzegdatum (`Def7`) over | Besluit stakeholder 2026-11-10, issue #221 |

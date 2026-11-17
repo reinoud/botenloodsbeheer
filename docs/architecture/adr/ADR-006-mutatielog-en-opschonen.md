@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.6.0
+**Versie:** v1.6.1
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043, BLB-047
 
 ## Context
@@ -56,7 +56,7 @@ Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `B
 
 De grens rekent met `jaren_terug`: een startdatum van precies 5 jaar geleden blijft staan. Een opgeschoond oud-lid komt niet terug, want de import neemt een nieuw lid met een opzegdatum alleen op als die hooguit 5 jaar geleden is, met dezelfde grens (ADR-004 stap 4, issue #298). Dezelfde startdatum en grens bepalen of een oud-lid binnen de bewaartermijn valt en dus als eigenaar te kiezen is (BLB-005); de bouw zet die in één functie in `domein/leden` die opschoning, import en keuzelijst delen. De wachtlijst volgt de boot via de cascade. Foto's staan in de database (ADR-008), dus er blijft geen bestand op schijf achter. De opschoning gebruikt geen `FOR UPDATE`. De import kan een oud-lid weer actief maken. Daarom neemt de opschoning naast haar eigen slot ook het importslot; loopt er een import, dan wacht ze tot de volgende ronde van de worker (#49).
 
-Sinds issue #298 geeft een beheerder een oud-lid binnen de bewaartermijn een boot, en een boot van een oud-lid een gewone plaats. Een oud-lid binnen de termijn valt niet onder de opschoning, dus dat botst niet, op één geval na. Wijst een beheerder een plaats toe aan een boot van een oud-lid buiten de termijn terwijl de opschoning loopt, dan heeft de opschoning het oud-lid al gekozen. Haar `DELETE` op die boot wacht op het slot van de toewijzing en raakt daarna een boot met een plaats. De verwijzing `plaats.boot_id` heeft geen `ON DELETE`, dus de database weigert die `DELETE`: de hele opschoning rolt terug, staat als mislukte run in `taakrun` en draait de volgende dag opnieuw, als de boot een plaats heeft en het oud-lid blijft staan (Probable; de bouw bevestigt dit met een test). Een boot van een oud-lid buiten de termijn krijgt bij voorkeur geen plaats; dat is architectuur §10.2, vraag 11, en sluit dit geval op de dag van de grens na. Een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
+Sinds issue #298 geeft een beheerder een oud-lid binnen de bewaartermijn een boot, en een boot van een oud-lid een gewone plaats. Een oud-lid binnen de termijn valt niet onder de opschoning, dus dat botst niet, op één geval na. Wijst een beheerder een plaats toe aan een boot van een oud-lid buiten de termijn terwijl de opschoning loopt, dan heeft de opschoning het oud-lid al gekozen. Haar `DELETE` op die boot wacht op het slot van de toewijzing en raakt daarna een boot met een plaats. De verwijzing `plaats.boot_id` heeft geen `ON DELETE`, dus de database weigert die `DELETE`: de hele opschoning rolt terug, staat als mislukte run in `taakrun` en draait de volgende dag opnieuw, als de boot een plaats heeft en het oud-lid blijft staan (Probable; de bouw bevestigt dit met een test). Sinds het besluit van de stakeholder van 2026-11-17 (architectuur §10.2, vraag 11, ADR-003) krijgt een boot van een oud-lid buiten de termijn geen plaats. Toewijzen en opschoning rekenen met dezelfde functie en grens, dus dit geval blijft alleen over rond middernacht op de dag van de grens; dan faalt de opschoning veilig zoals hierboven. Verplaatsen raakt de opschoning niet, want de boot had al een plaats. Een `DELETE` op een boot die intussen een andere eigenaar kreeg, leest de rij opnieuw en slaat hem over. De code staat in `domein/opschonen`.
 
 ## Alternatieven
 
@@ -80,6 +80,7 @@ Sinds issue #298 geeft een beheerder een oud-lid binnen de bewaartermijn een boo
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.6.1 | 2026-11-17 | Toewijzen weigert een boot van een oud-lid buiten de termijn; het geval met de opschoning blijft alleen rond middernacht op de dag van de grens | Besluit stakeholder 2026-11-17, architectuur §10.2, vraag 11 |
 | v1.6.0 | 2026-11-17 | Een beheerder geeft een oud-lid binnen de bewaartermijn een boot en een gewone plaats; import, opschoning en keuzelijst delen de grens; gelijktijdig toewijzen en opschonen faalt veilig op `plaats.boot_id` | Besluiten stakeholder 2026-11-16, issue #298 |
 | v1.5.0 | 2026-11-14 | Leesbaar tonen van actie en verwijzing in de bootlogs; technisch log en opslag ongewijzigd; alinea Twee logs en tabel Tonen aangevuld | BV-82, issue #174 |
 | v1.4.4 | 2026-11-13 | `boot.verplaatst` in `BOOTMUTATIES`; tabel Tonen (Plaats, Vrije plaatsen) en BLB-047 bij Stories | Issue #206 |
