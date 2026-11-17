@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.9.0
+**Versie:** v0.9.1
 **Datum:** 2026-11-17
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -268,7 +268,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | 6 | Mag een import ook leden met een `opzegdatum` in de toekomst aanmaken? | Stakeholder | L | Besloten 2026-10-31: ja, e-boekhouden kan dat leveren. De beheerder ziet een lijst met boten van deze leden en de opzegdatum (story volgt van apex) |
 | 7 | Een 429 van Traefik en een 413 boven 3 MB komen in geen toegangslog, omdat de toegangslog van Traefik per router uit staat (ADR-013). Is dat aanvaardbaar, of komt er een tweede logroute (metrics van Traefik, of de `errors`-middleware naar de applicatie)? | Stakeholder | M | Nee; standaard geen log van deze weigeringen |
 | 8 | Werkt `observability.accesslogs=false` per router in `traefik:v3.7.17`? | Forge, proef bij de bouw | H | Ja, voor productie: zonder deze eigenschap komen codes en zoektermen in de log van de gedeelde Traefik |
-| 9 | De veiligheidsgrens van de ledenimport telt ook records met een opzegdatum op of vóór vandaag (ADR-004 stap 3). Een lijst zonder de helft van de actieve leden komt zo door de grens als de bron genoeg opgezegde relaties levert. Tellen we alleen records zonder opzegdatum of met een opzegdatum na vandaag? | Stakeholder | H | Nee voor #298 (bestaat sinds issue #178). Advies: ja, kleine wijziging in `leden.synchroniseer` met een test |
+| 9 | De veiligheidsgrens van de ledenimport telt ook records met een opzegdatum op of vóór vandaag (ADR-004 stap 3). Een lijst zonder de helft van de actieve leden komt zo door de grens als de bron genoeg opgezegde relaties levert. Tellen we alleen records zonder opzegdatum of met een opzegdatum na vandaag? | Stakeholder | H | Besloten 2026-11-17: ja, alleen records zonder opzegdatum of met een opzegdatum na vandaag tellen mee (issue #307, ADR-004 v2.9.1) |
 | 10 | `GET /api/v1/bootaantallen` levert elk lid, dus ook elk oud-lid tot 5 jaar (issue #298); met `BOOTAANTALLEN_SCHRIJVEN=aan` krijgen die relaties `Def10` in e-boekhouden. Een boot van een oud-lid op een plaats telt mee. Is dat de bedoeling? | Stakeholder | M | Nee. Advies: ja, zo laten; nul is juist en de contributie volgt de boot op de plaats |
 | 11 | Mag een boot van een oud-lid buiten de bewaartermijn een plaats krijgen (toewijzen)? Besluit 2 van #298 staat een plaats toe, besluit 5 houdt zo'n oud-lid buiten de keuze Eigenaar. Een bestaande plaats houdt de boot; verplaatsen blijft mogelijk. | Stakeholder | M | Nee; de standaard tot het besluit is het advies. Advies: weigeren met de reden, want de plaats houdt de gegevens van het oud-lid dan onbeperkt vast (ADR-006) |
 
@@ -277,7 +277,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | # | Bevinding | Categorie | Zekerheid | Actie | Prioriteit |
 |---|-----------|-----------|-----------|-------|------------|
 | 1 | Na het opschonen van een oud-lid kan de volgende synchronisatie het lid opnieuw aanmaken als e-boekhouden het nog levert. | Gegevensbescherming | Confirmed | De import slaat records over met een opzegdatum van meer dan 5 jaar geleden die lokaal niet bestaan, met dezelfde grens als de opschoning (ADR-004 stap 4, ADR-006, issue #298). | H |
-| 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). De teller telt ook opgezegde records; zie §10.2, vraag 9. | H |
+| 2 | Een kapotte bron die een lege of halve lijst levert, maakt alle leden oud-lid. | Betrouwbaarheid | Probable | De synchronisatie breekt af als minder dan de helft van de actieve leden terugkomt (ADR-004). De teller telt alleen records zonder opzegdatum of met een opzegdatum na vandaag (§10.2, vraag 9, issue #307). | H |
 | 3 | Elke API-aanroep in het log zou bij een robot die elke minuut vraagt ongeveer 2,6 miljoen regels in 5 jaar geven. | Schaal | Opgelost | Besluit stakeholder 2026-10-31: geslaagde aanroepen en wijzigingen in leden door de import niet in het log (ADR-005 v1.2.0, ADR-006). | L |
 | 5 | Het netwerk `achterkant` is `internal: true`; `web`, `api` en `worker` hebben dan geen uitgaand verkeer. | Betrouwbaarheid | Probable | Geen van de drie heeft dat nu nodig; forge controleert dat bij slice B. | L |
 | 4 | De QR-codes op geprinte kaartjes hangen aan de domeinnaam. | Onderhoudbaarheid | Confirmed | Besluit 2 in §9. | M |
@@ -287,6 +287,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.9.1 | 2026-11-17 | Issue #307: de teller van de veiligheidsgrens telt geen opgezegde records (§8.1 dreiging 2, §10.2 vraag 9 besloten); ADR-004 v2.9.1 |
 | v0.9.0 | 2026-11-17 | Issue #298: de import neemt oud-leden tot 5 jaar op (§6.2, §6.3, §11 bevinding 1 en 2); open vragen 9 tot en met 11 (§10.2); ADR-004 v2.9.0, ADR-006 v1.6.0, ADR-012 v1.10.2, ADR-014 v0.2.9 |
 | v0.8.8 | 2026-11-10 | Issue #205: een clubboot mag ook op een gewone plaats (§3; ADR-003 v2.3.2) |
 | v0.8.7 | 2026-11-10 | Issue #220: een verse stack importeert de leden twee keer (eerst zonder opzegdatums), zodat de seed oud-leden heeft (§6.2, §6.3) |
