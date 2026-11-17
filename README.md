@@ -1,8 +1,34 @@
 # botenloodsbeheer
 
-Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OVERLAY.md`. Architectuur: `docs/architecture/architectuur.md`.
+Een webapplicatie waarmee een kanovereniging bijhoudt welke boot op welke plaats in de botenloods ligt, van wie die boot is, welke plaatsen vrij zijn en wie op de wachtlijst staat. Het vervangt de spreadsheet waarin dat eerst stond. De applicatie werkt op een groot scherm en op een telefoon.
+
+![Het rekoverzicht van een rek: per verdieping de plaatsen, met een icoon van de boot per plaats.](documentatie/gebruikers/afbeeldingen/rekoverzicht.png)
+
+## Wat de applicatie doet
+
+**De loods in beeld.** Het rekoverzicht toont per rek en per verdieping welke plaats bezet is en welke vrij. De indeling met rekken, verdiepingen en plaatsen leg je in de applicatie vast. Per plaats stel je in voor welke bootsoorten hij geschikt is, en of het een clubplaats is. Een plaats is te hernoemen zonder dat toewijzingen of QR-codes breken.
+
+**Boten en eigenaren.** Elke boot heeft een naam, een bootsoort, een eigenaar en zo nodig een foto. Vanaf de pagina van een boot wijs je een plaats toe, verplaats je de boot of zet je hem op de wachtlijst. De applicatie weigert een plaats die niet bij de bootsoort past, en een ledenboot op een clubplaats. Zoeken op plaats, boot of eigenaar kan vanuit de kop van elk scherm.
+
+![De pagina van een boot met bootsoort, eigenaar, plaats toewijzen en de wachtlijst.](documentatie/gebruikers/afbeeldingen/boot.png)
+
+**Wachtlijst per bootsoort.** Een boot zonder plaats komt op de wachtlijst van zijn bootsoort, met aanmelddatum en wachttijd. De beheerder kiest zelf wie een vrije plaats krijgt; de applicatie wijst niet automatisch toe.
+
+![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](documentatie/gebruikers/afbeeldingen/wachtlijst.png)
+
+**Leden uit de ledenadministratie.** De leden komen uit e-boekhouden, via een aparte integratiecontainer die alleen via de API werkt. Een andere vereniging kan die container vervangen door een koppeling met een eigen ledenbron. De applicatie bewaart alleen lidnummer, naam en lidmaatschapsdata, geen adres, telefoon of e-mail. Overzichten tonen welke leden gaan opzeggen en welke opgezegde leden nog een plaats hebben. Gegevens van oud-leden worden 5 jaar na de opzegdatum opgeschoond.
+
+**Kaartjes en een openbare pagina.** Per plaats print je een kaartje met een QR-code. De QR-code opent een openbare pagina met de plaats, de boot, de naam van de eigenaar en de foto. Wie langs het rek loopt, ziet zo zonder in te loggen van wie een boot is.
+
+![De openbare pagina van een plaats met boot, eigenaar en foto.](documentatie/gebruikers/afbeeldingen/openbaar.png)
+
+**Export, import en log.** De indeling gaat naar Excel, en indeling en bezetting gaan als CSV de applicatie uit en in. Elke wijziging staat in het mutatielog, en onder elk overzicht staan de bootmutaties die erbij horen.
+
+**Inloggen en API.** Beheerders loggen in met een passkey of met een wachtwoord en een authenticator-app. Er is een API (`/api/v1`, met OpenAPI-specificatie) met persoonlijke tokens en robottokens, rechten per token en een IP-whitelist.
 
 ## Documentatie
+
+- Projectregels: `docs/PROJECT-OVERLAY.md`. Architectuur: `docs/architecture/architectuur.md`.
 
 - Voor beheerders van de botenloods: [handleiding](documentatie/gebruikers/handleiding.md).
 - Voor systeembeheerders (installatie achter Traefik, voorbeelden, integratiecontainer, bijwerken): [beheerdocumentatie](documentatie/beheer/installatie.md).
@@ -12,7 +38,7 @@ Beheer van de botenloods van een kanovereniging. Projectregels: `docs/PROJECT-OV
 1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand). De standaarden `DOMEIN=localhost` en een lege `TRAEFIK_CERTRESOLVER` passen bij lokaal.
 2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`: zonder dat bestand start compose niet.
 3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`. Lokaal start een eigen Traefik mee; de netwerken maakt compose zelf.
-4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub. De import slaat een nieuw lid met een opzegdatum over (#203); wil je ook oud-leden, importeer dan eerst één keer zonder opzegdatums en laat daarna de container importeren. `tests/e2e/draai.sh` doet dat op een stack zonder leden zelf: `tests/e2e/eerste_import.py` in de container `e2e`, met een robottoken met `leden:importeren` en de whitelist op het adres van Traefik op het netwerk `koppeling`.
+4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub. De import neemt ook oud-leden op van wie de opzegdatum hooguit 5 jaar geleden is (#298). `tests/e2e/draai.sh` importeert op een stack zonder leden eerst één keer zonder opzegdatums: `tests/e2e/eerste_import.py` in de container `e2e`, met een robottoken met `leden:importeren` en de whitelist op het adres van Traefik op het netwerk `koppeling`.
 5. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed maakt geen leden: alleen de import via de API schrijft leden.
 6. Een login aanmaken, zie hieronder.
 
