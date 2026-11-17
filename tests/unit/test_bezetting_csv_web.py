@@ -92,7 +92,7 @@ def test_koppelen_annuleren_en_koppeling_verwijderen_vragen_alleen_een_inlog(ing
         s["ingelogd_op"] = int(time.time()) - 601
     for pad in ("/bezetting/import/koppelen", f"/bezetting/koppelingen/{kid}/verwijderen",
                 "/bezetting/import/annuleren"):
-        r = ingelogd.post(pad, data={"keuze-2": "overslaan"})
+        r = ingelogd.post(pad, data={"overslaan-2": "on"})
         assert r.status_code == 302 and not r.location.endswith("/inloggen"), pad
     assert db.session.scalar(select(Bezettingsimport)) is None
     assert db.session.scalar(select(Naamkoppeling)) is None
@@ -114,7 +114,7 @@ def test_upload_toont_het_overzicht_met_de_zes_kolommen(ingelogd):  # noqa: F811
     r = uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;Anna de Vries;1001"), follow_redirects=True)
     assert r.request.path == "/bezetting/import"
     kop = re.findall(r'<th role="columnheader">([^<]+)</th>', r.text)
-    assert kop == ["Regel", "Plaats", "Boot (bootsoort)", "Eigenaar (lidnummer)", "Uitkomst", "Keuze"]
+    assert kop == ["Regel", "Plaats", "Boot (bootsoort)", "Eigenaar (lidnummer)", "Uitkomst", "Keuze (naam of lidnummer)"]
     assert "Reiger (Kajak)" in r.text and '<span class="ds-tag">te koppelen</span>' in r.text
     assert "ds-notice--warning" in r.text and "ds-notice--danger" not in r.text  # nog te koppelen is geen systeemfout
     assert 'action="/bezetting/import/koppelen"' in r.text and 'name="csrf_token"' in r.text
@@ -193,17 +193,17 @@ def test_het_overzicht_toont_de_gevonden_eigenaar_en_zijn_keuzes(ingelogd):  # n
     plaats("A/1/1")
     plaats("A/1/2")
     plaats("A/1/3")
-    anna = lid("1001", "Anna de Vries")
+    lid("1001", "Anna de Vries")
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;Onbekend;", "A/1/2;Fuut;Zeilboot;;", "A/1/3;Meeuw;Kajak;Anna de Vries;1001"))
     tekst = pagina(ingelogd)
-    # Regel 2 is te koppelen: de keuzelijst heeft de vereniging en de leden. Regel 3 heeft een onbekende soort
-    # (de lijst heet soort-3, met overslaan en de soorten van de plaats), geen lid in de lijst.
-    keuze2 = re.search(r'<select[^>]*id="keuze-2".*?</select>', tekst, re.DOTALL)[0]
+    # Regel 2 is te koppelen: een zoekveld met de naam uit het bestand, nog zonder treffers, en geen lijst met
+    # leden. Regel 3 heeft een onbekende soort (de lijst heet soort-3 en heeft de soorten van de plaats).
+    zoek2 = re.search(r'<input[^>]*id="zoek-2"[^>]*>', tekst)[0]
     keuze3 = re.search(r'<select[^>]*id="soort-3".*?</select>', tekst, re.DOTALL)[0]
-    assert 'value="club"' in keuze2 and f'value="{anna.id}"' in keuze2 and "Anna de Vries (1001)" in keuze2
-    assert 'value="overslaan"' in keuze3 and ">Kajak</option>" in keuze3 and 'value="club"' not in keuze3
-    assert "Anna" not in keuze3 and 'id="keuze-3"' not in tekst
-    assert 'id="keuze-4"' not in tekst  # regel 4 is in orde: geen keuze nodig
+    assert 'type="search"' in zoek2 and 'name="zoek-2"' in zoek2 and 'value="Onbekend"' in zoek2 and 'minlength="2"' in zoek2
+    assert "<select" not in cel(tekst, 2) and 'type="radio"' not in tekst and "Anna de Vries (1001)</label>" not in tekst
+    assert ">Kajak</option>" in keuze3 and "overslaan" not in keuze3 and 'zoek-3' not in tekst
+    assert 'id="zoek-4"' not in tekst  # regel 4 is in orde: geen keuze nodig
     assert "<br>Gekoppeld: Anna de Vries (1001)" in tekst  # de gevonden eigenaar onder wat in het bestand stond
     assert "disabled" in tekst  # bevestigen kan nog niet
 
@@ -212,9 +212,10 @@ def test_koppelen_via_het_formulier_bewaart_de_keuze_en_ontgrendelt_bevestigen(i
     plaats("A/1/1")
     anna = lid()
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;Onbekend;"))
-    r = ingelogd.post("/bezetting/import/koppelen", data={"keuze-2": str(anna.id)}, follow_redirects=True)
+    r = ingelogd.post("/bezetting/import/koppelen", data={"keuze-2": anna.lidnummer}, follow_redirects=True)
     assert "De keuzes zijn opgeslagen." in r.text and r.request.path == "/bezetting/import"
-    assert f'<option value="{anna.id}" selected>' in r.text and "disabled" not in r.text
+    assert re.search(rf'<input type="radio"[^>]*name="keuze-2" value="{anna.lidnummer}" checked>', r.text)
+    assert "disabled" not in r.text
     assert '<span class="ds-tag">nieuwe boot</span>' in r.text and "Alle regels zijn in orde" in r.text
     r = ingelogd.post("/bezetting/import/koppelen", data={"keuze-2": "424242"}, follow_redirects=True)
     assert "keuzes kloppen niet" in r.text
@@ -253,7 +254,7 @@ def test_geen_flash_na_een_upload_of_koppeling_bevat_bestandsinhoud(ingelogd):  
     lid()
     for stap in (lambda: uploaden(ingelogd, bestand("A/1/1;Geheimeboot;Kajak;Geheimlid;")),
                  lambda: uploaden(ingelogd, bestand("A/1/1;Geheimeboot;Kajak;Geheimlid;")),  # tweede upload
-                 lambda: ingelogd.post("/bezetting/import/koppelen", data={"keuze-2": "overslaan"}),
+                 lambda: ingelogd.post("/bezetting/import/koppelen", data={"overslaan-2": "on"}),
                  lambda: ingelogd.post("/bezetting/import/annuleren")):
         stap()
         with ingelogd.session_transaction() as s:
@@ -322,56 +323,74 @@ def test_de_route_voor_het_menu_item_en_de_bestaande_routes_zijn_er(app):
 
 def cel(tekst, regel):
     """De cel Keuze van een regel."""
-    return re.search(rf'<tr role="row">\s*<td role="cell" data-label="Regel">{regel}</td>.*?data-label="Keuze">(.*?)</td>',
+    return re.search(rf'<tr role="row">\s*<td role="cell" data-label="Regel">{regel}</td>.*?data-label="Keuze \(naam of lidnummer\)">(.*?)</td>',
                      tekst, re.DOTALL)[1]
 
 
-def test_een_regel_met_twee_problemen_toont_twee_lijsten_in_een_fieldset(ingelogd):  # noqa: F811
+def test_een_regel_met_twee_problemen_toont_een_lijst_een_zoekveld_en_het_vakje_in_een_fieldset(ingelogd):  # noqa: F811
     plaats("A/1/1", ("Kajak", "Surfski"))
     lid()
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;S. de Vrees;"))
     c = cel(pagina(ingelogd), 2)
     assert re.search(r'<fieldset[^>]*>\s*<legend class="dj-sr-only">Keuze voor regel 2</legend>', c)
     assert re.search(r'<label[^>]*for="soort-2">Bootsoort</label>', c)
-    assert re.search(r'<label[^>]*for="keuze-2">Eigenaar</label>', c)
+    assert re.search(r'<label[^>]*for="zoek-2">Eigenaar</label>', c)
     soort_lijst = re.search(r'<select[^>]*id="soort-2".*?</select>', c, re.DOTALL)[0]
-    eigenaar_lijst = re.search(r'<select[^>]*id="keuze-2".*?</select>', c, re.DOTALL)[0]
-    assert 'value="overslaan"' in soort_lijst and ">Kajak</option>" in soort_lijst and ">Surfski</option>" in soort_lijst
-    assert 'value="overslaan"' not in eigenaar_lijst and 'value="club"' in eigenaar_lijst
+    assert "overslaan" not in soort_lijst and ">Kajak</option>" in soort_lijst and ">Surfski</option>" in soort_lijst
+    assert 'name="zoek-2"' in c and "<select" in c and c.count("<select") == 1
+    assert '<input type="checkbox" id="over-2" name="overslaan-2"><label for="over-2">Regel overslaan</label>' in c
     assert "Kies bij een regel een bootsoort, een lid of de vereniging" in pagina(ingelogd)
 
 
-def test_een_regel_met_een_probleem_houdt_een_lijst_met_het_label_keuze_voor_regel(ingelogd):  # noqa: F811
+def test_een_regel_met_een_probleem_houdt_een_veld_met_het_label_keuze_voor_regel_en_het_vakje(ingelogd):  # noqa: F811
     plaats("A/1/1")
     plaats("A/1/2")
     lid()
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;;", "A/1/2;Fuut;Kajak;S. de Vrees;"))
     tekst = pagina(ingelogd)
-    for regel, naam in ((2, "soort"), (3, "keuze")):
+    for regel, naam, veld in ((2, "soort", "<select"), (3, "zoek", '<input class="ds-input" type="search"')):
         c = cel(tekst, regel)
-        assert "<fieldset" not in c and c.count("<select") == 1
+        assert "<fieldset" not in c and c.count(veld) == 1
         assert re.search(rf'<label class="dj-sr-only" for="{naam}-{regel}">Keuze voor regel {regel}</label>', c)
+        assert f'name="overslaan-{regel}"' in c and "Regel overslaan</label>" in c and " checked" not in c
 
 
-def test_een_fout_in_de_plaats_toont_alleen_regel_overslaan_in_soort_n(ingelogd):  # noqa: F811
+def test_een_fout_in_de_plaats_toont_alleen_het_vakje_overslaan(ingelogd):  # noqa: F811
     plaats("A/1/1")
     uploaden(ingelogd, bestand("Z/9/9;Reiger;Kajak;;"))
     c = cel(pagina(ingelogd), 2)
-    assert 'name="soort-2"' in c and 'value="overslaan"' in c and c.count("<option") == 2
-    assert 'name="keuze-2"' not in c
+    assert 'name="overslaan-2"' in c and "<select" not in c and "<input class=" not in c
 
 
-def test_na_het_opslaan_blijven_beide_lijsten_met_hun_keuze_staan(ingelogd):  # noqa: F811
+def test_een_overgeslagen_regel_toont_alleen_het_aangevinkte_vakje_en_uitvinken_brengt_de_velden_terug(ingelogd):  # noqa: F811
+    plaats("A/1/1", ("Kajak", "Surfski"))
+    anna = lid()
+    uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;S. de Vrees;"))
+    surfski = str(next(s.id for s in bezetting_csv.indeling.bootsoorten() if s.naam == "Surfski"))
+    ingelogd.post("/bezetting/import/koppelen", data={"soort-2": surfski, "keuze-2": anna.lidnummer,
+                                                       "overslaan-2": "on"})  # het vakje aanvinken
+    r = ingelogd.post("/bezetting/import/koppelen", data={"overslaan-2": "on"}, follow_redirects=True)  # alleen het vakje
+    c = cel(r.text, 2)
+    assert '<span class="ds-tag">overgeslagen</span>' in r.text
+    assert 'name="overslaan-2" checked' in c and "<select" not in c and "zoek-2" not in c
+    r = ingelogd.post("/bezetting/import/koppelen", data={}, follow_redirects=True)  # het vakje is uitgevinkt
+    c = cel(r.text, 2)
+    assert 'name="overslaan-2" checked' not in c and "overgeslagen" not in r.text
+    assert f'<option value="{surfski}" selected>Surfski</option>' in c  # de soort en de eigenaar zijn terug
+    assert re.search(rf'name="keuze-2" value="{anna.lidnummer}" checked', c)
+
+
+def test_na_het_opslaan_blijven_beide_velden_met_hun_keuze_staan(ingelogd):  # noqa: F811
     plaats("A/1/1", ("Kajak", "Surfski"))
     anna = lid()
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kayak;S. de Vrees;"))
     r = ingelogd.post("/bezetting/import/koppelen", data={
         "soort-2": str(next(s.id for s in bezetting_csv.indeling.bootsoorten() if s.naam == "Surfski")),
-        "keuze-2": str(anna.id)}, follow_redirects=True)
+        "keuze-2": anna.lidnummer}, follow_redirects=True)
     c = cel(r.text, 2)
     assert "De keuzes zijn opgeslagen." in r.text and "<fieldset" in c
     assert ">Surfski</option>" in c and re.search(r'<option value="\d+" selected>Surfski</option>', c)
-    assert f'<option value="{anna.id}" selected>' in c
+    assert re.search(rf'name="keuze-2" value="{anna.lidnummer}" checked', c) and 'value="Anna de Vries (1001)"' in c  # een opgeslagen keuze toont "Naam (lidnummer)"
     assert '<span class="ds-tag">nieuwe boot</span>' in r.text
 
 

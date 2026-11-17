@@ -8,7 +8,14 @@ from pathlib import Path
 
 from conftest import reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, toewijzen
+from test_loods import (
+    boot_vastleggen,
+    kiesbare_leden,
+    lid_zoeken_en_kiezen,
+    plaats_instellen,
+    rek_aanmaken,
+    toewijzen,
+)
 
 KOP = "plaats;boot;bootsoort;eigenaar;lidnummer"
 
@@ -21,10 +28,15 @@ def uploaden(page, tekst):
 
 
 def leden_uit_de_lijst(page):
-    """(naam, lidnummer) van de eerste twee leden in de keuzelijst van /boten."""
-    page.goto("/boten")
-    teksten = page.locator("#eigenaar option").all_text_contents()[2:4]  # het blok Nieuwe boot is dicht; na 'Kies' en de vereniging
-    return [re.fullmatch(r"(.+) \((\w+)\)", t).groups() for t in teksten]
+    """(naam, lidnummer) van de eerste twee leden die je kunt kiezen."""
+    return kiesbare_leden(page, 2)
+
+
+def lid_kiezen_bij_regel(page, regelnaam, label, lidnummer):
+    """Zoek bij een regel van het koppelscherm op het lidnummer en kies de treffer (BV-85)."""
+    formulier = page.locator('form[action="/bezetting/import/koppelen"]')
+    lid_zoeken_en_kiezen(regel(page, regelnaam).get_by_label(label, exact=True),
+                         formulier.get_by_role("button", name="Zoeken", exact=True), lidnummer)
 
 
 def regel(page, tekst):
@@ -73,8 +85,7 @@ def test_bezetting_exporteren_aangepast_importeren_koppelen_en_opnieuw_importere
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), breedte
 
     # Het juiste lid kiezen en opslaan: de regel is nu in orde en bevestigen kan.
-    regel(page, f"Reiger {rek}").get_by_label("Keuze voor regel 2").select_option(
-        label=f"{naam1} ({nr1})")
+    lid_kiezen_bij_regel(page, f"Reiger {rek}", "Keuze voor regel 2", nr1)
     page.get_by_role("button", name="Keuzes opslaan").click()
     expect(page.get_by_text("De keuzes zijn opgeslagen.")).to_be_visible()
     expect(regel(page, f"Reiger {rek}")).to_contain_text("ongewijzigd")

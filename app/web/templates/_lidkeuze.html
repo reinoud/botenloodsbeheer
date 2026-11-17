@@ -1,0 +1,19 @@
+{# Een lid kiezen met zoeken en een tussenstap (BV-85): een zoekveld, en na de knop Zoeken de treffers als keuzerondjes met het lidnummer als waarde. De knop Zoeken staat in het formulier van het scherm. De zoekterm, de namen en de foutregel komen uit invoer en worden geëscapet. #}
+{% macro zoekveld(veld, id, zoeknaam, keuzenaam, label, verborgen=false, legend=None, verplicht=false, hint=None) %}
+{% set beschrijving = ((hint ~ ' ') if hint else '') ~ ((id ~ '-fout') if veld.fout else '') %}
+<div class="ds-field">
+  <label class="{{ 'dj-sr-only' if verborgen else 'ds-field__label' }}" for="{{ id }}">{{ label }}</label>
+  <input class="ds-input" type="search" id="{{ id }}" name="{{ zoeknaam }}" minlength="2" value="{{ veld.term }}" placeholder="Zoek lid: naam of lidnummer"{% if verplicht %} required{% endif %}{% if veld.fout %} aria-invalid="true"{% endif %}{% if beschrijving.strip() %} aria-describedby="{{ beschrijving.strip() }}"{% endif %}>
+  {% if veld.fout %}<span class="ds-field__error" id="{{ id }}-fout">{{ veld.fout }}</span>{% endif %}
+  {% if veld.treffers %}
+  <fieldset class="dj-choices"{% if veld.meer %} aria-describedby="{{ id }}-meer"{% endif %}>
+    <legend>Treffers voor {{ legend or label }}</legend>
+    {% for t in veld.treffers %}
+    <div class="ds-check dj-radio"><input type="radio" id="{{ id }}-t{{ loop.index0 }}" name="{{ keuzenaam }}" value="{{ t.waarde }}"{% if t.waarde == veld.gekozen %} checked{% endif %}><label for="{{ id }}-t{{ loop.index0 }}">{% if t.lid %}{{ t.lid.naam }} ({{ t.lid.lidnummer }}){% else %}{{ vereniging }} (clubboot){% endif %}</label></div>
+    {% endfor %}
+  </fieldset>
+  {% if veld.meer %}<p class="ds-field__hint" id="{{ id }}-meer">Meer dan 10 treffers. Zoek preciezer.</p>{% endif %}
+  {% endif %}
+  {% if caller %}{{ caller() }}{% endif %}
+</div>
+{% endmacro %}

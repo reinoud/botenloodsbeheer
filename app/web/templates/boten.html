@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% from "_log.html" import logblok %}
 {% from "_melding.html" import meldingblok %}
+{% from "_lidkeuze.html" import zoekveld with context %}
 {% block titel %}Boten · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten</h1>
@@ -11,27 +12,22 @@
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="boot-naam">Naam van de boot</label>
-      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" required>
+      <input class="ds-input" id="boot-naam" name="naam" maxlength="100" value="{{ invoer.get('naam', '') }}" required>
     </div>
     <div class="ds-field">
       <label class="ds-field__label" for="bootsoort">Bootsoort</label>
       <select class="dj-select" id="bootsoort" name="bootsoort" required>
-        {% for s in bootsoorten %}<option value="{{ s.id }}">{{ s.naam }}</option>{% endfor %}
+        {% for s in bootsoorten %}<option value="{{ s.id }}"{% if invoer.get('bootsoort') == s.id|string %} selected{% endif %}>{{ s.naam }}</option>{% endfor %}
       </select>
     </div>
-    <div class="ds-field">
-      <label class="ds-field__label" for="eigenaar">Eigenaar</label>
-      <select class="dj-select" id="eigenaar" name="eigenaar" required>
-        <option value="onbekend" selected>eigenaar onbekend</option>
-        <option value="club">{{ vereniging }} (clubboot)</option>
-        {% for l in leden %}<option value="{{ l.id }}">{{ l.naam }} ({{ l.lidnummer }})</option>{% endfor %}
-      </select>
-    </div>
-    <p class="bl-hint">Laat de eigenaar open als die nog niet bekend is. De boot staat dan op Boten zonder eigenaar.</p>
+    {{ zoekveld(eigenaarveld, 'eigenaar', 'zoek', 'eigenaar', 'Eigenaar', hint='eigenaar-hint') }}
+    <p class="bl-hint" id="eigenaar-hint">Laat de eigenaar open als die nog niet bekend is. De boot staat dan op Boten zonder eigenaar.</p>
     <div class="ds-field">
       <label class="ds-field__label label-lang" for="foto">Foto (JPEG, PNG of WebP, niet verplicht)</label>
-      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp">
+      <input class="ds-input" id="foto" name="foto" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="foto-hint">
+      <p class="bl-hint" id="foto-hint">Kies de foto opnieuw; een foto blijft niet bewaard na Zoeken.</p>
     </div>
+    <button type="submit" class="ds-btn" name="actie" value="zoeken">Zoeken</button>
     <button type="submit" class="ds-btn ds-btn--primary">Boot vastleggen</button>
   </form>
   </div>

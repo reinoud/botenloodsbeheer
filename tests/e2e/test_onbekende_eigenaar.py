@@ -8,7 +8,14 @@ import re
 from conftest import reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_bezetting_csv import KOP, uploaden
-from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, toewijzen
+from test_loods import (
+    boot_vastleggen,
+    kiesbare_leden,
+    lid_zoeken_en_kiezen,
+    plaats_instellen,
+    rek_aanmaken,
+    toewijzen,
+)
 
 
 def regel_van(page, boot):
@@ -36,8 +43,10 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     page.locator("#nieuw-kop").click()
     page.get_by_label("Naam van de boot").fill(wulp)
     page.get_by_label("Bootsoort").select_option(label="Kajak")
-    expect(page.get_by_label("Eigenaar", exact=True)).to_have_value("onbekend")  # exact: het zoekveld in de kop noemt ook de eigenaar
-    expect(page.get_by_label("Eigenaar", exact=True).locator("option").first).to_have_text("eigenaar onbekend")
+    eigenaar = page.get_by_label("Eigenaar", exact=True)  # exact: het zoekveld in de kop noemt ook de eigenaar
+    expect(eigenaar).to_have_value("")  # leeg is eigenaar onbekend (BV-85)
+    expect(eigenaar).not_to_have_attribute("required", "")
+    expect(page.get_by_text("Laat de eigenaar open als die nog niet bekend is.")).to_be_visible()
     page.get_by_role("button", name="Boot vastleggen").click()
     expect(page.get_by_text("De boot is vastgelegd.")).to_be_visible()
     expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")
@@ -57,13 +66,17 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     zonder_scroll(page)
 
     page.set_viewport_size({"width": 1100, "height": 900})
-    # Een lid kiezen: de boot is van de lijst.
+    # Een lid kiezen: zoeken op het lidnummer, het rondje kiezen, opslaan; de boot is van de lijst.
+    (_naam, nummer), *_ = kiesbare_leden(page, 1)
+    page.goto("/boten/zonder-eigenaar")
     for boot in (tureluur, kluut):
-        regel_van(page, boot).get_by_label(f"Eigenaar van {boot}").select_option(index=2)
+        lid_zoeken_en_kiezen(regel_van(page, boot).get_by_label(f"Eigenaar van {boot}"),
+                             regel_van(page, boot).get_by_role("button", name=f"Zoeken: {boot}"), nummer)
         regel_van(page, boot).get_by_role("button", name=f"Eigenaar opslaan: {boot}").click()
         expect(page.get_by_text(f"De eigenaar van {boot} is opgeslagen.")).to_be_visible()
         expect(regel_van(page, boot)).to_have_count(0)
-    regel_van(page, wulp).get_by_label(f"Eigenaar van {wulp}").select_option(value="club")
+    lid_zoeken_en_kiezen(regel_van(page, wulp).get_by_label(f"Eigenaar van {wulp}"),
+                         regel_van(page, wulp).get_by_role("button", name=f"Zoeken: {wulp}"), "clubboot")
     regel_van(page, wulp).get_by_role("button", name=f"Eigenaar opslaan: {wulp}").click()
     expect(regel_van(page, wulp)).to_have_count(0)
 
@@ -72,16 +85,16 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     expect(regel_van(page, tureluur)).not_to_contain_text("onbekend")
 
 
-def boot_opslaan_als_onbekend(page, boot):
+def eigenaar_leegmaken(page, boot):
     page.goto("/boten")
     page.get_by_role("link", name=boot, exact=True).click()
     page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
     formulier = page.locator("section.kaart", has=page.get_by_role("heading", name="Boot wijzigen"))
-    formulier.get_by_label("Eigenaar").select_option(label="eigenaar onbekend")
+    formulier.get_by_label("Eigenaar", exact=True).fill("")
     formulier.get_by_role("button", name="Boot opslaan").click()
 
 
-def test_boot_met_een_eigenaar_weer_onbekend_maken_en_een_clubboot_eerst_van_de_clubplaats(page):
+def test_een_boot_van_een_lid_wordt_niet_onbekend_en_een_clubboot_eerst_van_de_clubplaats(page):
     wachtwoord_instellen(page, "weeronbekend")
     rek = reknaam("e")
     lidboot, clubboot = f"Lidboot {rek}", f"Clubboot {rek}"
@@ -92,31 +105,33 @@ def test_boot_met_een_eigenaar_weer_onbekend_maken_en_een_clubboot_eerst_van_de_
     toewijzen(page, f"{rek}/1/1", lidboot)
     toewijzen(page, f"{rek}/1/2", clubboot)
 
-    # Happy: een boot van een lid wordt onbekend en houdt zijn gewone plaats. De keuze staat er ook
-    # bij een boot met een eigenaar. Mutant: de optie in boot.html weer alleen bij een onbekende
-    # eigenaar valt op select_option (label niet gevonden).
-    boot_opslaan_als_onbekend(page, lidboot)
-    expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
-    expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")
-    expect(page.locator("dl.bl-feiten dd").nth(2)).to_have_text(f"{rek}/1/1")
-    expect(page.locator("section.log")).to_contain_text("'onbekend'")
+    # Unhappy (besluit 2026-11-17, BV-72 4A): een leeg veld Eigenaar bij een boot van een lid geeft een foutregel
+    # bij het veld; de boot blijft van het lid. Het veld toont de huidige eigenaar tot je het leegmaakt.
+    page.goto("/boten")
+    page.get_by_role("link", name=lidboot, exact=True).click()
+    page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
+    expect(page.get_by_label("Eigenaar", exact=True)).not_to_have_value("")
+    eigenaar_leegmaken(page, lidboot)
+    veld = page.get_by_label("Eigenaar", exact=True)
+    expect(veld).to_have_attribute("aria-invalid", "true")
+    expect(page.get_by_text("Vul een eigenaar in. Een boot van een lid of oud-lid kan niet zonder eigenaar.")).to_be_visible()
+    expect(page.locator("dl.bl-feiten dd").nth(1)).not_to_have_text("onbekend")
     page.goto("/boten/zonder-eigenaar")
-    expect(regel_van(page, lidboot)).to_contain_text(f"{rek}/1/1")
+    expect(regel_van(page, lidboot)).to_have_count(0)
 
-    # Unhappy: een clubboot op een clubplaats blijft clubboot, met een melding. Mutant: de
-    # voorwaarde `clubboot != oude_club` in boot_wijzigen weg valt op de melding (de boot wordt dan onbekend).
-    boot_opslaan_als_onbekend(page, clubboot)
+    # Een clubboot op een clubplaats blijft clubboot, met een melding. Mutant: de voorwaarde
+    # `clubboot != oude_club` in boot_wijzigen weg valt op de melding (de boot wordt dan onbekend).
+    eigenaar_leegmaken(page, clubboot)
     expect(page.get_by_role("alert")).to_contain_text(f"Plaats {rek}/1/2 is een clubplaats en alleen voor clubboten")
     expect(page.locator("dl.bl-feiten dd").nth(1)).to_contain_text("(clubboot)")
     page.goto("/boten/zonder-eigenaar")
     expect(regel_van(page, clubboot)).to_have_count(0)
 
-    # Na het vrijgeven van de plaats lukt het wel. Mutant: de melding blokkeert ook zonder plaats
-    # valt op de laatste twee asserts.
+    # Na het vrijgeven van de plaats mag een clubboot wel onbekend worden (#233).
     page.goto("/indeling")
     page.get_by_role("link", name=f"{rek}/1/2", exact=True).click()
     page.get_by_role("button", name=f"Plaats {rek}/1/2 vrijgeven").click()
     expect(page.get_by_text("De plaats is vrijgegeven.")).to_be_visible()
-    boot_opslaan_als_onbekend(page, clubboot)
+    eigenaar_leegmaken(page, clubboot)
     expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
     expect(page.locator("dl.bl-feiten dd").nth(1)).to_have_text("onbekend")

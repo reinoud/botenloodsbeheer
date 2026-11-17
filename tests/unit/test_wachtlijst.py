@@ -363,10 +363,10 @@ def test_andere_eigenaar_geeft_een_melding_aan_de_beheerder(ingelogd):  # noqa: 
     nieuw = lid("1002")
     wachtlijst.erop_zetten(b.id, None, CLI)
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Zeemeeuw", "bootsoort": soort("Kajak"),
-                                              "eigenaar": nieuw.id}, follow_redirects=True)
+                                              "eigenaar": nieuw.lidnummer}, follow_redirects=True)
     assert "van de wachtlijst gehaald" in r.text and op_lijst(b) is None
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut", "bootsoort": soort("Kajak"),
-                                              "eigenaar": nieuw.id}, follow_redirects=True)
+                                              "eigenaar": nieuw.lidnummer}, follow_redirects=True)
     assert "van de wachtlijst gehaald" not in r.text
 
 

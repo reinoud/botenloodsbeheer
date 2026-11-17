@@ -168,6 +168,8 @@
 .dj-select[aria-invalid="true"] { border-color: var(--danger); }
 .dj-select option { background: var(--surface-raised); color: var(--ink); }
 
+.dj-radio input { border-radius: var(--radius-round); }
+.dj-radio label > span { margin-inline-start: var(--space-2); } /* BV-86: de tag oud-lid staat in het label; de spatie vóór de tag valt in een flexregel weg */
 .dj-choices { display: grid; gap: var(--space-1); min-width: 0; margin: 0; padding: 0; border: 0; }
 .dj-choices > legend { padding: 0 0 var(--space-2); color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .dj-choices > * { align-items: center; }
@@ -182,6 +184,8 @@
 .dj-disclosure > summary:focus-visible { outline: 2px solid var(--focus); outline-offset: calc(var(--space-1) * -1); }
 .dj-disclosure[open] > summary { margin-bottom: var(--space-3); }
 .dj-disclosure > summary ~ * { margin-inline: var(--space-4); }
+/* een naam zonder afbreekpunt in de summary of legend laat de pagina op 360 px niet uitlopen (gh#46) */
+.dj-disclosure > summary, .dj-disclosure legend { overflow-wrap: anywhere; }
 .dj-disclosure[open] > :last-child { margin-bottom: var(--space-4); }
 
 .dj-dl { display: grid; gap: var(--space-1); margin: 0; }

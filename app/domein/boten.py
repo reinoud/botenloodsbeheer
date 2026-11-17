@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
-from app.domein import Regelfout, afbeeldingen, indeling, leden, log, wachtlijst
+from app.domein import Regelfout, afbeeldingen, indeling, leden, lidkeuze, log, wachtlijst
 from app.domein.toewijzing import controleer_past
 from app.models import Boot, Bootsoort, Lid, Plaats, Taakrun, db
 
@@ -116,8 +116,8 @@ def _eigenaar_tekst(lid_id, clubboot):
 
 
 def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
-    """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend, ook bij een boot
-    die al een eigenaar had, #233). Een boot met een plaats blijft passen bij die plaats; een clubboot
+    """Wijzigt naam, bootsoort en eigenaar (lid_id, of clubboot; beide leeg is onbekend, ook bij een clubboot
+    (#233), maar niet bij een boot van een lid of oud-lid: dat geeft een foutregel, #295). Een boot met een plaats blijft passen bij die plaats; een clubboot
     op een clubplaats wordt dus pas onbekend nadat hij van die plaats af is. Het log krijgt alleen een regel bij een echt verschil. Een boot op de wachtlijst met een andere
     eigenaar gaat van de lijst (`wachtlijst.verwijderd`, reden `andere eigenaar`).
     Vergrendeling: eerst de boot, dan de plaats van de boot; zo ziet de plaatsquery een
@@ -136,6 +136,8 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
             raise Regelfout("Deze boot bestaat niet.")
         plaats = db.session.scalar(select(Plaats).where(Plaats.boot_id == b.id).with_for_update()
                                    .execution_options(populate_existing=True))
+        if lid_id is None and not clubboot and b.lid_id is not None:
+            raise Regelfout(lidkeuze.EIGENAAR_LEEG)
         if eigenaar is not None and lid_id != b.lid_id and leden.is_oud_lid(eigenaar):
             raise Regelfout(f"{eigenaar.naam} is oud-lid en krijgt geen nieuwe boot.")
         if clubboot and b.wachtlijst is not None:
