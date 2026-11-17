@@ -142,9 +142,9 @@ def synchroniseer(records, actor):
     """Verwerkt de volledige lijst uit de bron in de lopende transactie; de aanroeper commit.
 
     Gooit Veiligheidsgrens als minder dan de helft van de actieve leden terugkomt; er is dan
-    nog niets gewijzigd. Wijzigingen in leden komen niet in het log (ADR-004 v2.1.0); de
-    aantallen gaan naar taakrun. Boten van oud-leden gaan van de wachtlijst, met actor in het
-    log (BLB-008, #27).
+    nog niets gewijzigd. Records met een opzegdatum op of vóór vandaag tellen niet mee (#307).
+    Wijzigingen in leden komen niet in het log (ADR-004 v2.1.0); de aantallen gaan naar
+    taakrun. Boten van oud-leden gaan van de wachtlijst, met actor in het log (BLB-008, #27).
     """
     dag = vandaag()
     aantallen = {"ontvangen": len(records), "nieuw": 0, "bijgewerkt": 0, "uit_bron": 0,
@@ -152,7 +152,7 @@ def synchroniseer(records, actor):
 
     # Ook een record met een geldig lidnummer maar ongeldige velden telt als gezien: anders
     # zou een tikfout in een datum van een lid een oud-lid maken.
-    gezien, geldig = set(), {}
+    gezien, geldig, tellend = set(), {}, 0
     for record in records:
         nummer = lidnummer_van(record)
         if nummer is None or nummer in gezien:
@@ -162,12 +162,18 @@ def synchroniseer(records, actor):
         try:
             geldig[nummer] = valideer(record)
         except Ongeldig:
-            aantallen["ongeldig"] += 1  # zonder de inhoud te loggen
+            # Zonder de inhoud te loggen. Telt niet mee voor de grens: een opzegdatum in een ander
+            # formaat mag een halve lijst niet doorlaten; een 409 wijzigt niets (#307).
+            aantallen["ongeldig"] += 1
+        else:
+            # Een opgezegde relatie is geen actief lid: ze telt niet mee voor de grens (#307).
+            opzegdatum = geldig[nummer]["opzegdatum"]
+            tellend += opzegdatum is None or opzegdatum > dag
 
     actief = len(actieve_leden())
-    if actief and len(gezien) * 2 < actief:
+    if actief and tellend * 2 < actief:
         raise Veiligheidsgrens(
-            f"De import leverde {len(gezien)} leden, minder dan de helft van de {actief} "
+            f"De import leverde {tellend} leden, minder dan de helft van de {actief} "
             "actieve leden. Er is niets gewijzigd."
         )
 

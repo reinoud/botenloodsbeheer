@@ -133,6 +133,49 @@ def test_halve_lijst_409_zonder_wijziging_en_als_mislukte_run(importeer):
     assert importeer([record(str(n)) for n in range(1, 6)]).json["uit_bron"] == 5
 
 
+def test_opgezegde_records_tellen_niet_mee_voor_de_grens(importeer):
+    """#307: een bron die de helft van de actieve leden mist maar genoeg opgezegde relaties
+    levert, stopt bij de grens. Mutant: len(gezien) als teller laat deze lijst door."""
+    importeer([record(str(n)) for n in range(1, 11)])
+    opgezegd = [record(f"o{n}", opzegdatum=str(vandaag() - timedelta(days=n))) for n in range(8)]
+    r = importeer([record(str(n), naam="Anders") for n in range(1, 5)] + opgezegd)
+    assert r.status_code == 409 and "minder dan de helft" in r.json["fout"]
+    assert all(lid.uit_bron_op is None and lid.naam != "Anders" for lid in alle().values())
+    assert set(alle()) == {str(n) for n in range(1, 11)}
+
+
+def test_volledige_bron_met_veel_opgezegde_relaties_komt_door_de_grens(importeer):
+    """#307: de opgezegde relaties veranderen niets aan een volledige lijst."""
+    importeer([record(str(n)) for n in range(1, 5)])
+    opgezegd = [record(f"o{n}", opzegdatum=str(vandaag() - timedelta(days=n))) for n in range(20)]
+    toekomst = record("5", opzegdatum=str(vandaag() + timedelta(days=1)))
+    r = importeer([record(str(n)) for n in range(1, 5)] + [toekomst] + opgezegd)
+    assert r.status_code == 200 and r.json["uit_bron"] == 0
+
+
+def test_ongeldige_opzegdatum_telt_niet_mee_voor_de_grens(importeer):
+    """#307, review aegis: een opzegdatum in een ander formaat laat een halve lijst niet door.
+    Het record telt wel als gezien: het lid krijgt geen uit_bron_op. Mutant: ongeldig telt mee."""
+    importeer([record(str(n)) for n in range(1, 11)])
+    fout = [record(f"o{n}", opzegdatum="31-12-2020") for n in range(8)]
+    r = importeer([record(str(n), naam="Anders") for n in range(1, 5)] + fout)
+    assert r.status_code == 409 and "minder dan de helft" in r.json["fout"]
+    r = importeer([record("1", opzegdatum="17-11-2026")] + [record(str(n)) for n in range(2, 6)])
+    assert r.status_code == 409  # 4 van 10 tellen
+    r = importeer([record("1", opzegdatum="17-11-2026")] + [record(str(n)) for n in range(2, 7)])
+    assert r.status_code == 200 and alle()["1"].uit_bron_op is None
+
+
+def test_grens_telt_opzegdatum_vandaag_niet_en_morgen_wel(importeer):
+    """#307: precies de helft van de tellende records gaat door; één minder niet."""
+    importeer([record(str(n)) for n in range(1, 5)])
+    vandaag_op = [record(str(n), opzegdatum=str(vandaag())) for n in (1, 2)]
+    assert importeer(vandaag_op + [record("3")]).status_code == 409  # 1 van 4 telt
+    assert importeer(vandaag_op + [record("3"), record("4")]).status_code == 200  # 2 van 4
+    morgen = str(vandaag() + timedelta(days=1))
+    assert importeer([record(str(n), opzegdatum=morgen) for n in (1, 2)]).status_code == 200
+
+
 @pytest.mark.parametrize("lichaam", [{"json": {"leden": "geen lijst"}}, {"json": {}},
                                      {"json": [record("1")]}, {"data": "{kapot"},
                                      {"json": {"leden": [record("1")] * 5001}}],
@@ -174,7 +217,7 @@ def test_zonder_recht_403_zonder_wijziging(client):
 def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
     """BLB-008 criteria 1 en 5: gegevens en plaats blijven; een boot zonder plaats krijgt er
     geen meer. Rek, plaatsen en boten maakt web, zoals de beheerder."""
-    importeer([record("1")])
+    importeer([record("1"), record("2")])  # lid 2 houdt de lijst boven de grens (#307)
     anna = alle()["1"].id
 
     def loods():
@@ -186,7 +229,7 @@ def test_opzegging_maakt_oud_lid_met_behoud_van_gegevens_en_plaats(importeer):
 
     p1, p2, b1, b2 = als_web(loods)
     gisteren = (vandaag() - timedelta(days=1)).isoformat()
-    importeer([record("1", opzegdatum=gisteren)])
+    importeer([record("1", opzegdatum=gisteren), record("2")])
     lid = alle()["1"]
     assert leden.is_oud_lid(lid) and lid.naam == "Lid 1"
     assert als_web(lambda: db.session.get(Plaats, p1).boot_id) == b1
@@ -262,9 +305,9 @@ def test_nieuw_lid_met_opzegdatum_vandaag_of_eerder_komt_er_niet_in(importeer):
 
 def test_bestaand_lid_dat_opzegt_blijft_staan_met_de_opzegdatum(importeer):
     """#203: alleen een nieuw lidnummer wordt overgeslagen, een bestaand lid wordt bijgewerkt."""
-    importeer([record("1")])
+    importeer([record("1"), record("2")])  # lid 2 houdt de lijst boven de grens (#307)
     gisteren = vandaag() - timedelta(days=1)
-    r = importeer([record("1", opzegdatum=gisteren.isoformat())])
+    r = importeer([record("1", opzegdatum=gisteren.isoformat()), record("2")])
     assert (r.json["bijgewerkt"], r.json["overgeslagen"]) == (1, 0)
     assert alle()["1"].opzegdatum == gisteren
 
