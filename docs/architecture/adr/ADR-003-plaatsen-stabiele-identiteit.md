@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (indeling: issue #80, #83)
 **Datum:** 2026-11-05
-**Versie:** v2.3.2
+**Versie:** v2.3.3
 **Stories:** BLB-001 tot en met BLB-003, BLB-010, BLB-011, BLB-020, BLB-021, BLB-044
 
 ## Context
@@ -41,7 +41,7 @@ De domeinfunctie `indeling_instellen(rek, vakken)` krijgt de verzameling paren `
 
 De toewijzing is het veld `plaats.boot_id`, nullable, met een unieke constraint. Leeg betekent vrij. Een aparte toewijzingstabel met historie is niet nodig: de historie staat in het mutatielog (ADR-006).
 
-Clubplaats is een boolean op de plaats. Een clubboot is een boot met `clubboot` gezet en zonder lid; een boot zonder lid en zonder `clubboot` heeft een onbekende eigenaar en hoort, net als een boot van een lid, op een gewone plaats (issue #204). De domeinfunctie `toewijzen` controleert in één transactie, met `SELECT ... FOR UPDATE` op de plaats: plaats vrij, bootsoort past, een clubplaats is alleen voor clubboten, een clubboot mag ook op een gewone plaats (issue #205), eigenaar is geen oud-lid, boot heeft nog geen plaats. Na toewijzen verdwijnt de boot van de wachtlijst.
+Clubplaats is een boolean op de plaats. Een clubboot is een boot met `clubboot` gezet en zonder lid; een boot zonder lid en zonder `clubboot` heeft een onbekende eigenaar en hoort, net als een boot van een lid, op een gewone plaats (issue #204). De domeinfunctie `toewijzen` controleert in één transactie, met `SELECT ... FOR UPDATE` op de plaats: plaats vrij, bootsoort past, een clubplaats is alleen voor clubboten, een clubboot mag ook op een gewone plaats (issue #205), boot heeft nog geen plaats. Een boot van een oud-lid krijgt een gewone plaats en geen clubplaats (issue #298, besluit 2); de bezettingsimport weigert een oud-lid wel (ADR-014). Na toewijzen verdwijnt de boot van de wachtlijst.
 
 Verwijderen van een rek of een geschikte bootsoort met een toegewezen boot weigert de domeinlaag (BLB-001, BLB-002). Een rek verwijderen verwijdert alleen lege plaatsen. Een plaats verdwijnt alleen via `indeling_instellen`, als haar vak in het raster uit gaat. `plaats_verwijderen` en de route `POST /plaatsen/<id>/verwijderen` vervallen (BLB-044, issue #83).
 
@@ -95,6 +95,7 @@ Migratie `0013` volgt op `0012` en is de enige head. Upgrade: trek DELETE op `ve
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.3.3 | 2026-11-17 | `toewijzen` weigert een boot van een oud-lid niet meer; de clubplaats blijft voor clubboten | Issue #298, besluit 2 |
 | v2.3.2 | 2026-11-10 | Een clubboot mag ook op een gewone plaats; een clubplaats blijft alleen voor clubboten | Besluit stakeholder 2026-11-10, issue #205 |
 | v2.3.1 | 2026-11-10 | Clubboot is een eigen vlag; zonder lid en zonder vlag is de eigenaar onbekend en past de boot op een gewone plaats | Issue #204 |
 | v2.3.0 | 2026-11-05 | Een verdieping heeft geen gaten (validatie in het domein, geen migratie); seed aangevuld tot 229 plaatsen en 30 clubplaatsen; rekoverzicht zonder lege kolommen en verdiepingen | Besluiten stakeholder 2026-11-05, issue #94 |

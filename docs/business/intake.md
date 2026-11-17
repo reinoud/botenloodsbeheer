@@ -71,6 +71,7 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 
 - Leden hebben ingestemd met het openbaar tonen van alleen hun naam en de foto van hun boot.
 - Gegevens van oud-leden en het mutatielog worden 5 jaar bewaard.
+- Besluit van de stakeholder, 2026-11-17 (issue #298, besluit op vraag 30): de ledenimport neemt ook oud-leden op die nog niet in de applicatie stonden en geen boot hebben, als hun opzegdatum hooguit 5 jaar geleden is. Het doel is dat de beheerder een eigenaar kan kiezen voor een boot die in de loods ligt. De gegevens blijven 5 jaar vanaf de opzegdatum en worden daarna opgeschoond, met dezelfde grens als de opschoning. De grondslag voor deze verwerking stelt de vereniging vast.
 
 ### Inrichting
 

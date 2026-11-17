@@ -2,7 +2,7 @@
 
 **Status:** Voorgesteld
 **Datum:** 2026-11-06
-**Versie:** v0.2.8
+**Versie:** v0.2.9
 **Stories:** issue #157 (rekindeling), issue #158 (bezetting), issue #202 (bootsoort kiezen); backlog BLB-045 (rekindeling) en BLB-048 (bezetting)
 
 ## Context
@@ -80,7 +80,7 @@ Bevestigen kan pas zonder `te koppelen` en `fout`; zo'n regel slaat de beheerder
 
 Faalt een controle, dan volgt een rollback en een nieuw overzicht.
 
-**Oud-lid.** Ligt de boot van een oud-lid al op de plaats, dan is de regel `ongewijzigd`. Een nieuwe toewijzing of boot voor een oud-lid is een fout, zoals in `toewijzen` (open vraag 1).
+**Oud-lid.** Ligt de boot van een oud-lid al op de plaats, dan is de regel `ongewijzigd`. Een nieuwe toewijzing of boot voor een oud-lid is een fout, ook binnen de bewaartermijn van 5 jaar (open vraag 1; besluit stakeholder 2026-11-16, issue #298, besluit 1). In het scherm Boten mag dat sinds #298 wel; de import houdt daarom haar eigen controle in de beoordeling van de regel (`_beoordeel_regel`) en leunt niet op `toewijzen` of het aanmaken van een boot. Bevestigen beoordeelt elke regel opnieuw na het vergrendelen, dus een lid dat tussendoor oud-lid wordt, geeft een fout en de import gebeurt niet. Het koppelscherm toont geen oud-leden (besluit stakeholder 2026-11-17, vraag 29 van de backlog). Wel herkent de import een oud-lid op lidnummer, onthouden koppeling of exacte naam; sinds #298 staan er meer oud-leden in de applicatie, dus een naam in het bestand wijst vaker naar een oud-lid. Die regel is dan een fout in plaats van te koppelen; heet een lid hetzelfde als een oud-lid, dan is er geen precies één treffer en komt de regel in het koppelscherm.
 
 **Loggen.** De bootmutaties krijgen de bestaande regels van de hergebruikte kernen. Het technische log krijgt `bezetting.geimporteerd` met alleen aantallen (regels, nieuw, toegewezen, overschreven, verplaatst, ongewijzigd, overgeslagen, koppelingen) en `naamkoppeling.verwijderd` met `lid:<id>` of `clubboot`. Geen naam of veld uit het bestand komt in het technische log of in stdout, hooguit regelnummer en foutcode. Een onverwachte databasefout bij het uploaden wordt zonder de databasemelding opnieuw opgeworpen, want die kan de rij met de regels noemen; de melding van een Regelfout uit de kern bij het aanmaken van een nieuwe boot wordt de algemene melding (issue #167). Beide acties komen in `TECHNISCH`.
 
@@ -132,7 +132,7 @@ De standaard geldt tot een besluit.
 
 | # | Vraag | Blokkerend | Standaard |
 |---|-------|------------|-----------|
-| 1 | Mag een oud-lid via de import een plaats of nieuwe boot krijgen? | Besloten | Nee, zoals `toewijzen` (stakeholder 2026-11-06) |
+| 1 | Mag een oud-lid via de import een plaats of nieuwe boot krijgen? | Besloten | Nee, ook binnen de bewaartermijn (stakeholder 2026-11-06, bevestigd 2026-11-16 in issue #298, besluit 1); het koppelscherm toont geen oud-leden (stakeholder 2026-11-17) |
 | 2 | Boot uit het bestand die elders ligt: verplaatsen of fout? | Besloten | Verplaatsen, zichtbaar in het overzicht (stakeholder 2026-11-06) |
 | 3 | Ziet elke beheerder een lopende import, of alleen de uploader? | Besloten | Elke beheerder; één lopende import voor de installatie (stakeholder 2026-11-06) |
 | 4 | Bewaartermijn van onthouden koppelingen | Besloten | Weg met het lid, en 5 jaar na laatste gebruik (stakeholder 2026-11-06) |
@@ -142,6 +142,7 @@ De standaard geldt tot een besluit.
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.2.9 | 2026-11-17 | Oud-lid: de import weigert ook binnen de bewaartermijn, met een eigen controle, nu het scherm Boten een oud-lid toestaat; het koppelscherm toont geen oud-leden | Besluiten stakeholder 2026-11-16 en 2026-11-17, issue #298 |
 | v0.2.8 | 2026-11-15 | De standaardbootsoort per verdieping gaat niet mee in de CSV van de rekindeling; een rek uit een import heeft geen standaard | Issue #164, besluit stakeholder 2026-11-14, herzien 2026-11-15 |
 | v0.2.7 | 2026-11-14 | Na Regel overslaan houdt de soortlijst de soorten van de plaats; een onverwachte databasefout bij het uploaden lekt geen bestandsinhoud; het aanmaken van een nieuwe boot valt onder de algemene melding | Issues #218 en #167 |
 | v0.2.6 | 2026-11-14 | Verwijzing naar de backlogstories BLB-045 en BLB-048 | Issue #216 |
