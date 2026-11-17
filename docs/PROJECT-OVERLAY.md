@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.93
+**Versie overlay:** v0.5.94
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-17
@@ -88,6 +88,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Raakt een issue de besluiten van een ander issue, zeg dan welke besluiten uit dat issue deze ronde verwerkt en welke niet; het agent meldt welke het verwerkte (#298).
 - Verwijs naar een sectie van een issue met de plek: de issuetekst (`gh issue view <nr> --json body -q .body`) of een commentaar (`--comments`) (#297).
 - Een agent in een worktree schrijft zijn terugblik in `werk/terugblik/` van de worktree; die komt via de branch in `main` (#297).
+- Bouw je op een ontwerp van Design System, lees dan vóór de opdracht `docs/besluiten.md` op main van designsystem: een later BV-nummer kan het genoemde besluit vervangen (BV-84 keurde BV-83 af; #295).
+- Raakt een besluit een API-aanroep, noem dan ook `app/api/openapi.yaml` en de beheerdocumentatie, en zeg of die in deze ronde of in de bouw worden bijgewerkt (#298).
+- Een eigen testdatabase maak je met een sed-kopie van `tests/unit/conftest.py` waarin `TEST_DB` is vervangen, als bind mount; `from ... import *` werkt niet, want `db_url` legt de naam als standaardargument vast. Draai docker compose vanuit een worktree via een script in de scratchpad (#307).
 
 #### Bouw
 
@@ -301,6 +304,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Zeg in een reviewopdracht of de unitsuite en `draai.sh -k <test>` tegelijk mogen draaien of na elkaar, en laat een overname uit designsystem vergelijken met `cmp <(git show :<pad>) <(git -C /Users/reinoud/git/designsystem show <commit>:<pad>)`, zonder tijdelijke bestanden en zonder `rm`.
 - Een regex toets je met letterlijke waarden in één SELECT; proefrijen alleen als het gedrag van het hele script getoetst moet worden (#300).
 - Een review van een workflow draait actionlint met `docker run --rm -v <werkmap>:/repo -w /repo rhysd/actionlint:1.7.7 -no-color <workflow>` (#297).
+- Zoek na een wijziging van een ADR-regel het hele ADR af, ook Gevolgen en Risico's, op de oude formulering, en noem per rand de test die hem bewijst of dat die ontbreekt (#307).
+- Noem per mutant het uitvoerbestand dat het bewijs is, en controleer met grep of diff dat de mutatie in de kopie staat voordat de run als bewijs telt (#307).
+- Een proef met code van de app in de webcontainer draait de hoofdwerkmap, niet een worktree: controleer eerst dat de geraakte functies in de diff niet gewijzigd zijn (#307).
 
 #### E2E
 
@@ -422,6 +428,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een whitelist- of adrescontrole in welke vorm het clientadres binnenkomt (IPv4 als gewone notatie of als `::ffff:`), of zeg dat het onbekend is.
 - Een controle dat Traefik een route niet logt, begint met één verzoek zonder router (onbekende Host) dat wel gelogd moet worden; anders bewijst een lege log niets (#154).
 - Rechten van GITHUB_TOKEN gelden per job, niet per stap. Heeft een stap meer rechten nodig, vraag dan om een aparte job en noem welke actions daarvoor bij mogen komen (#297).
+- Bij een veiligheidsgrens telt een record met een onbekende of ongeldige waarde naar de veilige kant: de kant die de import stopt. Noem in de opdracht het bronveld en of het vrije tekst is (#307).
 
 #### Documentatie, backlog en ADR's
 
@@ -507,6 +514,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.94 | 2026-11-17 | Zeven regels: besluiten van Design System nalezen, API-documentatie noemen, eigen testdatabase met sed-kopie (Bouw); heel ADR afzoeken, mutant met bewijsbestand, proef in de webcontainer (Review); veilige kant bij een veiligheidsgrens (Security en proxy); uit de terugblikken bij #295, #298 en #307 | Lessen |
 | v0.5.93 | 2026-11-17 | Zes regels: besluiten uit een ander issue, plek van een issuesectie, terugblik in een worktree (Algemeen); regex met letterlijke waarden, actionlint (Review); rechten van GITHUB_TOKEN per job (Security en proxy); uit de terugblikken bij #297, #298 en #300 | Lessen |
 | v0.5.92 | 2026-11-17 | Regel (Release): SBOM per image in CycloneDX JSON als bijlage bij de release | Besluit stakeholder (#297) |
 | v0.5.91 | 2026-11-17 | Zes regels (Bouw): slottest direct op de domeinfunctie, mutant op config met een nieuwe web, ruff in de container, tellen over alle pytest-samenvattingen, opruimregex tellen, uitvoer van een achtergrondrun zelf lezen; uit de terugblikken bij #278, #283 en #285 | Lessen |
