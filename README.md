@@ -38,7 +38,7 @@ Een webapplicatie waarmee een kanovereniging bijhoudt welke boot op welke plaats
 1. `cp .env.example .env`, `chmod 600 .env` en de geheimen invullen (uitleg staat in het bestand). De standaarden `DOMEIN=localhost` en een lege `TRAEFIK_CERTRESOLVER` passen bij lokaal.
 2. `mkdir -p secrets && install -m 600 /dev/null secrets/api_token`: zonder dat bestand start compose niet.
 3. `docker compose -f docker-compose.yml -f compose.dev.yml up --build -d`. Lokaal start een eigen Traefik mee; de netwerken maakt compose zelf.
-4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub. De import neemt ook oud-leden op van wie de opzegdatum hooguit 5 jaar geleden is (#298). `tests/e2e/draai.sh` importeert op een stack zonder leden eerst één keer zonder opzegdatums: `tests/e2e/eerste_import.py` in de container `e2e`, met een robottoken met `leden:importeren` en de whitelist op het adres van Traefik op het netwerk `koppeling`.
+4. Een token voor de integratiecontainer maken en in `secrets/api_token` zetten volgens `documentatie/beheer/integratiecontainer.md`. Binnen een minuut importeert de container de synthetische leden met de stub. De import neemt ook oud-leden op van wie de opzegdatum hooguit 5 jaar geleden is (#298). De twee oud-leden van de fixture met een opzegdatum in 2019 vallen buiten die termijn; die slaat de import over.
 5. `docker compose -f docker-compose.yml -f compose.dev.yml exec worker flask seed` voor een synthetische loods (alleen buiten productie). Seed maakt geen leden: alleen de import via de API schrijft leden.
 6. Een login aanmaken, zie hieronder.
 
