@@ -389,7 +389,7 @@ def overzicht():
     telling = {}
     for u in uitkomsten:
         telling[u.uitkomst] = telling.get(u.uitkomst, 0) + 1
-    return {"lopend": imp, "uitkomsten": uitkomsten, "leden": leden.actieve_leden(),
+    return {"lopend": imp, "uitkomsten": uitkomsten,
             "telling": telling, "kan_bevestigen": not any(u.uitkomst in BLOKKEERT for u in uitkomsten)}
 
 

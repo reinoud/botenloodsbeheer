@@ -481,7 +481,7 @@ def _boot_scherm(boot_id, code=200, eigenaarveld=None):
     b = _of_404(boten.boot, boot_id)
     oud_lid = b.lid is not None and leden.is_oud_lid(b.lid)
     # #132, #205: een boot zonder plaats kiest uit de vrije plaatsen die toewijzen accepteert;
-    # een clubboot ook uit de clubplaatsen. Een boot van een oud-lid buiten de termijn kiest ze niet (#298).
+    # een clubboot ook uit de clubplaatsen. Bij een oud-lid buiten de termijn toont boot.html ze niet (#298).
     vrij = indeling.vrije_plaatsen(b.bootsoort_id, ook_club=b.clubboot)
     return render_template("boot.html", boot=b, regels=log.regels([f"boot:{b.id}"]),
                            bootsoorten=indeling.bootsoorten(),
