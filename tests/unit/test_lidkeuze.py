@@ -120,10 +120,9 @@ def test_eigenaar_rondje_lidnummer_clubboot_en_onbekende_waarde(app):
         assert waarde is None and veld.fout == lidkeuze.ONGELDIG and veld.term == "Anna", onbekend
 
 
-def test_eigenaar_leeg_is_onbekend_behalve_bij_verplicht_en_bij_een_lid_of_oud_lid(app):
+def test_eigenaar_leeg_is_onbekend_behalve_bij_een_lid_of_oud_lid(app):
     anna = lid()
     assert lidkeuze.eigenaar("", "") == ((None, False), None)
-    assert lidkeuze.eigenaar("", "", verplicht=True)[1].fout == lidkeuze.EIGENAAR_VERPLICHT
     van_lid, van_club, onbekend = boot(anna.id, "Kajak", "Lid"), boot(None, "Kajak", "Club"), boot(None, "Kajak", "Wulp", onbekend=True)
     assert lidkeuze.eigenaar("", "", van_lid)[1].fout == lidkeuze.EIGENAAR_LEEG
     assert lidkeuze.eigenaar("", "", van_club) == ((None, False), None)  # #233
@@ -417,45 +416,6 @@ def test_boot_wijzigen_met_een_ongewijzigd_eigenaarveld_met_een_lange_lidnaam_la
     assert html.unescape(veld) == f"{LANG} (1001)"
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut 2", "bootsoort": b.bootsoort_id, "zoek": html.unescape(veld)})
     assert r.status_code < 400 and lidkeuze.NIET_GEKOZEN not in r.text and (b.naam, b.lid_id) == ("Fuut 2", maria.id)
-
-
-# Boten zonder eigenaar
-
-
-def test_zonder_eigenaar_na_zoeken_toont_de_treffers_alleen_bij_die_boot(ingelogd):  # noqa: F811
-    lid("1001", "Anna Wielinga"), lid("1002", "Bram Wielinga")
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    boot(None, "Kajak", "Kluut", onbekend=True)
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"actie": "zoeken", "zoek": "Wielinga"})
-    assert r.status_code == 200 and (wulp.lid_id, wulp.clubboot) == (None, False)
-    items = re.findall(r'<li class="bl-item">(.*?)</li>', r.text, re.DOTALL)
-    een = next(i for i in items if "Wulp" in i)
-    assert re.findall(r'name="eigenaar" value="(\d+)"', een) == ["1001", "1002"]
-    assert "<legend>Treffers voor Eigenaar van Wulp</legend>" in een
-    assert "type=\"radio\"" not in next(i for i in items if "Kluut" in i)
-
-
-def test_zonder_eigenaar_zonder_treffer_en_met_een_gekozen_rondje(ingelogd):  # noqa: F811
-    anna = lid()
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"actie": "zoeken", "zoek": "Zonder"})
-    assert f'id="eigenaar-0-fout">{lidkeuze.GEEN_LID}</span>' in r.text and 'aria-invalid="true"' in r.text
-    ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"zoek": "Anna", "eigenaar": "1001"})
-    assert wulp.lid_id == anna.id
-
-
-def test_zonder_eigenaar_met_een_oud_lid_buiten_de_termijn_als_rondje_wordt_geweigerd(ingelogd):  # noqa: F811
-    oud = lid("1002", "Oud", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"eigenaar": oud.lidnummer})
-    assert r.status_code == 422 and lidkeuze.ONGELDIG in r.text and wulp.lid_id is None
-
-
-def test_de_zoekterm_bij_boten_zonder_eigenaar_staat_geescaped(ingelogd):  # noqa: F811
-    lid("1001", "Anna <b>x</b>")
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"actie": "zoeken", "zoek": "<b>x</b>"})
-    assert "<b>x</b>" not in r.text and "Anna &lt;b&gt;x&lt;/b&gt; (1001)</label>" in r.text
 
 
 @pytest.mark.parametrize("pad", ["/boten", "/boten/zonder-eigenaar"])

@@ -182,29 +182,6 @@ def boot_wijzigen(boot_id, naam, bootsoort_id, lid_id, actor, clubboot=False):
     return b
 
 
-def eigenaar_kiezen(boot_id, lid_id, actor, clubboot=False):
-    """Geeft een boot met een onbekende eigenaar een lid of de vereniging (pagina Boten zonder
-    eigenaar, #204). Alleen zolang de eigenaar onbekend is: een andere beheerder kan hem intussen
-    hebben gekozen. De rest van de regels (plaats, wachtlijst, oud-lid) is die van boot_wijzigen,
-    in dezelfde transactie: het slot op de boot blijft staan."""
-    b = db.session.get(Boot, boot_id, with_for_update=True, populate_existing=True)
-    try:
-        if b is None:
-            raise Regelfout("Deze boot bestaat niet.")
-        if b.lid_id is not None or b.clubboot:
-            raise Regelfout(f"Boot {b.naam} heeft intussen een eigenaar. Er is niets gewijzigd.")
-        if lid_id is None and not clubboot:
-            raise Regelfout("Kies een eigenaar.")
-        lid = db.session.get(Lid, lid_id) if lid_id is not None else None
-        if lid is not None and leden.lid_buiten_termijn(lid):
-            raise Regelfout(f"Het gekozen lid van boot {b.naam} is intussen langer dan "
-                            f"{leden.BEWAARJAREN} jaar opgezegd. Er is niets gewijzigd.")
-    except Regelfout:
-        db.session.rollback()
-        raise
-    return boot_wijzigen(boot_id, b.naam, b.bootsoort_id, lid_id, actor, clubboot)
-
-
 def heeft_foto(boot_id):
     return db.session.scalar(select(Boot.afbeelding_id).where(Boot.id == boot_id)) is not None
 

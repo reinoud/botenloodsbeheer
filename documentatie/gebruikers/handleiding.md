@@ -116,9 +116,9 @@ Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de b
 
 ## Boten zonder eigenaar
 
-Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Zoek per boot bij **Eigenaar van** een lid of de vereniging (kies **Zoeken** met de bootnaam erachter), kies een treffer en kies **Eigenaar opslaan** met de bootnaam erachter. Het veld is verplicht: leeg opslaan kan hier niet. Een weigering, bijvoorbeeld de vereniging als eigenaar van een boot op de wachtlijst, geldt alleen die boot. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers. Leeg opslaan geeft ook bij een boot van een oud-lid een foutregel.
+Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Klik op de naam van een boot om een eigenaar toe te kennen: kies de eigenaar bij **Boot wijzigen** op de pagina van de boot (zie hierboven). Daarna staat de boot niet meer op de lijst. De plaats is een link naar de plaats. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers.
 
-![De pagina Boten zonder eigenaar met een boot en de keuze van een eigenaar.](afbeeldingen/boten-zonder-eigenaar.png)
+![De pagina Boten zonder eigenaar met een lijst van boten, met bootsoort en plaats.](afbeeldingen/boten-zonder-eigenaar.png)
 
 ## De wachtlijst
 
@@ -137,7 +137,7 @@ De applicatie weigert een clubboot, een boot van een oud-lid, een boot met een p
 - een boot die een plaats krijgt, gaat van de lijst;
 - krijgt de boot een andere eigenaar (een ander lid), dan gaat hij van de lijst. De applicatie meldt dat en het log noemt de reden `andere eigenaar`. Zet de boot er daarna zo nodig opnieuw op. Een boot van een lid kan niet onbekend worden, dus dat is geen reden meer om van de lijst te gaan;
 - wordt de eigenaar oud-lid, dan haalt de eerstvolgende import van leden de boot van de lijst. Het log noemt dan het robottoken van de import als uitvoerder. Tot die import zegt de pagina van de boot: "De eigenaar is oud-lid. Bij de volgende ledenimport gaat de boot van de wachtlijst." Je kunt de boot ook zelf van de lijst halen;
-- kies je bij **Boot wijzigen** of **Boten zonder eigenaar** een oud-lid als eigenaar van een boot op de wachtlijst, dan gaat hij meteen van de lijst. De applicatie meldt dat en het log noemt de reden `oud-lid`.
+- kies je bij **Boot wijzigen** een oud-lid als eigenaar van een boot op de wachtlijst, dan gaat hij meteen van de lijst. De applicatie meldt dat en het log noemt de reden `oud-lid`.
 
 Op de pagina van een lid staat een boot op de wachtlijst met de regel **Wachtlijst: Sinds** en de aanmelddatum; een boot die niet op de lijst staat, heeft die regel niet.
 
@@ -397,7 +397,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/vrij` | Vrije plaatsen |
 | `/wachtlijst` | Wachtlijst per bootsoort |
 | `/zoeken` | Zoeken vanuit de kop, de lijst met treffers |
-| `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, een eigenaar kiezen |
+| `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, met een link naar de boot |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |
 | `/leden` | Leden en de import |

@@ -1,6 +1,6 @@
 """Een lid kiezen met zoeken en een tussenstap (BV-85, #295). Het zoekveld en de treffers (keuzerondjes
 met het lidnummer als waarde) horen bij elk scherm waar een beheerder een lid kiest: de bezettingsimport,
-Nieuwe boot, Boot wijzigen en Boten zonder eigenaar.
+Nieuwe boot en Boot wijzigen.
 
 De zoekterm en de gekozen waarde komen uit het formulier en zijn externe invoer. De server herkent een
 keuze alleen als de waarde het lidnummer is van een lid dat `kiesbare_leden` levert, of `clubboot`.
@@ -24,7 +24,6 @@ ONGELDIG = "Dit lid kan niet worden gekozen. Zoek opnieuw."
 KEUZES_ONGELDIG = "De keuzes kloppen niet meer. Ververs de pagina en probeer het opnieuw."
 EIGENAAR_LEEG = ("Vul een eigenaar in. Een boot van een lid of oud-lid kan niet zonder eigenaar. "
                  "Zoek op naam of lidnummer.")
-EIGENAAR_VERPLICHT = "Vul een eigenaar in. Zoek op naam of lidnummer."
 # Het veld Eigenaar van een bestaande boot is gevuld met "Naam (lidnummer)": zoeken daarop zoekt het nummer.
 _LABEL = re.compile(r".+ \(([^()]+)\)")
 
@@ -91,12 +90,12 @@ def veld_gekozen(term, lid):
     return Keuzeveld(term, [treffer], gekozen=treffer.waarde)
 
 
-def eigenaar(keuze, term, boot=None, boot_tekst="", verplicht=False):
-    """Wat een formulier met één keuze (Nieuwe boot, Boot wijzigen, Boten zonder eigenaar) betekent:
+def eigenaar(keuze, term, boot=None, boot_tekst=""):
+    """Wat een formulier met één keuze (Nieuwe boot, Boot wijzigen) betekent:
     ((lid_id, clubboot), None), of (None, Keuzeveld met een foutregel). `keuze` is het aangevinkte
     rondje, `term` het zoekveld. Zonder rondje geldt: het ongewijzigde zoekveld van een bestaande boot
     (`boot_tekst`) laat de eigenaar staan; een andere term is geen keuze; een leeg veld is eigenaar
-    onbekend, behalve bij `verplicht` en bij een boot van een lid of oud-lid (#295, 4A). Een clubboot
+    onbekend, behalve bij een boot van een lid of oud-lid (#295, 4A). Een clubboot
     mag onbekend worden (#233)."""
     keuze, term = (keuze or "").strip(), schoon(term, MAX_TEKENS)
     if keuze == CLUBBOOT:
@@ -108,8 +107,6 @@ def eigenaar(keuze, term, boot=None, boot_tekst="", verplicht=False):
         if boot is not None and term == boot_tekst:
             return (boot.lid_id, boot.clubboot), None
         return None, Keuzeveld(term, fout=NIET_GEKOZEN)
-    if verplicht:
-        return None, Keuzeveld(fout=EIGENAAR_VERPLICHT)
     if boot is not None and boot.lid_id is not None:
         return None, Keuzeveld(fout=EIGENAAR_LEEG)
     return (None, False), None
