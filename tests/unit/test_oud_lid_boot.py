@@ -162,17 +162,6 @@ def test_een_bestaande_eigenaar_buiten_de_termijn_blijft_staan_bij_een_andere_na
     assert b.lid_id == anna.id
 
 
-def test_eigenaar_kiezen_geeft_een_oud_lid_binnen_de_termijn_en_weigert_erbuiten(app):
-    # Mutant: is_oud_lid terug valt op de eerste assert; de controle weglaten op de Regelfout.
-    binnen, buiten = oud_lid(BINNEN), oud_lid(BUITEN, "2002", "Te Oud")
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    with pytest.raises(Regelfout, match="langer dan 5 jaar opgezegd"):
-        boten.eigenaar_kiezen(wulp.id, buiten.id, CLI)
-    assert wulp.lid_id is None
-    boten.eigenaar_kiezen(wulp.id, binnen.id, CLI)
-    assert wulp.lid_id == binnen.id
-
-
 # Wachtlijst (besluit 27)
 
 
@@ -190,7 +179,7 @@ def test_onbekende_boot_op_de_wachtlijst_gaat_eraf_als_hij_een_oud_lid_krijgt(ap
     # staan valt hier: de eigenaar was onbekend.
     wulp = boot(None, "Kajak", "Wulp", onbekend=True)
     wachtlijst.erop_zetten(wulp.id, None, CLI)
-    boten.eigenaar_kiezen(wulp.id, oud_lid().id, CLI)
+    wijzig(wulp, lid_id=oud_lid().id)
     assert wulp.wachtlijst is None and logreden("wachtlijst.verwijderd") == ["oud-lid"]
 
 
@@ -321,17 +310,6 @@ def test_nieuwe_boot_met_een_oud_lid_binnen_de_termijn_wordt_vastgelegd_en_buite
     r = ingelogd.post("/boten", data={"naam": "Fuut", "bootsoort": "1", "eigenaar": binnen.lidnummer})
     db.session.expire_all()
     assert r.status_code == 302 and db.session.scalar(select(Boot)).lid_id == binnen.id
-
-
-def test_zonder_eigenaar_kiest_een_oud_lid_binnen_de_termijn_en_haalt_de_boot_van_de_lijst(ingelogd):  # noqa: F811
-    # Mutant: oud=True in lidkeuze.eigenaar weglaten valt op de status; _melding_wachtlijst weglaten op de melding.
-    oud = oud_lid(BINNEN)
-    wulp = boot(None, "Kajak", "Wulp", onbekend=True)
-    wachtlijst.erop_zetten(wulp.id, None, CLI)
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"eigenaar": oud.lidnummer}, follow_redirects=True)
-    db.session.expire_all()
-    assert r.status_code == 200 and wulp.lid_id == oud.id and wulp.wachtlijst is None
-    assert "De eigenaar is oud-lid. De boot is van de wachtlijst gehaald." in r.text
 
 
 def test_boot_wijzigen_toont_de_melding_bij_een_oud_lid_en_zoekt_oud_leden(ingelogd):  # noqa: F811

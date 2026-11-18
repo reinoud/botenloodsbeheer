@@ -3,14 +3,13 @@ wachtlijst, de pagina Boten zonder eigenaar, het menu, het formulier Nieuwe boot
 staat in test_bezetting_csv.py, de migratie in test_migratie_en_taken.py."""
 
 import re
-from datetime import timedelta
 
 import pytest
 from sqlalchemy import select
 
-from app.domein import CLI, Regelfout, boten, leden, toewijzing, uitlezen, vandaag, wachtlijst
+from app.domein import CLI, Regelfout, boten, toewijzing, uitlezen, vandaag, wachtlijst
 from app.models import Boot, Logregel, db
-from tests.unit.hulp import lid, race
+from tests.unit.hulp import lid
 from tests.unit.test_boot_wijzigen import regels, wijzig
 from tests.unit.test_indeling_en_toewijzing import acties, boot, plaats
 from tests.unit.test_overzichten_en_instellingen import opzeggen
@@ -154,29 +153,6 @@ def test_boot_op_de_wachtlijst_houdt_zijn_plek_als_een_onbekende_eigenaar_een_li
     assert o.wachtlijst is not None and b.wachtlijst is None
 
 
-def test_eigenaar_kiezen_alleen_zolang_de_eigenaar_onbekend_is(app):
-    anna = lid()
-    o = onbekend()
-    boten.eigenaar_kiezen(o.id, anna.id, CLI)
-    assert o.lid_id == anna.id
-    with pytest.raises(Regelfout, match="heeft intussen een eigenaar"):
-        boten.eigenaar_kiezen(o.id, None, CLI, clubboot=True)
-    assert o.clubboot is False  # de tweede keuze is niet toegepast
-
-
-def test_eigenaar_kiezen_weigert_geen_keuze_oud_lid_buiten_de_termijn_en_onbekend_lid(app):
-    # #298: een oud-lid binnen de termijn mag wel (test_oud_lid_boot.py).
-    oud = lid("1002", "Oud", opzegdatum=leden.jaren_terug(vandaag(), leden.BEWAARJAREN) - timedelta(days=1))
-    o = onbekend()
-    with pytest.raises(Regelfout, match="Kies een eigenaar"):
-        boten.eigenaar_kiezen(o.id, None, CLI)
-    with pytest.raises(Regelfout, match="langer dan 5 jaar opgezegd"):
-        boten.eigenaar_kiezen(o.id, oud.id, CLI)
-    with pytest.raises(Regelfout, match="bestaat niet"):
-        boten.eigenaar_kiezen(o.id, 424242, CLI)
-    assert (o.lid_id, o.clubboot) == (None, False)
-
-
 def test_zonder_eigenaar_alleen_onbekende_op_naam_en_het_aantal(app):
     boot(lid().id, "Kajak", "Lid")
     boot(None, "Kajak", "Club")
@@ -203,22 +179,24 @@ def test_api_clubboot_is_true_alleen_bij_een_clubboot(app):
 # Schermen
 
 
-def test_pagina_boten_zonder_eigenaar_een_regel_per_boot_met_label_en_knop(ingelogd):  # noqa: F811
-    toewijzing.toewijzen(plaats("A/1/1").id, onbekend("Wulp").id, CLI)
-    onbekend("Kluut")
+def test_pagina_boten_zonder_eigenaar_is_een_lijst_zonder_formulier_met_links(ingelogd):  # noqa: F811
+    # BV-90 (#321). Mutant: een formulier, zoekveld of knop terug valt op de laatste assert; een link weg op de links.
+    toewijzing.toewijzen(plaats("A/1/1").id, (wulp := onbekend("Wulp")).id, CLI)
+    kluut = onbekend("Kluut")
     lid()
     boot(None, "Kajak", "Clubboot")
     html = ingelogd.get("/boten/zonder-eigenaar").text
     assert "2 boten zonder eigenaar" in html and "Clubboot" not in html.split('<ul class="bl-lijst">')[1]
+    assert '<p class="bl-hint">Klik op de boot om een eigenaar toe te kennen.</p>' in html
     items = re.findall(r'<li class="bl-item">(.*?)</li>', html, re.DOTALL)
     assert len(items) == 2
-    wulp = next(i for i in items if "Wulp" in i)
-    assert ">A/1/1</a>" in wulp and "Eigenaar van Wulp</label>" in wulp
-    assert ">Eigenaar opslaan: Wulp</button>" in wulp and "Kluut" not in wulp
-    assert ">Zoeken: Wulp</button>" in wulp and 'name="actie" value="zoeken"' in wulp
-    assert "geen plaats" in next(i for i in items if "Kluut" in i)
-    assert re.search(r'<input class="ds-input" type="search" id="eigenaar-\d" name="zoek" minlength="2" value="" [^>]*required>', wulp)
-    assert "<select" not in wulp and "Anna de Vries" not in wulp and "<fieldset" not in wulp  # de treffers volgen na Zoeken
+    w, k = (next(i for i in items if n in i) for n in ("Wulp", "Kluut"))
+    assert f'href="/boten/{wulp.id}">Wulp</a>' in w and f'href="/boten/{kluut.id}">Kluut</a>' in k
+    assert 'data-label="Bootsoort">Kajak</span>' in w
+    assert f'href="/plaatsen/{wulp.plaats.id}">A/1/1</a>' in w and "<a" not in k.split('bl-item__zijde')[1]
+    assert "geen plaats" in k
+    main = html.split("<main", 1)[1]
+    assert not any(t in main for t in ("<form", "<input", "<button", "<select", "Eigenaar opslaan"))
 
 
 def test_pagina_boten_zonder_eigenaar_leeg(ingelogd):  # noqa: F811
@@ -231,7 +209,15 @@ def test_bootnaam_wordt_geescaped_op_boten_zonder_eigenaar(ingelogd):  # noqa: F
     # Mutant: |safe op de bootnaam in lijst, label of knop valt hier.
     onbekend("<b>x</b>")
     html = ingelogd.get("/boten/zonder-eigenaar").text
-    assert "<b>x</b>" not in html and html.count("&lt;b&gt;x&lt;/b&gt;") == 4  # titel, label, Zoeken en Eigenaar opslaan
+    assert "<b>x</b>" not in html and html.count("&lt;b&gt;x&lt;/b&gt;") == 1  # de link naar de boot
+
+
+def test_een_post_op_de_vervallen_route_voor_een_eigenaar_kiezen_wordt_geweigerd(ingelogd):  # noqa: F811
+    # #321: de keuze staat alleen nog bij Boot wijzigen. Mutant: de route terugzetten valt op beide statussen.
+    o = onbekend()
+    assert ingelogd.post("/boten/zonder-eigenaar", data={"eigenaar": "clubboot"}).status_code == 405
+    assert ingelogd.post(f"/boten/{o.id}/eigenaar", data={"eigenaar": "clubboot"}).status_code == 404
+    assert (o.lid_id, o.clubboot) == (None, False)
 
 
 def test_menu_toont_het_aantal_in_de_link_en_bij_nul_alleen_de_naam(ingelogd):  # noqa: F811
@@ -301,43 +287,6 @@ def test_een_clubboot_wordt_onbekend_met_een_leeg_veld_eigenaar(ingelogd):  # no
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Club", "bootsoort": b.bootsoort_id, "zoek": ""},
                       follow_redirects=True)
     assert "De boot is opgeslagen." in r.text and (b.lid_id, b.clubboot) == (None, False)
-
-
-def test_eigenaar_opslaan_gelukt_ook_clubboot_op_gewone_plaats_en_raakt_alleen_die_boot(ingelogd):  # noqa: F811
-    anna = lid()
-    toewijzing.toewijzen(plaats("A/1/1").id, (kluut := onbekend("Kluut")).id, CLI)
-    wulp = onbekend("Wulp")
-    onbekend("Waterhoen")
-    r = ingelogd.post(f"/boten/{kluut.id}/eigenaar", data={"eigenaar": "clubboot"}, follow_redirects=True)
-    assert "De eigenaar van Kluut is opgeslagen." in r.text and "Wulp" in r.text  # #205
-    r = ingelogd.post(f"/boten/{wulp.id}/eigenaar", data={"eigenaar": anna.lidnummer}, follow_redirects=True)
-    assert "De eigenaar van Wulp is opgeslagen." in r.text
-    assert wulp.lid_id == anna.id and kluut.lid_id is None and kluut.clubboot is True
-    assert "1 boot zonder eigenaar" in r.text
-
-
-@pytest.mark.parametrize("data, melding", [
-    ({"zoek": ""}, "Vul een eigenaar in. Zoek op naam of lidnummer."),
-    ({"eigenaar": "9999"}, "Dit lid kan niet worden gekozen. Zoek opnieuw."),
-    ({"eigenaar": "onbekend"}, "Dit lid kan niet worden gekozen. Zoek opnieuw."),
-    ({"zoek": "Anna"}, "Kies een lid uit de treffers. Zoek eerst met de knop Zoeken."),
-], ids=["leeg", "onbekend-lidnummer", "onbekend-niet-aangeboden", "term-zonder-keuze"])
-def test_eigenaar_opslaan_zonder_geldige_keuze_geeft_een_foutregel_bij_het_veld(ingelogd, data, melding):  # noqa: F811
-    lid()
-    o = onbekend()
-    r = ingelogd.post(f"/boten/{o.id}/eigenaar", data=data)
-    assert r.status_code == 422 and f'<span class="ds-field__error" id="eigenaar-0-fout">{melding}</span>' in r.text
-    assert 'aria-invalid="true"' in r.text and (o.lid_id, o.clubboot) == (None, False)
-
-
-def test_eigenaar_opslaan_voor_een_boot_die_niet_bestaat_is_404(ingelogd):  # noqa: F811
-    assert ingelogd.post("/boten/424242/eigenaar", data={"eigenaar": "club"}).status_code == 404
-
-
-def test_eigenaar_opslaan_vraagt_inloggen(client, app):
-    o = onbekend()
-    assert client.post(f"/boten/{o.id}/eigenaar", data={"eigenaar": "club"}).status_code in (302, 401, 403)
-    assert o.clubboot is False
 
 
 # Nieuwe boot (#207)
@@ -437,13 +386,3 @@ def test_indeling_export_noemt_eigenaar_onbekend(ingelogd):  # noqa: F811
     toewijzing.toewijzen(plaats("A/1/1").id, onbekend("Wulp").id, CLI)
     blad = load_workbook(io.BytesIO(ingelogd.get("/indeling.xlsx").data)).active
     assert [c.value for c in list(blad.iter_rows())[1]][4:] == ["Wulp", "eigenaar onbekend", None]
-
-
-def test_gelijktijdig_eigenaar_kiezen_ziet_de_eerdere_keuze(app):
-    """Een andere sessie geeft de boot net een lid; met het slot ziet eigenaar_kiezen dat en weigert."""
-    anna = lid()
-    o = onbekend()
-    fouten = race(app, ["SELECT id FROM boot WHERE id = :b FOR UPDATE", "UPDATE boot SET lid_id = :l WHERE id = :b"],
-                  {"b": o.id, "l": anna.id}, lambda: boten.eigenaar_kiezen(o.id, None, CLI, clubboot=True))
-    assert len(fouten) == 1 and "heeft intussen een eigenaar" in fouten[0], fouten
-    assert (db.session.get(Boot, o.id).lid_id, db.session.get(Boot, o.id).clubboot) == (anna.id, False)

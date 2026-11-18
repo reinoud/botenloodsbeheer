@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.21
+**Versie:** v0.6.22
 **Datum:** 2026-11-17
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -149,7 +149,7 @@ In deze story is de bewaartermijn van een oud-lid de termijn van BLB-026: een ou
 
 - Gegeven een lid in de ledenlijst, wanneer de beheerder een boot met naam en bootsoort voor dat lid aanmaakt, dan staat de boot bij het lid. Een lid kan meerdere boten hebben.
 - Gegeven een clubboot, wanneer de beheerder die aanmaakt, dan heeft de vereniging de boot als eigenaar en is er geen lid aan gekoppeld.
-De keuze Eigenaar gaat met zoeken en een tussenstap (BV-85, vervangt BV-83; besluit stakeholder 2026-11-16, issue #295). Ze geldt bij Nieuwe boot, Boot wijzigen en Boten zonder eigenaar (BLB-046) en werkt zonder script (ADR-002). Een treffer is de vereniging, een lid of een oud-lid binnen de bewaartermijn.
+De keuze Eigenaar gaat met zoeken en een tussenstap (BV-85, vervangt BV-83; besluit stakeholder 2026-11-16, issue #295). Ze geldt bij Nieuwe boot en Boot wijzigen en werkt zonder script (ADR-002). Een treffer is de vereniging, een lid of een oud-lid binnen de bewaartermijn.
 
 - Gegeven het overzicht van boten, wanneer de beheerder bovenaan de knop **Nieuwe boot** opent, dan staat het formulier open onder de kop, met bij Eigenaar een zoekveld en vóór de opslaanknop de knop **Zoeken**.
 - Gegeven Nieuwe boot met een leeg zoekveld en geen gekozen treffer, wanneer de beheerder opslaat, dan krijgt de boot de toestand eigenaar onbekend (BLB-046) en staat hij op Boten zonder eigenaar (issue #207; issue #295 punt 5; BV-85).
@@ -170,7 +170,7 @@ De keuze Eigenaar gaat met zoeken en een tussenstap (BV-85, vervangt BV-83; besl
 - Gegeven een boot van een lid met een gewone plaats, wanneer de beheerder een oud-lid binnen de bewaartermijn als eigenaar kiest, dan houdt de boot zijn plaats en staat hij op Opgezegd (BLB-018; issue #298, besluit 6).
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder een gewone plaats toewijst die bij de bootsoort past, dan lukt dat; een clubplaats weigert de applicatie met de reden (issue #298, besluit 2; BLB-010).
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie met de reden (issue #298, besluit 2; BLB-013).
-- Gegeven een boot op de wachtlijst, wanneer de beheerder bij Boot wijzigen of Boten zonder eigenaar een oud-lid als eigenaar kiest, dan gaat de boot van de wachtlijst, ziet de beheerder dat in een melding en staat dat in het log van de bootmutaties met de reden `oud-lid` (besluit stakeholder 2026-11-17, issue #298, vraag 27).
+- Gegeven een boot op de wachtlijst, wanneer de beheerder bij Boot wijzigen een oud-lid als eigenaar kiest, dan gaat de boot van de wachtlijst, ziet de beheerder dat in een melding en staat dat in het log van de bootmutaties met de reden `oud-lid` (besluit stakeholder 2026-11-17, issue #298, vraag 27).
 - Gegeven een bezettingsimport met een regel waarvan de eigenaar een oud-lid is, wanneer de beheerder het overzicht opent, dan blijft de regel een fout als die een nieuwe boot of een nieuwe toewijzing zou geven. Dat geldt ook binnen de bewaartermijn (BLB-048; issue #298, besluit 1).
 - Gegeven het overzicht van boten, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon boten** kiest, dan staan alleen de boten waarvan de boot of de eigenaar de tekst bevat en die van die soort zijn in de lijst, met het aantal erboven. De zoektekst telt letterlijk (ook `%` en `_`) en hoofdletters tellen niet mee. Geen enkel filter geeft alle boten. Een onbekende bootsoort geeft geen boten en geen foutmelding. Een keuzelijst verstuurt niet zelf (WCAG 3.2.2).
 
@@ -183,10 +183,10 @@ Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en 
 - Gegeven een bezettingsregel met lege eigenaar en leeg lidnummer, wanneer de beheerder importeert, dan ontstaat een boot met de toestand eigenaar onbekend, geen clubboot, op de plaats uit het bestand. Het woord `clubboot` in de kolom Eigenaar (zonder verschil in hoofdletters) maakt een clubboot.
 - Gegeven een bezettingsregel met het lidnummer of de naam van een oud-lid, wanneer de beheerder importeert, dan ontstaat geen boot met eigenaar onbekend: de regel is een fout als die een nieuwe boot of toewijzing zou geven (BLB-048; issue #298, besluit 1).
 - Gegeven een boot met een onbekende eigenaar, wanneer die een plaats krijgt, dan weigert de applicatie een clubplaats en accepteert ze een gewone plaats. De boot mag op de wachtlijst.
-- Gegeven de pagina `/boten/zonder-eigenaar`, dan staat per boot een regel met naam, bootsoort en plaats, het verplichte veld Eigenaar als zoekveld met keuzerondjes zoals in BLB-005, de knop **Zoeken: <bootnaam>** en de knop **Eigenaar opslaan** met de bootnaam (BV-85). Na opslaan is de boot van de lijst; een weigering geldt alleen die boot.
-- Gegeven een boot op `/boten/zonder-eigenaar`, wanneer de beheerder **Eigenaar opslaan** kiest zonder gekozen treffer, dan geeft de server een foutregel en blijft de boot onbekend. Eigenaar blijft hier verplicht (issue #295 punt 6; besluit stakeholder 2026-11-17; BV-86). Zonder boten staat er "Alle boten hebben een eigenaar."
-- Gegeven een boot met een onbekende eigenaar en een gewone plaats, wanneer de beheerder op Boten zonder eigenaar een oud-lid kiest met een opzegdatum van precies 5 jaar geleden, dan heeft de boot dat oud-lid als eigenaar, houdt hij zijn plaats en staat hij op Opgezegd (issue #298, besluit 1 en 6).
-- Gegeven een oud-lid met een opzegdatum van 5 jaar en 1 dag geleden, wanneer de beheerder op Boten zonder eigenaar op diens naam of lidnummer zoekt, dan is het oud-lid geen treffer en blijft de boot onbekend (issue #298, besluit 5; BV-86).
+- Gegeven de pagina `/boten/zonder-eigenaar`, dan staat boven de lijst "N boten zonder eigenaar" en de hint "Klik op de boot om een eigenaar toe te kennen.", en per boot een regel met de naam als link naar de pagina van de boot, de bootsoort en de plaats als link naar de plaats of "geen plaats". Er is geen formulier, zoekveld of knop. Zonder boten staat er "Alle boten hebben een eigenaar." Een POST op de oude route voor een eigenaar kiezen geeft een fout (issue #321; BV-90, die BV-72 2B en BV-86 aanpast).
+- Gegeven een boot op `/boten/zonder-eigenaar`, wanneer de beheerder op de boot klikt en bij Boot wijzigen een eigenaar kiest en opslaat, dan is de boot van de lijst. Het uitklapblok Boot wijzigen of verwijderen staat daarbij dicht tot de beheerder het opent (besluit stakeholder 2026-11-17; BV-90, BV-85, BV-87).
+- Gegeven een boot met een onbekende eigenaar en een gewone plaats, wanneer de beheerder bij Boot wijzigen een oud-lid kiest met een opzegdatum van precies 5 jaar geleden, dan heeft de boot dat oud-lid als eigenaar, houdt hij zijn plaats en staat hij op Opgezegd (issue #298, besluit 1 en 6).
+- Gegeven een oud-lid met een opzegdatum van 5 jaar en 1 dag geleden, wanneer de beheerder bij Boot wijzigen op diens naam of lidnummer zoekt, dan is het oud-lid geen treffer en blijft de boot onbekend (issue #298, besluit 5; BV-86).
 - Gegeven een boot met een onbekende eigenaar op de wachtlijst, wanneer de beheerder een oud-lid kiest, dan geldt het criterium over de wachtlijst in BLB-005: de boot gaat van de wachtlijst (vraag 27).
 - Gegeven het menu, dan staat **Boten zonder eigenaar** onder Dagelijks na Wachtlijst, met het aantal in de link; bij nul staat er geen aantal.
 - Gegeven een boot met een lid als eigenaar, wanneer de beheerder bij Boot wijzigen het veld Eigenaar leeg maakt en opslaat, dan geeft de server bij het veld de foutregel "Vul een eigenaar in. Een boot van een lid of oud-lid kan niet zonder eigenaar. Zoek op naam of lidnummer.", blijft de eigenaar staan en gaat de boot niet naar eigenaar onbekend (besluit stakeholder 2026-11-17, issue #295, BV-72, BV-86; vervangt issue #233 voor een boot met een lid). Bij een boot van een oud-lid geeft leegmaken dezelfde foutregel (besluit stakeholder 2026-11-17, vraag 28).
@@ -194,7 +194,7 @@ Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en 
 - Gegeven de migratie, dan zijn alle bestaande boten zonder lid clubboot.
 - Gegeven `GET /api/v1/boten`, dan heeft elke boot een boolean `clubboot`: `true` bij een clubboot, `false` bij een boot van een lid en bij een onbekende eigenaar. `eigenaar` blijft `null` bij een clubboot en bij een onbekende eigenaar; er gaat geen veld uit de API af (issue #212, besluit stakeholder 2026-11-10).
 
-Route voor een mens (issue #204): importeer een CSV met een regel zonder eigenaar, open Boten zonder eigenaar, kies een lid en sla op.
+Route voor een mens (issue #204, #321): importeer een CSV met een regel zonder eigenaar, open Boten zonder eigenaar, klik op de boot, kies bij Boot wijzigen een lid en sla op. De boot staat niet meer op de lijst.
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
@@ -850,7 +850,7 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 
 | Nr | Vraag | Besluit | Raakt |
 |----|-------|---------|-------|
-| 27 | Een boot op de wachtlijst krijgt bij Boot wijzigen of Boten zonder eigenaar een oud-lid als eigenaar. Gaat de boot van de wachtlijst, of weigert de applicatie de wijziging? | De wijziging gaat door en de boot gaat van de wachtlijst, met een melding en de reden `oud-lid` in het log. | BLB-005, BLB-013, BLB-046 |
+| 27 | Een boot op de wachtlijst krijgt bij Boot wijzigen een oud-lid als eigenaar. Gaat de boot van de wachtlijst, of weigert de applicatie de wijziging? | De wijziging gaat door en de boot gaat van de wachtlijst, met een melding en de reden `oud-lid` in het log. | BLB-005, BLB-013, BLB-046 |
 | 28 | Geeft leegmaken van Eigenaar ook een foutregel bij een boot van een oud-lid en bij een clubboot (BV-72)? | Oud-lid: ja, een foutregel, zoals bij een lid. Clubboot: nee, de boot mag eigenaar onbekend worden, zoals in #233. | BLB-013, BLB-046 |
 | 29 | Toont het koppelscherm van de bezettingsimport oud-leden als keuze? | Nee. | BLB-048 |
 | 30 | Krijgt de intake een besluit over de gegevens van oud-leden die de ledenimport opneemt? | Ja. Doel: een eigenaar kunnen kiezen voor een boot die in de loods ligt. Termijn: 5 jaar vanaf de opzegdatum, daarna opgeschoond. Grondslag: stelt de vereniging vast. | BLB-006, BLB-008, BLB-026 |
@@ -884,6 +884,7 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.22 | 2026-11-18 | Issue #321, besluit stakeholder 2026-11-17 en BV-90: Boten zonder eigenaar is een lijst zonder keuze en zonder knop; de eigenaar kies je bij Boot wijzigen op de pagina van de boot. Het criterium met het zoekveld en het criterium met de foutregel bij Eigenaar opslaan vervallen; de criteria over het oud-lid en de wachtlijst gelden bij Boot wijzigen (BLB-005, 046; vraag 27) |
 | v0.6.21 | 2026-11-17 | Issues #295 en #298, besluiten stakeholder 2026-11-16 en 2026-11-17: de keuze Eigenaar volgt BV-85 in plaats van BV-83 (datalist): zoekveld, één knop Zoeken, treffers als keuzerondjes met het lidnummer als waarde, hooguit 10 met een hint, voorkeuze bij één treffer, foutregel zonder treffer en "clubboot" als zoekterm (BLB-005, 046, 048). Een oud-lid krijgt de tag "oud-lid" in plaats van de tekst "(oud-lid)" (besluit 7 aangepast; BLB-005, 019). "Regel overslaan" is een vakje in de cel Keuze (BLB-048). De foutregel bij leegmaken van Eigenaar volgt BV-86 (BLB-046) |
 | v0.6.20 | 2026-11-17 | Vragen 27 tot en met 31 besloten door de stakeholder (issue #298): een oud-lid als eigenaar haalt een boot van de wachtlijst (BLB-005, 013, 046); leegmaken van Eigenaar geeft bij een oud-lid een foutregel en mag bij een clubboot (BLB-013, 046); het koppelscherm toont geen oud-leden (BLB-048); de taaktekst van BLB-008 staat vast; de intake krijgt doel, termijn en grondslag voor gegevens van oud-leden. BLB-005 is niet meer geblokkeerd |
 | v0.6.19 | 2026-11-17 | Issue #298: een oud-lid binnen de bewaartermijn van 5 jaar is te kiezen als eigenaar en krijgt een gewone plaats, geen clubplaats en geen wachtlijst (BLB-005, 008, 010, 013, 018, 046); de ledenimport neemt oud-leden tot 5 jaar op (BLB-006, 008, 026); `/leden` toont "(oud-lid)" (BLB-019); de bezettingsimport blijft een oud-lid weigeren (BLB-048). Issue #295: het veld Eigenaar is een tekstveld met keuzelijst en leegmaken bij een boot met een lid geeft een foutregel (BLB-005, 013, 046). Vragen 27 tot en met 31 |

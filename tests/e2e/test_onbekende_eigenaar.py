@@ -1,6 +1,6 @@
 """Eigenaar onbekend (issues #204 en #207), de route voor een mens: een boot vastleggen met de knop
 Nieuwe boot bovenaan Boten en de eigenaar open laten, twee boten zonder eigenaar importeren, op
-Boten zonder eigenaar per boot een eigenaar kiezen, een weigering die alleen die boot raakt. Op
+naar een boot klikken en daar een eigenaar kiezen (#321). Op
 1100 en 360 pixels breed. Daarna een boot met een eigenaar weer onbekend maken (#233)."""
 
 import re
@@ -66,19 +66,22 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
     zonder_scroll(page)
 
     page.set_viewport_size({"width": 1100, "height": 900})
-    # Een lid kiezen: zoeken op het lidnummer, het rondje kiezen, opslaan; de boot is van de lijst.
+    # #321: geen keuze op de lijst; klik op de boot en kies de eigenaar bij Boot wijzigen. De boot is van de lijst.
+    expect(page.get_by_text("Klik op de boot om een eigenaar toe te kennen.")).to_be_visible()
+    expect(page.locator("main form, main input, main button")).to_have_count(0)
     (_naam, nummer), *_ = kiesbare_leden(page, 1)
-    page.goto("/boten/zonder-eigenaar")
-    for boot in (tureluur, kluut):
-        lid_zoeken_en_kiezen(regel_van(page, boot).get_by_label(f"Eigenaar van {boot}"),
-                             regel_van(page, boot).get_by_role("button", name=f"Zoeken: {boot}"), nummer)
-        regel_van(page, boot).get_by_role("button", name=f"Eigenaar opslaan: {boot}").click()
-        expect(page.get_by_text(f"De eigenaar van {boot} is opgeslagen.")).to_be_visible()
+    for boot, keuze in ((tureluur, nummer), (kluut, nummer), (wulp, "clubboot")):
+        page.goto("/boten/zonder-eigenaar")
+        page.get_by_role("link", name=boot, exact=True).click()
+        expect(page.get_by_role("heading", level=1)).to_have_text(boot)
+        page.get_by_text("Boot wijzigen of verwijderen", exact=True).click()
+        formulier = page.locator("section.kaart", has=page.get_by_role("heading", name="Boot wijzigen"))
+        lid_zoeken_en_kiezen(formulier.get_by_label("Eigenaar", exact=True),
+                             formulier.get_by_role("button", name="Zoeken", exact=True), keuze)
+        formulier.get_by_role("button", name="Boot opslaan").click()
+        expect(page.get_by_text("De boot is opgeslagen.")).to_be_visible()
+        page.goto("/boten/zonder-eigenaar")
         expect(regel_van(page, boot)).to_have_count(0)
-    lid_zoeken_en_kiezen(regel_van(page, wulp).get_by_label(f"Eigenaar van {wulp}"),
-                         regel_van(page, wulp).get_by_role("button", name=f"Zoeken: {wulp}"), "clubboot")
-    regel_van(page, wulp).get_by_role("button", name=f"Eigenaar opslaan: {wulp}").click()
-    expect(regel_van(page, wulp)).to_have_count(0)
 
     page.goto("/boten")
     expect(regel_van(page, wulp)).to_contain_text("clubboot")

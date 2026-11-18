@@ -403,11 +403,11 @@ def _eigenaar_tekst(b):
     return _lidtekst(b.lid) if b.lid or b.clubboot else ""
 
 
-def _eigenaar(boot=None, verplicht=False):
+def _eigenaar(boot=None):
     """((lid_id, clubboot), None) uit de velden eigenaar (rondje) en zoek van het formulier, of
     (None, Keuzeveld met foutregel). Zie lidkeuze.eigenaar."""
     return lidkeuze.eigenaar(request.form.get("eigenaar"), request.form.get("zoek"), boot,
-                             _eigenaar_tekst(boot) if boot else "", verplicht)
+                             _eigenaar_tekst(boot) if boot else "")
 
 
 def _na_zoeken():
@@ -446,33 +446,10 @@ def zoeken():
     return render_template("zoeken.html", zoekterm=term, resultaat=resultaat, is_oud_lid=leden.is_oud_lid)
 
 
-def _zonder_eigenaar_scherm(code=200, velden=None):
-    lijst = boten.zonder_eigenaar()
-    velden = {b.id: lidkeuze.Keuzeveld() for b in lijst} | (velden or {})
-    return render_template("boten_zonder_eigenaar.html", boten=lijst, velden=velden), code
-
-
 @bp.get("/boten/zonder-eigenaar")
 @inloggen_vereist
 def boten_zonder_eigenaar():
-    return _zonder_eigenaar_scherm()
-
-
-@bp.post("/boten/<int:boot_id>/eigenaar")
-@inloggen_vereist
-def boot_eigenaar_kiezen(boot_id):
-    b = _of_404(boten.boot, boot_id)
-    naam, was_wachtend = b.naam, b.wachtlijst is not None
-    if request.form.get("actie") == "zoeken":
-        return _zonder_eigenaar_scherm(velden={boot_id: _na_zoeken()})
-    eigenaar, veld = _eigenaar(verplicht=True)
-    if veld:
-        return _zonder_eigenaar_scherm(422, {boot_id: veld})
-    lid_id, clubboot = eigenaar
-    if uitvoeren(partial(boten.eigenaar_kiezen, clubboot=clubboot), boot_id, lid_id,
-                 gelukt=f"De eigenaar van {naam} is opgeslagen.") is not None and was_wachtend:
-        _melding_wachtlijst(boot_id)
-    return redirect(url_for("web.boten_zonder_eigenaar"))
+    return render_template("boten_zonder_eigenaar.html", boten=boten.zonder_eigenaar())
 
 
 def _boot_scherm(boot_id, code=200, eigenaarveld=None):
