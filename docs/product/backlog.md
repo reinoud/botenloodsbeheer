@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.22
-**Datum:** 2026-11-17
+**Versie:** v0.6.23
+**Datum:** 2026-11-18
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -195,6 +195,21 @@ Als beheerder wil ik boten waarvan de eigenaar nog niet bekend is apart zien en 
 - Gegeven `GET /api/v1/boten`, dan heeft elke boot een boolean `clubboot`: `true` bij een clubboot, `false` bij een boot van een lid en bij een onbekende eigenaar. `eigenaar` blijft `null` bij een clubboot en bij een onbekende eigenaar; er gaat geen veld uit de API af (issue #212, besluit stakeholder 2026-11-10).
 
 Route voor een mens (issue #204, #321): importeer een CSV met een regel zonder eigenaar, open Boten zonder eigenaar, klik op de boot, kies bij Boot wijzigen een lid en sla op. De boot staat niet meer op de lijst.
+
+#### BLB-049 Boten zonder foto
+
+Prioriteit: Should. Bron: issue #315, besluiten stakeholder 2026-11-17, ontwerp BV-88 (designsystem gh#113). Afhankelijk van: BLB-005.
+
+Als beheerder wil ik een lijst met de boten die nog geen foto hebben, zodat ik tijdens een ronde door de loods gericht foto's toevoeg.
+
+- Gegeven de pagina `/boten-zonder-foto`, wanneer een ingelogde beheerder haar opent, dan staan er de kop **Boten zonder foto**, daaronder "N boten zonder foto" ("1 boot zonder foto" bij één) en een regel per boot zonder foto met de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. Een boot met een foto staat er niet op. Zonder inloggen verwijst de applicatie naar de inlogpagina.
+- Gegeven de eigenaar, dan staat die als platte tekst, zoals op Boten: de naam van het lid, "clubboot" of "eigenaar onbekend". Bij een oud-lid staat de tag **oud-lid** achter de naam (BV-86).
+- Gegeven de volgorde, dan staan eerst de boten met een plaats in loodsvolgorde (rek, verdieping, vak) en daarna de boten zonder plaats ("geen plaats"), op naam.
+- Gegeven geen boot zonder foto, dan staat er "Alle boten hebben een foto." en geen lijst.
+- Gegeven het menu, dan staat **Boten zonder foto** onder Beheer direct na Kaartjes, zonder aantal.
+- Gegeven een boot op de lijst, wanneer de beheerder via de pagina van de boot een foto toevoegt, dan staat de boot niet meer op de lijst.
+
+Route voor een mens (issue #315): kies in het menu onder Beheer **Boten zonder foto**, open een boot uit de lijst, voeg een foto toe en ga terug: de boot staat er niet meer op.
 
 #### BLB-006 Leden ophalen uit de ledenbron
 
@@ -884,6 +899,7 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.6.23 | 2026-11-18 | Issue #315: BLB-049, een lijst met boten zonder foto onder Beheer (besluiten stakeholder 2026-11-17, BV-88) |
 | v0.6.22 | 2026-11-18 | Issue #321, besluit stakeholder 2026-11-17 en BV-90: Boten zonder eigenaar is een lijst zonder keuze en zonder knop; de eigenaar kies je bij Boot wijzigen op de pagina van de boot. Het criterium met het zoekveld en het criterium met de foutregel bij Eigenaar opslaan vervallen; de criteria over het oud-lid en de wachtlijst gelden bij Boot wijzigen (BLB-005, 046; vraag 27) |
 | v0.6.21 | 2026-11-17 | Issues #295 en #298, besluiten stakeholder 2026-11-16 en 2026-11-17: de keuze Eigenaar volgt BV-85 in plaats van BV-83 (datalist): zoekveld, één knop Zoeken, treffers als keuzerondjes met het lidnummer als waarde, hooguit 10 met een hint, voorkeuze bij één treffer, foutregel zonder treffer en "clubboot" als zoekterm (BLB-005, 046, 048). Een oud-lid krijgt de tag "oud-lid" in plaats van de tekst "(oud-lid)" (besluit 7 aangepast; BLB-005, 019). "Regel overslaan" is een vakje in de cel Keuze (BLB-048). De foutregel bij leegmaken van Eigenaar volgt BV-86 (BLB-046) |
 | v0.6.20 | 2026-11-17 | Vragen 27 tot en met 31 besloten door de stakeholder (issue #298): een oud-lid als eigenaar haalt een boot van de wachtlijst (BLB-005, 013, 046); leegmaken van Eigenaar geeft bij een oud-lid een foutregel en mag bij een clubboot (BLB-013, 046); het koppelscherm toont geen oud-leden (BLB-048); de taaktekst van BLB-008 staat vast; de intake krijgt doel, termijn en grondslag voor gegevens van oud-leden. BLB-005 is niet meer geblokkeerd |

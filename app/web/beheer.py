@@ -446,6 +446,12 @@ def zoeken():
     return render_template("zoeken.html", zoekterm=term, resultaat=resultaat, is_oud_lid=leden.is_oud_lid)
 
 
+@bp.get("/boten-zonder-foto")
+@inloggen_vereist
+def boten_zonder_foto():
+    return render_template("boten_zonder_foto.html", boten=boten.zonder_foto(), is_oud_lid=leden.is_oud_lid)
+
+
 @bp.get("/boten/zonder-eigenaar")
 @inloggen_vereist
 def boten_zonder_eigenaar():

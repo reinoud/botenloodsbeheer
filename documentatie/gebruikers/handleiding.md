@@ -120,6 +120,12 @@ Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met 
 
 ![De pagina Boten zonder eigenaar met een lijst van boten, met bootsoort en plaats.](afbeeldingen/boten-zonder-eigenaar.png)
 
+## Boten zonder foto
+
+Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met **Boten zonder foto** in het menu, onder Beheer direct na **Kaartjes**; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
+
+Open een boot uit de lijst en voeg bij **Foto vervangen** een foto toe (zie Boten). Daarna staat de boot niet meer op de lijst. Hebben alle boten een foto, dan staat er "Alle boten hebben een foto."
+
 ## De wachtlijst
 
 Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
@@ -398,6 +404,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/wachtlijst` | Wachtlijst per bootsoort |
 | `/zoeken` | Zoeken vanuit de kop, de lijst met treffers |
 | `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, met een link naar de boot |
+| `/boten-zonder-foto` | Boten zonder foto |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |
 | `/leden` | Leden en de import |
