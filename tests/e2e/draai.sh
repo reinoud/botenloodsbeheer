@@ -52,20 +52,8 @@ robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:l
 chmod 600 secrets/api_token
 stil=1
 "${c[@]}" stop integratie >/dev/null
-# Een verse stack heeft nog geen leden en de import slaat een nieuw opgezegd lid over (#203, #220):
-# importeer die eerst zonder opzegdatums; de container brengt ze daarna aan.
 koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n}} {{$v.IPAddress}}
 {{end}}' "$("${c[@]}" ps -q traefik)" | awk '$1 ~ /_koppeling$/ {print $2}')
-aantal_leden=$("${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import leden
-with create_app().app_context():
-    print(len(leden.alle_leden()))' | tail -n 1) \
-  || { echo "Telling van de leden mislukt." >&2; exit 1; }
-if [ "$aantal_leden" = 0 ]; then
-  eerst=$(robot "e2e-eerst-$stempel" --recht leden:importeren --whitelist "$koppel_ip/32")
-  "${c[@]}" --profile e2e run --rm -T -e EERST_API="http://$koppel_ip:8081/api/v1" \
-    -e EERST_TOKEN="$eerst" e2e python eerste_import.py >/dev/null \
-    || { echo "Eerste import van de leden mislukt." >&2; exit 1; }
-fi
 "${c[@]}" exec -T web python -c 'from app import create_app; from app.domein import CLI, leden
 with create_app().app_context():
     leden.import_aangevraagd() or leden.import_aanvragen(CLI)' \

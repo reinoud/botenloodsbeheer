@@ -1,7 +1,7 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.10.0
+**Versie:** v0.10.1
 **Datum:** 2026-11-17
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
@@ -131,7 +131,7 @@ Lokaal start de ontwikkelaar de stack met:
 5. `docker compose exec worker flask seed` voor de rest van de synthetische gegevens. Seed draait in de worker en maakt geen leden; zonder leden weigert seed. Seed in `api` zou de rol `botenloods_api` schrijfrecht geven op rek, plaats en boot.
 6. `docker compose exec web flask beheerder uitnodigen ontwikkelaar` geeft een eenmalige link; daarmee stelt de ontwikkelaar een passkey of een wachtwoord met TOTP in.
 
-`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, importeert op een verse stack eerst de leden zonder opzegdatums via de API, zodat ook de oud-leden met een opzegdatum van meer dan 5 jaar geleden er komen (§6.3), zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
+`tests/e2e/draai.sh` doet stap 4 en 5 zelf: het maakt een token, legt de integratiecontainer stil, zet een importverzoek klaar, start de container weer en wacht op de import. Zo werkt het ook tussen 00:00 en `SYNC_TIJDSTIP` (#45).
 
 Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in browsers op `localhost` zonder TLS, dus lokaal is geen certificaat nodig. `compose.dev.yml` zet Flask in herlaadmodus en opent de databasepoort alleen op 127.0.0.1.
 
@@ -140,7 +140,7 @@ Lokaal draait de applicatie op `http://localhost:8080`. Passkeys werken in brows
 `flask seed` bouwt de echte indeling op en vult die met synthetische leden en boten, met een vaste random seed zodat elke run hetzelfde oplevert:
 
 - 11 rekken met samen 229 plaatsen, waarvan 30 clubplaatsen (heel rek A), uit `app/seed_rekken.csv` en `app/seed_indeling.csv`, met de bootsoort per plaats en de nieuwe bootsoort Wildwaterkano (ADR-003);
-- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum van meer dan 5 jaar geleden slaat de import over (ADR-004 stap 4, issue #298); een opzegdatum van hooguit 5 jaar geleden komt binnen als oud-lid. De fixture heeft 2 opzegdatums in 2019, die vallen buiten de termijn; die oud-leden ontstaan alleen als het lid eerst zonder opzegdatum is geïmporteerd. De seedtest importeert daarom eerst de fixture zonder opzegdatums. De 10 opzegdatums in 2024 vallen vanaf 2029 buiten de termijn; een test die een oud-lid binnen de termijn nodig heeft, rekent de datum vanaf vandaag uit en leunt niet op de fixture. Een verse stack importeert de leden daarom twee keer: eerst zonder opzegdatums (`tests/e2e/eerste_import.py`, via de API), daarna met, door de integratiecontainer of de API. `tests/e2e/draai.sh` en `documentatie/gebruikers/schermafbeeldingen.sh` doen dat zelf (issue #220); met één import heeft de seed geen oud-leden. Een test voor de opschoning maakt zulke leden zelf aan;
+- 210 leden in `tests/fixtures/leden.json`. Die komen niet uit seed, maar uit de import door de integratiecontainer met de stub (§6.2). Daaronder 12 oud-leden, waarvan 4 nog een plaats hebben. Een nieuw lid met een opzegdatum van meer dan 5 jaar geleden slaat de import over (ADR-004 stap 4, issue #298); een opzegdatum van hooguit 5 jaar geleden komt binnen als oud-lid. De fixture heeft 2 opzegdatums in 2019; die vallen buiten de termijn en de import slaat die leden over. De 10 opzegdatums in 2024 vallen vanaf 2029 buiten de termijn; een test die een oud-lid binnen de termijn nodig heeft, rekent de datum vanaf vandaag uit en leunt niet op de fixture. Een verse stack importeert de leden één keer, door de integratiecontainer of de API; de seed heeft dan de oud-leden van 2024. Een test voor de opschoning maakt zulke leden zelf aan;
 - 180 boten, waarvan 6 clubboten, 150 met een plaats en 10 op de wachtlijst verdeeld over drie bootsoorten;
 - een naam voor een fictieve vereniging. Het testlogo komt niet uit seed maar uit `compose.dev.yml` (ADR-008).
 
@@ -288,6 +288,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.10.1 | 2026-11-18 | Issue #327: een verse stack importeert de leden één keer; de eerste import zonder opzegdatums vervalt (§6.2, §6.3) |
 | v0.10.0 | 2026-11-17 | Issue #298: §10.2 vragen 10, 11 en 12 besloten (verplaatsen buiten de bewaartermijn blijft mogelijk); ADR-003 v2.4.0, ADR-004 v2.10.0, ADR-006 v1.6.1, ADR-012 v1.11.0 |
 | v0.9.1 | 2026-11-17 | Issue #307: de teller van de veiligheidsgrens telt geen opgezegde records (§11 bevinding 2, §10.2 vraag 9 besloten); ADR-004 v2.9.1 |
 | v0.9.0 | 2026-11-17 | Issue #298: de import neemt oud-leden tot 5 jaar op (§6.2, §6.3, §11 bevinding 1 en 2); open vragen 9 tot en met 11 (§10.2); ADR-004 v2.9.0, ADR-006 v1.6.0, ADR-012 v1.10.2, ADR-014 v0.2.9 |
