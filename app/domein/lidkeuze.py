@@ -13,6 +13,9 @@ from app.domein import leden
 from app.domein.zoekopdracht import MIN_TEKENS, schoon
 
 MAX_TREFFERS = 10
+# "Naam (lidnummer)" kan 100 + 2 + 20 + 1 tekens zijn (Lid.naam, Lid.lidnummer): een kortere grens kapt
+# het lidnummer af, en dan herkent veld() de tekst niet meer als de keuze van een bestaande boot (#316).
+MAX_TEKENS = 123
 CLUBBOOT = "clubboot"  # de term die de clubboot als treffer geeft, en de waarde van zijn rondje
 TE_KORT = f"Geef minstens {MIN_TEKENS} tekens op. Zoek op een deel van de naam of op het lidnummer."
 GEEN_LID = "Geen lid gevonden. Zoek op een deel van de naam of op het lidnummer."
@@ -64,7 +67,7 @@ def veld(term, keuze="", club=True, oud=False):
     """Zoekt na de knop Zoeken. `keuze` is het rondje dat het formulier meestuurde: het blijft alleen
     gekozen als het nog een treffer is. Precies één treffer staat al gekozen. Te kort of zonder treffer
     geeft een foutregel."""
-    term = schoon(term)
+    term = schoon(term, MAX_TEKENS)
     if len(term) < MIN_TEKENS:
         return Keuzeveld(term, fout=TE_KORT)
     zoek = m.group(1) if (m := _LABEL.fullmatch(term)) else term
@@ -95,7 +98,7 @@ def eigenaar(keuze, term, boot=None, boot_tekst="", verplicht=False):
     (`boot_tekst`) laat de eigenaar staan; een andere term is geen keuze; een leeg veld is eigenaar
     onbekend, behalve bij `verplicht` en bij een boot van een lid of oud-lid (#295, 4A). Een clubboot
     mag onbekend worden (#233)."""
-    keuze, term = (keuze or "").strip(), schoon(term)
+    keuze, term = (keuze or "").strip(), schoon(term, MAX_TEKENS)
     if keuze == CLUBBOOT:
         return (None, True), None
     if keuze:
