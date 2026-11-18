@@ -2,12 +2,12 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.5
+**Versie:** v1.2.6
 **Stories:** alle schermen, vooral BLB-016, BLB-020, BLB-021, BLB-027
 
 ## Context
 
-De applicatie heeft ongeveer twintig schermen: overzichten, formulieren, een plaatsdetail, een openbare pagina en een printpagina voor kaartjes. Gebruikers zijn drie beheerders en bezoekers die een QR-code scannen. De interface moet werken van groot scherm tot telefoon. De huisstijl is vast: de Dajaks-basis (besluit stakeholder 2026-11-06, issue #150). Alleen de naam en het logo zijn per installatie te kiezen. De stack is Python en Flask; er is geen frontendspecialist in het vaste team.
+De applicatie heeft ongeveer twintig schermen: overzichten, formulieren, een plaatsdetail, een openbare pagina en een printpagina voor kaartjes. Gebruikers zijn beheerders, kijkers (ADR-015) en bezoekers die een QR-code scannen. De interface moet werken van groot scherm tot telefoon. De huisstijl is vast: de Dajaks-basis (besluit stakeholder 2026-11-06, issue #150). Alleen de naam en het logo zijn per installatie te kiezen. De stack is Python en Flask; er is geen frontendspecialist in het vaste team.
 
 Het lastigste scherm is de indeling per rek (BLB-016): 229 plaatsen met status, leesbaar op een telefoon. Dat is een tabel of raster met kleuren, geen interactieve tekening.
 
@@ -42,6 +42,7 @@ De interface is server-rendered met Jinja-templates en gewone HTML-formulieren. 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.6 | 2026-11-18 | Kijker als gebruiker | ADR-015, issue #322 |
 | v1.2.5 | 2026-11-11 | Omvang 229 plaatsen volgens de echte indeling | Issue #236 |
 | v1.2.4 | 2026-11-11 | Zoeken zonder onderscheid in accenten via de extensie `unaccent` (migratie 0021) | Issue #232 |
 | v1.2.3 | 2026-11-07 | Blok 3A: lijsten Boten, Leden, Opgezegd, Gaan opzeggen en Wachtlijst als `ul.bl-lijst` met zoeken en filters; log 3B (uitklapblok, kop per dag in de tijdzone van de installatie); de bevestiging bij verwijderen bestaat niet en is uit de tekst gehaald | Besluiten stakeholder BV-46, BV-47 en BV-60, issue #150 |

@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.97
+**Versie overlay:** v0.5.98
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-18
@@ -25,7 +25,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 |-----------|--------------|
 | Aanleiding en probleem | De kanovereniging houdt de indeling van de botenloods bij in een spreadsheet. Daarin is niet goed te zien welke boot op welke plaats hoort, van wie die is, welke plaatsen vrij zijn en wie op de wachtlijst staat. |
 | Product | Webapplicatie voor het beheer van stallingsplaatsen in de botenloods, met wachtlijst per bootsoort, overzichten, Excel-export, printbare kaartjes met QR-code en een openbare pagina per plaats. |
-| Gebruikers | 3 beheerders met dezelfde rechten. Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
+| Gebruikers | Beheerders (3, met dezelfde rechten) en vanaf milestone 10 kijkers die alleen inzien en hun eigen profiel beheren (#322, ADR-015). Bezoekers en leden zonder account zien alleen de openbare pagina. API-gebruikers met een persoonlijk token of een robottoken. |
 | Omvang | 11 rekken en 229 plaatsen (de echte indeling, #80), ongeveer 210 leden en 180 boten. |
 | Stack | Python, Flask, Gunicorn en PostgreSQL, in docker-compose, achter Traefik (ADR-013). |
 | Gevoeligheid van gegevens | Persoonsgegevens van leden en oud-leden (lidnummer, naam, lidmaatschapsdata). Adres, telefoon en e-mail worden niet bewaard (#180). Openbaar alleen de naam van de eigenaar en de foto van de boot, met instemming van de leden. |
@@ -52,7 +52,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Algemeen (elke brief)
 
 - Geef bij elke agentopdracht model en effort expliciet mee (besluit stakeholder, 2026-11-06). Reviews (sentinel, aegis): Opus 5.5 met effort `higher`. Bouw (prism, bedrock en andere bouwers): Sonnet 5.5, effort standaard. Mechanische opdrachten die zichzelf controleren (zoeken en rapporteren, een vaste reeks stappen nalopen): effort `lower`. Een grote review (meer dan 50 bestanden of een migratie) krijgt altijd `higher`.
-- Geef de omvang (11 rekken, 229 plaatsen, 210 leden, 180 boten) en de rollen (3 gelijke beheerders, geen systeembeheerrol) mee.
+- Geef de omvang (11 rekken, 229 plaatsen, 210 leden, 180 boten) en de rollen (beheerder en kijker, ADR-015; geen systeembeheerrol) mee.
 - `docs/business/intake.md` is leidend boven de business outline en boven eigen inschatting.
 - Noem een ADR bij nummer en bestandsnaam zoals `ls docs/architecture/adr/` die toont, niet met een omschrijving uit het hoofd.
 - Geef bij een omvang het woordbudget per onderdeel, niet alleen een totaal. Een woordgrens voor een alinea telt alleen de alinea; kop, versieregel en wijzigingslog tellen apart.
@@ -461,6 +461,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een criterium noemt alleen schermen die het gegeven echt tonen; controleer dat vóór de bouw (kaartjes en `/p/` tonen geen bootsoort).
 - Verandert een story welke regels een scherm toont, noem dan ook de ADR's die het tonen beschrijven (zoals ADR-002 en ADR-006), zodat het agent ze in dezelfde ronde bijwerkt of er vooraf een issue voor is. Verandert een wijziging wanneer een API-route een foutcode geeft, noem dan ook de documentatie en de OpenAPI-beschrijving van die route, zodat bouwer en reviewer ze in dezelfde ronde bijwerken.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
+- Geef bij een ADR-budget een richtwaarde per besluitpunt en zeg of een tabel met endpoints of kolomnamen meetelt (#322).
+- Werken apex en foundation tegelijk aan hetzelfde issue, noem dan de nummers van de open vragen in de backlog, zodat de ADR naar dezelfde vraag verwijst (#322).
+- Geef bij een woordbudget voor de backlog ook een budget per story, en zeg of §7 (open vragen) en het wijzigingslog meetellen (#322).
+- Zeg bij een vervolgopdracht per document of het onder het budget van het vervolg valt of een eigen budget heeft (#322).
+- Zeg of nieuwe stories in de slicetabel (§5 van de backlog) als slice of als milestone komen (#322).
 - Een woordbudget voor een ADR telt alleen ADR-tekst. Noem per besluitpunt of een korte zin volstaat; bij meer dan vier besluitpunten krijgt het budget 75 woorden per punt.
 - Heeft een document nog geen versie of wijzigingslog, begin dan op v1.0.0 en voeg onderaan een wijzigingslog toe. De backlog heeft een wijzigingslog in §9: bij een nieuwe versie komt er een logregel bij en gaat de datum mee.
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat. Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
@@ -534,6 +539,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.98 | 2026-11-18 | Vijf regels: budget per vervolg, budget per story, slice of milestone in de slicetabel, richtwaarde per ADR-besluitpunt, gedeelde nummers van open vragen (Documentatie, backlog en ADR's); uit de terugblikken van apex en foundation bij #322. Rollen in §3 en Algemeen bijgewerkt (kijker, ADR-015) | Lessen |
 | v0.5.97 | 2026-11-18 | Elf regels: oordeel met SendMessage en controle in de scratchpad, worktree nalopen na stoppen, python3 in plaats van sed (Algemeen); afkapgrens en test op de grens, vaste menulijsten, 404 of 405 (Bouw); volgordetest met expliciete id's, sleutel en macro met context (Review); stack zonder bouwen, `.env` in een worktree, schermafbeeldingen niet parallel (E2E); uit de terugblikken van milestone 9 | Lessen |
 | v0.5.96 | 2026-11-17 | Drie regels: andere routes bij een versoepelde regel (Bouw); bestand bij een regelnummer en mutant van een ander agent (Review); gegeven dat de stack niet meebrengt (E2E); uit de terugblikken bij #298 | Lessen |
 | v0.5.95 | 2026-11-17 | Zes regels: zoekveld in plaats van keuzelijst, geldige keuze vervalt niet, afhankelijk criterium (Bouw); functietest bij afkappen, positieve controle, eigen TEST_DB voor elke reviewer (Review); uit de terugblikken bij #295 | Lessen |

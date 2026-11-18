@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** BLB-036, BLB-037
 
 ## Context
@@ -22,7 +22,7 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 **Healthchecks in compose:** `web` en `api` op `/health/live`; `db` met `pg_isready`; `worker` met `flask taken gezond`, dat controleert of de heartbeat in `taakrun` jonger is dan 2 minuten. `web`, `api` en `worker` starten pas als `db` gezond is en `migrate` klaar is. `integratie` heeft geen healthcheck; de statuspagina laat zien of hij werkt.
 
-**Statuspagina**, na inloggen als beheerder:
+**Statuspagina**, na inloggen als beheerder; een kijker krijgt 403 (ADR-015):
 
 - `GET /status` (HTML) en `GET /status.json` (JSON) uit dezelfde functie (`domein/status`), zodat ze niet uit elkaar lopen. Menu-item **Status**. Zonder inlog verwijzen beide naar `/inloggen`.
 - Inhoud: applicatieversie (buildargument `APP_VERSIE` in het image, de workflow geeft de tag van de release mee), databaseversie en migratieversie, laatste heartbeat van de worker, laatste import van leden via de API (tijdstip, resultaat, aantallen nieuw, bijgewerkt, oud-lid, overgeslagen, en bij een fout de reden uit de vaste lijst van ADR-012), laatste opschoning (tijdstip en aantallen), API aan of uit, laatste aanroep per geldig robottoken, wanneer de bootaantallen voor het laatst zijn opgehaald (een rij in `taakrun` met taak `bootaantallen`), tokens die binnen 31 dagen verlopen met naam en vervaldatum (niet ingetrokken en nog niet verlopen). `web` leest `API_INGESCHAKELD` uit dezelfde omgeving als `api`.
@@ -49,6 +49,7 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-11-18 | Kijker geweigerd | ADR-015, issue #322 |
 | v1.2.0 | 2026-11-02 | Gebouwd: `APP_VERSIE`, `API_INGESCHAKELD` ook bij `web`, waarschuwingen voor opschoning en tokens, tijdstip van de bootaantallen in `taakrun` | Bouw slice 9, issue #48 |
 | v1.1.1 | 2026-10-31 | Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
 | v1.1.0 | 2026-10-31 | Healthcheck voor `api`; statuspagina toont de laatste import via de API, de laatste aanroep per robottoken en het ophalen van de bootaantallen, niet meer de ledenbron en de instelling terugschrijven | Besluiten stakeholder 2026-10-31, ADR-012 |

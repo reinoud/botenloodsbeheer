@@ -34,6 +34,7 @@ De import van de bestaande spreadsheet volgt later en hoort niet bij de eerste v
 ## Gebruikers, beveiliging en logging
 
 - Gebruikers worden lokaal aangemaakt en beheerd. Sommige functies zijn zonder inloggen beschikbaar.
+- Een gebruiker is beheerder of kijker (besluit 2026-11-18, issue #322, zie onderaan).
 - Een moderne en veilige inlogmethode.
 - Elke mutatie wordt gelogd. Onder elk overzicht staat een log met de mutaties die erbij horen.
 
@@ -61,6 +62,7 @@ Deze besluiten gaan voor op de open vragen in `business-outline.md`.
 - De loods heeft ongeveer 10 rekken en 160 plaatsen. De vereniging heeft ongeveer 210 leden en 180 boten.
   Bijgewerkt: de echte indeling die de stakeholder op 2026-11-03 aanleverde (#80), heeft 11 rekken en 229 plaatsen (#236).
 - Er zijn 3 beheerders met dezelfde rechten. Er is geen aparte rol voor systeembeheer.
+  Vervangen op 2026-11-18 (issue #322): naast de beheerder is er de kijker. Beheerders hebben onderling nog steeds dezelfde rechten; een rol voor systeembeheer is er nog steeds niet.
 
 ### Wachtlijst
 
@@ -216,3 +218,30 @@ Deze besluiten gaan voor eerdere besluiten die ermee botsen.
 
 - Lid sinds en opzegdatum komen in de leesaanroepen van de API voortaan mee met `leden:lezen`; eerder alleen met `persoonsgegevens`.
 - Een token dat alleen `persoonsgegevens` had, wordt bij de migratie ingetrokken, met een regel in het technische log. Tokens met andere rechten verliezen alleen dat recht.
+
+## Besluiten van de stakeholder (2026-11-18, issue #322)
+
+Deze besluiten gaan voor eerdere besluiten die ermee botsen. Ze horen bij release v2.0.0.
+
+### Gebruikers en rollen
+
+Een gebruiker heeft een van twee rollen. Een beheerder mag alles wat tot nu toe kon. Een kijker mag gegevens inzien en niets wijzigen. Een beheerder nodigt een kijker uit en zet een account van beheerder naar kijker en terug. Menu en pagina Beheerders heten voortaan Gebruikers.
+
+Een kijker ziet Rekoverzicht, Vrije plaatsen, Boten (zonder Nieuwe boot), Profiel en Uitloggen, de pagina van een boot en van een plaats zonder knoppen om te wijzigen, Zoeken en het log onderaan een pagina. Alle andere schermen staan niet in zijn menu en de applicatie weigert ze hem. De server weigert elke mutatie van een kijker, ook een directe aanvraag buiten het scherm om. Zijn eigen profiel, sessie en inlogmethodes beheert hij wel (besluit 8).
+
+### De besluiten
+
+1. Een kijker ziet de pagina van een plaats en Zoeken, maar niet de pagina van een lid.
+2. Een kijker ziet op geen enkel scherm lidnummers of opzegdata.
+3. Een kijker krijgt geen API-tokens.
+4. Een beheerder mag zichzelf kijker maken, zolang er minstens één beheerder overblijft. De laatste beheerder kan nooit kijker worden.
+5. Een kijker ziet de technische statuspagina niet.
+6. Een kijker ziet geen telling van taken in het menu; de schermen met taken ziet hij ook niet.
+7. Release v2.0.0 komt direct na deze feature (milestone 10, afgestemd 2026-11-17).
+8. Een kijker beheert zijn eigen profiel: zijn inlogmethodes en wat daar later bij komt. Aan boten, rekken en plaatsen wijzigt hij niets.
+
+### Persoonsgegevens voor een kijker (AVG-afweging)
+
+Een kijker ziet van een lid alleen de naam als eigenaar van een boot, als platte tekst zonder link. Hij ziet geen lidnummer, geen datum lid sinds en geen opzegdatum, ook niet in Zoeken of in het log onderaan een pagina. De schermen Leden, Opgezegd, Gaan opzeggen en de pagina van een lid zijn voor hem dicht. Zoeken toont hem geen leden.
+
+Dit is dataminimalisatie. Een kijker hoeft alleen te weten welke boot waar ligt en van wie die is. Daarvoor is de naam genoeg; leden stemden in met het openbaar tonen van hun naam en de foto van hun boot. Lidnummer en lidmaatschapsdata zijn nodig voor de administratie, de wachtlijst en de contributie, en dat werk doet alleen een beheerder. Wel ziet een kijker de namen van alle eigenaars bij elkaar, wat de openbare pagina per plaats niet toont. Daarom bepaalt een beheerder wie kijker wordt. De grondslag voor deze verwerking stelt de vereniging vast, zoals bij de gegevens van oud-leden (besluit 2026-11-17).

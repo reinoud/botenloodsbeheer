@@ -2,12 +2,12 @@
 
 **Status:** Aanvaard, 2026-10-30 (besluit van de stakeholder; architectuur §9, besluit 1)
 **Datum:** 2026-10-30
-**Versie:** v1.2.1
+**Versie:** v1.3.0
 **Stories:** BLB-022, BLB-023, BLB-038
 
 ## Context
 
-Drie beheerders met gelijke rechten zien persoonsgegevens van 210 leden en beheren de loods. BLB-022 vraagt geen vast standaardwachtwoord bij een nieuwe installatie en een rem op herhaalde pogingen. BLB-023 vraagt dat een beheerder de toegang van een ander kan herstellen zonder dat iemand een wachtwoord ziet, en dat blokkeren een lopende sessie beëindigt.
+Drie beheerders zien persoonsgegevens van 210 leden en beheren de loods. BLB-022 vraagt geen vast standaardwachtwoord bij een nieuwe installatie en een rem op herhaalde pogingen. BLB-023 vraagt dat een beheerder de toegang van een ander kan herstellen zonder dat iemand een wachtwoord ziet, en dat blokkeren een lopende sessie beëindigt.
 
 Foundation raadde alleen passkeys aan. De stakeholder besloot op 2026-10-30 dat een beheerder inlogt met een passkey of met een wachtwoord plus TOTP, en dat beide beschikbaar zijn. Een beheerder is een vrijwilliger, geen IT'er; de oplossing blijft daarom klein, zonder extra methodes.
 
@@ -50,12 +50,14 @@ Intrekken hoogt de sessieversie op. Alle sessies van die beheerder eindigen, ook
 - E2E-tests gebruiken de virtuele authenticator van Chromium en `pyotp` met een testgeheim; er komt geen inlogomweg.
 - Aegis beoordeelt inlog, TOTP, brute-forceregels en herstel vóór de commit (overlay §4).
 - Restrisico: wie binnen 10 minuten na de inlog een open sessie overneemt, kan nog een methode toevoegen, een beheerder uitnodigen of een collega herstellen of deblokkeren. Het log toont dat, en een andere beheerder kan herstellen.
+- Sinds 2026-11-18 heeft een account de rol beheerder of kijker (ADR-015). Een kijker logt op dezelfde manier in en beheert in Profiel zijn eigen methodes. Uitnodigen, herstellen, blokkeren, deblokkeren en verwijderen doet alleen een beheerder, en er blijft altijd een actieve beheerder.
 - Uitwerking in slice 2 (issue #11), binnen dit besluit: een beheerder kan zijn eigen account niet blokkeren, verwijderen of herstellen. Daardoor blijft er altijd een actieve beheerder (BLB-023). Een geblokkeerd account is weer te deblokkeren; herstel vraagt eerst deblokkeren. De controle op een recente inlog geldt ook voor het opvragen van de passkeyopties.
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v1.3.0 | 2026-11-18 | Rollen beheerder en kijker (ADR-015, issue #322) |
 | v1.2.1 | 2026-11-05 | Recente inlog ook voor blokkeren, deblokkeren en verwijderen (issue #12) |
 | v1.2.0 | 2026-10-31 | Rate limit per IP in Traefik in plaats van Nginx (Besluit stakeholder 2026-10-31, issue #29 (ADR-013)) |
 | v1.1.2 | 2026-10-30 | Recente inlog ook voor uitnodigen en herstellen (review aegis, issue #11) |

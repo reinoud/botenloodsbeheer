@@ -2,7 +2,7 @@
 
 **Status:** Aanvaard, 2026-10-30
 **Datum:** 2026-10-30
-**Versie:** v1.6.1
+**Versie:** v1.7.0
 **Stories:** BLB-024, BLB-025, BLB-026, BLB-033, BLB-034, BLB-043, BLB-047
 
 ## Context
@@ -41,11 +41,11 @@ Er is één tabel `logregel`, alleen voor toevoegen. Daaruit komen twee logs.
 | Vrije plaatsen | Toewijzen, vrijgeven en verplaatsen (`plaats.`, `boot.verplaatst`) |
 | Wachtlijst | Handelingen op de wachtlijst (`wachtlijst.`) |
 | Opgezegd en opzeggend | Bootmutaties op de getoonde plaatsen |
-| `/indeling`, `/rekoverzicht`, beheerders, profiel, leden, instellingen | Geen log |
+| `/indeling`, `/rekoverzicht`, gebruikers, profiel, leden, instellingen | Geen log |
 
 **Leesbaar tonen (BV-82, #174).** Alle schermen behalve `/log/techniek` tonen de actie en de verwijzingen als tekst; opslag en gegevens veranderen niet. De actie is de opgeslagen naam met punt en liggend streepje als spatie, in kleine letters (`plaats.toegewezen` wordt "plaats toegewezen"). Een eigen tekst per actie is niet nodig: de acties met een fout gespelde mechanische vorm (`bezetting.geimporteerd`, `indeling.geimporteerd`) staan alleen in het technische log, dat de opgeslagen namen toont. Een actie die niet in `BOOTMUTATIES` of `TECHNISCH` staat, blijft zoals opgeslagen. Een verwijzing wordt "Plaats B/2/2", "Boot <naam>", "Lid <naam> (<lidnummer>)", "Rek <naam>" (zonder tweede "Rek" als de naam er al mee begint), "Bootsoort <naam>", "Beheerder <naam>" of "Token <naam>", gescheiden door ", ". Is het object verwijderd of de soort onbekend (`taakrun:5`, `clubboot`), dan blijft de opgeslagen verwijzing staan. De namen komen per pagina met één query per soort (`log.namen`) en zijn gebruikersinvoer: Jinja escapet ze. De gegevens (`bl-loggeg`) blijven zoals opgeslagen.
 
-Elke beheerder ziet beide logs helemaal. De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen`, `oud-lid` of `andere eigenaar`). Beide verwijzen naar de boot en het lid. Krijgt een boot op de lijst een andere eigenaar, dan gaat hij van de lijst in dezelfde transactie als `boot.gewijzigd` (besluit stakeholder 2026-11-01); is de nieuwe eigenaar een oud-lid, dan is de reden `oud-lid`, ook als de eigenaar eerst onbekend was (besluit stakeholder 2026-11-17, issue #298). Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
+Elke beheerder ziet beide logs helemaal. Een kijker ziet geen van beide, alleen het log onder een scherm dat hij mag zien, zonder lidnummer. Een verwijzing `beheerder:<id>` heet daar "Gebruiker <naam>"; de nieuwe actie `beheerder.rol_gewijzigd` hoort bij `TECHNISCH` (ADR-015). De acties van de wachtlijst staan in `BOOTMUTATIES` (slice 7): `wachtlijst.toegevoegd` met boot, bootsoort en aanmelddatum, en `wachtlijst.verwijderd` met boot, aanmelddatum en zo nodig een reden (`plaats toegewezen`, `oud-lid` of `andere eigenaar`). Beide verwijzen naar de boot en het lid. Krijgt een boot op de lijst een andere eigenaar, dan gaat hij van de lijst in dezelfde transactie als `boot.gewijzigd` (besluit stakeholder 2026-11-01); is de nieuwe eigenaar een oud-lid, dan is de reden `oud-lid`, ook als de eigenaar eerst onbekend was (besluit stakeholder 2026-11-17, issue #298). Haalt de import een boot van een oud-lid van de lijst, dan is het robottoken de actor (BLB-008, #27). Toewijzen geeft naast `plaats.toegewezen` een regel `wachtlijst.verwijderd` als de boot op de lijst stond. Een verwijderde boot gaat zonder eigen regel van de lijst; `boot.verwijderd` dekt dat. Een GIN-index op `verwijzingen` en een index op `tijdstip` houden de filters snel. Elk log toont de nieuwste 50 regels. `/log` en `/log/techniek` bladeren per 50 (`?pagina=`); een overzicht met 50 regels linkt naar `/log`, zonder zijn eigen filter (issue #42).
 
 **Opschonen.** Een dagelijkse taak (ADR-007) doet in één transactie:
 
@@ -80,6 +80,7 @@ Sinds issue #298 geeft een beheerder een oud-lid binnen de bewaartermijn een boo
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.7.0 | 2026-11-18 | Log voor een kijker, actie `beheerder.rol_gewijzigd` | ADR-015, issue #322 |
 | v1.6.1 | 2026-11-17 | Toewijzen weigert een boot van een oud-lid buiten de termijn; het geval met de opschoning blijft alleen rond middernacht op de dag van de grens | Besluit stakeholder 2026-11-17, architectuur §10.2, vraag 11 |
 | v1.6.0 | 2026-11-17 | Een beheerder geeft een oud-lid binnen de bewaartermijn een boot en een gewone plaats; import, opschoning en keuzelijst delen de grens; gelijktijdig toewijzen en opschonen faalt veilig op `plaats.boot_id` | Besluiten stakeholder 2026-11-16, issue #298 |
 | v1.5.0 | 2026-11-14 | Leesbaar tonen van actie en verwijzing in de bootlogs; technisch log en opslag ongewijzigd; alinea Twee logs en tabel Tonen aangevuld | BV-82, issue #174 |

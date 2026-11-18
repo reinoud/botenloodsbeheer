@@ -1,7 +1,7 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.6.23
+**Versie:** v0.7.0
 **Datum:** 2026-11-18
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
@@ -11,12 +11,12 @@
 
 Dit backlog beschrijft wat de beheerder en de bezoeker moeten kunnen. Het kiest geen techniek: de inlogmethode, het datamodel en de bibliotheken zijn aan foundation.
 
-De loods heeft 11 rekken met 229 plaatsen (de echte indeling, issue #80), 210 leden en 180 boten. Drie beheerders hebben dezelfde rechten. Er is geen aparte rol voor systeembeheer. Een bezoeker is iedereen die niet is ingelogd, dus ook een lid. Alleen beheerders hebben een account.
+De loods heeft 11 rekken met 229 plaatsen (de echte indeling, issue #80), 210 leden en 180 boten. Drie beheerders hebben dezelfde rechten. Er is geen aparte rol voor systeembeheer. Een bezoeker is iedereen die niet is ingelogd, dus ook een lid. Alleen beheerders hebben een account. Vanaf v2.0.0 heeft een account de rol beheerder of kijker; een kijker ziet en wijzigt minder (BLB-050, BLB-051, issue #322).
 
 Deze eisen gelden voor elke story en staan niet bij elke story herhaald:
 
 - Onder elk overzicht en elk detailscherm voor beheerders staat het log met de mutaties die erbij horen (BLB-025).
-- De applicatie bewaart geen adres, telefoonnummer of e-mailadres van leden (besluit stakeholder 2026-11-08, issue #180). Naam, lidnummer en lidmaatschapsdata zijn alleen zichtbaar voor een ingelogde beheerder en voor een token met het bijbehorende leesrecht.
+- De applicatie bewaart geen adres, telefoonnummer of e-mailadres van leden (besluit stakeholder 2026-11-08, issue #180). Naam, lidnummer en lidmaatschapsdata zijn alleen zichtbaar voor een ingelogde beheerder en voor een token met het bijbehorende leesrecht. Een kijker ziet alleen de naam van een eigenaar (BLB-051).
 - Elke pagina werkt op een groot scherm en op een telefoon.
 - Tests en voorbeeldgegevens gebruiken alleen synthetische gegevens.
 - Een bezoeker die een beheerpagina opent, ziet geen gegevens en gaat naar het inlogscherm.
@@ -27,8 +27,8 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 
 | Meting | Waarde |
 |--------|--------|
-| Aantal stories | 45, waarvan BLB-004 vervallen (issue #80) |
-| Must | 34 |
+| Aantal stories | 47, waarvan BLB-004 vervallen (issue #80) |
+| Must | 36 |
 | Should | 9 |
 | Could | 1 |
 | Af (slice 1 tot en met 3) | 24, waarvan BLB-006, 007, 008, 017, 024 en 027 nieuwe criteria hebben voor slice 4 of 6 |
@@ -45,7 +45,7 @@ Een story is pas gereed voor bouw als foundation de architectuurvragen heeft bea
 | EP-04 | Wachtlijst | Boten zonder plaats per bootsoort laten wachten, met zichtbare wachttijd |
 | EP-05 | Overzichten en export | De beheerder een beeld geven van de loods |
 | EP-06 | Openbare pagina en kaartjes | Bezoekers beperkte gegevens tonen en kaartjes met QR-code printen |
-| EP-07 | Inloggen en beheerders | Toegang tot alles wat niet openbaar is |
+| EP-07 | Inloggen en gebruikers | Toegang tot alles wat niet openbaar is, voor beheerders en kijkers |
 | EP-08 | Mutatielog en bewaartermijn | Elke wijziging terug kunnen vinden en gegevens na 5 jaar opruimen |
 | EP-09 | Configuratie | Naam en logo in de applicatie, en de lijst met bootsoorten per vereniging |
 | EP-10 | API | Gecontroleerde toegang over het interne netwerk voor de integratiecontainer en andere koppelingen, met robottokens en persoonlijke tokens |
@@ -462,7 +462,7 @@ Als beheerder wil ik voor één, meerdere of alle plaatsen een kaartje printen m
 - Gegeven een vrije plaats of een clubplaats, wanneer de beheerder het kaartje maakt, dan staat er geen "vrij" en geen naam van de vereniging bij de aanduiding; de naam van de vereniging staat alleen bij het logo (issue #143).
 - Gegeven een plaats zonder bootsoort, wanneer de beheerder het kaartje maakt, dan valt de regel "Geschikt voor" weg.
 
-### EP-07 Inloggen en beheerders
+### EP-07 Inloggen en gebruikers
 
 #### BLB-022 Inloggen en uitloggen
 
@@ -481,12 +481,47 @@ Als beheerder wil ik veilig inloggen zodat alleen beheerders persoonsgegevens en
 
 Prioriteit: Must. Bron: intake (gebruikers), besluit omvang. Afhankelijk van: BLB-022.
 
-Als beheerder wil ik accounts van beheerders aanmaken, blokkeren en verwijderen zodat de juiste mensen toegang hebben. Alle beheerders hebben dezelfde rechten.
+Als beheerder wil ik accounts van beheerders aanmaken, blokkeren en verwijderen zodat de juiste mensen toegang hebben. Alle beheerders hebben dezelfde rechten. Vanaf v2.0.0 vervangt BLB-050 criterium 6 hier criterium 2.
 
 - Gegeven een ingelogde beheerder, wanneer die een nieuw account aanmaakt, dan kan de nieuwe beheerder inloggen en heeft dezelfde rechten.
 - Gegeven het laatste actieve account, wanneer een beheerder dat wil blokkeren of verwijderen, dan weigert de applicatie.
 - Gegeven een geblokkeerd account, wanneer die beheerder nog is ingelogd of wil inloggen, dan eindigt de sessie en lukt inloggen niet.
 - Gegeven een beheerder die zijn inloggegevens kwijt is, wanneer een andere beheerder toegang herstelt, dan kan de eerste weer inloggen zonder dat iemand het wachtwoord ziet.
+
+#### BLB-050 Gebruikers en rollen
+
+Prioriteit: Must. Bron: issue #322, besluiten stakeholder 2026-11-18 (intake). Afhankelijk van: BLB-023, BLB-038. Milestone 10, release v2.0.0.
+
+Als beheerder wil ik een kijker uitnodigen en een account van beheerder naar kijker zetten en terug, zodat iemand de loods inziet zonder te wijzigen.
+
+- Gegeven een ingelogde beheerder, wanneer die het menu opent, dan staat onder Beheer **Gebruikers** in plaats van Beheerders, ook als kop van de pagina. `GET /beheerders` verwijst met 301 naar Gebruikers; de oude POST-routes vervallen (ADR-015).
+- Gegeven de update naar v2.0.0, wanneer de migratie draait, dan is elk bestaand account beheerder.
+- Gegeven Gebruikers, wanneer een beheerder iemand uitnodigt, dan kiest hij de rol beheerder of kijker, en het nieuwe account krijgt die rol. De rol staat in het technische log bij `beheerder.uitgenodigd`.
+- Gegeven een ander account, wanneer een beheerder de rol wijzigt van beheerder naar kijker of terug, dan geldt de nieuwe rol bij het volgende verzoek van dat account, en staat de wijziging met oude en nieuwe rol in het technische log (`beheerder.rol_gewijzigd`). De applicatie leest de rol bij elk verzoek uit de database, nooit uit de sessiecookie (ADR-015).
+- Besluit 4: gegeven minstens twee actieve beheerders, wanneer een beheerder zichzelf kijker maakt, dan lukt dat en ziet hij daarna het menu van een kijker.
+- Besluit 4: gegeven één actieve beheerder, wanneer iemand dat account kijker wil maken, blokkeren of verwijderen, dan weigert de applicatie met een melding en blijft het account beheerder. Blokkeren en verwijderen: uitwerking van besluit 4.
+- Besluit 4, uitwerking door de regie: wanneer twee beheerders tegelijk elkaar of zichzelf kijker maken, dan blijft er minstens één beheerder over.
+- Besluit 3 (een kijker heeft geen tokens; Tokens weigert hem, BLB-051): gegeven een beheerder met persoonlijke tokens, wanneer zijn rol kijker wordt, dan zijn die tokens ingetrokken, met een regel in het technische log; terug naar beheerder brengt ze niet terug (ADR-015).
+- Gegeven een persoonlijk token waarvan de eigenaar geen actieve beheerder is, wanneer het de API aanroept, dan weigert de API (ADR-015).
+- Gegeven een kijker, wanneer migratie 0022 wordt teruggedraaid, dan is dat account eerst geblokkeerd, met een regel in het technische log (ADR-015).
+
+#### BLB-051 Een kijker ziet alleen wat hij mag zien
+
+Prioriteit: Must. Bron: issue #322 ("Wat een kijker ziet" en "niet ziet", besluiten stakeholder 2026-11-18, intake). Afhankelijk van: BLB-050. Milestone 10, release v2.0.0.
+
+Als kijker wil ik zien welke boot waar ligt en van wie die is.
+
+- Besluit 6: gegeven een ingelogde kijker, wanneer hij het menu opent, dan staan er alleen Rekoverzicht, Vrije plaatsen, Boten, Profiel en Uitloggen, zonder telling van taken.
+- Gegeven Boten, wanneer een kijker die opent, dan staat er geen knop Nieuwe boot.
+- Gegeven de pagina van een boot, wanneer een kijker die opent, dan staan er niet de tekst "Vrijgeven doe je op de plaats", Boot verplaatsen, Boot wijzigen en Foto vervangen.
+- Besluit 1: gegeven de pagina van een plaats, wanneer een kijker die opent, dan staan er geen knoppen om te wijzigen.
+- Besluit 1: gegeven "Overal zoeken" in de kop, wanneer een kijker zoekt, dan staan er geen leden in de resultaten. Zoeken op een lidnummer geeft geen treffer op dat nummer (uitwerking door de regie).
+- Besluit 1: gegeven een eigenaar op een scherm van een kijker, dan staat de naam als platte tekst zonder link. Een kijker ziet nergens een link naar een scherm dat hem wordt geweigerd.
+- Besluit 2: gegeven elk scherm dat een kijker ziet, ook de zoekresultaten en het log onderaan een pagina, dan staat er geen lidnummer, geen opzegdatum, geen datum lid sinds en geen melding oud-lid (ADR-015, vraag 34).
+- Besluit 5: gegeven een kijker, wanneer hij de URL opent van Wachtlijst, Boten zonder eigenaar, Gaan opzeggen, Leden, Opgezegd, Log, de pagina van een lid of een scherm onder Beheer (Indeling, Kaartjes, Boten zonder foto, Import/export, Gebruikers, Technisch log, Tokens, Instellingen, Status), dan weigert de applicatie met 403 zonder gegevens, met een test per route.
+- Gegeven een kijker, wanneer hij een mutatie stuurt, ook met een gemanipuleerd formulier of een directe POST, dan weigert de server met 403 en verandert er niets. Een test over alle routes vangt een nieuwe route zonder rolcontrole. Besluit 8: inloggen, uitloggen, de uitnodiging en zijn eigen inlogmethodes in Profiel mag hij wel.
+
+Route voor een mens: zie issue #322.
 
 #### BLB-038 Inlogmethode toevoegen of intrekken
 
@@ -776,6 +811,7 @@ Slice 1 tot en met 11 zijn af. De besluiten van 2026-10-31 halen de API naar vor
 | 9 | F | BLB-026; BLB-037 criteria 1 tot en met 5; BLB-009 | Af. De bewaartermijn werkt, de installatie is te bewaken en de bootaantallen staan klaar, terugschrijven staat uit |
 | 10 | G | BLB-030, 035, 042; BLB-031 criteria 4 en 5; BLB-032 criteria 3 en 4; BLB-034 criterium 2 | Leesendpoints, persoonlijke tokens, tokenschermen, en de keuze om de API van buiten bereikbaar te maken |
 | 11 | H | BLB-028 | Af. Een andere vereniging past de bootsoorten aan |
+| Milestone 10 | | BLB-050, daarna BLB-051 | Een kijker ziet de loods en wijzigt niets; Beheerders heet Gebruikers. Eerst ADR (foundation) en ontwerp (Design System); daarna v2.0.0 (besluit 7) |
 
 Slice 5 gaat vóór slice 6, omdat de integratiecontainer het contract en het robottoken uit slice 5 nodig heeft. Slice 6 gaat vóór de wachtlijst, zodat BLB-008 criterium 3 meteen op de definitieve importroute wordt gebouwd. Slice 4 staat los van de API.
 
@@ -800,7 +836,7 @@ Het log uit slice 1 bevat vanaf het begin de datum van elke mutatie, zodat opsch
 | Leden aanmaken of wijzigen in de webinterface | De ledenbron is leidend; alleen de import via de API werkt leden bij |
 | Meerdere verenigingen in één installatie | Besluit stakeholder: één vereniging per installatie |
 | Automatische toewijzing van plaatsen | Besluit stakeholder: de beheerder kiest zelf |
-| Aparte rol voor systeembeheer | Besluit stakeholder: drie gelijke beheerders |
+| Aparte rol voor systeembeheer | Besluit stakeholder: beheerders hebben dezelfde rechten; sinds 2026-11-18 is er daarnaast alleen de kijker (BLB-051) |
 
 ## 7. Besluiten op de open vragen
 
@@ -883,6 +919,9 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 | 23 | In welke slice komen BLB-001 (nieuw) en BLB-044? | Regie | Nee | Besloten door de regie 2026-11-03: slice 12, voor issue #80 |
 | 24 | (a) Mag een gat in de verdiepingen ontstaan als de beheerder een verdieping weghaalt, net als bij vakken? (b) Is de omschrijving van een rek verplicht, en wat is de grens? Het besluit noemt "tot 52 tekens" als voorbeeld. | Stakeholder | Nee, BLB-001 en BLB-044 zijn te bouwen; de test op deze twee grenzen wacht | Besloten door de regie 2026-11-03: (a) ja, een verdieping bestaat zolang er een vak aan staat en houdt haar nummer; (b) niet verplicht, ten hoogste 60 tekens (ADR-003 v2.1.0) |
 | 25 | Issue #80 noemt een nieuwe bootsoort, wildwaterkano. Hoort die in de startlijst (§8, BLB-002)? | Regie | Nee | Besloten door de regie 2026-11-03: nee. De stakeholder besloot "alleen als seed"; de seed voegt wildwaterkano toe, een echte installatie via BLB-028 |
+| 32 | Een kijker moet inloggen, uitloggen, na de uitnodiging een inlogmethode instellen en in Profiel methodes beheren; dat zijn POST-routes. Vallen die buiten "elke mutatie" die de server weigert? | Stakeholder | Nee (besloten) | Besloten door de stakeholder 2026-11-18 (besluit 8): een kijker beheert zijn eigen profiel; inloggen en uitloggen mogen ook (uitwerking door de regie) |
+| 33 | Worden persoonlijke tokens ingetrokken als een beheerder kijker wordt (besluit 3)? | Foundation | Nee (besloten) | Besloten in ADR-015: ja, intrekken met een regel in het technische log |
+| 34 | Ziet een kijker de tag **oud-lid** achter de naam van een eigenaar? | Regie | Nee (besloten) | Uitwerking door de regie: nee (ADR-015); de stakeholder kan dit terugdraaien |
 | 26 | Bootsoort per verdieping bij "Nieuw rek" (issue #82): (a) is die verplicht of mag ze leeg blijven? (b) krijgt een vak dat later in het raster aan gaat (BLB-044) ook die bootsoort? (c) één bootsoort per verdieping of meer, zoals per plaats (BLB-002)? | Stakeholder | Nee | Besloten door de stakeholder 2026-11-04: (a) optioneel; (b) ja, het rek onthoudt de bootsoort per verdieping; (c) één. Advies van apex bij (b) was nee |
 
 ## 8. Aannames
@@ -894,11 +933,13 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 - Besluit stakeholder 2026-10-30: de API gaat aan en uit in de installatie, via een omgevingsvariabele (ADR-009), niet in de applicatie. Sinds 2026-10-31 staat hij standaard aan.
 - Een IP-whitelist bevat adressen en adresreeksen, zowel IPv4 als IPv6.
 - Een wachttijd telt vanaf de dag van aanmelding op de wachtlijst.
+- Een kijker logt in zoals een beheerder, met een passkey of een wachtwoord plus TOTP (ADR-001, BLB-038).
 
 ## 9. Wijzigingslog
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.7.0 | 2026-11-18 | Issue #322: BLB-050 en BLB-051 (kijker, Gebruikers), milestone 10; EP-07, uitgangspunten, BLB-023 en §6 bijgewerkt; vragen 32 tot en met 34 besloten (besluit 8, ADR-015); criteria uit ADR-015 |
 | v0.6.23 | 2026-11-18 | Issue #315: BLB-049, een lijst met boten zonder foto onder Beheer (besluiten stakeholder 2026-11-17, BV-88) |
 | v0.6.22 | 2026-11-18 | Issue #321, besluit stakeholder 2026-11-17 en BV-90: Boten zonder eigenaar is een lijst zonder keuze en zonder knop; de eigenaar kies je bij Boot wijzigen op de pagina van de boot. Het criterium met het zoekveld en het criterium met de foutregel bij Eigenaar opslaan vervallen; de criteria over het oud-lid en de wachtlijst gelden bij Boot wijzigen (BLB-005, 046; vraag 27) |
 | v0.6.21 | 2026-11-17 | Issues #295 en #298, besluiten stakeholder 2026-11-16 en 2026-11-17: de keuze Eigenaar volgt BV-85 in plaats van BV-83 (datalist): zoekveld, één knop Zoeken, treffers als keuzerondjes met het lidnummer als waarde, hooguit 10 met een hint, voorkeuze bij één treffer, foutregel zonder treffer en "clubboot" als zoekterm (BLB-005, 046, 048). Een oud-lid krijgt de tag "oud-lid" in plaats van de tekst "(oud-lid)" (besluit 7 aangepast; BLB-005, 019). "Regel overslaan" is een vakje in de cel Keuze (BLB-048). De foutregel bij leegmaken van Eigenaar volgt BV-86 (BLB-046) |
