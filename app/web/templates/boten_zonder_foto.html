@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
+{% block titel %}Boten zonder foto · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Boten zonder foto</h1>
+{% if boten %}
+<p class="bl-aantal">{{ boten|length }} {{ 'boot' if boten|length == 1 else 'boten' }} zonder foto</p>
+<ul class="bl-lijst">
+  {% for b in boten %}
+  <li class="bl-item">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span> · <span data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' if b.clubboot else 'eigenaar onbekend' }}</span>{% if b.lid and is_oud_lid(b.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}</span></div>
+    <p class="bl-item__zijde">{% if b.plaats %}<a class="bl-plaatslink" data-label="Plaats" href="{{ url_for('web.plaats_detail', plaats_id=b.plaats.id) }}">{{ b.plaats.code }}</a>{% else %}<span data-label="Plaats">geen plaats</span>{% endif %}</p>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% call meldingblok() %}Alle boten hebben een foto.{% endcall %}
+{% endif %}
+{% endblock %}

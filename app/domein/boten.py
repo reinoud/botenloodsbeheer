@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, afbeeldingen, indeling, leden, lidkeuze, log, wachtlijst
 from app.domein.toewijzing import controleer_past
-from app.models import Boot, Bootsoort, Lid, Plaats, Taakrun, db
+from app.models import Boot, Bootsoort, Lid, Plaats, Rek, Taakrun, db
 
 BOOTAANTALLEN = "bootaantallen"  # taak in taakrun: wanneer de API ze voor het laatst leverde
 
@@ -40,6 +40,15 @@ def zonder_eigenaar():
     return db.session.scalars(
         select(Boot).where(Boot.lid_id.is_(None), Boot.clubboot.is_(False)).order_by(Boot.naam, Boot.id)
         .options(selectinload(Boot.plaats), selectinload(Boot.bootsoort))).all()
+
+
+def zonder_foto():
+    """Boten zonder foto (#315): eerst die met een plaats in loodsvolgorde, dan die zonder plaats; elke
+    groep daarbinnen op naam. Zonder plaats zijn rek en plaats NULL en sorteert PostgreSQL die achteraan."""
+    return db.session.scalars(
+        select(Boot).outerjoin(Boot.plaats).outerjoin(Plaats.rek).where(Boot.afbeelding_id.is_(None))
+        .order_by(Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak, Boot.naam, Boot.id)
+        .options(selectinload(Boot.lid), selectinload(Boot.plaats), selectinload(Boot.bootsoort))).all()
 
 
 def aantal_zonder_eigenaar():

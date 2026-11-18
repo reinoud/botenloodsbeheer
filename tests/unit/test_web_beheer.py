@@ -12,7 +12,7 @@ from app.web import getal
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats, png
 from tests.unit.test_web import inloggen
 
-BEHEER = ["/indeling", "/boten", "/boten/zonder-eigenaar", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
+BEHEER = ["/indeling", "/boten", "/boten/zonder-eigenaar", "/boten-zonder-foto", "/leden", "/plaatsen/1", "/boten/1", "/beheerders",
           "/profiel", "/log", "/log/techniek"]
 
 
