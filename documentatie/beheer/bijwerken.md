@@ -27,6 +27,8 @@ Versie 0.4.0 bevat migratie 0017 hierboven en migratie 0018. Migratie 0018 haalt
 
 Versie 1.3.0 heeft geen migratie. De eerste ledenimport daarna neemt oud-leden op van wie de opzegdatum hooguit 5 jaar geleden is, ook oud-leden zonder boot die eerder zijn verwijderd. Levert de ledenbron `lid_sinds` of de opzegdatum niet als JJJJ-MM-DD, dan stopt de import met een 409 en blijven de leden ongewijzigd; kijk die eerste import daarom na.
 
+Versie 1.4.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding.

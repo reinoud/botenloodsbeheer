@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.96
+**Versie overlay:** v0.5.97
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-17
+**Bijgewerkt:** 2026-11-18
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -94,6 +94,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een besluit dat een keuzelijst vervangt door een zoekveld: beschrijf vóór de bouw per formulier wat Zoeken bewaart (andere velden, bestanden, keuzes), wat een gevuld veld bij een bestaand object betekent en welke statuscode een foutregel krijgt. Een zoekveld met een opgeslagen keuze bevat een term die die keuze bij opnieuw zoeken als treffer teruggeeft (#295).
 - Een keuze die het formulier meestuurt en nog geldig is, vervalt nooit doordat de lijst met treffers is afgekapt. Herstel de oorzaak van een bevinding, niet alleen de reproductie (#295).
 - Hangt een criterium af van een ander issue, noem dat issue en zeg of de test het nu al moet bewijzen of pas daarna (#295).
+- Een agent stuurt zijn oordeel of oplevering met SendMessage aan de regie én zet het in zijn eindantwoord. De regie kijkt zelf in de scratchpad van een agent zodra diens suite klaar moet zijn, en wacht niet alleen op een melding (oordelen bij #315, #316 en #321 kwamen uren niet aan).
+- Na het stoppen van een agent loopt de regie `git status` en `git diff` in zijn worktree na: een gestopte agent kan een mutant laten staan (#315).
+- Tekstwijzigingen in scripts gaan met python3: `sed` in de agentshell is GNU sed. Een samengesteld commando met een heredoc zet de agent in een script in de scratchpad (#316, #321).
 
 #### Bouw
 
@@ -220,6 +223,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een test op overloop gebruikt gegevens die breder zijn dan het venster, en de opdracht noemt hoe breed: op 360 px een rek van meer dan vier vakken en een bootnaam van meer dan 30 tekens. De bootsoort zonder plaatje in de seed is Supboard (#270).
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
 - Versoepelt de wijziging een regel in de kern, noem dan elke andere route die op de oude weigering leunde (zoals de bezettingsimport), en eis per route een test met een geval binnen de nieuwe grens, met een mutant (#298).
+- Een afkapgrens op een veld met een samengestelde tekst (zoals "Naam (lidnummer)") is minstens de som van de kolomlengtes plus de scheiders, afgeleid uit het model. De test staat precies op de nieuwe grens, met de langste geldige waarde (#316).
+- Een nieuw menu-item: zoek de E2E-tests met een vaste menulijst (zoals `tests/e2e/test_rekindeling_csv.py`) en werk ze bij (#315).
+- Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
 
 #### Review
 
@@ -315,6 +321,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een proef die bewijst dat iets niet verandert, toont eerst met hetzelfde verzoek en een geldige keuze dat het wel verandert (positieve controle) (#295).
 - Elke reviewer die zelf unittests draait, gebruikt een eigen `TEST_DB`, ook als de regie zegt dat ze de suite draait: een gedeelde `botenloods_test` verdween bij #295 midden in een run (#295).
 - Noem bij een regelnummer in een brief altijd het bestand (`app/domein/bezetting_csv.py:155`), en zeg bij een oordeel dat steunt op een mutant van een ander agent of het oordeel op die uitkomst mag wachten of statisch moet zijn (#298).
+- Een volgordetest op een laatste sleutel `id` maakt de rijen met expliciete id's, het hoogste eerst ingevoegd. Een mutant zonder die sleutel heet pas gelijkwaardig na die proef (#315).
+- Haalt een wijziging een sleutel weg uit een dict die met `**` naar een sjabloon gaat, noem dan ook de macro's die met `with context` worden geïmporteerd (#323).
 
 #### E2E
 
@@ -343,6 +351,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een E2E-assert op een keuzelijst filtert op de eigen plaatscode; de seed heeft ook vrije plaatsen.
 - Een nieuwe foutroute in `draai.sh` toetst ook welke toestand het script achterlaat (integratiecontainer gestart, `secrets/api_token`), niet alleen dat het stopt.
 - Zet in de opdracht voor een E2E-test van een gegeven dat de stack niet meebrengt (zoals een oud-lid binnen de bewaartermijn): hoe de test dat gegeven maakt, of het de stack vervuilt, en welke `reknaam`-letter vrij is (alle letters a tot en met z zijn bezet; kies een groep van twee of drie letters) (#298).
+- Een eigen E2E-stack start met `up -d --no-build --wait`; een agent bouwt het gedeelde image `botenloods-app:latest` niet opnieuw vanuit een worktree (#321).
+- In een worktree staat geen `.env`: noem `--env-file <hoofdmap>/.env` en voor `draai.sh` `COMPOSE_ENV_FILES=<hoofdmap>/.env` (#315).
+- `schermafbeeldingen.sh` draait op een vaste projectnaam (`botenloods-doc`) en een vast subnet, dus nooit tegelijk met een ander agent. Zegt een opdracht een scherm te vereenvoudigen, noem dan of de schermafbeelding opnieuw moet en wie dat doet (#321).
 
 #### Migratie en database
 
@@ -523,6 +534,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.97 | 2026-11-18 | Elf regels: oordeel met SendMessage en controle in de scratchpad, worktree nalopen na stoppen, python3 in plaats van sed (Algemeen); afkapgrens en test op de grens, vaste menulijsten, 404 of 405 (Bouw); volgordetest met expliciete id's, sleutel en macro met context (Review); stack zonder bouwen, `.env` in een worktree, schermafbeeldingen niet parallel (E2E); uit de terugblikken van milestone 9 | Lessen |
 | v0.5.96 | 2026-11-17 | Drie regels: andere routes bij een versoepelde regel (Bouw); bestand bij een regelnummer en mutant van een ander agent (Review); gegeven dat de stack niet meebrengt (E2E); uit de terugblikken bij #298 | Lessen |
 | v0.5.95 | 2026-11-17 | Zes regels: zoekveld in plaats van keuzelijst, geldige keuze vervalt niet, afhankelijk criterium (Bouw); functietest bij afkappen, positieve controle, eigen TEST_DB voor elke reviewer (Review); uit de terugblikken bij #295 | Lessen |
 | v0.5.94 | 2026-11-17 | Zeven regels: besluiten van Design System nalezen, API-documentatie noemen, eigen testdatabase met sed-kopie (Bouw); heel ADR afzoeken, mutant met bewijsbestand, proef in de webcontainer (Review); veilige kant bij een veiligheidsgrens (Security en proxy); uit de terugblikken bij #295, #298 en #307 | Lessen |

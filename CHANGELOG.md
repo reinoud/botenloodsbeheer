@@ -2,6 +2,27 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 1.4.0 (2026-11-18)
+
+Versie met lijsten en restpunten na 1.3.0 (milestone "Lijsten, restpunten en afhankelijkheden na v1.3.0").
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:1.4.0`
+- `ghcr.io/reinoud/botenloods-integratie:1.4.0`
+
+Ook beschikbaar onder de tags `1.4` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-1.4.0.cdx.json` en `botenloods-integratie-1.4.0.cdx.json`.
+
+**Nieuw sinds 1.3.0**
+- Onder Beheer staat de lijst Boten zonder foto, direct na Kaartjes. Per boot staan de naam, de bootsoort, de eigenaar en de plaats, in de volgorde van de loods. Zo maak je tijdens een ronde door de loods gericht foto's (#315).
+
+**Gewijzigd**
+- Boten zonder eigenaar is alleen nog een lijst, met per boot de naam, de bootsoort en de plaats. Een eigenaar kies je bij Boot wijzigen op de pagina van de boot (#321).
+- Een boot van een lid met een lange naam kan worden opgeslagen zonder het veld Eigenaar opnieuw te kiezen. Eerder gaf dat een foutregel (#316).
+- Het image is gebouwd met uv 0.13.7 (#319).
+- Testonderhoud: een verse teststack importeert de leden één keer; commentaar en een ongebruikte sleutel opgeruimd (#323, #327).
+
+**Bijwerken vanaf 1.3.0** (zie `documentatie/beheer/bijwerken.md`). Er is geen migratie; `docker-compose.yml` en `.env` zijn niet gewijzigd.
+
 ## 1.3.0 (2026-11-17)
 
 Versie met oud-leden als eigenaar en een SBOM per image (milestone "Oud-leden als eigenaar en SBOM"). Neemt ook twee zichtbare wijzigingen uit milestone 7 mee.
