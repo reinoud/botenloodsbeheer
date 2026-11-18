@@ -4,6 +4,7 @@ eigenaar. Elke test noemt de mutant die hem laat falen. Een oud-lid binnen de be
 bij de drie schermen met één keuze (#298, test_oud_lid_boot.py); de bezettingsimport toont en accepteert
 nooit een oud-lid."""
 
+import html
 import re
 from datetime import timedelta
 
@@ -138,6 +139,20 @@ def test_eigenaar_het_ongewijzigde_veld_van_een_boot_laat_de_eigenaar_staan_een_
     assert lidkeuze.eigenaar("", "Anna", None)[1].fout == lidkeuze.NIET_GEKOZEN  # Nieuwe boot
 
 
+LANG = "Maria Theresia (Tessa) van der Berg-Oostenrijk en Hongarije, echtgenote van Franz Stephan Josef"  # 95 tekens
+assert len(LANG) == 95
+
+
+def test_een_lidnaam_van_95_tekens_met_haakjes_overleeft_de_zoekterm_van_het_eigenaarveld(app):
+    # Mutant: schoon() zonder MAX_TEKENS van lidkeuze kapt het lidnummer af (#316).
+    maria = lid("1001", LANG)
+    tekst = f"{LANG} ({maria.lidnummer})"
+    assert len(tekst) > 100
+    assert lidkeuze.veld(tekst).gekozen == "1001"
+    b = boot(maria.id, "Kajak", "Fuut")
+    assert lidkeuze.eigenaar("", tekst, b, tekst) == ((maria.id, False), None)
+
+
 # De bezettingsimport
 
 
@@ -255,6 +270,19 @@ def test_een_rondje_dat_na_een_nieuwe_zoekterm_geen_treffer_meer_is_vervalt(inge
     assert keuzes() != {}
     zoek(ingelogd, **{"zoek-2": "Kuiperberg", "keuze-2": "1001"})
     assert keuzes() == {}
+
+
+def test_een_opgeslagen_keuze_van_een_lid_met_een_lange_naam_blijft_na_zoeken_op_een_andere_regel(ingelogd):  # noqa: F811
+    # Mutant: de term afkappen op 100 tekens laat de keuze vervallen (#316).
+    maria = lid("1001", LANG)
+    lid("1002", "Bram Kuiperberg")
+    start_import(ingelogd, "A/1/1;Reiger;Kajak;Onbekend;", "A/1/2;Wulp;Kajak;Onbekend;")
+    ingelogd.post("/bezetting/import/koppelen", data={"keuze-2": "1001"})
+    assert keuzes() == {"2": str(maria.id)}
+    tekst = html.unescape(re.search(r'name="zoek-2"[^>]*value="([^"]*)"', ingelogd.get("/bezetting/import").text)[1])
+    assert tekst == f"{LANG} (1001)"
+    zoek(ingelogd, **{"zoek-2": tekst, "keuze-2": "1001", "zoek-3": "Kuiperberg"})
+    assert keuzes() == {"2": str(maria.id)}
 
 
 def test_een_vervalst_lidnummer_bij_de_import_wordt_geweigerd(ingelogd):  # noqa: F811
@@ -379,6 +407,16 @@ def test_boot_wijzigen_met_een_andere_term_zonder_rondje_wijzigt_niets(ingelogd)
     b = boot(anna.id, "Kajak", "Fuut")
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut 2", "bootsoort": b.bootsoort_id, "zoek": "Bram"})
     assert r.status_code == 422 and lidkeuze.NIET_GEKOZEN in r.text and (b.naam, b.lid_id) == ("Fuut", anna.id)
+
+
+def test_boot_wijzigen_met_een_ongewijzigd_eigenaarveld_met_een_lange_lidnaam_laat_de_eigenaar_staan(ingelogd):  # noqa: F811
+    # Mutant: de term afkappen op 100 tekens geeft de foutregel "Kies een lid uit de treffers" (#316).
+    maria = lid("1001", LANG)
+    b = boot(maria.id, "Kajak", "Fuut")
+    veld = re.search(r'id="eigenaar" name="zoek"[^>]*value="([^"]*)"', ingelogd.get(f"/boten/{b.id}").text)[1]
+    assert html.unescape(veld) == f"{LANG} (1001)"
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut 2", "bootsoort": b.bootsoort_id, "zoek": html.unescape(veld)})
+    assert r.status_code < 400 and lidkeuze.NIET_GEKOZEN not in r.text and (b.naam, b.lid_id) == ("Fuut 2", maria.id)
 
 
 # Boten zonder eigenaar

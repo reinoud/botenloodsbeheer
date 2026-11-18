@@ -21,9 +21,9 @@ MAX_TREFFERS = 50
 Resultaat = namedtuple("Resultaat", "totaal treffers")
 
 
-def schoon(term):
-    """De term zoals hij gezocht wordt: zonder omringende spaties, hooguit MAX_TEKENS tekens."""
-    return (term or "").strip()[:MAX_TEKENS]
+def schoon(term, maximum=MAX_TEKENS):
+    """De term zoals hij gezocht wordt: zonder omringende spaties, hooguit `maximum` tekens."""
+    return (term or "").strip()[:maximum]
 
 
 def zoek(term):
