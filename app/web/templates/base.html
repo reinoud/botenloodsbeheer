@@ -24,6 +24,7 @@
         <input class="ds-input dj-search__field" type="search" id="kop-zoek" name="q" value="{{ zoekterm|default('') }}" maxlength="100" placeholder="Plaats, boot of eigenaar">
         <button type="submit" class="ds-btn ds-btn--primary"><span class="dj-icon dj-icon--zoek" aria-hidden="true"></span> <span class="dj-search__tekst">Zoeken</span></button>
       </form>
+      {# Een kijker heeft menu 2B (BV-92): één lijst zonder groepskoppen en zonder tellingen. #}
       {# De vier groepen van BV-76 (BV-42); de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}
       {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail"} %}
@@ -33,16 +34,17 @@
         ("Lijsten", [("web.boten_overzicht", "Boten"), ("web.leden_overzicht", "Leden"), ("web.opgezegd", "Opgezegd"), ("web.logboek", "Log")]),
         ("Beheer", [("web.indeling_overzicht", "Indeling"), ("web.kaartjes_kiezen", "Kaartjes"), ("web.boten_zonder_foto", "Boten zonder foto"),
                     ("web.import_export_scherm", "Import/export"),
-                    ("web.beheerders_overzicht", "Beheerders"), ("web.technisch_log", "Technisch log"), ("web.tokens_overzicht", "Tokens"),
+                    ("web.beheerders_overzicht", "Gebruikers"), ("web.technisch_log", "Technisch log"), ("web.tokens_overzicht", "Tokens"),
                     ("web.instellingen_scherm", "Instellingen"), ("web.statuspagina", "Status")]),
         ("Account", [("web.profiel", "Profiel")])] %}
+      {% if is_kijker() %}{% set menu = [("", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.boten_overzicht", "Boten"), ("web.profiel", "Profiel")])] %}{% endif %}
       <details class="dj-menu">
         <summary class="dj-menu__button">Menu</summary>
         <nav class="dj-menu__panel" aria-label="Hoofdmenu">
           {% for groep, items in menu %}
           <div class="bl-nav__blok">
-            <p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>
-            <ul class="dj-nav__list" aria-labelledby="menu-{{ loop.index0 }}">
+            {% if groep %}<p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>{% endif %}
+            <ul class="dj-nav__list"{% if groep %} aria-labelledby="menu-{{ loop.index0 }}"{% endif %}>
               {% for endpoint, naam in items %}
               <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
               {% endfor %}

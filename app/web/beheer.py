@@ -1,4 +1,4 @@
-"""Beheerschermen: indeling, plaatsdetail, boten, leden, beheerders en de technische status.
+"""Beheerschermen: indeling, plaatsdetail, boten, leden, gebruikers en de technische status.
 Schermen over boten en plaatsen tonen de bootmutaties die erbij horen (BLB-025, BLB-043, ADR-006)."""
 
 import json
@@ -28,7 +28,7 @@ from app.domein import (
     zoekopdracht,
 )
 from app.domein.csvbestand import CsvFout
-from app.web import bp, getal, inloggen_vereist, recent_ingelogd, uitvoeren
+from app.web import bp, getal, inloggen_vereist, is_kijker, recent_ingelogd, uitvoeren
 
 
 def _of_404(functie, *args):
@@ -439,7 +439,7 @@ def zoeken():
     """Zoekveld in de kop (#154). Eén treffer gaat direct naar zijn scherm. De term staat niet in een
     log: Gunicorn laat de querystring weg (toegangslog) en de applicatie logt hem niet."""
     term = zoekopdracht.schoon(request.args.get("q"))
-    resultaat = zoekopdracht.zoek(term)
+    resultaat = zoekopdracht.zoek(term, met_leden=not is_kijker())
     if resultaat and resultaat.totaal == 1:
         soort, gevonden = resultaat.treffers[0]
         return redirect(url_for(f"web.{soort}_detail", **{f"{soort}_id": gevonden.id}))
@@ -607,10 +607,16 @@ def leden_ophalen():
     return redirect(url_for("web.leden_overzicht"))
 
 
-# Beheerders (BLB-023)
+# Gebruikers (BLB-023, BLB-050): in de interface heten de beheerders gebruikers, met een rol (ADR-015)
 
 
 @bp.get("/beheerders")
+def beheerders_oud():
+    """De oude url van Gebruikers; de oude POST-routes vervallen."""
+    return redirect(url_for("web.beheerders_overzicht"), 301)
+
+
+@bp.get("/gebruikers")
 @inloggen_vereist
 def beheerders_overzicht():
     return render_template("beheerders.html", beheerders=beheerders.alle())
@@ -624,18 +630,38 @@ def _link(code, titel, uitleg):
     return render_template("link.html", titel=titel, uitleg=uitleg, link=link, qr=Markup(qr))
 
 
-@bp.post("/beheerders")
+@bp.post("/gebruikers")
 @inloggen_vereist
 @recent_ingelogd
 def beheerder_uitnodigen():
-    code = uitvoeren(beheerders.uitnodigen, request.form.get("gebruikersnaam", "").strip())
+    # De rol gaat als expliciet veld mee, zonder voorkeur: een ontbrekende rol geeft een foutmelding.
+    code = uitvoeren(beheerders.uitnodigen, request.form.get("gebruikersnaam", "").strip(),
+                     request.form.get("rol", ""))
     if code is None:
         return redirect(url_for("web.beheerders_overzicht"))
-    return _link(code, "Beheerder uitgenodigd",
-                 "Geef deze link aan de nieuwe beheerder. Hij werkt één keer en is 24 uur geldig.")
+    return _link(code, "Gebruiker uitgenodigd",
+                 "Geef deze link aan de nieuwe gebruiker. Hij werkt één keer en is 24 uur geldig.")
 
 
-@bp.post("/beheerders/<int:beheerder_id>/herstellen")
+@bp.post("/gebruikers/<int:beheerder_id>/rol")
+@inloggen_vereist
+@recent_ingelogd
+def beheerder_rol(beheerder_id):
+    rol = request.form.get("rol", "")
+    naam = uitvoeren(beheerders.rol_wijzigen, beheerder_id, rol)
+    if naam is None:
+        return redirect(url_for("web.beheerders_overzicht"))
+    # Wie zichzelf kijker maakt, kan Gebruikers niet meer openen: terug naar Rekoverzicht met een melding.
+    if beheerder_id == g.beheerder.id and rol == "kijker":
+        flash("Je bent nu kijker: je ziet de loods en wijzigt niets. Je persoonlijke tokens zijn ingetrokken. "
+              "Gebruikers kun je niet meer openen.", "info")
+        return redirect(url_for("web.rekoverzicht"))
+    flash(f"{naam} is nu {rol}." + (f" De persoonlijke tokens van {naam} zijn ingetrokken." if rol == "kijker" else ""),
+          "info")
+    return redirect(url_for("web.beheerders_overzicht"))
+
+
+@bp.post("/gebruikers/<int:beheerder_id>/herstellen")
 @inloggen_vereist
 @recent_ingelogd
 def beheerder_herstellen(beheerder_id):
@@ -647,7 +673,7 @@ def beheerder_herstellen(beheerder_id):
                  "beheerder. Hij werkt één keer en is 24 uur geldig.")
 
 
-@bp.post("/beheerders/<int:beheerder_id>/<any(blokkeren, deblokkeren, verwijderen):actie>")
+@bp.post("/gebruikers/<int:beheerder_id>/<any(blokkeren, deblokkeren, verwijderen):actie>")
 @inloggen_vereist
 @recent_ingelogd
 def beheerder_wijzigen(beheerder_id, actie):

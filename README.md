@@ -46,14 +46,14 @@ De applicatie draait op http://localhost:8080. De API (`/api/v1`) is alleen bere
 
 ### Een login aanmaken
 
-De eerste beheerder maak je op de commandoregel. Elke volgende beheerder kan ook via `/beheerders` in de applicatie.
+De eerste beheerder maak je op de commandoregel; het commando maakt altijd een beheerder. Elke volgende gebruiker, beheerder of kijker, nodig je uit via `/gebruikers` in de applicatie.
 
 1. `docker compose -f docker-compose.yml -f compose.dev.yml exec web flask beheerder uitnodigen <gebruikersnaam>`. De gebruikersnaam is 2 tot 50 tekens: a-z, cijfers, punt, streepje en onderstreping.
 2. Het commando toont een link (`<BASIS_URL>/uitnodiging/<code>`). Die werkt één keer en is 24 uur geldig.
 3. Open de link en kies een passkey, of een wachtwoord van 12 tot 128 tekens met een authenticator-app (QR-code scannen en een eerste code invullen).
 4. Log in op http://localhost:8080/inloggen.
 
-Een passkey hangt aan de host uit `BASIS_URL` (of `WEBAUTHN_RP_ID`). Open de link dus op dezelfde host, `localhost` en niet `127.0.0.1`. Is de link verlopen of gebruikt, draai het commando dan opnieuw met een andere gebruikersnaam, of herstel de beheerder via `/beheerders`.
+Een passkey hangt aan de host uit `BASIS_URL` (of `WEBAUTHN_RP_ID`). Open de link dus op dezelfde host, `localhost` en niet `127.0.0.1`. Is de link verlopen of gebruikt, draai het commando dan opnieuw met een andere gebruikersnaam, of herstel de gebruiker via `/gebruikers`.
 
 ## API-token
 

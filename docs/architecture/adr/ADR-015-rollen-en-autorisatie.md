@@ -1,8 +1,8 @@
 # ADR-015 Rollen en autorisatie: beheerder en kijker
 
-**Status:** Besloten door Foundation, 2026-11-18; open vraag 1 wacht op de stakeholder
+**Status:** Besloten door Foundation, 2026-11-18; open vraag 1 beantwoord door besluit 8 (2026-11-18)
 **Datum:** 2026-11-18
-**Versie:** v1.0.0
+**Versie:** v1.0.1
 **Stories:** BLB-050, BLB-051; issue #322
 
 ## Context
@@ -26,7 +26,7 @@ Een test loopt `app.url_map` langs en doet voor elke regel van `web` buiten de l
 
 **Tokens.** De tokenschermen staan niet in de lijst. Wordt een account kijker, dan trekt dezelfde transactie zijn persoonlijke tokens in, met `token.ingetrokken` per token. Terug naar beheerder brengt ze niet terug. De controle per aanroep (ADR-005) eist een eigenaar die actief en beheerder is (reden `eigenaar_inactief`); die vangt ook een token dat tijdens de rolwijziging nog ontstond. Robottokens blijven werken.
 
-**Lidnummer en opzegdatum.** Een kijker ziet geen lidnummer, opzegdatum, datum lid sinds of oud-lidmelding (open vraag 2), en geen link naar een lid. `zoekopdracht.zoek` krijgt het argument `met_leden`; voor een kijker zoekt hij niet in `Lid.lidnummer` en geeft hij geen leden. `log.namen` toont "Lid <naam>" zonder nummer, en de link "Meer in het log" vervalt. Een test eist dat een herkenbaar lidnummer en opzegdatum op geen toegestaan scherm van een kijker staan, ook niet na zoeken op dat nummer.
+**Lidnummer en opzegdatum.** Een kijker ziet geen lidnummer, opzegdatum, datum lid sinds of oud-lidmelding (open vraag 2), en geen link naar een lid. `zoekopdracht.zoek` krijgt het argument `met_leden`; voor een kijker zoekt hij niet in `Lid.lidnummer` en geeft hij geen leden. `log.namen` toont "Lid <naam>" zonder nummer, de link "Meer in het log" vervalt, en de regels `wachtlijst.toegevoegd` en `wachtlijst.verwijderd` zijn voor een kijker helemaal weg uit het log (`log.zichtbaar`, besluit stakeholder op AEG-01). Een test eist dat een herkenbaar lidnummer en opzegdatum op geen toegestaan scherm van een kijker staan, ook niet na zoeken op dat nummer.
 
 **Laatste beheerder.** Gekozen is een vergrendeling, geen database-constraint. Rol wijzigen, blokkeren en verwijderen vergrendelen eerst alle actieve accounts (`FOR UPDATE`, `populate_existing=True`), zoals `_ander_account` nu doet. Onder dat slot is de actor een actieve beheerder en blijft na de wijziging minstens één actieve beheerder over. Bij twee gelijktijdige wijzigingen ziet de tweede de uitkomst van de eerste. De racetest laat twee beheerders tegelijk zichzelf en elkaar kijker maken en faalt met een mutant zonder slot.
 
@@ -47,7 +47,7 @@ Upgrade:
 3. Check `rol IN ('beheerder', 'kijker')`, naam `rol_geldig`, ook in `__table_args__`.
 4. `GRANT SELECT (rol) ON beheerder TO botenloods_api` (tokencontrole). De tabelrechten van `botenloods_web` en `botenloods_taken` (migratie 0001) dekken de kolom al.
 
-Downgrade: zonder kolom wordt elke kijker beheerder. Daarom blokkeert de downgrade eerst elke kijker (`actief = false`, sessieversie plus één), met per account een regel `beheerder.geblokkeerd` (actor systeem, naam `migratie`). Daarna vervallen recht, check en kolom. Na een nieuwe upgrade zijn dat geblokkeerde beheerders. De migratietest doet upgrade, downgrade en upgrade met een kijker.
+Downgrade: zonder kolom wordt elke kijker beheerder. Daarom blokkeert de downgrade eerst elke kijker (`actief = false`, sessieversie plus één). Elke kijker die nog actief was, krijgt een logregel `beheerder.geblokkeerd` (actor systeem, naam `migratie`); een al geblokkeerd account krijgt er geen. Daarna vervallen recht, check en kolom. Na een nieuwe upgrade zijn dat geblokkeerde beheerders. De migratietest doet upgrade, downgrade en upgrade met een kijker.
 
 ## Alternatieven
 
@@ -67,11 +67,12 @@ Downgrade: zonder kolom wordt elke kijker beheerder. Daarom blokkeert de downgra
 
 | # | Vraag | Blokkerend | Aanbeveling |
 |---|-------|------------|-------------|
-| 1 | Mag een kijker in Profiel zijn eigen inlogmethodes toevoegen en intrekken? Backlog vraag 32; de intake ("weigert elke mutatie") sluit het strikt uit. | Ja, voor de profielroutes | Ja: geen gegevens van de loods; anders herstelt een beheerder bij elk verloren toestel |
+| 1 | Mag een kijker in Profiel zijn eigen inlogmethodes toevoegen en intrekken? Backlog vraag 32; de intake ("weigert elke mutatie") sluit het strikt uit. Beantwoord: ja, besluit 8 (2026-11-18). | Nee, beantwoord | Ja: geen gegevens van de loods; anders herstelt een beheerder bij elk verloren toestel |
 | 2 | Ziet een kijker dat een eigenaar oud-lid is? | Nee | Nee (zo besloten): de melding volgt uit de opzegdatum |
 
 ## Wijzigingslog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.0.1 | 2026-11-19 | Wachtlijstregels weg uit het log voor een kijker; downgrade logt alleen actieve kijkers; open vraag 1 beantwoord | Besluit stakeholder op AEG-01, issue #322 |
 | v1.0.0 | 2026-11-18 | Eerste versie | Besluiten stakeholder 2026-11-18, issue #322 |

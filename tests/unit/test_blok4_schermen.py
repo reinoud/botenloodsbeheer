@@ -132,7 +132,7 @@ def test_meldingsscherm_heeft_een_verborgen_h1(client):
 
 def test_uitnodiging_toont_de_passkey_eerst_en_het_wachtwoordblok_dicht(client):
     # Open vraag 3. Mutant: open op het blok, of de volgorde omkeren.
-    code = beheerders.uitnodigen("carla", CLI)
+    code = beheerders.uitnodigen("carla", "beheerder", CLI)
     tekst = main(client.get(f"/uitnodiging/{code}").text)
     assert tekst.index('id="passkey-registreren"') < tekst.index("Wachtwoord en authenticator-app")
     # data-wachtwoord: passkey.js opent dit blok als de browser geen passkeys kent (BV-66).
@@ -164,7 +164,7 @@ def test_profiel_met_wachtwoord_toont_geen_blok_om_het_toe_te_voegen(ingelogd):
 
 def test_uitnodiging_opent_het_wachtwoordblok_na_een_mislukte_poging(client):
     # #188. Mutant: open weghalen uit uitnodiging.html, of de categorie weglaten (dan opent "info" het ook).
-    code = beheerders.uitnodigen("carla", CLI)
+    code = beheerders.uitnodigen("carla", "beheerder", CLI)
     client.get(f"/uitnodiging/{code}")
     r = client.post(f"/uitnodiging/{code}/wachtwoord", data={"wachtwoord": "a" * 12, "herhaling": "b" * 12},
                     follow_redirects=True)
@@ -177,7 +177,7 @@ def test_uitnodiging_opent_het_wachtwoordblok_na_een_mislukte_poging(client):
 
 
 def test_profiel_zonder_wachtwoord_toont_het_blok_voor_toevoegen(client):
-    b = beheerders.uitnodiging(beheerders.uitnodigen("dora", CLI)).beheerder
+    b = beheerders.uitnodiging(beheerders.uitnodigen("dora", "beheerder", CLI)).beheerder
     met_passkey(b)
     with client.session_transaction() as s:
         s.update(beheerder_id=b.id, sessieversie=b.sessieversie, ingelogd_op=int(time.time()))
@@ -277,11 +277,11 @@ def test_tokenwaarde_staat_in_een_kader_met_waarschuwing_en_zonder_kopieerknop(i
 
 
 def test_uitnodigingslink_staat_in_een_kader_met_waarschuwing_en_zonder_kopieerknop(ingelogd):
-    r = ingelogd.post("/beheerders", data={"gebruikersnaam": "carla"})
+    r = ingelogd.post("/gebruikers", data={"gebruikersnaam": "carla", "rol": "beheerder"})
     tekst = main(r.text)
     assert re.search(r'<div class="bl-waarde"><code id="uitnodigingslink">[^<]+/uitnodiging/[^<]+</code></div>', tekst)
     assert "ds-notice--warning" in tekst and "Hij werkt één keer" in tekst
-    assert '<a class="ds-btn" href="/beheerders">Terug naar beheerders</a>' in tekst
+    assert '<a class="ds-btn" href="/gebruikers">Terug naar gebruikers</a>' in tekst
     assert "<button" not in tekst
 
 
@@ -308,7 +308,7 @@ def test_kaartjesscherm_zonder_plaatsen_zegt_dat_er_geen_zijn(ingelogd):
 # Knoppen en tabellen (3A, 6A, 7A)
 
 
-@pytest.mark.parametrize("pad", ["/beheerders", "/tokens", "/status"])
+@pytest.mark.parametrize("pad", ["/gebruikers", "/tokens", "/status"])
 def test_tabellen_staan_in_bl_tabel(ingelogd, pad):
     # Mutant: de wrapperklasse terug naar tabel, of --breed op een andere tabel dan Tokens (gh#40).
     tokens.robot_maken("koppeling", ["boten:lezen"], ["192.0.2.1"], None, CLI)

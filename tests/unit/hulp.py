@@ -22,9 +22,9 @@ def code_bij(geheim, stappen_verder=0):
     return pyotp.TOTP(geheim).at(time.time() + 30 * stappen_verder)
 
 
-def beheerder_met_wachtwoord(gebruikersnaam="anna"):
+def beheerder_met_wachtwoord(gebruikersnaam="anna", rol="beheerder"):
     """Geeft (beheerder, totp-geheim). De huidige tijdstap is al gebruikt."""
-    code = beheerders.uitnodigen(gebruikersnaam, CLI)
+    code = beheerders.uitnodigen(gebruikersnaam, rol, CLI)
     geheim = beheerders.nieuw_totp_geheim()
     b = beheerders.wachtwoord_instellen(code, WACHTWOORD, geheim, code_bij(geheim))
     return b, geheim

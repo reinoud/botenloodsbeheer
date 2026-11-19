@@ -24,7 +24,7 @@ def test_verboden_velden_komen_niet_in_het_log(app):
 
 
 def test_uitnodigen_en_instellen_geven_logregels_zonder_geheimen(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     b, geheim = beheerder_met_wachtwoord("bert")
     regels = db.session.scalars(select(Logregel).order_by(Logregel.id)).all()
     assert [r.actie for r in regels] == [
@@ -36,7 +36,7 @@ def test_uitnodigen_en_instellen_geven_logregels_zonder_geheimen(app):
 
 
 def test_log_filtert_op_verwijzing_nieuwste_eerst(app):
-    beheerders.uitnodigen("anna", CLI)
+    beheerders.uitnodigen("anna", "beheerder", CLI)
     beheerder_met_wachtwoord("bert")
     regels = log.regels(["beheerder:2"], technisch=True)
     assert [r.actie for r in regels] == ["beheerder.methode_ingesteld", "beheerder.uitgenodigd"]
@@ -53,14 +53,14 @@ def test_vergrendeling_staat_in_het_log(app):
 
 @pytest.mark.parametrize("sql", ["UPDATE logregel SET actie = 'x'", "DELETE FROM logregel"])
 def test_webgebruiker_kan_log_niet_wijzigen_of_verwijderen(app, sql):
-    beheerders.uitnodigen("anna", CLI)
+    beheerders.uitnodigen("anna", "beheerder", CLI)
     with pytest.raises(ProgrammingError, match="permission denied"):
         db.session.execute(text(sql))
     db.session.rollback()
 
 
 def test_taakgebruiker_mag_log_opschonen(app):
-    beheerders.uitnodigen("anna", CLI)
+    beheerders.uitnodigen("anna", "beheerder", CLI)
     taken = create_engine(TAKEN)
     with taken.begin() as c:
         assert c.execute(text("DELETE FROM logregel")).rowcount == 1
@@ -93,7 +93,7 @@ def test_elke_handeling_hoort_bij_precies_een_log():
 
 
 def test_overzichten_tonen_alleen_bootmutaties(app):
-    beheerders.uitnodigen("anna", CLI)
+    beheerders.uitnodigen("anna", "beheerder", CLI)
     log.schrijf(CLI, "plaats.toegewezen", ["beheerder:1"])
     db.session.commit()
     assert [r.actie for r in log.regels(["beheerder:1"])] == ["plaats.toegewezen"]

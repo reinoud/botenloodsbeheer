@@ -75,7 +75,7 @@ def test_csv_exporteren_aangepast_importeren_en_fout_bestand_geweigerd(page):
             expect(menu.get_by_text(groep, exact=True)).to_be_visible()
         beheer = menu.get_by_role("list", name="Beheer")
         expect(beheer.get_by_role("link")).to_have_text([
-            "Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Beheerders", "Technisch log", "Tokens",
+            "Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Gebruikers", "Technisch log", "Tokens",
             "Instellingen", "Status"])
         expect(menu.locator('a[aria-current="page"]')).to_have_text("Import/export")
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), breedte

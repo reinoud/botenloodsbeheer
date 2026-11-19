@@ -6,7 +6,7 @@ database en nergens naar een log (eis 8 van het ontwerp); de functies hier logge
 
 from collections import namedtuple
 
-from sqlalchemy import or_, select
+from sqlalchemy import false, or_, select
 from sqlalchemy.orm import selectinload
 
 from app.domein import leden
@@ -26,8 +26,9 @@ def schoon(term, maximum=MAX_TEKENS):
     return (term or "").strip()[:maximum]
 
 
-def zoek(term):
-    """Treffers voor de term, of None als de term te kort is om te zoeken.
+def zoek(term, met_leden=True):
+    """Treffers voor de term, of None als de term te kort is om te zoeken. Zonder met_leden (een kijker,
+    ADR-015) zoekt hij niet in het lidnummer en geeft hij geen leden.
 
     Eerst boten (op naam, dan id), dan leden zonder boot (op naam, dan lidnummer), dan plaatsen
     zonder boot (in loodsvolgorde). Een boot telt als treffer op zijn naam, de naam of het lidnummer
@@ -39,14 +40,15 @@ def zoek(term):
     gevonden = db.session.scalars(
         select(Boot).outerjoin(Boot.lid).outerjoin(Boot.plaats)
         .where(or_(leden.bevat(Boot.naam, term), leden.bevat(Lid.naam, term),
-                   leden.bevat(Lid.lidnummer, term), leden.bevat(Plaats.code, term)))
+                   leden.bevat(Lid.lidnummer, term) if met_leden else false(),
+                   leden.bevat(Plaats.code, term)))
         .order_by(Boot.naam, Boot.id)
         .options(selectinload(Boot.lid), selectinload(Boot.plaats), selectinload(Boot.bootsoort))
     ).all()
     zonder_boot = db.session.scalars(
         select(Lid).where(~Lid.boten.any(), or_(leden.bevat(Lid.naam, term), leden.bevat(Lid.lidnummer, term)))
         .order_by(Lid.naam, Lid.lidnummer)
-    ).all()
+    ).all() if met_leden else []
     vrij = db.session.scalars(
         select(Plaats).join(Plaats.rek).where(Plaats.boot_id.is_(None), leden.bevat(Plaats.code, term))
         .order_by(Rek.volgorde, Rek.id, Plaats.verdieping, Plaats.vak)

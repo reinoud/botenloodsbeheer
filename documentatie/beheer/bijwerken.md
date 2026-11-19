@@ -29,9 +29,11 @@ Versie 1.3.0 heeft geen migratie. De eerste ledenimport daarna neemt oud-leden o
 
 Versie 1.4.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet.
 
+Migratie 0022 (rollen, de kijker; verschijnt met de volgende release) geeft elk bestaand account de rol beheerder en wijzigt `docker-compose.yml` en `.env` niet. `flask beheerder uitnodigen` maakt altijd een beheerder; een kijker nodig je uit via `/gebruikers`. De downgrade blokkeert eerst elke kijker, met een regel `beheerder.geblokkeerd` van `migratie` voor elke kijker die nog actief was in het technische log, omdat de oude versie geen rollen kent; na een nieuwe upgrade zijn het geblokkeerde beheerders die je deblokkeert of verwijdert.
+
 ## Tokens
 
-- Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding.
+- Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
 - Maken met de CLI: `docker compose exec web flask token robot <naam> --recht leden:importeren --recht bootaantallen:lezen`. Het token verschijnt één keer. Zonder `--whitelist` geldt `KOPPELNET`, zonder `--dagen` 365 dagen, hooguit 1095. Een reeks breder dan /8 (IPv4) of /32 (IPv6) weigert de CLI.
 - Vernieuwen: een nieuw token onder een andere naam maken, in `secrets/api_token` zetten en daarna het oude intrekken.
 - Intrekken: `docker compose exec web flask token intrekken <naam>`.

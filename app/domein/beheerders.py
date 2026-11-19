@@ -1,5 +1,6 @@
-"""Beheerders: uitnodigen, inlogmethode instellen en inloggen (ADR-001), beheerders beheren
-(BLB-023) en de eigen inlogmethodes toevoegen of intrekken (BLB-038)."""
+"""Beheerders: uitnodigen, inlogmethode instellen en inloggen (ADR-001), gebruikers beheren met
+hun rol (BLB-023, BLB-050; ADR-015) en de eigen inlogmethodes toevoegen of intrekken (BLB-038).
+In de interface heten ze gebruikers; model, tabel en logacties houden de naam beheerder."""
 
 import hashlib
 import hmac
@@ -31,9 +32,10 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from app.domein import SYSTEEM, Actor, Regelfout, log
+from app.domein import SYSTEEM, Actor, Regelfout, log, tokens
 from app.models import Beheerder, Passkey, Token, Uitnodiging, db
 
+ROLLEN = ("beheerder", "kijker")
 UITNODIGING_GELDIG = timedelta(hours=24)
 MAX_POGINGEN = 5
 VERGRENDELTIJD = timedelta(minutes=15)
@@ -65,18 +67,20 @@ def _rp():
 # Uitnodigen
 
 
-def uitnodigen(gebruikersnaam, actor):
-    """Maakt een beheerder zonder inlogmethode en geeft de eenmalige code terug."""
+def uitnodigen(gebruikersnaam, rol, actor):
+    """Maakt een account met deze rol zonder inlogmethode en geeft de eenmalige code terug."""
+    if rol not in ROLLEN:
+        raise Regelfout("Kies een rol: beheerder of kijker.")
     if not GEBRUIKERSNAAM.fullmatch(gebruikersnaam):
         raise Regelfout("Gebruikersnaam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
     if db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == gebruikersnaam)):
         raise Regelfout("Deze gebruikersnaam bestaat al.")
-    beheerder = Beheerder(naam=gebruikersnaam, gebruikersnaam=gebruikersnaam)
+    beheerder = Beheerder(naam=gebruikersnaam, gebruikersnaam=gebruikersnaam, rol=rol)
     db.session.add(beheerder)
     db.session.flush()
     code, verloopt_op = _nieuwe_uitnodiging(beheerder)
     log.schrijf(actor, "beheerder.uitgenodigd", [f"beheerder:{beheerder.id}"],
-                {"gebruikersnaam": gebruikersnaam,
+                {"gebruikersnaam": gebruikersnaam, "rol": rol,
                  "geldig_tot": verloopt_op.isoformat(timespec="minutes")})
     db.session.commit()
     return code
@@ -336,32 +340,68 @@ def uitloggen(beheerder):
     db.session.commit()
 
 
-# Beheerders beheren (BLB-023). Alle beheerders hebben dezelfde rechten.
+# Gebruikers beheren (BLB-023, BLB-050). Een beheerder wijzigt alles; een kijker wijzigt hier niets.
 
 
 def alle():
     return db.session.scalars(select(Beheerder).order_by(Beheerder.gebruikersnaam)).all()
 
 
-def _ander_account(beheerder_id, actor, wat):
-    """Vergrendelt alle actieve accounts en het doel, en controleert dat de actor nog actief is
-    en niet zijn eigen account kiest. Zo blijft er altijd een actieve beheerder over, ook als
-    twee beheerders elkaar tegelijk blokkeren."""
+def _vergrendelen(beheerder_id, actor):
+    """Vergrendelt alle actieve accounts en het doel (ADR-015) en controleert dat de actor nog een
+    actieve beheerder is. Geeft (actieve accounts op id, doel). Onder dit slot blijft er een actieve
+    beheerder over, ook als twee beheerders elkaar tegelijk kijker maken of blokkeren. populate_existing:
+    laad_beheerder heeft het account van de actor al zonder slot geladen."""
     actief = {b.id: b for b in db.session.scalars(
-        select(Beheerder).where(Beheerder.actief).order_by(Beheerder.id).with_for_update())}
-    doel = actief.get(beheerder_id) or db.session.get(Beheerder, beheerder_id,
-                                                     with_for_update=True)
+        select(Beheerder).where(Beheerder.actief).order_by(Beheerder.id).with_for_update()
+        .execution_options(populate_existing=True))}
+    doel = actief.get(beheerder_id) or db.session.get(Beheerder, beheerder_id, with_for_update=True,
+                                                     populate_existing=True)
     if actor.id not in actief:
         db.session.rollback()
         raise Regelfout("Je account is niet meer actief.")
+    if actief[actor.id].rol != "beheerder":
+        db.session.rollback()
+        raise Regelfout("Alleen een beheerder wijzigt gebruikers.")
     if doel is None:
         db.session.rollback()
-        raise Regelfout("Deze beheerder bestaat niet.")
+        raise Regelfout("Deze gebruiker bestaat niet.")
+    return actief, doel
+
+
+def _ander_account(beheerder_id, actor, wat):
+    """Als _vergrendelen, en het doel is niet het eigen account."""
+    _, doel = _vergrendelen(beheerder_id, actor)
     if doel.id == actor.id:
         db.session.rollback()
         raise Regelfout(f"Je kunt je eigen account niet {wat}. Zo blijft er altijd een actieve "
                         "beheerder; vraag een andere beheerder.")
     return doel
+
+
+def rol_wijzigen(beheerder_id, rol, actor):
+    """Zet een account naar beheerder of kijker, ook het eigen account, zolang er een actieve
+    beheerder overblijft. Wordt iemand kijker, dan trekt dezelfde transactie zijn persoonlijke tokens
+    in; terug naar beheerder brengt ze niet terug. Sessies blijven: de rol geldt vanaf het volgende
+    verzoek (ADR-015). Zonder verschil geen logregel. Geeft de gebruikersnaam."""
+    if rol not in ROLLEN:
+        raise Regelfout("Kies een rol: beheerder of kijker.")
+    actief, doel = _vergrendelen(beheerder_id, actor)
+    naam = doel.gebruikersnaam
+    if doel.rol == rol:
+        db.session.rollback()
+        return naam
+    if rol == "kijker" and not any(b.rol == "beheerder" and b.id != doel.id for b in actief.values()):
+        db.session.rollback()
+        raise Regelfout(f"Er blijft geen beheerder over. De rol van {doel.gebruikersnaam} is niet "
+                        "gewijzigd.")
+    oud, doel.rol = doel.rol, rol
+    log.schrijf(actor, "beheerder.rol_gewijzigd", [f"beheerder:{doel.id}"],
+                {"gebruikersnaam": doel.gebruikersnaam, "rol": [oud, rol]})
+    if rol == "kijker":
+        tokens.intrekken_van(doel.id, actor)
+    db.session.commit()
+    return naam
 
 
 def blokkeren(beheerder_id, actor):

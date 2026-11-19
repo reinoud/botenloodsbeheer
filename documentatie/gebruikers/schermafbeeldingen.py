@@ -140,14 +140,20 @@ def schermen(browser):
     page.get_by_role("button", name="Logo opslaan").click()
     expect(page.get_by_text("Het logo is opgeslagen.")).to_be_visible()
 
-    # Beheerders.
-    page.goto("/beheerders")
+    # Gebruikers (BLB-050): uitnodigen met een rol; de kijker krijgt aan het eind zijn eigen sessie.
+    page.goto("/gebruikers")
     page.get_by_label("Gebruikersnaam (a-z, cijfers, punt, - en _)").fill("beheerder.twee")
+    page.get_by_role("radio", name="Beheerder: ziet en wijzigt alles").check()
     page.get_by_role("button", name="Uitnodigen").click()
     verberg_geheimen(page)
     o.maak("uitnodiging-link", hoogte=850)
-    page.goto("/beheerders")
-    o.maak("beheerders", hoogte=700)
+    page.goto("/gebruikers")
+    page.get_by_label("Gebruikersnaam (a-z, cijfers, punt, - en _)").fill("kijker.een")
+    page.get_by_role("radio", name="Kijker: ziet de loods en wijzigt niets").check()
+    page.get_by_role("button", name="Uitnodigen").click()
+    kijker_link = page.locator("#uitnodigingslink").inner_text()
+    page.goto("/gebruikers")
+    o.maak("beheerders", hoogte=1750)
     # Tokens: een persoonlijk token en een robottoken, binnen 10 minuten na het inloggen.
     page.goto("/tokens/nieuw")
     page.get_by_label("Naam (a-z, cijfers, punt, - en _)").fill("laptop-penningmeester")
@@ -283,6 +289,24 @@ def schermen(browser):
     pagina.screenshot(path=UIT / "openbaar.png", full_page=True)
     ctx.close()
     bezoeker.close()
+
+    # Een kijker (BLB-051): zijn eigen sessie, met een wachtwoord en TOTP, en de pagina van een boot.
+    ctx = browser.new_context(base_url=BASIS, viewport={"width": BREEDTE, "height": 800},
+                              locale="nl-NL", timezone_id="Europe/Amsterdam")
+    page = ctx.new_page()
+    page.goto(kijker_link)
+    page.locator("summary", has_text="Wachtwoord en authenticator-app").click()
+    totp = pyotp.TOTP(page.locator("#totp-geheim").inner_text())
+    page.get_by_label("Wachtwoord (12 tot 128 tekens)").fill(WACHTWOORD)
+    page.get_by_label("Wachtwoord nog een keer").fill(WACHTWOORD)
+    page.get_by_label("Code van zes cijfers uit de app").fill(totp.now())
+    page.get_by_role("button", name="Wachtwoord instellen").click()
+    expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
+    page.goto("/boten")
+    page.get_by_role("link", name="Zwaluw 7", exact=True).click()
+    expect(page.get_by_role("heading", level=1)).to_have_text("Zwaluw 7")
+    Opnamen(page).maak("kijker-boot", hoogte=450)
+    ctx.close()
 
 
 def main():

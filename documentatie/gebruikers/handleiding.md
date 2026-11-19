@@ -1,8 +1,8 @@
-# Handleiding voor beheerders van de botenloods
+# Handleiding voor de botenloods
 
-Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van 11 rekken, 229 plaatsen, ongeveer 210 leden en 180 boten, met 3 beheerders die dezelfde rechten hebben. Er is geen aparte systeembeheerder in de applicatie.
+Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van 11 rekken, 229 plaatsen, ongeveer 210 leden en 180 boten, met gebruikers in twee rollen: de beheerder ziet en wijzigt alles, de kijker ziet de loods en wijzigt niets. Beheerders hebben onderling dezelfde rechten. Er is geen aparte systeembeheerder in de applicatie. De handleiding gaat uit van een beheerder; wat een kijker anders ziet, staat onder [Kijkers](#kijkers).
 
-Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft vier groepen: Dagelijks, Lijsten, Beheer en Account. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
+Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft voor een beheerder vier groepen: Dagelijks, Lijsten, Beheer en Account. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
 ## Inloggen
 
@@ -18,35 +18,39 @@ Na het inloggen sta je op het rekoverzicht. Een mislukte poging met je wachtwoor
 
 ![Het scherm waar je de code van zes cijfers uit je authenticator-app invult.](afbeeldingen/code.png)
 
-Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (groep Beheer) sluit je hem eerder af.
+Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (groep Account) sluit je hem eerder af.
 
-Een paar handelingen vragen een inlog van hooguit 10 minuten oud: een beheerder uitnodigen, herstellen, blokkeren, deblokkeren of verwijderen, inlogmethodes wijzigen en de instellingen opslaan. Is je inlog ouder, dan vraagt de applicatie je opnieuw in te loggen.
+Een paar handelingen vragen een inlog van hooguit 10 minuten oud: een gebruiker uitnodigen, zijn rol wijzigen, hem herstellen, blokkeren, deblokkeren of verwijderen, inlogmethodes wijzigen en de instellingen opslaan. Is je inlog ouder, dan vraagt de applicatie je opnieuw in te loggen.
 
-## Beheerders
+## Gebruikers
 
-Het scherm `/beheerders` toont alle accounts met hun status en inlogmethodes. De eerste beheerder maakt wie de installatie beheert (zie de beheerdocumentatie). Daarna nodigen jullie elkaar uit.
+Het scherm `/gebruikers` toont alle accounts met hun rol, status en inlogmethodes. Een beheerder ziet en wijzigt alles; een kijker ziet de loods en wijzigt niets. De eerste beheerder maakt wie de installatie beheert (zie de beheerdocumentatie). Daarna nodigen jullie elkaar uit. De oude url `/beheerders` verwijst door naar `/gebruikers`.
 
-![De pagina Beheerders met het formulier om uit te nodigen en de lijst met accounts.](afbeeldingen/beheerders.png)
+![De pagina Gebruikers met het formulier om uit te nodigen en de lijst met accounts.](afbeeldingen/beheerders.png)
 
-### Een beheerder uitnodigen
+### Een gebruiker uitnodigen
 
-1. Vul onder **Beheerder uitnodigen** een gebruikersnaam in (2 tot 50 tekens: a-z, cijfers, punt, streepje en onderstreping) en kies **Uitnodigen**.
-2. Geef de link die verschijnt aan de nieuwe beheerder. De link werkt één keer en is 24 uur geldig. Hij staat alleen op dit scherm, als tekst en als QR-code. De nieuwe beheerder kan de QR-code met de telefoon scannen in plaats van de link over te typen. Bij **Toegang herstellen** verschijnt dezelfde combinatie.
-3. De nieuwe beheerder opent de link en kiest een passkey, of klapt **Wachtwoord en authenticator-app** uit voor een wachtwoord van 12 tot 128 tekens met de QR-code of sleutel voor de authenticator-app en een eerste code. De link zelf staat in een kader; selecteer hem met één tik.
+1. Vul onder **Gebruiker uitnodigen** een gebruikersnaam in (2 tot 50 tekens: a-z, cijfers, punt, streepje en onderstreping), kies bij **Rol** Beheerder of Kijker (er is geen voorkeur; zonder keuze maakt de applicatie geen account) en kies **Uitnodigen**.
+2. Geef de link die verschijnt aan de nieuwe gebruiker. De link werkt één keer en is 24 uur geldig. Hij staat alleen op dit scherm, als tekst en als QR-code. De nieuwe gebruiker kan de QR-code met de telefoon scannen in plaats van de link over te typen. Bij **Toegang herstellen** verschijnt dezelfde combinatie.
+3. De nieuwe gebruiker opent de link en kiest een passkey, of klapt **Wachtwoord en authenticator-app** uit voor een wachtwoord van 12 tot 128 tekens met de QR-code of sleutel voor de authenticator-app en een eerste code. De link zelf staat in een kader; selecteer hem met één tik.
 
-![Het scherm Beheerder uitgenodigd met de uitnodigingslink, hier onherkenbaar gemaakt.](afbeeldingen/uitnodiging-link.png)
+![Het scherm Gebruiker uitgenodigd met de uitnodigingslink, hier onherkenbaar gemaakt.](afbeeldingen/uitnodiging-link.png)
 
 ![Het scherm Account instellen met de passkey bovenaan en het uitgeklapte blok voor wachtwoord met authenticator-app.](afbeeldingen/uitnodiging.png)
 
+### De rol van een gebruiker wijzigen
+
+Achter elk account, ook het jouwe, staat één knop met de andere rol: **Maak kijker** of **Maak beheerder**. De wijziging geldt bij het volgende verzoek van die gebruiker, zonder dat hij opnieuw inlogt. Een kijker mag niets wijzigen, dus zijn persoonlijke tokens vervallen op het moment dat hij kijker wordt; terug naar beheerder brengt ze niet terug, hij maakt zo nodig nieuwe. Robottokens blijven werken. Er blijft altijd minstens één beheerder: de laatste actieve beheerder kan geen kijker worden, ook niet als twee beheerders het tegelijk proberen, en de applicatie meldt dan dat er geen beheerder overblijft. Maak je jezelf kijker, dan kom je op het rekoverzicht met een melding en kun je dit scherm niet meer openen. De wijziging staat in het technische log als `beheerder.rol_gewijzigd`, met de oude en de nieuwe rol.
+
 ### Een collega blokkeren, herstellen of verwijderen
 
-Achter elk ander account staan drie knoppen. Je eigen account kun je hier niet wijzigen, zodat er altijd een actieve beheerder blijft.
+Achter elk ander account staan naast de rolknop drie knoppen. Je eigen account kun je hier niet blokkeren, herstellen of verwijderen, zodat er altijd een actieve beheerder blijft; alleen de rol kun je wijzigen.
 
 | Knop | Gevolg |
 |---|---|
-| Blokkeren | De beheerder kan niet meer inloggen. **Deblokkeren** maakt dat ongedaan. |
-| Toegang herstellen | Oude inlogmethodes en sessies vervallen. Je krijgt een nieuwe link van 24 uur voor de collega, bijvoorbeeld na een verloren telefoon. |
-| Verwijderen | Het account verdwijnt, met de persoonlijke tokens van die beheerder. Het log blijft. |
+| Blokkeren | De gebruiker kan niet meer inloggen. **Deblokkeren** maakt dat ongedaan. |
+| Toegang herstellen | Oude inlogmethodes en sessies vervallen. Je krijgt een nieuwe link van 24 uur voor de gebruiker, bijvoorbeeld na een verloren telefoon. |
+| Verwijderen | Het account verdwijnt, met zijn persoonlijke tokens. Het log blijft. |
 
 ### Je eigen inlogmethodes
 
@@ -166,7 +170,7 @@ De applicatie wijst nooit zelf een plaats toe. Jij kiest boot en plaats.
 
 **Vrijgeven:** open de bezette plaats en kies **Plaats ... vrijgeven**. De boot blijft bestaan, zonder plaats. De plaats blijft vrij tot jij een boot kiest, ook als er een wachtlijst is. Wie twee collega's tegelijk dezelfde plaats laat vrijgeven, krijgt één wijziging in het log.
 
-Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link naar de openbare pagina. In het blok **Eigenaar** is de naam een link naar het lid; bij een oud-lid staat de tag oud-lid achter de link. Bij een clubboot of een onbekende eigenaar staat er geen link. De openbare pagina heeft geen link naar het lid. Het lidnummer is alleen voor beheerders. Adres, telefoon en e-mail haalt de applicatie niet op uit de ledenadministratie.
+Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link naar de openbare pagina. In het blok **Eigenaar** is de naam een link naar het lid; bij een oud-lid staat de tag oud-lid achter de link. Bij een clubboot of een onbekende eigenaar staat er geen link. De openbare pagina heeft geen link naar het lid. Het lidnummer is alleen voor beheerders; een kijker ziet de eigenaar als platte tekst, zonder link, lidnummer of tag. Adres, telefoon en e-mail haalt de applicatie niet op uit de ledenadministratie.
 
 ![Een plaats direct na het toewijzen, met de melding dat de boot de plaats heeft gekregen.](afbeeldingen/plaats-toegewezen.png)
 
@@ -273,20 +277,20 @@ Blijft een verzoek op aangevraagd staan, dan draait de integratiecontainer waars
 
 ## Het mutatielog
 
-Elke wijziging van een beheerder en elke wijziging door een robottoken komt in een log, met tijdstip, wie het deed, de handeling, waarop die betrekking had en een paar gegevens. Een log kan niet worden aangepast. Een wijziging van een lid door de import staat er niet in, een wijziging in de botenadministratie als gevolg daarvan wel. In het mutatielog staat de handeling als tekst, zoals "plaats toegewezen" of "boot aangemaakt". Het technische log toont de handeling zoals de applicatie ze opslaat, in de vorm onderwerp.handeling, zoals `token.gemaakt`.
+Elke wijziging van een gebruiker en elke wijziging door een robottoken komt in een log, met tijdstip, wie het deed, de handeling, waarop die betrekking had en een paar gegevens. Een log kan niet worden aangepast. Een wijziging van een lid door de import staat er niet in, een wijziging in de botenadministratie als gevolg daarvan wel. In het mutatielog staat de handeling als tekst, zoals "plaats toegewezen" of "boot aangemaakt". Het technische log toont de handeling zoals de applicatie ze opslaat, in de vorm onderwerp.handeling, zoals `token.gemaakt`.
 
-Er zijn twee logs. Elke beheerder ziet ze allebei.
+Er zijn twee logs. Elke beheerder ziet ze allebei; een kijker ziet geen van beide als scherm, alleen het log onder een boot, een plaats of een overzicht dat hij mag zien.
 
 | Log | Menu | Inhoud |
 |---|---|---|
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot verplaatst ("boot verplaatst"), een boot op de wachtlijst gezet ("wachtlijst toegevoegd", met de aanmelddatum) of eraf gehaald ("wachtlijst verwijderd") |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, beheerders en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, gebruikers (ook een rolwijziging, `beheerder.rol_gewijzigd`) en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
 
-Het mutatielog toont bij elke regel waarop de handeling betrekking had als tekst: "Plaats B/2/2", "Rek B", "Boot Zeemeeuw" en "Lid Anna de Vries (1001)". Bestaat een boot of lid niet meer, dan staat de verwijzing er zoals opgeslagen, bijvoorbeeld `boot:183`. Het technische log toont de verwijzingen zoals opgeslagen. Beide tonen per pagina 50 regels, de nieuwste bovenaan, onder een kop per dag met de weekdag (in de tijdzone van de installatie, niet in UTC); met **Oudere regels** en **Nieuwere regels** blader je verder. Onder een overzicht staat het log in een uitklapblok **Log** dat dicht begint; open het met een klik. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen, vrijgaven en verplaatsingen op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen, vrijgaven en verplaatsingen op hun plaatsen. Onder `/indeling` en de schermen voor beheerders, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
+Het mutatielog toont bij elke regel waarop de handeling betrekking had als tekst: "Plaats B/2/2", "Rek B", "Boot Zeemeeuw", "Lid Anna de Vries (1001)" en "Gebruiker anna" (een account). Een kijker ziet het lid zonder lidnummer, geen regels over de wachtlijst ("wachtlijst toegevoegd" en "wachtlijst verwijderd"), en niet de link **Meer in het log**. Bestaat een boot of lid niet meer, dan staat de verwijzing er zoals opgeslagen, bijvoorbeeld `boot:183`. Het technische log toont de verwijzingen zoals opgeslagen. Beide tonen per pagina 50 regels, de nieuwste bovenaan, onder een kop per dag met de weekdag (in de tijdzone van de installatie, niet in UTC); met **Oudere regels** en **Nieuwere regels** blader je verder. Onder een overzicht staat het log in een uitklapblok **Log** dat dicht begint; open het met een klik. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen, vrijgaven en verplaatsingen op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen, vrijgaven en verplaatsingen op hun plaatsen. Onder `/indeling` en de schermen voor gebruikers, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
 ![Het mutatielog met tijdstip, wie, handeling, betreft en gegevens.](afbeeldingen/log.png)
 
-![Het technische log met een importverzoek, uitnodigingen en inlogs van beheerders.](afbeeldingen/log-techniek.png)
+![Het technische log met een importverzoek, uitnodigingen en inlogs van gebruikers.](afbeeldingen/log-techniek.png)
 
 ## De technische status
 
@@ -353,6 +357,25 @@ Onder **Rechten wijzigen**, onder de lijst, klap je een token uit, pas je de vin
 
 Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud. Elke handeling staat in het technische log, zonder de waarde van het token.
 
+## Kijkers
+
+Een kijker is een gebruiker die de loods ziet en niets wijzigt. Een beheerder nodigt hem uit of zet een account om (zie [Gebruikers](#gebruikers)). Een kijker logt in zoals een beheerder, met een passkey of een wachtwoord met code.
+
+Het menu van een kijker is één lijst, zonder groepskoppen: Rekoverzicht, Vrije plaatsen, Boten, Profiel en Uitloggen, met het zoekveld in de kop. Er staan geen tellingen in.
+
+| Scherm | Wat een kijker ziet |
+|---|---|
+| Rekoverzicht en Vrije plaatsen | Zoals een beheerder, zonder knoppen. |
+| Boten | De lijst en het filter, zonder **Nieuwe boot**; de eigenaar is platte tekst, zonder link. Het filter zoekt op de naam van de boot of van de eigenaar, niet op een lidnummer, ook al heet het veld "Zoek op boot of lid". |
+| Een boot | De feiten (bootsoort, eigenaar, plaats, foto) en het log. Geen taken, geen **Boot verplaatsen**, **Boot wijzigen** of **Foto vervangen**, en bij een boot zonder plaats geen regel Wachtlijst. |
+| Een plaats | De panelen Boot, Eigenaar (alleen de naam) en Openbare pagina. Een vrije plaats zegt alleen dat ze vrij is. |
+| Zoeken | Boten en vrije plaatsen, geen leden, en een eigenaar zonder lidnummer of tag oud-lid. Een zoekterm met een lidnummer geeft geen treffer. |
+| Profiel | De eigen inlogmethodes, zoals bij een beheerder. |
+
+![De pagina van een boot voor een kijker: de feiten en het log, zonder knoppen.](afbeeldingen/kijker-boot.png)
+
+Een kijker ziet nergens een lidnummer, een opzegdatum of de melding dat een eigenaar oud-lid is. De schermen Wachtlijst, Boten zonder eigenaar, Gaan opzeggen, Leden, Opgezegd, Log, de pagina van een lid en alles onder Beheer (Indeling, Kaartjes, Boten zonder foto, Import/export, Gebruikers, Technisch log, Tokens, Instellingen en Status) staan niet in zijn menu. Typt hij zo'n adres toch, dan weigert de applicatie het met een foutpagina (403). Hetzelfde geldt voor elke handeling die iets wijzigt, ook als iemand het formulier nabootst: alleen inloggen, uitloggen en het eigen profiel mogen. Een kijker heeft geen API-tokens.
+
 ## Naam, logo en bootsoorten
 
 Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud.
@@ -380,7 +403,8 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/inloggen/code` | Code uit de authenticator-app |
 | `/uitnodiging/{code}` | Account instellen met een uitnodigingslink |
 | `/profiel` | Je inlogmethodes |
-| `/beheerders` | Beheerders uitnodigen en beheren |
+| `/gebruikers` | Gebruikers uitnodigen, hun rol wijzigen en ze beheren |
+| `/beheerders` | De oude url van Gebruikers; verwijst door |
 | `/tokens` | Tokens voor de API |
 | `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken, omschrijvingen en plaatsen |

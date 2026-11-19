@@ -8,7 +8,7 @@ Andere delen: [voorbeelden](voorbeelden.md) (images binnenhalen of zelf bouwen),
 
 | Dienst | Taak | Netwerken |
 |--------|------|-----------|
-| `web` | webinterface voor de beheerders en de openbare pagina | `achterkant`, `voorkant` |
+| `web` | webinterface voor de gebruikers (beheerders en kijkers) en de openbare pagina | `achterkant`, `voorkant` |
 | `api` | `/api/v1`, standaard alleen voor de integratiecontainer; van buiten alleen met `compose.api-extern.yml` ([API van buiten](api-van-buiten.md)) | `achterkant`, `voorkant` |
 | `worker` | achtergrondtaken, zoals de opschoning | `achterkant` |
 | `migrate` | databasemigraties bij het starten | `achterkant` |
@@ -91,7 +91,7 @@ docker compose ps
 
 Traefik stuurt pas verkeer naar `web` en `api` als hun healthcheck slaagt. Tot dan geeft het domein 404.
 
-De eerste beheerder komt van de commandoregel. Volgende beheerders nodigt een beheerder uit via `/beheerders`:
+De eerste beheerder komt van de commandoregel; het commando maakt altijd een beheerder. Volgende gebruikers, beheerder of kijker, nodigt een beheerder uit via `/gebruikers`:
 
 ```sh
 docker compose exec web flask beheerder uitnodigen <gebruikersnaam>

@@ -7,6 +7,7 @@ from zoneinfo import ZoneInfo
 
 from flask import (
     Blueprint,
+    abort,
     current_app,
     flash,
     g,
@@ -31,6 +32,19 @@ RECENT = 10 * 60
 OPNIEUW = "Je inlog is ouder dan 10 minuten. Log opnieuw in en probeer het nog eens."
 
 
+# De endpoints die een kijker mag openen; alles wat hier niet in staat is voor hem dicht, ook een nieuwe
+# route (ADR-015). Alleen de POST-routes onder Eigen inlog mag een kijker doen (besluit 8, #322).
+KIJKER_TOEGESTAAN = frozenset(f"web.{naam}" for naam in (
+    # Inzien
+    "start", "rekoverzicht", "vrije_plaatsen", "boten_overzicht", "boot_detail", "plaats_detail", "zoeken",
+    "afbeelding", "logo", "openbare_plaats",
+    # Eigen inlog: de endpoints van app/web/inloggen.py
+    "inloggen", "inloggen_wachtwoord", "inloggen_code", "inloggen_passkey_opties", "inloggen_passkey",
+    "uitloggen", "uitnodiging", "uitnodiging_wachtwoord", "uitnodiging_passkey_opties",
+    "uitnodiging_passkey", "profiel", "profiel_passkey_opties", "profiel_passkey", "profiel_wachtwoord",
+    "profiel_intrekken"))
+
+
 def getal(waarde):
     """type= voor querystring en formulier: buiten integer van PostgreSQL geeft Werkzeug de
     standaardwaarde, net als bij tekst die geen getal is (#74)."""
@@ -42,7 +56,8 @@ def getal(waarde):
 
 @bp.before_request
 def laad_beheerder():
-    """Elk verzoek controleert of het account actief is en de sessieversie klopt (ADR-001)."""
+    """Elk verzoek controleert of het account actief is en de sessieversie klopt (ADR-001), leest de rol uit
+    de database (nooit uit de cookie) en weigert een kijker buiten KIJKER_TOEGESTAAN (ADR-015)."""
     g.beheerder = None
     beheerder_id = session.get("beheerder_id")
     if beheerder_id is None:
@@ -57,6 +72,15 @@ def laad_beheerder():
         session.clear()
         return
     g.beheerder = b
+    # Een onbekende rol valt ook onder de weigering.
+    if b.rol != "beheerder" and request.endpoint not in KIJKER_TOEGESTAAN:
+        abort(403)
+
+
+@bp.app_template_global("is_kijker")
+def is_kijker():
+    """Ingelogd zonder de rol beheerder: de schermen tonen dan geen knoppen, leden of lidnummers."""
+    return g.get("beheerder") is not None and g.beheerder.rol != "beheerder"
 
 
 @bp.after_request
@@ -173,7 +197,8 @@ def dagkop(dag):
 
 
 bp.add_app_template_filter(log.actietekst, "actietekst")
-bp.add_app_template_filter(log.namen, "lognamen")
+bp.add_app_template_filter(lambda regels: log.namen(regels, met_leden=not is_kijker()), "lognamen")
+bp.add_app_template_filter(lambda regels: log.zichtbaar(regels, met_leden=not is_kijker()), "logzichtbaar")
 bp.add_app_template_filter(log.betreft, "betreft")
 
 

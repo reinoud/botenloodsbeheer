@@ -81,8 +81,9 @@ def qr_zichtbaar(page):
 def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     wachtwoord_instellen(page, "beheerders")
     nieuw = f"e2e-nieuw-{STEMPEL}"
-    page.get_by_role("link", name="Beheerders").click()
+    page.get_by_role("link", name="Gebruikers").click()
     page.get_by_label("Gebruikersnaam").fill(nieuw)
+    page.get_by_role("radio", name="Beheerder: ziet en wijzigt alles").check()
     page.get_by_role("button", name="Uitnodigen").click()
     link = page.locator("#uitnodigingslink").inner_text()
     qr_zichtbaar(page)
@@ -91,7 +92,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     wachtwoord_instellen(collega, None, url=link)
 
     # Herstel: de oude methodes en de sessie van de collega vervallen; een nieuwe link werkt.
-    page.goto("/beheerders")
+    page.goto("/gebruikers")
     page.get_by_role("button", name=f"Toegang herstellen: {nieuw}").click()
     herstel = page.locator("#uitnodigingslink").inner_text()
     qr_zichtbaar(page)
@@ -100,7 +101,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     wachtwoord_instellen(collega, None, url=herstel)
 
     # Blokkeren beëindigt de sessie en inloggen lukt niet meer.
-    page.goto("/beheerders")
+    page.goto("/gebruikers")
     page.get_by_role("button", name=f"Blokkeren: {nieuw}").click()
     expect(page.get_by_text("Het account is geblokkeerd.")).to_be_visible()
     collega.goto("/")
