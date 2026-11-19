@@ -14,7 +14,7 @@ from tests.unit.test_web import inloggen
 GROEPEN = {
     "Dagelijks": ["Rekoverzicht", "Vrije plaatsen", "Wachtlijst", "Boten zonder eigenaar", "Gaan opzeggen"],
     "Lijsten": ["Boten", "Leden", "Opgezegd", "Log"],
-    "Beheer": ["Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Beheerders", "Technisch log", "Tokens", "Instellingen", "Status"],
+    "Beheer": ["Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Gebruikers", "Technisch log", "Tokens", "Instellingen", "Status"],
     "Account": ["Profiel", "Uitloggen"],
 }
 

@@ -11,7 +11,7 @@ from tests.unit.hulp import WACHTWOORD, beheerder_met_wachtwoord, code_bij
 
 
 def test_uitnodiging_bewaart_alleen_hash_en_is_24_uur_geldig(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     u = db.session.scalar(select(Uitnodiging))
     assert code not in u.code_hash and len(u.code_hash) == 64
     assert timedelta(hours=23, minutes=59) < u.verloopt_op - datetime.now(UTC) <= timedelta(hours=24)
@@ -19,7 +19,7 @@ def test_uitnodiging_bewaart_alleen_hash_en_is_24_uur_geldig(app):
 
 
 def test_verlopen_uitnodiging_geweigerd(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     db.session.scalar(select(Uitnodiging)).verloopt_op = datetime.now(UTC) - timedelta(seconds=1)
     db.session.commit()
     with pytest.raises(Regelfout):
@@ -28,7 +28,7 @@ def test_verlopen_uitnodiging_geweigerd(app):
 
 def test_uitnodiging_werkt_een_keer(app):
     _b, geheim = beheerder_met_wachtwoord()
-    code = beheerders.uitnodigen("bert", CLI)
+    code = beheerders.uitnodigen("bert", "beheerder", CLI)
     beheerders.wachtwoord_instellen(code, WACHTWOORD, geheim, code_bij(geheim))
     with pytest.raises(Regelfout):
         beheerders.wachtwoord_instellen(code, WACHTWOORD, geheim, code_bij(geheim, 1))
@@ -37,32 +37,32 @@ def test_uitnodiging_werkt_een_keer(app):
 @pytest.mark.parametrize("naam", ["a", "Anna", "anna jansen", "x" * 51])
 def test_ongeldige_gebruikersnaam(app, naam):
     with pytest.raises(Regelfout):
-        beheerders.uitnodigen(naam, CLI)
+        beheerders.uitnodigen(naam, "beheerder", CLI)
 
 
 def test_gebruikersnaam_bestaat_al(app):
-    beheerders.uitnodigen("anna", CLI)
+    beheerders.uitnodigen("anna", "beheerder", CLI)
     with pytest.raises(Regelfout):
-        beheerders.uitnodigen("anna", CLI)
+        beheerders.uitnodigen("anna", "beheerder", CLI)
 
 
 @pytest.mark.parametrize("wachtwoord", ["kort", "elf tekens!", "x" * 129])
 def test_wachtwoordregels(app, wachtwoord):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     geheim = beheerders.nieuw_totp_geheim()
     with pytest.raises(Regelfout):
         beheerders.wachtwoord_instellen(code, wachtwoord, geheim, code_bij(geheim))
 
 
 def test_wachtwoord_gelijk_aan_gebruikersnaam_geweigerd(app):
-    code = beheerders.uitnodigen("annajansen12", CLI)
+    code = beheerders.uitnodigen("annajansen12", "beheerder", CLI)
     geheim = beheerders.nieuw_totp_geheim()
     with pytest.raises(Regelfout):
         beheerders.wachtwoord_instellen(code, "AnnaJansen12", geheim, code_bij(geheim))
 
 
 def test_foute_totp_bij_instellen_verbruikt_uitnodiging_niet(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     geheim = beheerders.nieuw_totp_geheim()
     with pytest.raises(Regelfout):
         beheerders.wachtwoord_instellen(code, WACHTWOORD, geheim, "000000"
@@ -138,7 +138,7 @@ def test_inactief_account_kan_niet_inloggen(app):
 
 
 def test_ongeldige_passkeygegevens_geweigerd(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     with pytest.raises(Regelfout):
         beheerders.passkey_registreren(code, {"id": "x", "rawId": "x"}, b"challenge")
     assert beheerders.uitnodiging(code)  # niet verbruikt

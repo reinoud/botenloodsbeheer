@@ -23,7 +23,7 @@ def test_beheerpagina_vraagt_inloggen(client):
 
 
 def test_account_instellen_via_uitnodiging(app, client):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     assert client.get(f"/uitnodiging/{code}").status_code == 200
     with client.session_transaction() as s:
         geheim = Fernet(app.config["TOTP_SLEUTEL"]).decrypt(s["totp_nieuw"].encode()).decode()

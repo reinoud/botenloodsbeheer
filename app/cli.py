@@ -21,7 +21,7 @@ def registreer(app):
     def uitnodigen(gebruikersnaam):
         """Maakt een beheerder en toont een eenmalige link (24 uur geldig)."""
         try:
-            code = beheerders.uitnodigen(gebruikersnaam, CLI)
+            code = beheerders.uitnodigen(gebruikersnaam, "beheerder", CLI)
         except Regelfout as fout:
             raise click.ClickException(str(fout)) from None
         click.echo(f"{current_app.config['BASIS_URL']}/uitnodiging/{code}")

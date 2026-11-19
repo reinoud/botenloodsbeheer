@@ -1,17 +1,22 @@
 {% extends "base.html" %}
-{% block titel %}Beheerders · {{ vereniging }}{% endblock %}
+{% block titel %}Gebruikers · {{ vereniging }}{% endblock %}
 {% block inhoud %}
-<h1>Beheerders</h1>
-<p>Alle beheerders hebben dezelfde rechten. Je eigen account beheer je in je <a href="{{ url_for('web.profiel') }}">profiel</a>.</p>
+<h1>Gebruikers</h1>
+<p>Een beheerder ziet en wijzigt alles, een kijker ziet de loods en wijzigt niets. Je eigen account beheer je in je <a href="{{ url_for('web.profiel') }}">profiel</a>.</p>
 
 <section class="dj-panel" aria-labelledby="uitnodigen-kop">
-  <h2 class="dj-panel__title" id="uitnodigen-kop">Beheerder uitnodigen</h2>
+  <h2 class="dj-panel__title" id="uitnodigen-kop">Gebruiker uitnodigen</h2>
   <form class="bl-formulier" method="post" action="{{ url_for('web.beheerder_uitnodigen') }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
       <label class="ds-field__label" for="gebruikersnaam">Gebruikersnaam (a-z, cijfers, punt, - en _)</label>
       <input class="ds-input" id="gebruikersnaam" name="gebruikersnaam" type="text" maxlength="50" required>
     </div>
+    <fieldset class="dj-choices">
+      <legend>Rol</legend>
+      <div class="ds-check dj-radio"><input type="radio" id="rol-beheerder" name="rol" value="beheerder" required><label for="rol-beheerder">Beheerder: ziet en wijzigt alles</label></div>
+      <div class="ds-check dj-radio"><input type="radio" id="rol-kijker" name="rol" value="kijker" required><label for="rol-kijker">Kijker: ziet de loods en wijzigt niets</label></div>
+    </fieldset>
     <button type="submit" class="ds-btn ds-btn--primary">Uitnodigen</button>
   </form>
 </section>
@@ -20,14 +25,21 @@
   <h2 class="dj-panel__title" id="accounts-kop">Accounts</h2>
   <div class="ds-table-wrap bl-tabel">
   <table class="ds-table dj-table--stack" role="table">
-    <thead role="rowgroup"><tr role="row"><th role="columnheader">Gebruikersnaam</th><th role="columnheader">Status</th><th role="columnheader">Inlogmethodes</th><th role="columnheader">Acties</th></tr></thead>
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Gebruikersnaam</th><th role="columnheader">Rol</th><th role="columnheader">Status</th><th role="columnheader">Inlogmethodes</th><th role="columnheader">Acties</th></tr></thead>
     <tbody role="rowgroup">
     {% for b in beheerders %}
       <tr role="row">
         <td role="cell" data-label="Gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</td>
+        <td role="cell" data-label="Rol">{{ 'Kijker' if b.rol == 'kijker' else 'Beheerder' }}</td>
         <td role="cell" data-label="Status">{{ 'Actief' if b.actief else 'Geblokkeerd' }}</td>
         <td role="cell" data-label="Inlogmethodes">{{ [(b.passkeys|length ~ ' passkey(s)') if b.passkeys, 'wachtwoord en TOTP' if b.wachtwoordhash]|select|join(', ') or 'nog niet ingesteld' }}</td>
         <td role="cell" data-label="Acties">
+          {% set andere = 'beheerder' if b.rol == 'kijker' else 'kijker' %}
+          <form method="post" action="{{ url_for('web.beheerder_rol', beheerder_id=b.id) }}">
+            {% include "_csrf.html" %}
+            <input type="hidden" name="rol" value="{{ andere }}">
+            <button type="submit" class="ds-btn" aria-label="Maak {{ andere }}: {{ b.gebruikersnaam }}">Maak {{ andere }}</button>
+          </form>
           {% if b.id != g.beheerder.id %}
           {% for actie, knop in ([('herstellen', 'Toegang herstellen'), ('blokkeren', 'Blokkeren')] if b.actief else [('deblokkeren', 'Deblokkeren')]) + [('verwijderen', 'Verwijderen')] %}
           <form method="post" action="{{ url_for('web.beheerder_herstellen', beheerder_id=b.id) if actie == 'herstellen' else url_for('web.beheerder_wijzigen', beheerder_id=b.id, actie=actie) }}">
@@ -42,6 +54,7 @@
     </tbody>
   </table>
   </div>
+  <p class="bl-hint" id="rol-hint">Wordt een beheerder kijker, dan vervallen zijn persoonlijke tokens; terug naar beheerder brengt ze niet terug. Maak je jezelf kijker, dan kun je dit scherm daarna niet meer openen. Er blijft altijd minstens één beheerder.</p>
 </section>
 
 {% endblock %}

@@ -44,7 +44,7 @@ def twee():
 
 def test_uitgenodigde_beheerder_kan_inloggen_met_dezelfde_rechten(app, twee):
     anna, _, _ = twee
-    code = beheerders.uitnodigen("carla", actor(anna))
+    code = beheerders.uitnodigen("carla", "beheerder", actor(anna))
     geheim = beheerders.nieuw_totp_geheim()
     carla = beheerders.wachtwoord_instellen(code, WACHTWOORD, geheim, code_bij(geheim))
     assert beheerders.wachtwoord_controleren("carla", WACHTWOORD) == carla
@@ -130,7 +130,7 @@ def test_gelijktijdig_elkaar_blokkeren(app, twee):
 
 
 def test_wachtwoord_toevoegen_werkt_pas_na_juiste_code(app):
-    code = beheerders.uitnodigen("anna", CLI)
+    code = beheerders.uitnodigen("anna", "beheerder", CLI)
     anna = beheerders.uitnodiging(code).beheerder
     met_passkey(anna)
     geheim = beheerders.nieuw_totp_geheim()
@@ -173,7 +173,7 @@ def test_enige_methode_intrekken_geweigerd(app, methode):
         anna, _ = beheerder_met_wachtwoord()
         passkey_id = None
     else:
-        anna = beheerders.uitnodiging(beheerders.uitnodigen("anna", CLI)).beheerder
+        anna = beheerders.uitnodiging(beheerders.uitnodigen("anna", "beheerder", CLI)).beheerder
         passkey_id = met_passkey(anna).id
     with pytest.raises(Regelfout, match="enige inlogmethode"):
         beheerders.methode_intrekken(passkey_id, actor(anna))
@@ -230,20 +230,20 @@ def ingelogd(client, twee):
     return client, anna, bert
 
 
-@pytest.mark.parametrize("pad", ["/beheerders", "/beheerders/1/blokkeren", "/profiel/intrekken",
+@pytest.mark.parametrize("pad", ["/gebruikers", "/gebruikers/1/blokkeren", "/profiel/intrekken",
                                  "/profiel/wachtwoord", "/profiel/passkey/opties"])
 def test_bezoeker_gaat_naar_inloggen(client, pad):
-    r = client.post(pad) if pad != "/beheerders" else client.get(pad)
+    r = client.post(pad) if pad != "/gebruikers" else client.get(pad)
     assert r.status_code == 302 and r.location.endswith("/inloggen")
 
 
 def test_uitnodigen_toont_link_eenmalig_zonder_flash(ingelogd):
     client, _anna, _bert = ingelogd
-    r = client.post("/beheerders", data={"gebruikersnaam": "carla"})
+    r = client.post("/gebruikers", data={"gebruikersnaam": "carla", "rol": "beheerder"})
     assert r.status_code == 200 and b"/uitnodiging/" in r.data
     with client.session_transaction() as s:
         assert "_flashes" not in s  # de code staat niet in de leesbare sessiecookie
-    assert b"carla" in client.get("/beheerders").data
+    assert b"carla" in client.get("/gebruikers").data
 
 
 def test_geblokkeerde_beheerder_verliest_lopende_sessie(app, ingelogd):
@@ -251,9 +251,9 @@ def test_geblokkeerde_beheerder_verliest_lopende_sessie(app, ingelogd):
     andere = app.test_client()
     inloggen(andere, geheim_van(bert), gebruikersnaam="bert")
     assert andere.get("/rekoverzicht").status_code == 200
-    client.post(f"/beheerders/{bert.id}/blokkeren")
+    client.post(f"/gebruikers/{bert.id}/blokkeren")
     assert andere.get("/rekoverzicht").status_code == 302
-    r = client.post(f"/beheerders/{anna.id}/blokkeren", follow_redirects=True)
+    r = client.post(f"/gebruikers/{anna.id}/blokkeren", follow_redirects=True)
     assert "altijd een actieve beheerder" in r.text
 
 
@@ -283,7 +283,7 @@ def test_recente_inlog_json_geeft_401_met_url(app, ingelogd):
     assert r.status_code == 401 and r.json["url"] == "/inloggen"
 
 
-@pytest.mark.parametrize("pad", ["/beheerders", "/beheerders/{bert}/herstellen",
+@pytest.mark.parametrize("pad", ["/gebruikers", "/gebruikers/{bert}/herstellen",
                                  "/profiel/passkey", "/profiel/wachtwoord"])
 def test_recente_inlog_vereist_voor_uitnodigen_herstellen_en_toevoegen(ingelogd, pad):
     """Wie een oudere open sessie overneemt, maakt geen account en neemt er geen over (aegis)."""
@@ -292,7 +292,7 @@ def test_recente_inlog_vereist_voor_uitnodigen_herstellen_en_toevoegen(ingelogd,
         s["ingelogd_op"] = int(time.time()) - 601
     voor = (db.session.scalar(select(db.func.count()).select_from(Uitnodiging)),
             db.session.scalar(select(db.func.count()).select_from(Passkey)))
-    r = client.post(pad.format(bert=bert.id), data={"gebruikersnaam": "carla"})
+    r = client.post(pad.format(bert=bert.id), data={"gebruikersnaam": "carla", "rol": "beheerder"})
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     assert db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla")) is None
     assert (db.session.scalar(select(db.func.count()).select_from(Uitnodiging)),
@@ -309,7 +309,7 @@ def test_recente_inlog_vereist_voor_blokkeren_deblokkeren_en_verwijderen(ingelog
     actief = db.session.get(Beheerder, bert.id).actief
     with client.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
-    r = client.post(f"/beheerders/{bert.id}/{actie}")
+    r = client.post(f"/gebruikers/{bert.id}/{actie}")
     assert r.status_code == 302 and r.location.endswith("/inloggen")
     db.session.expire_all()
     b = db.session.get(Beheerder, bert.id)
@@ -330,7 +330,7 @@ def test_intrekken_beeindigt_alle_eigen_sessies_niet_die_van_anderen(app, ingelo
 
 
 def test_profiel_toont_methodes_en_wachtwoord_toevoegen(app, client):
-    anna = beheerders.uitnodiging(beheerders.uitnodigen("anna", CLI)).beheerder
+    anna = beheerders.uitnodiging(beheerders.uitnodigen("anna", "beheerder", CLI)).beheerder
     met_passkey(anna)
     with client.session_transaction() as s:
         s.update(beheerder_id=anna.id, sessieversie=anna.sessieversie,
@@ -357,10 +357,10 @@ def _link_en_qr(r):
     return link, html
 
 
-@pytest.mark.parametrize("pad", ["/beheerders", "/beheerders/{bert}/herstellen"])
+@pytest.mark.parametrize("pad", ["/gebruikers", "/gebruikers/{bert}/herstellen"])
 def test_link_toont_qr_naar_dezelfde_link_met_naam_en_zonder_cache(ingelogd, pad):
     client, _anna, bert = ingelogd
-    data = {"gebruikersnaam": "carla"} if pad == "/beheerders" else {}
+    data = {"gebruikersnaam": "carla", "rol": "beheerder"} if pad == "/gebruikers" else {}
     r = client.post(pad.format(bert=bert.id), data=data)
     link, html = _link_en_qr(r)
     assert "/uitnodiging/" in link
@@ -368,7 +368,7 @@ def test_link_toont_qr_naar_dezelfde_link_met_naam_en_zonder_cache(ingelogd, pad
     assert re.search(r'<svg role="img" aria-label="QR-code van de uitnodigingslink"', html)
     assert r.headers["Cache-Control"] == "no-store"
     code = link.rsplit("/", 1)[1]
-    assert code not in client.get("/beheerders").get_data(as_text=True)
+    assert code not in client.get("/gebruikers").get_data(as_text=True)
     assert all(code not in str(r.gegevens) for r in db.session.scalars(select(Logregel)))
     with client.session_transaction() as s:
         assert "_flashes" not in s

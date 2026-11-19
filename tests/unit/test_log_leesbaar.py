@@ -47,7 +47,7 @@ def test_beheerder_en_token_in_betreft(app):
     tokens.robot_maken("koppeling", ["boten:lezen"], ["192.0.2.1"], None, CLI)
     token = db.session.scalar(db.select(Token))
     verwijzingen = [f"beheerder:{anna.id}", f"token:{token.id}"]
-    assert log.betreft(verwijzingen, log.namen([_regel(*verwijzingen)])) == f"Beheerder {anna.naam}, Token koppeling"
+    assert log.betreft(verwijzingen, log.namen([_regel(*verwijzingen)])) == f"Gebruiker {anna.naam}, Token koppeling"
 
 
 @pytest.mark.parametrize("naam,tekst", [
@@ -102,3 +102,23 @@ def test_gegevens_blijven_zoals_opgeslagen(ingelogd):  # noqa: F811
     b = boten.boot_aanmaken("Zeemeeuw", 1, anna.id, None, CLI)
     ingelogd.post(f"/boten/{b.id}", data={"naam": "Zeemeeuw", "bootsoort": "1", "eigenaar": bert.lidnummer})
     assert f"eigenaar: [&#39;lid:{anna.id}&#39;, &#39;lid:{bert.id}&#39;]" in ingelogd.get("/log").text
+
+
+# Een kijker (ADR-015, issue #322)
+
+
+def regel(actie, gegevens, verwijzingen=()):
+    return Logregel(actie=actie, gegevens=gegevens, verwijzingen=list(verwijzingen))
+
+
+def test_zichtbaar_laat_voor_een_kijker_alleen_de_wachtlijstregels_weg():
+    regels = [regel(a, {}) for a in ("wachtlijst.toegevoegd", "wachtlijst.verwijderd", "boot.gewijzigd", "plaats.toegewezen")]
+    assert [r.actie for r in log.zichtbaar(regels, met_leden=False)] == ["boot.gewijzigd", "plaats.toegewezen"]
+    assert log.zichtbaar(regels, met_leden=True) == regels  # een beheerder ziet alles
+
+
+def test_namen_zonder_met_leden_geeft_een_lid_zonder_nummer_en_leest_het_nummer_niet(app):
+    anna, p = lid("1001", "Anna de Vries"), plaats("A/1/1")
+    r = regel("boot.gewijzigd", {}, [f"lid:{anna.id}", f"plaats:{p.id}"])
+    assert log.namen([r]) == {f"lid:{anna.id}": "Lid Anna de Vries (1001)", f"plaats:{p.id}": "Plaats A/1/1"}
+    assert log.namen([r], met_leden=False) == {f"lid:{anna.id}": "Lid Anna de Vries", f"plaats:{p.id}": "Plaats A/1/1"}

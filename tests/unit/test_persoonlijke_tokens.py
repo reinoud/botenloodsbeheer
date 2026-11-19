@@ -408,11 +408,11 @@ def test_bezoeker_gaat_naar_inloggen(client):
     assert client.post("/tokens/1/intrekken").status_code == 302
 
 
-def test_api_rol_leest_van_beheerder_alleen_id_en_actief(app, twee):
-    """Migratie 0009: botenloods_api leest of de eigenaar actief is, niet meer."""
+def test_api_rol_leest_van_beheerder_alleen_id_actief_en_rol(app, twee):
+    """Migratie 0009 en 0022: botenloods_api leest of de eigenaar actief en beheerder is, niet meer."""
     engine = create_engine(API)
     with engine.connect() as c:
-        assert len(c.execute(text("SELECT id, actief FROM beheerder")).all()) == 2
+        assert len(c.execute(text("SELECT id, actief, rol FROM beheerder")).all()) == 2
         with pytest.raises(ProgrammingError, match="permission denied"):
             c.execute(text("SELECT gebruikersnaam FROM beheerder"))
     engine.dispose()

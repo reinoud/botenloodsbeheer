@@ -68,7 +68,7 @@ geimporteerd || { echo "De integratiecontainer importeerde niet; zie zijn log." 
 
 links=()
 for soort in wachtwoord vergrendel bezoeker indeling regels plaatsbeheer \
-            methodes intrekken beheerders vrij leden huisstijl import opzeggend bootwijzigen \
+            methodes intrekken beheerders kijkers kijkerzelf vrij leden huisstijl import opzeggend bootwijzigen \
             wachtlijst wachtlijstfout kaartjes status bootaantallen tokens tokenscollega \
             tokensintrekken bootsoorten indelingraster rekoverzicht bootplaats rekindelingcsv \
             bezettingcsv bezettingsoort eigenaaronbekend weeronbekend clubboot plaatseigenaar bootverplaatsen zoeken uploadgrens passkey overloop oudlid zonderfoto; do

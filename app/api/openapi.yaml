@@ -11,7 +11,7 @@ info:
     Elke aanroep heeft een token nodig (`Authorization: Bearer blb_...`). Het token moet bestaan,
     niet verlopen of ingetrokken zijn, de aanroep moet van een adres in de IP-whitelist komen en
     het token moet het recht van de aanroep hebben. Een persoonlijk token werkt alleen zolang de
-    beheerder actief is; een lege whitelist betekent elk adres dat de installatie doorlaat. Een
+    eigenaar een actieve beheerder is (een kijker heeft geen tokens); een lege whitelist betekent elk adres dat de installatie doorlaat. Een
     weigering geeft 401, of 403 bij een
     ontbrekend recht of als de API in de installatie uit staat, altijd met dezelfde tekst. Meer
     dan 60 aanroepen per minuut per token geeft 429 met `Retry-After`. Een onbekend pad geeft 404

@@ -144,7 +144,7 @@ def test_precies_een_migratiehead():
     """Leest de scriptmap rechtstreeks: bij een tweede head faalt de assert hieronder, niet de
     fixture `database` (#161)."""
     scripts = ScriptDirectory.from_config(Config("alembic.ini"))
-    assert scripts.get_heads() == ["0021"]
+    assert scripts.get_heads() == ["0022"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -247,7 +247,7 @@ def test_seed_weigert_in_productie(app):
 
 
 @pytest.mark.parametrize("sql", [
-    "INSERT INTO beheerder (naam, gebruikersnaam, actief, sessieversie) VALUES ('X', 'x', true, 1)",
+    "INSERT INTO beheerder (naam, gebruikersnaam, rol, actief, sessieversie) VALUES ('X', 'x', 'beheerder', true, 1)",
     "UPDATE beheerder SET actief = false", "DELETE FROM beheerder",
     "SELECT 1 FROM passkey", "SELECT 1 FROM uitnodiging", "SELECT 1 FROM token", "UPDATE instelling SET waarde = 'x'",
     "DELETE FROM rek", "DELETE FROM plaats", "DELETE FROM bootsoort", "DELETE FROM taakrun"])

@@ -21,8 +21,8 @@
   <h2 class="dj-panel__title" id="eigenaar-kop">Eigenaar</h2>
   {% if boot.lid %}
   <dl class="dj-dl">
-    <dt>Naam</dt><dd data-veld="naam"><a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% if oud_lid %} <span class="ds-tag">oud-lid</span>{% endif %}</dd>
-    <dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>
+    <dt>Naam</dt><dd data-veld="naam">{% if is_kijker() %}{{ boot.lid.naam }}{% else %}<a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% if oud_lid %} <span class="ds-tag">oud-lid</span>{% endif %}{% endif %}</dd>
+    {% if not is_kijker() %}<dt>Lidnummer</dt><dd data-veld="lidnummer">{{ boot.lid.lidnummer }}</dd>{% endif %}
   </dl>
   {% elif boot.clubboot %}
   <p>{{ vereniging }} (clubboot)</p>
@@ -30,14 +30,17 @@
   <p>onbekend</p>
   {% endif %}
 </section>
+{% if not is_kijker() %}
 <form method="post" action="{{ url_for('web.plaats_vrijgeven', plaats_id=plaats.id) }}">
   {% include "_csrf.html" %}
   <button type="submit" class="ds-btn">Plaats {{ plaats.code }} vrijgeven</button>
 </form>
+{% endif %}
 {% else %}
 <section class="dj-panel" aria-labelledby="vrij-kop">
   <h2 class="dj-panel__title" id="vrij-kop">Deze plaats is vrij</h2>
-  {% if boten %}
+  {% if is_kijker() %}
+  {% elif boten %}
   <form class="bl-formulier" method="post" action="{{ url_for('web.plaats_toewijzen', plaats_id=plaats.id) }}">
     {% include "_csrf.html" %}
     <div class="ds-field">
@@ -65,6 +68,7 @@
 {% endif %}
 </div>
 <div>
+{% if not is_kijker() %}
 <section class="dj-panel" aria-labelledby="wijzigen-kop">
   <h2 class="dj-panel__title" id="wijzigen-kop">Plaats wijzigen</h2>
   <form class="bl-formulier" method="post" action="{{ url_for('web.plaats_wijzigen', plaats_id=plaats.id) }}">
@@ -79,6 +83,7 @@
     <button type="submit" class="ds-btn ds-btn--primary">Plaats opslaan</button>
   </form>
 </section>
+{% endif %}
 <section class="dj-panel" aria-labelledby="openbaar-kop">
   <h2 class="dj-panel__title" id="openbaar-kop">Openbare pagina</h2>
   <p>Deze link staat later in de QR-code op het kaartje: <a href="{{ openbare_url }}" id="openbare-link">{{ openbare_url }}</a></p>

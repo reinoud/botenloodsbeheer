@@ -19,13 +19,15 @@
     <h1>{{ boot.naam }}</h1>
     <dl class="bl-feiten">
       <div><dt>Bootsoort</dt> <dd>{{ boot.bootsoort.naam }}</dd></div>
-      <div><dt>Eigenaar</dt> <dd>{% if boot.lid %}<a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% elif boot.clubboot %}{{ vereniging }} (clubboot){% else %}onbekend{% endif %}</dd></div>
+      <div><dt>Eigenaar</dt> <dd>{% if boot.lid and is_kijker() %}{{ boot.lid.naam }}{% elif boot.lid %}<a href="{{ url_for('web.lid_detail', lid_id=boot.lid.id) }}">{{ boot.lid.naam }}</a>{% elif boot.clubboot %}{{ vereniging }} (clubboot){% else %}onbekend{% endif %}</dd></div>
       <div><dt>Plaats</dt> <dd>{% if boot.plaats %}<a href="{{ url_for('web.plaats_detail', plaats_id=boot.plaats.id) }}">{{ boot.plaats.code }}</a>{% else %}geen{% endif %}</dd></div>
-      {% if not boot.plaats %}<div><dt>Wachtlijst</dt> <dd>{% if boot.wachtlijst %}sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}nee{% endif %}</dd></div>{% endif %}
+      {% if not boot.plaats and not is_kijker() %}<div><dt>Wachtlijst</dt> <dd>{% if boot.wachtlijst %}sinds {{ boot.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}{% else %}nee{% endif %}</dd></div>{% endif %}
     </dl>
   </div>
   {% if boot.afbeelding %}<img class="bl-kopfoto" src="{{ url_for('web.afbeelding', sleutel=boot.afbeelding.sleutel) }}" alt="Foto van {{ boot.naam }}" width="96" height="72">{% endif %}
 </div>
+{# Een kijker ziet de feiten en het log; de taken en formulieren zijn voor de beheerder (BV-92). #}
+{% if not is_kijker() %}
 {% set verwijderen_in_taak = buiten_termijn and not boot.plaats %}
 <section class="kaart bl-taak" aria-labelledby="taak-kop">
   {% if boot.plaats %}
@@ -156,5 +158,6 @@
   </div>
 </details>
 </section>
+{% endif %}
 {{ logblok(regels) }}
 {% endblock %}

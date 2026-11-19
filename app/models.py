@@ -44,11 +44,14 @@ class Beheerder(db.Model):
         CheckConstraint(
             "(wachtwoordhash IS NULL) = (totp_geheim IS NULL)", name="wachtwoord_met_totp"
         ),
+        CheckConstraint("rol IN ('beheerder', 'kijker')", name="rol_geldig"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     naam: Mapped[str] = mapped_column(String(100))
     gebruikersnaam: Mapped[str] = mapped_column(String(50), unique=True)
+    # Geen standaardwaarde: een vergeten rol geeft een fout (ADR-015).
+    rol: Mapped[str] = mapped_column(String(10))
     actief: Mapped[bool] = mapped_column(default=True, server_default=text("true"))
     sessieversie: Mapped[int] = mapped_column(default=1, server_default=text("1"))
     wachtwoordhash: Mapped[str | None] = mapped_column(Text)

@@ -179,6 +179,16 @@ def intrekken(sleutel, actor):
     db.session.commit()
 
 
+def intrekken_van(beheerder_id, actor):
+    """Trekt de actieve persoonlijke tokens van een account in, met token.ingetrokken per token; de
+    aanroeper commit (de rolwijziging naar kijker, ADR-015)."""
+    for token in db.session.scalars(
+            select(Token).where(Token.beheerder_id == beheerder_id, Token.ingetrokken_op.is_(None))
+            .order_by(Token.id).with_for_update().execution_options(populate_existing=True)):
+        token.ingetrokken_op = _nu()
+        log.schrijf(actor, "token.ingetrokken", [f"token:{token.id}"], {"naam": token.naam})
+
+
 def _weiger(reden, token, endpoint, ip, status=401):
     actor = als_actor(token) if token else Actor("token", None, "onbekend")
     log.schrijf(actor, "api.geweigerd", [f"token:{token.id}"] if token else [],
@@ -202,9 +212,12 @@ def controleer(authorization, ip, recht, endpoint):
         _weiger("ingetrokken", token, endpoint, ip)
     if _nu() >= token.verloopt_op:
         _weiger("verlopen", token, endpoint, ip)
-    if token.beheerder_id is not None and not db.session.scalar(
-            select(Beheerder.actief).where(Beheerder.id == token.beheerder_id)):
-        _weiger("eigenaar_inactief", token, endpoint, ip)
+    if token.beheerder_id is not None:
+        eigenaar = db.session.execute(
+            select(Beheerder.actief, Beheerder.rol).where(Beheerder.id == token.beheerder_id)).one_or_none()
+        # Een kijker heeft geen tokens (ADR-015); dit vangt ook een token dat tijdens de rolwijziging ontstond.
+        if eigenaar is None or not eigenaar.actief or eigenaar.rol != "beheerder":
+            _weiger("eigenaar_inactief", token, endpoint, ip)
     try:
         adres = ipaddress.ip_address(ip)
     except ValueError:

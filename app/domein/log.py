@@ -24,7 +24,7 @@ TECHNISCH = frozenset(
      "bootsoort.hernoemd", "bootsoort.verwijderd", "beheerder.uitgenodigd",
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
      "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
-     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld",
+     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld", "beheerder.rol_gewijzigd",
      "opschoning.uitgevoerd", "indeling.geimporteerd", "bezetting.geimporteerd",
      "naamkoppeling.verwijderd"}
 )
@@ -83,14 +83,15 @@ _SOORTEN = {
     "lid": ((Lid.naam, Lid.lidnummer), lambda naam, nummer: f"Lid {naam} ({nummer})"),
     "rek": ((Rek.naam,), _rek),
     "bootsoort": ((Bootsoort.naam,), lambda naam: f"Bootsoort {naam}"),
-    "beheerder": ((Beheerder.naam,), lambda naam: f"Beheerder {naam}"),
+    "beheerder": ((Beheerder.naam,), lambda naam: f"Gebruiker {naam}"),
     "token": ((Token.naam,), lambda naam: f"Token {naam}"),
 }
 
 
-def namen(regels):
+def namen(regels, met_leden=True):
     """Verwijzing -> leesbare tekst voor alle regels, met één query per soort (geen N+1). Een
-    verwijzing zonder object of van een andere soort ontbreekt; betreft() toont die zoals opgeslagen."""
+    verwijzing zonder object of van een andere soort ontbreekt; betreft() toont die zoals opgeslagen.
+    Zonder met_leden (een kijker, ADR-015) staat een lid er zonder lidnummer."""
     ids = {soort: set() for soort in _SOORTEN}
     for r in regels:
         for v in r.verwijzingen:
@@ -102,6 +103,8 @@ def namen(regels):
         if not nrs:
             continue
         kolommen, tekst = _SOORTEN[soort]
+        if soort == "lid" and not met_leden:  # het nummer wordt niet eens gelezen
+            kolommen, tekst = (Lid.naam,), lambda naam: f"Lid {naam}"
         model = kolommen[0].class_
         for id_, *rest in db.session.execute(select(model.id, *kolommen).where(model.id.in_(nrs))):
             uit[f"{soort}:{id_}"] = tekst(*rest)
@@ -110,3 +113,9 @@ def namen(regels):
 
 def betreft(verwijzingen, namen):
     return ", ".join(namen.get(v, v) for v in verwijzingen)
+
+
+def zichtbaar(regels, met_leden=True):
+    """De regels om te tonen. Een kijker (zonder met_leden) ziet de wachtlijst niet, ook niet in het log
+    onder een pagina: de regels wachtlijst.toegevoegd en wachtlijst.verwijderd vallen weg (ADR-015)."""
+    return [r for r in regels if met_leden or not r.actie.startswith("wachtlijst.")]

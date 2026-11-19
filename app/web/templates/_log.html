@@ -3,6 +3,7 @@
    daar is de kop van de pagina de naam van de sectie. Leesbaar (BV-82): actie en verwijzingen als tekst;
    het technische log toont ze zoals opgeslagen. #}
 {% macro logblok(regels, op_logpagina=false, leesbaar=true) %}
+{% set regels = regels|logzichtbaar %}
 <section class="log" aria-labelledby="log-kop">
 {% if not op_logpagina %}
 <details class="dj-disclosure">
@@ -24,7 +25,7 @@
   {% endfor %}
 </div>
 {# shortcut: de link opent het hele log zonder het filter van dit scherm; een filter in de url als een scherm vaak meer dan 50 regels heeft. #}
-{% if not op_logpagina and regels|length >= 50 %}<p><a href="{{ url_for('web.logboek') }}">Meer in het log</a></p>{% endif %}
+{% if not op_logpagina and regels|length >= 50 and not is_kijker() %}<p><a href="{{ url_for('web.logboek') }}">Meer in het log</a></p>{% endif %}
 {% else %}
 <p>Nog geen mutaties.</p>
 {% endif %}

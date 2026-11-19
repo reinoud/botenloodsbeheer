@@ -5,6 +5,7 @@
 {% block titel %}Boten · {{ vereniging }}{% endblock %}
 {% block inhoud %}
 <h1>Boten</h1>
+{% if not is_kijker() %}
 <details class="bl-nieuw"{% if nieuw_open %} open{% endif %}>
   <summary id="nieuw-kop">Nieuwe boot</summary>
   <div class="dj-panel bl-nieuw__inhoud">
@@ -32,10 +33,11 @@
   </form>
   </div>
 </details>
+{% endif %}
 
 <form class="bl-filter" method="get" action="{{ url_for('web.boten_overzicht') }}" role="search" aria-label="Zoeken in Boten">
   <div class="ds-field">
-    <label class="ds-field__label" for="boten-zoek">Zoek op boot of lid</label>
+    <label class="ds-field__label" for="boten-zoek">{{ "Zoek op boot of eigenaar" if is_kijker() else "Zoek op boot of lid" }}</label>
     <input class="ds-input" type="search" id="boten-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
   </div>
   <div class="ds-field">

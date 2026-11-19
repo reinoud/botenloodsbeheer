@@ -168,7 +168,7 @@ def test_een_verwijderde_beheerder_neemt_de_lopende_import_mee(app):
 
 def import_met_verlooptijd(verloopt):
     """De worker leest beheerder niet; de eigenaar maakt de beheerder en de import."""
-    eigenaar("INSERT INTO beheerder (naam, gebruikersnaam, actief, sessieversie) VALUES ('U', 'u', true, 1)")
+    eigenaar("INSERT INTO beheerder (naam, gebruikersnaam, rol, actief, sessieversie) VALUES ('U', 'u', 'beheerder', true, 1)")
     eigenaar("INSERT INTO bezettingsimport (beheerder_id, verloopt_op, regels) "
              f"SELECT id, {verloopt}, '[]' FROM beheerder")
 

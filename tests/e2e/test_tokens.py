@@ -98,7 +98,7 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
         # Een gestapelde cel is een raster, een tabelcel niet.
         expect(page.locator(cel).first).to_have_css("display", "grid" if gestapeld else "table-cell")
     # De andere tabellen blijven tot 40rem een tabel (640 px) en stapelen daaronder.
-    page.goto("/beheerders")
+    page.goto("/gebruikers")
     for breedte, gestapeld in ((660, False), (800, False), (360, True)):
         page.set_viewport_size({"width": breedte, "height": 900})
         expect(page.locator(".bl-tabel td").first).to_have_css("display", "grid" if gestapeld else "table-cell")
