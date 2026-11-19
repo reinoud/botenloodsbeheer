@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.98
+**Versie overlay:** v0.5.99
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-18
@@ -97,6 +97,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een agent stuurt zijn oordeel of oplevering met SendMessage aan de regie én zet het in zijn eindantwoord. De regie kijkt zelf in de scratchpad van een agent zodra diens suite klaar moet zijn, en wacht niet alleen op een melding (oordelen bij #315, #316 en #321 kwamen uren niet aan).
 - Na het stoppen van een agent loopt de regie `git status` en `git diff` in zijn worktree na: een gestopte agent kan een mutant laten staan (#315).
 - Tekstwijzigingen in scripts gaan met python3: `sed` in de agentshell is GNU sed. Een samengesteld commando met een heredoc zet de agent in een script in de scratchpad (#316, #321).
+- Staat een ontwerpvraag open in de README van Design System, zeg dan vóór de bouw welk antwoord de bouwer gebruikt; de bouwer volgt het ontwerp en meldt de vraag (#322).
+- Noem bij een vorige testtelling ook de lijst testnamen of het pad van de uitvoer, zodat een reviewer een verschil per bestand kan verklaren (#322).
 
 #### Bouw
 
@@ -226,6 +228,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een afkapgrens op een veld met een samengestelde tekst (zoals "Naam (lidnummer)") is minstens de som van de kolomlengtes plus de scheiders, afgeleid uit het model. De test staat precies op de nieuwe grens, met de langste geldige waarde (#316).
 - Een nieuw menu-item: zoek de E2E-tests met een vaste menulijst (zoals `tests/e2e/test_rekindeling_csv.py`) en werk ze bij (#315).
 - Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
+- Een E2E-selector op een formulierveld noemt het type (`input[type=radio][name=...]`); rij-acties met verborgen velden van dezelfde naam tellen anders mee (#322).
 
 #### Review
 
@@ -354,6 +357,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een eigen E2E-stack start met `up -d --no-build --wait`; een agent bouwt het gedeelde image `botenloods-app:latest` niet opnieuw vanuit een worktree (#321).
 - In een worktree staat geen `.env`: noem `--env-file <hoofdmap>/.env` en voor `draai.sh` `COMPOSE_ENV_FILES=<hoofdmap>/.env` (#315).
 - `schermafbeeldingen.sh` draait op een vaste projectnaam (`botenloods-doc`) en een vast subnet, dus nooit tegelijk met een ander agent. Zegt een opdracht een scherm te vereenvoudigen, noem dan of de schermafbeelding opnieuw moet en wie dat doet (#321).
+- De E2E-basislijn noemt het aantal testfuncties per bestand (`grep -c '^def test_' tests/e2e/test_*.py`) naast het aantal geslaagd; `draai.sh` draait pytest meer dan eens. De volledige run duurt langer dan 600 seconden: wacht in twee until-lussen (#322).
 
 #### Migratie en database
 
@@ -380,6 +384,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een rechtenwijziging in een migratie noem je in de brief zowel het testbestand van de migratie als dat van de domeinfunctie; de reviewer draait de mutanten tegen beide samen.
 - Bij een rechtenwijziging: draai per recht dat de rol houdt een mutant die alleen dat recht intrekt, en noem per mutant de test die valt; een recht zonder vallende test is niet gedekt. Meld de reviewer of de gedeelde database al op de nieuwe migratie staat, zodat hij de live ACL toetst.
 - Bij een rechtenwijziging: zoek in alle tests met de marker `worker` (of `api`) naar setup via de domeinlaag in tabellen die de rol straks niet meer mag schrijven (zoals `foto=` of `png()`), en noem ze vooraf in de opdracht.
+- Een test die als eigenaar een constraint of kolom wijzigt, begint met `db.session.remove()` en `SET LOCAL lock_timeout`; de clientrequests van de fixture delen zijn sessie (#322).
 
 #### Security en proxy
 
@@ -449,6 +454,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een controle dat Traefik een route niet logt, begint met één verzoek zonder router (onbekende Host) dat wel gelogd moet worden; anders bewijst een lege log niets (#154).
 - Rechten van GITHUB_TOKEN gelden per job, niet per stap. Heeft een stap meer rechten nodig, vraag dan om een aparte job en noem welke actions daarvoor bij mogen komen (#297).
 - Bij een veiligheidsgrens telt een record met een onbekende of ongeldige waarde naar de veilige kant: de kant die de import stopt. Noem in de opdracht het bronveld en of het vrije tekst is (#307).
+- Een proef via de proxy met sessie: teken de cookie direct voor de proef (`recent_ingelogd` is 10 minuten), gebruik geen `rm` in proefscripts, en werk met `curl --resolve localhost:8080:127.0.0.1` en `http://localhost:8080`, zodat de cookiejar werkt (#322).
+- Kies voor een live proef een object dat de E2E-suite niet opruimt, of zoek het object direct voor de proef op (#322).
 
 #### Documentatie, backlog en ADR's
 
@@ -539,6 +546,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.5.99 | 2026-11-19 | Zeven regels: open ontwerpvraag en testnamen bij een telling (Algemeen); selector met type (Bouw); constraint wijzigen als eigenaar (Migratie en database); basislijn per bestand en twee wachtlussen (E2E); cookie en curl bij een proef, object dat de E2E niet opruimt (Security); uit de terugblikken van #322 | Lessen |
 | v0.5.98 | 2026-11-18 | Vijf regels: budget per vervolg, budget per story, slice of milestone in de slicetabel, richtwaarde per ADR-besluitpunt, gedeelde nummers van open vragen (Documentatie, backlog en ADR's); uit de terugblikken van apex en foundation bij #322. Rollen in §3 en Algemeen bijgewerkt (kijker, ADR-015) | Lessen |
 | v0.5.97 | 2026-11-18 | Elf regels: oordeel met SendMessage en controle in de scratchpad, worktree nalopen na stoppen, python3 in plaats van sed (Algemeen); afkapgrens en test op de grens, vaste menulijsten, 404 of 405 (Bouw); volgordetest met expliciete id's, sleutel en macro met context (Review); stack zonder bouwen, `.env` in een worktree, schermafbeeldingen niet parallel (E2E); uit de terugblikken van milestone 9 | Lessen |
 | v0.5.96 | 2026-11-17 | Drie regels: andere routes bij een versoepelde regel (Bouw); bestand bij een regelnummer en mutant van een ander agent (Review); gegeven dat de stack niet meebrengt (E2E); uit de terugblikken bij #298 | Lessen |
