@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.1
+**Versie overlay:** v0.6.2
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -170,6 +170,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Test een rondgang (export, ongewijzigd importeren) ook met elke toestand die het scherm toelaat, zoals een plaats zonder bootsoort, en niet alleen met de standaardwaarden van de testhulpfuncties.
 - Verandert een herstel een regel die ook in een gebruikerstekst staat (sjabloon, handleiding, ADR, schermuitleg), noem dan elke plek met bestand:regel en werk ze in dezelfde ronde bij.
 - Een opdracht met een nieuw scherm noemt ADR-002 (Styling) en de designsystem-repository op een genoemde commit. De regie laat de schermen vóór de review toetsen door de sessie Design System.
+- Een `app_errorhandler` draait bij een fout zonder route zonder de `before_request`- en `after_request`-hooks van het blueprint, dus zonder `g.beheerder`, zonder `request.endpoint` en zonder de headers van `niet_bewaren`. Noem in de opdracht de onderdelen van `base.html` en de headers die daarvan uitgaan (#341).
+- Zeg bij een globale foutafhandelaar of statische bestanden en routes met een eigen 404 in platte tekst (`afbeelding`, `logo`) de HTML-pagina mogen krijgen (#341).
 - Noem bij een nieuw scherm of een nieuwe knop de linktekst. Die mag geen deel zijn van een bestaande link- of knoptekst op dezelfde pagina; Playwright `get_by_role(name=...)` zoekt op een deel van de tekst.
 - Een testhulp die de database als eigenaar wijzigt (`eigenaar()`), doet daarna `db.session.expire_all()`; anders ziet de test oude waarden.
 - Een test met de rol van de worker kan `beheerder` niet lezen. Zet testgegevens voor die rol met één SQL-regel als eigenaar (met een subselect), niet met een aparte leesactie.
@@ -261,6 +263,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Een nieuw Python-bestand buiten `app/` en `tests/` (zoals `docker/`) lint de reviewer met `-v $PWD/<map>:/app/<map>:ro` en `ruff check --no-cache <map>`; de testcontainer mount die map niet.
 - Zet per issue de acceptatiecriteria letterlijk onder de diff in de reviewbrief, zodat de reviewer `gh issue view` niet hoeft te draaien (#346).
+- Vervangt een herstel een bestaande guard, noem dan in de nareviewbrief wat de oude guard nog afving buiten het herstelde geval (#341).
+- De volledige unitsuite duurt 8 tot 13 minuten: laat de reviewer hem in de achtergrond draaien en het uitvoerbestand lezen, niet wachten met een korte lus (#341).
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Een eigen proef met `-p tests.unit.conftest /app/scratch/<bestand>` draait los, niet in dezelfde run als een bestand onder `tests/unit/`.
 - Een live proef van aegis met een eigen beheerder in `web` vraagt vooraf toestemming in de omgeving. Zonder die toestemming toetst aegis CSRF en autorisatie statisch en meldt dat in het oordeel.
@@ -548,6 +552,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.2 | 2026-11-19 | Vier regels: foutafhandelaar zonder hooks van het blueprint, globale afhandelaar en statische bestanden (Bouw); vervangen guard bij een nareview, duur van de unitsuite (Review); uit de terugblikken bij #341 | Lessen |
 | v0.6.1 | 2026-11-19 | Eén regel (Review): acceptatiecriteria letterlijk in de reviewbrief; uit de terugblik bij #346, #342, #291 en #333 | Lessen |
 | v0.6.0 | 2026-11-19 | Eén regel (E2E): images voor trivy onder een eigen tag, de E2E-stack native (arm64); uit de release v2.0.0 (#344) | Lessen |
 | v0.5.99 | 2026-11-19 | Zeven regels: open ontwerpvraag en testnamen bij een telling (Algemeen); selector met type (Bouw); constraint wijzigen als eigenaar (Migratie en database); basislijn per bestand en twee wachtlussen (E2E); cookie en curl bij een proef, object dat de E2E niet opruimt (Security); uit de terugblikken van #322 | Lessen |
