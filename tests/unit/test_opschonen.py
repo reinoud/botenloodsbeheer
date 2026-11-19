@@ -249,6 +249,22 @@ def test_niet_tijdens_een_import_die_het_oud_lid_weer_actief_maakt(app):
     assert bestaat(oud.id) and tel(Boot) == 1
 
 
+def test_ronde_na_de_opschoning_neemt_geen_slot(app):
+    """#346: anders krijgt een import in dat venster een 409."""
+    assert opschonen.draai() is not None
+    sloten = []
+    echt = opschonen.gedraaid_op
+
+    def spion(dag):
+        sloten.append(db.session.scalar(text(
+            "SELECT count(*) FROM pg_locks WHERE locktype = 'advisory' AND pid = pg_backend_pid()")))
+        return echt(dag)
+
+    with mock.patch.object(opschonen, "gedraaid_op", spion):
+        taken.ronde(datetime.combine(vandaag(), time(23, 0), ZoneInfo(app.config["TZ"])))
+    assert sloten == [0] and runs() == ["geslaagd"]
+
+
 @pytest.mark.parametrize("uur,minuut,gedraaid", [(3, 59, False), (4, 0, True)],
                          ids=["voor_het_tijdstip", "op_het_tijdstip"])
 def test_ronde_draait_de_opschoning_vanaf_het_tijdstip(app, uur, minuut, gedraaid):
