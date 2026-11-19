@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.2
+**Versie overlay:** v0.6.3
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -364,6 +364,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `schermafbeeldingen.sh` draait op een vaste projectnaam (`botenloods-doc`) en een vast subnet, dus nooit tegelijk met een ander agent. Zegt een opdracht een scherm te vereenvoudigen, noem dan of de schermafbeelding opnieuw moet en wie dat doet (#321).
 - De E2E-basislijn noemt het aantal testfuncties per bestand (`grep -c '^def test_' tests/e2e/test_*.py`) naast het aantal geslaagd; `draai.sh` draait pytest meer dan eens. De volledige run duurt langer dan 600 seconden: wacht in twee until-lussen (#322).
 - Docker op de Mac van de stakeholder draait arm64; `uname -m` in de agentshell zegt x86_64 (Rosetta). Bouw de amd64-images voor trivy onder een eigen tag (`--platform linux/amd64`), nooit als `latest`. De E2E-stack draait het native image; controleer vóór de run met `docker image inspect -f '{{.Architecture}}' botenloods-app:latest` dat het arm64 is. Onder qemu haalt de worker zijn healthcheck niet en faalt de E2E (#344).
+- De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met een override in de scratchpad die `ports` leegt, en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. `draai.sh` vervangt ook dan `secrets/api_token` in de gedeelde werkmap: herstart daarna de integratiecontainer van de dev-stack (#347).
 
 #### Migratie en database
 
@@ -552,6 +553,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.3 | 2026-11-19 | Eén regel bij E2E: de release-E2E in een eigen project met eigen images, en de dev-integratie herstarten na `draai.sh`; uit de terugblik bij #347 | Lessen |
 | v0.6.2 | 2026-11-19 | Vier regels: foutafhandelaar zonder hooks van het blueprint, globale afhandelaar en statische bestanden (Bouw); vervangen guard bij een nareview, duur van de unitsuite (Review); uit de terugblikken bij #341 | Lessen |
 | v0.6.1 | 2026-11-19 | Eén regel (Review): acceptatiecriteria letterlijk in de reviewbrief; uit de terugblik bij #346, #342, #291 en #333 | Lessen |
 | v0.6.0 | 2026-11-19 | Eén regel (E2E): images voor trivy onder een eigen tag, de E2E-stack native (arm64); uit de release v2.0.0 (#344) | Lessen |
