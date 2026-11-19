@@ -114,7 +114,11 @@ def test_menu_telt_boten_zonder_eigenaar_ook_op_import_export(ingelogd):
 
 def test_elke_url_in_de_css_wijst_naar_een_bestand_in_static():
     # #162: dj-components.css verwees naar icons/*.svg die niet waren afgenomen.
-    static = pathlib.Path(__file__).parents[2] / "app/web/static"
-    for css in static.rglob("*.css"):
-        for ref in re.findall(r'url\("([^"]+)"\)', css.read_text()):
-            assert (css.parent / ref).resolve().is_file(), (css.name, ref)
+    # #291: ook url() zonder of met enkele aanhalingstekens, en het pad blijft binnen static.
+    static = (pathlib.Path(__file__).parents[2] / "app/web/static").resolve()
+    refs = [(css, ref) for css in static.rglob("*.css")
+            for ref in re.findall(r"""url\(\s*['"]?([^'")]+)""", css.read_text()) if not ref.startswith("data:")]
+    assert refs
+    for css, ref in refs:
+        pad = (css.parent / ref).resolve()
+        assert pad.is_relative_to(static) and pad.is_file(), (css.name, ref)
