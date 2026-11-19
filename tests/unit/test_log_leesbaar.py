@@ -117,6 +117,14 @@ def test_zichtbaar_laat_voor_een_kijker_alleen_de_wachtlijstregels_weg():
     assert log.zichtbaar(regels, met_leden=True) == regels  # een beheerder ziet alles
 
 
+def test_een_kijker_ziet_precies_deze_logacties():
+    """#342: een nieuwe actie in BOOTMUTATIES wordt pas zichtbaar voor een kijker na een bewuste keuze hier.
+    Toets bij een nieuwe actie of de gegevens iets tonen wat een kijker niet mag zien (ADR-015)."""
+    kijker = {r.actie for r in log.zichtbaar([regel(a, {}) for a in log.BOOTMUTATIES], met_leden=False)}
+    assert kijker == {"boot.aangemaakt", "boot.gewijzigd", "boot.foto_toegevoegd", "boot.foto_vervangen",
+                      "boot.verwijderd", "boot.verplaatst", "plaats.toegewezen", "plaats.vrijgegeven"}
+
+
 def test_namen_zonder_met_leden_geeft_een_lid_zonder_nummer_en_leest_het_nummer_niet(app):
     anna, p = lid("1001", "Anna de Vries"), plaats("A/1/1")
     r = regel("boot.gewijzigd", {}, [f"lid:{anna.id}", f"plaats:{p.id}"])
