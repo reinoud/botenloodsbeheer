@@ -69,6 +69,10 @@ def draai(dag=None):
     Loopt er een import, dan volgt de volgende ronde een nieuwe poging. Geeft de aantallen, of None
     als er niets te doen was."""
     dag = dag or vandaag()
+    # Eerst zonder slot kijken: anders neemt elke ronde na het tijdstip het importslot (#346).
+    if gedraaid_op(dag):
+        db.session.rollback()
+        return None
     if (not db.session.scalar(select(func.pg_try_advisory_xact_lock(SLOT)))
             or not db.session.scalar(select(func.pg_try_advisory_xact_lock(IMPORT_SLOT)))
             or gedraaid_op(dag)):
