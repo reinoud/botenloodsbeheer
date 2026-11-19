@@ -2,6 +2,29 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.1.0 (2026-11-19)
+
+Versie met de restpunten na 2.0.0 (milestone "Restpunten na v2.0.0"). Een minorversie, omdat de foutpagina voor 403 en 404 zichtbaar verandert.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.1.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.1.0`
+
+Ook beschikbaar onder de tags `2.1` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.1.0.cdx.json` en `botenloods-integratie-2.1.0.cdx.json`.
+
+**Gewijzigd**
+- Bij 403 en 404 toont de webinterface een eigen foutpagina in de huisstijl, met de kopbalk en een knop terug: naar het rekoverzicht als je bent ingelogd, anders naar inloggen. Een ingelogde gebruiker houdt zijn menu, ook bij een onbekend adres. De API geeft ongewijzigd zijn JSON-fouten (#341).
+
+**Opgelost**
+- De worker nam na de opschoning van die dag elke 15 seconden kort het importslot. Een ledenimport die precies dan binnenkwam, kreeg een 409 en de integratiecontainer wachtte een uur. Dat gebeurt niet meer (#346).
+
+**Tests**
+- Een test legt vast welke logacties een kijker ziet; een nieuwe actie wordt pas zichtbaar na een bewuste keuze (#342).
+- De controle op `url()` in de CSS vindt ook verwijzingen zonder aanhalingstekens en eist dat het pad binnen `static` blijft (#291).
+- Grenstests voor de lidkeuze: een lid met een naam van 100 en een lidnummer van 20 tekens, en een clubboot met een verenigingsnaam van 100 tekens (#333).
+
+**Bijwerken vanaf 2.0.0** (zie `documentatie/beheer/bijwerken.md`). Geen migratie; `docker-compose.yml` en `.env` zijn niet gewijzigd.
+
 ## 2.0.0 (2026-11-19)
 
 Versie met de rol kijker (milestone "Kijkers en v2.0.0"). Een majorversie, omdat elke route een nieuwe autorisatie heeft en het scherm Beheerders Gebruikers heet.

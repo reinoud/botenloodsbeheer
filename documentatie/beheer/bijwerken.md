@@ -31,6 +31,8 @@ Versie 1.4.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet.
 
 Versie 2.0.0 bevat migratie 0022 (rollen, de kijker). Migratie 0022 geeft elk bestaand account de rol beheerder en wijzigt `docker-compose.yml` en `.env` niet. `flask beheerder uitnodigen` maakt altijd een beheerder; een kijker nodig je uit via `/gebruikers`. De downgrade blokkeert eerst elke kijker, met een regel `beheerder.geblokkeerd` van `migratie` voor elke kijker die nog actief was in het technische log, omdat de oude versie geen rollen kent; na een nieuwe upgrade zijn het geblokkeerde beheerders die je deblokkeert of verwijdert.
 
+Versie 2.1.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet. Terug naar 2.0.0 kan zonder downgrade van de database.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
