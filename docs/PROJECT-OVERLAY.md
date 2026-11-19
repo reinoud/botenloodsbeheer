@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.5.99
+**Versie overlay:** v0.6.0
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-18
+**Bijgewerkt:** 2026-11-19
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -358,6 +358,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - In een worktree staat geen `.env`: noem `--env-file <hoofdmap>/.env` en voor `draai.sh` `COMPOSE_ENV_FILES=<hoofdmap>/.env` (#315).
 - `schermafbeeldingen.sh` draait op een vaste projectnaam (`botenloods-doc`) en een vast subnet, dus nooit tegelijk met een ander agent. Zegt een opdracht een scherm te vereenvoudigen, noem dan of de schermafbeelding opnieuw moet en wie dat doet (#321).
 - De E2E-basislijn noemt het aantal testfuncties per bestand (`grep -c '^def test_' tests/e2e/test_*.py`) naast het aantal geslaagd; `draai.sh` draait pytest meer dan eens. De volledige run duurt langer dan 600 seconden: wacht in twee until-lussen (#322).
+- Docker op de Mac van de stakeholder draait arm64; `uname -m` in de agentshell zegt x86_64 (Rosetta). Bouw de amd64-images voor trivy onder een eigen tag (`--platform linux/amd64`), nooit als `latest`. De E2E-stack draait het native image; controleer vóór de run met `docker image inspect -f '{{.Architecture}}' botenloods-app:latest` dat het arm64 is. Onder qemu haalt de worker zijn healthcheck niet en faalt de E2E (#344).
 
 #### Migratie en database
 
@@ -546,6 +547,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.0 | 2026-11-19 | Eén regel (E2E): images voor trivy onder een eigen tag, de E2E-stack native (arm64); uit de release v2.0.0 (#344) | Lessen |
 | v0.5.99 | 2026-11-19 | Zeven regels: open ontwerpvraag en testnamen bij een telling (Algemeen); selector met type (Bouw); constraint wijzigen als eigenaar (Migratie en database); basislijn per bestand en twee wachtlussen (E2E); cookie en curl bij een proef, object dat de E2E niet opruimt (Security); uit de terugblikken van #322 | Lessen |
 | v0.5.98 | 2026-11-18 | Vijf regels: budget per vervolg, budget per story, slice of milestone in de slicetabel, richtwaarde per ADR-besluitpunt, gedeelde nummers van open vragen (Documentatie, backlog en ADR's); uit de terugblikken van apex en foundation bij #322. Rollen in §3 en Algemeen bijgewerkt (kijker, ADR-015) | Lessen |
 | v0.5.97 | 2026-11-18 | Elf regels: oordeel met SendMessage en controle in de scratchpad, worktree nalopen na stoppen, python3 in plaats van sed (Algemeen); afkapgrens en test op de grens, vaste menulijsten, 404 of 405 (Bouw); volgordetest met expliciete id's, sleutel en macro met context (Review); stack zonder bouwen, `.env` in een worktree, schermafbeeldingen niet parallel (E2E); uit de terugblikken van milestone 9 | Lessen |
