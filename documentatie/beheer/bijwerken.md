@@ -29,7 +29,7 @@ Versie 1.3.0 heeft geen migratie. De eerste ledenimport daarna neemt oud-leden o
 
 Versie 1.4.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet.
 
-Migratie 0022 (rollen, de kijker; verschijnt met de volgende release) geeft elk bestaand account de rol beheerder en wijzigt `docker-compose.yml` en `.env` niet. `flask beheerder uitnodigen` maakt altijd een beheerder; een kijker nodig je uit via `/gebruikers`. De downgrade blokkeert eerst elke kijker, met een regel `beheerder.geblokkeerd` van `migratie` voor elke kijker die nog actief was in het technische log, omdat de oude versie geen rollen kent; na een nieuwe upgrade zijn het geblokkeerde beheerders die je deblokkeert of verwijdert.
+Versie 2.0.0 bevat migratie 0022 (rollen, de kijker). Migratie 0022 geeft elk bestaand account de rol beheerder en wijzigt `docker-compose.yml` en `.env` niet. `flask beheerder uitnodigen` maakt altijd een beheerder; een kijker nodig je uit via `/gebruikers`. De downgrade blokkeert eerst elke kijker, met een regel `beheerder.geblokkeerd` van `migratie` voor elke kijker die nog actief was in het technische log, omdat de oude versie geen rollen kent; na een nieuwe upgrade zijn het geblokkeerde beheerders die je deblokkeert of verwijdert.
 
 ## Tokens
 

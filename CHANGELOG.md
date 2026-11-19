@@ -2,6 +2,30 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.0.0 (2026-11-19)
+
+Versie met de rol kijker (milestone "Kijkers en v2.0.0"). Een majorversie, omdat elke route een nieuwe autorisatie heeft en het scherm Beheerders Gebruikers heet.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.0.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.0.0`
+
+Ook beschikbaar onder de tags `2.0` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.0.0.cdx.json` en `botenloods-integratie-2.0.0.cdx.json`.
+
+**Nieuw sinds 1.4.0**
+- Elk account heeft een rol: beheerder of kijker. Een kijker ziet het rekoverzicht, de vrije plaatsen, de boten, de pagina van een boot en van een plaats, en de zoekresultaten, en wijzigt niets. Hij ziet geen lidnummer, opzegdatum, tag oud-lid of wachtlijst, en heeft geen tokens. Een ander adres of een wijziging weigert de applicatie met 403 (#322).
+- Bij het uitnodigen kies je de rol. Op Gebruikers zet een beheerder een account om met **Maak kijker** of **Maak beheerder**. De laatste actieve beheerder kan geen kijker worden. Wordt een account kijker, dan vervallen zijn persoonlijke tokens (#322).
+
+**Gewijzigd**
+- Het scherm Beheerders heet Gebruikers en staat op `/gebruikers`. De oude url `/beheerders` verwijst door (#322).
+- De handleiding heeft een hoofdstuk Kijkers en nieuwe schermafbeeldingen (#322).
+
+**Bekend open werk**
+- Bij 403 en 404 toont de webinterface nog de kale foutpagina, zonder kopbalk of menu. Een kijker ziet die alleen via een oude bladwijzer of een getypte url (#341).
+- Een test die vastlegt welke logacties een kijker ziet, ontbreekt nog (#342).
+
+**Bijwerken vanaf 1.4.0** (zie `documentatie/beheer/bijwerken.md`). Migratie 0022 geeft elk bestaand account de rol beheerder; `docker-compose.yml` en `.env` zijn niet gewijzigd. `flask beheerder uitnodigen` maakt altijd een beheerder; een kijker nodig je uit op `/gebruikers`. Maak vóór het bijwerken een back-up: een downgrade blokkeert elke kijker, omdat 1.4.0 geen rollen kent.
+
 ## 1.4.0 (2026-11-18)
 
 Versie met lijsten en restpunten na 1.3.0 (milestone "Lijsten, restpunten en afhankelijkheden na v1.3.0").
