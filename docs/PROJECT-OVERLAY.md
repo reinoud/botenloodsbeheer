@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.0
+**Versie overlay:** v0.6.1
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -260,6 +260,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij elke review welke regels in de overlay na de bouw zijn toegevoegd; een ontbrekende test op zo'n regel is een restpunt (ernst laag) en blokkeert de review niet.
 - Een reviewer controleert vóór een testrun met `git diff --stat` dat de gemounte paden geen niet-gestagede wijzigingen hebben; anders toetst de test niet de gestagede diff.
 - Een nieuw Python-bestand buiten `app/` en `tests/` (zoals `docker/`) lint de reviewer met `-v $PWD/<map>:/app/<map>:ro` en `ruff check --no-cache <map>`; de testcontainer mount die map niet.
+- Zet per issue de acceptatiecriteria letterlijk onder de diff in de reviewbrief, zodat de reviewer `gh issue view` niet hoeft te draaien (#346).
 - Een reviewer die een eigen test draait, mount de scratchpad op `/app/scratch` en draait `pytest -p tests.unit.conftest /app/scratch/<bestand>` met `-e PYTHONPATH=/app`, nooit een bestand onder `tests/`.
 - Een eigen proef met `-p tests.unit.conftest /app/scratch/<bestand>` draait los, niet in dezelfde run als een bestand onder `tests/unit/`.
 - Een live proef van aegis met een eigen beheerder in `web` vraagt vooraf toestemming in de omgeving. Zonder die toestemming toetst aegis CSRF en autorisatie statisch en meldt dat in het oordeel.
@@ -547,6 +548,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.1 | 2026-11-19 | Eén regel (Review): acceptatiecriteria letterlijk in de reviewbrief; uit de terugblik bij #346, #342, #291 en #333 | Lessen |
 | v0.6.0 | 2026-11-19 | Eén regel (E2E): images voor trivy onder een eigen tag, de E2E-stack native (arm64); uit de release v2.0.0 (#344) | Lessen |
 | v0.5.99 | 2026-11-19 | Zeven regels: open ontwerpvraag en testnamen bij een telling (Algemeen); selector met type (Bouw); constraint wijzigen als eigenaar (Migratie en database); basislijn per bestand en twee wachtlussen (E2E); cookie en curl bij een proef, object dat de E2E niet opruimt (Security); uit de terugblikken van #322 | Lessen |
 | v0.5.98 | 2026-11-18 | Vijf regels: budget per vervolg, budget per story, slice of milestone in de slicetabel, richtwaarde per ADR-besluitpunt, gedeelde nummers van open vragen (Documentatie, backlog en ADR's); uit de terugblikken van apex en foundation bij #322. Rollen in §3 en Algemeen bijgewerkt (kijker, ADR-015) | Lessen |
