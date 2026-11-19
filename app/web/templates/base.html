@@ -46,7 +46,7 @@
             {% if groep %}<p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>{% endif %}
             <ul class="dj-nav__list"{% if groep %} aria-labelledby="menu-{{ loop.index0 }}"{% endif %}>
               {% for endpoint, naam in items %}
-              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
+              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if foutcode %}{% elif (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
               {% endfor %}
               {% if loop.last %}
               <li>
@@ -64,7 +64,7 @@
       {% endif %}{% endblock %}
     </div>
   </header>
-  <main class="dj-container bl-main" id="inhoud">
+  <main class="dj-container bl-main" id="inhoud"{% block hoofdattr %}{% endblock %}>
     {% with meldingen = get_flashed_messages(with_categories=true) %}
     {% if meldingen %}
     <div class="bl-meldingen">
