@@ -10,8 +10,8 @@ import re
 from conftest import gebruikersnaam, wachtwoord_instellen
 from playwright.sync_api import expect
 
-# De pagina van Werkzeug (de applicatie); de 403 van Traefik is een kale "Forbidden".
-APPLICATIE_403 = "permission to access the requested resource"
+# De foutpagina van de applicatie (#341); de 403 van Traefik is een kale "Forbidden".
+APPLICATIE_403 = 'data-fout="403"'
 
 
 def csrf(page):

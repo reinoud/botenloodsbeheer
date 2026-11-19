@@ -374,7 +374,7 @@ Het menu van een kijker is één lijst, zonder groepskoppen: Rekoverzicht, Vrije
 
 ![De pagina van een boot voor een kijker: de feiten en het log, zonder knoppen.](afbeeldingen/kijker-boot.png)
 
-Een kijker ziet nergens een lidnummer, een opzegdatum of de melding dat een eigenaar oud-lid is. De schermen Wachtlijst, Boten zonder eigenaar, Gaan opzeggen, Leden, Opgezegd, Log, de pagina van een lid en alles onder Beheer (Indeling, Kaartjes, Boten zonder foto, Import/export, Gebruikers, Technisch log, Tokens, Instellingen en Status) staan niet in zijn menu. Typt hij zo'n adres toch, dan weigert de applicatie het met een foutpagina (403). Hetzelfde geldt voor elke handeling die iets wijzigt, ook als iemand het formulier nabootst: alleen inloggen, uitloggen en het eigen profiel mogen. Een kijker heeft geen API-tokens.
+Een kijker ziet nergens een lidnummer, een opzegdatum of de melding dat een eigenaar oud-lid is. De schermen Wachtlijst, Boten zonder eigenaar, Gaan opzeggen, Leden, Opgezegd, Log, de pagina van een lid en alles onder Beheer (Indeling, Kaartjes, Boten zonder foto, Import/export, Gebruikers, Technisch log, Tokens, Instellingen en Status) staan niet in zijn menu. Typt hij zo'n adres toch, dan toont de applicatie de pagina Geen toegang (403), met een link naar het rekoverzicht. Een adres dat niet bestaat geeft voor iedereen de pagina Pagina niet gevonden (404), ook met die link. Hetzelfde geldt voor elke handeling die iets wijzigt, ook als iemand het formulier nabootst: alleen inloggen, uitloggen en het eigen profiel mogen. Een kijker heeft geen API-tokens.
 
 ## Naam, logo en bootsoorten
 

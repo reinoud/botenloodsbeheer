@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{# Foutpagina 403 en 404 (BV-95, #341). Zonder beheerder: alleen het logo, geen menu en geen zoekveld, en
+   geen CSRF-token (dat maakt een sessiecookie, #9). #}
+{% block csrf %}{% if g.beheerder %}{{ super() }}{% endif %}{% endblock %}
+{% set terug = url_for('web.rekoverzicht') if g.beheerder else url_for('web.inloggen') %}
+{% block logo %}<a class="dj-logo" href="{{ terug }}">{% if logo %}<img class="bl-logo" src="{{ url_for('web.logo', kenmerk=logo) }}" alt="">{% endif %}{{ vereniging }}</a>{% endblock %}
+{% block titel %}{{ kop }} · {{ vereniging }}{% endblock %}
+{% block hoofdattr %} data-fout="{{ foutcode }}"{% endblock %}
+{% block inhoud %}
+<div class="bl-plaats">
+<p class="ds-lab">Foutcode {{ foutcode }}</p>
+<h1>{{ kop }}</h1>
+<p>{{ tekst }}</p>
+<a class="ds-btn ds-btn--primary" href="{{ terug }}">{{ 'Naar het rekoverzicht' if g.beheerder else 'Naar inloggen' }}</a>
+</div>
+{% endblock %}

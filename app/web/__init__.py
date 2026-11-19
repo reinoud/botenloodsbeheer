@@ -54,14 +54,12 @@ def getal(waarde):
     return n
 
 
-@bp.before_request
-def laad_beheerder():
-    """Elk verzoek controleert of het account actief is en de sessieversie klopt (ADR-001), leest de rol uit
-    de database (nooit uit de cookie) en weigert een kijker buiten KIJKER_TOEGESTAAN (ADR-015)."""
-    g.beheerder = None
+def _sessiebeheerder():
+    """De beheerder van de sessie: actief account, sessieversie en sessieduur kloppen (ADR-001); de rol komt uit
+    de database, nooit uit de cookie. Anders None, en een ongeldige sessie wordt gewist."""
     beheerder_id = session.get("beheerder_id")
     if beheerder_id is None:
-        return
+        return None
     b = db.session.get(Beheerder, beheerder_id)
     if (
         not b
@@ -70,10 +68,16 @@ def laad_beheerder():
         or time.time() - session.get("ingelogd_op", 0) > SESSIEDUUR
     ):
         session.clear()
-        return
-    g.beheerder = b
+        return None
+    return b
+
+
+@bp.before_request
+def laad_beheerder():
+    """Elk verzoek leest de beheerder uit de sessie en weigert een kijker buiten KIJKER_TOEGESTAAN (ADR-015)."""
+    g.beheerder = b = _sessiebeheerder()
     # Een onbekende rol valt ook onder de weigering.
-    if b.rol != "beheerder" and request.endpoint not in KIJKER_TOEGESTAAN:
+    if b and b.rol != "beheerder" and request.endpoint not in KIJKER_TOEGESTAAN:
         abort(403)
 
 
@@ -137,6 +141,24 @@ def uitvoeren(functie, *args, gelukt=None):
     if gelukt:
         flash(gelukt, "info")
     return resultaat
+
+
+FOUTEN = {403: ("Geen toegang", "Met je account kun je deze pagina niet openen."),
+          404: ("Pagina niet gevonden",
+                "Dit adres leidt nergens heen. Misschien is de link verouderd of staat er een tikfout in.")}
+
+
+# app_errorhandler: een onbekend adres raakt geen view van de blueprint, dus before_request is niet gelopen
+# en g.beheerder niet gezet. De sessie lezen we hier opnieuw, zonder de kijkerweigering (BV-95, #341).
+# De dienst api registreert deze blueprint niet en houdt zijn eigen JSON-fouten.
+@bp.app_errorhandler(403)
+@bp.app_errorhandler(404)
+def foutpagina(fout):
+    g.beheerder = _sessiebeheerder()
+    kop, tekst = FOUTEN[fout.code]
+    # no-store zoals niet_bewaren: die after_request van het blueprint loopt niet bij een onbekend adres.
+    return (render_template("fout.html", foutcode=fout.code, kop=kop, tekst=tekst), fout.code,
+            {"Cache-Control": "no-store"})
 
 
 # app_errorhandler: MAX_CONTENT_LENGTH weigert al vóór de route en vóór CSRF. Terug naar het formulier
