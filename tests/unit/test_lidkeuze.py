@@ -11,7 +11,7 @@ from datetime import timedelta
 import pytest
 from sqlalchemy import select
 
-from app.domein import leden, lidkeuze, vandaag
+from app.domein import CLI, instellingen, leden, lidkeuze, vandaag
 from app.models import Bezettingsimport, Boot, db
 from tests.unit.hulp import lid
 from tests.unit.test_bezetting_csv import bestand, plaats
@@ -416,6 +416,32 @@ def test_boot_wijzigen_met_een_ongewijzigd_eigenaarveld_met_een_lange_lidnaam_la
     assert html.unescape(veld) == f"{LANG} (1001)"
     r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut 2", "bootsoort": b.bootsoort_id, "zoek": html.unescape(veld)})
     assert r.status_code < 400 and lidkeuze.NIET_GEKOZEN not in r.text and (b.naam, b.lid_id) == ("Fuut 2", maria.id)
+
+
+def eigenaarveld_terugsturen(ingelogd, b):  # noqa: F811
+    veld = html.unescape(re.search(r'id="eigenaar" name="zoek"[^>]*value="([^"]*)"', ingelogd.get(f"/boten/{b.id}").text)[1])
+    r = ingelogd.post(f"/boten/{b.id}", data={"naam": "Fuut 2", "bootsoort": b.bootsoort_id, "zoek": veld})
+    db.session.refresh(b)
+    return veld, r
+
+
+def test_een_lid_met_een_naam_van_100_en_een_lidnummer_van_20_tekens_blijft_eigenaar(ingelogd):  # noqa: F811
+    # Grens van MAX_TEKENS (#333): de langste keuze is precies 123 tekens. Mutant: MAX_TEKENS = 122.
+    nummer = "9" * 20
+    lang = lid(nummer, "N" * 100)
+    b = boot(lang.id, "Kajak", "Fuut")
+    veld, r = eigenaarveld_terugsturen(ingelogd, b)
+    assert len(veld) == 123
+    assert r.status_code < 400 and (b.naam, b.lid_id) == ("Fuut 2", lang.id)
+
+
+def test_een_clubboot_met_een_verenigingsnaam_van_100_tekens_blijft_clubboot(ingelogd):  # noqa: F811
+    # #333: "Vereniging (clubboot)" is 111 tekens. Mutant: MAX_TEKENS = 110.
+    instellingen.opslaan("V" * 100, CLI)
+    b = boot(None, "Kajak", "Fuut")
+    veld, r = eigenaarveld_terugsturen(ingelogd, b)
+    assert len(veld) == 111
+    assert r.status_code < 400 and (b.naam, b.lid_id, b.clubboot) == ("Fuut 2", None, True)
 
 
 @pytest.mark.parametrize("pad", ["/boten", "/boten/zonder-eigenaar"])
