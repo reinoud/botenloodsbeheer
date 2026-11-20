@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.4
+**Versie overlay:** v0.6.5
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -228,6 +228,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Maakt een besluit in dezelfde ronde een CSS-regel overbodig, noem dan welke mutant daarna de bewaker is, en welke bestaande E2E-test de verwijderde regel bewaakte; de reviewer draait die test met de nieuwe bewakermutant (#270).
 - Versoepelt de wijziging een regel in de kern, noem dan elke andere route die op de oude weigering leunde (zoals de bezettingsimport), en eis per route een test met een geval binnen de nieuwe grens, met een mutant (#298).
 - Een afkapgrens op een veld met een samengestelde tekst (zoals "Naam (lidnummer)") is minstens de som van de kolomlengtes plus de scheiders, afgeleid uit het model. De test staat precies op de nieuwe grens, met de langste geldige waarde (#316).
+- Verandert een redirect, een URL of een tekst waarop tests controleren, zoek het patroon dan in `tests/unit/` én `tests/e2e/` (zoals `grep -rn 'inloggen\$\|endswith("/inloggen")' tests/`) en draai de geraakte E2E-tests, niet alleen de nieuwe. Een E2E-test logt hooguit één keer in met een TOTP-account; de tweede code valt buiten het venster (#354).
 - Een nieuw menu-item: zoek de E2E-tests met een vaste menulijst (zoals `tests/e2e/test_rekindeling_csv.py`) en werk ze bij (#315).
 - Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
 - Een E2E-selector op een formulierveld noemt het type (`input[type=radio][name=...]`); rij-acties met verborgen velden van dezelfde naam tellen anders mee (#322).
@@ -293,6 +294,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
 - Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
 - Noem in een reviewbrief per gewijzigde domeinfunctie via welke ingangen (web, API, CLI) ze bereikbaar is, en dat ruff de regellengte (E501) niet controleert: een te lange regel is een opmerking, geen blokkade (#348).
+- Bij een nareview gaan de oude en de nieuwe gestagede diff mee, met de bestanden die ertussen zijn veranderd; de reviewer vergelijkt per bestand (#354).
+- Eigen unitproeven van een reviewer: mount de scratchpad als `/proef:ro` en draai `pytest -p tests.unit.conftest /proef/...` met `-e PYTHONPATH=/app`; `tests/unit` is in de container alleen-lezen (#354).
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
 - Noem bij een review van een basisimage dat `.github/workflows/images.yml` alleen `linux/amd64` bouwt, zodat de reviewer weet welke architectuur de scan moet dekken.
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
@@ -554,6 +557,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.5 | 2026-11-20 | Drie regels: patroon zoeken in unit- én E2E-tests, één TOTP-inlog per E2E-test (Bouw); nareview met oude en nieuwe diff, eigen unitproeven via `/proef` (Review); uit de terugblikken bij #354 | Lessen |
 | v0.6.4 | 2026-11-20 | Eén regel bij Review: ingangen per domeinfunctie en regellengte in de reviewbrief; uit de terugblikken bij #348 | Lessen |
 | v0.6.3 | 2026-11-19 | Eén regel bij E2E: de release-E2E in een eigen project met eigen images, en de dev-integratie herstarten na `draai.sh`; uit de terugblik bij #347 | Lessen |
 | v0.6.2 | 2026-11-19 | Vier regels: foutafhandelaar zonder hooks van het blueprint, globale afhandelaar en statische bestanden (Bouw); vervangen guard bij een nareview, duur van de unitsuite (Review); uit de terugblikken bij #341 | Lessen |
