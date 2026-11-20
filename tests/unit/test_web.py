@@ -19,7 +19,7 @@ def inloggen(client, geheim, stappen_verder=1, gebruikersnaam="anna"):
 def test_beheerpagina_vraagt_inloggen(client):
     for pad in ("/", "/log", "/log/techniek"):
         r = client.get(pad)
-        assert r.status_code == 302 and r.location.endswith("/inloggen")
+        assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_account_instellen_via_uitnodiging(app, client):
@@ -47,11 +47,11 @@ def test_inloggen_en_uitloggen(app, client):
     with client.session_transaction() as s:
         oude_sessie = dict(s)
     client.post("/uitloggen")
-    assert client.get("/rekoverzicht").location.endswith("/inloggen")
+    assert client.get("/rekoverzicht").location.startswith("/inloggen")
     # Een bewaarde kopie van de oude sessie werkt niet meer: de sessieversie is opgehoogd.
     with client.session_transaction() as s:
         s.update(oude_sessie)
-    assert client.get("/rekoverzicht").location.endswith("/inloggen")
+    assert client.get("/rekoverzicht").location.startswith("/inloggen")
 
 
 def test_fout_wachtwoord_en_foute_code_geven_dezelfde_melding(client):
@@ -68,7 +68,7 @@ def test_fout_wachtwoord_en_foute_code_geven_dezelfde_melding(client):
 
 def test_codestap_zonder_wachtwoordstap(client):
     r = client.post("/inloggen/code", data={"code": "123456"})
-    assert r.location.endswith("/inloggen")
+    assert r.location.startswith("/inloggen")
 
 
 def test_sessie_eindigt_bij_inactief_account(client):
@@ -76,7 +76,7 @@ def test_sessie_eindigt_bij_inactief_account(client):
     inloggen(client, geheim)
     db.session.get(Beheerder, b.id).actief = False
     db.session.commit()
-    assert client.get("/rekoverzicht").location.endswith("/inloggen")
+    assert client.get("/rekoverzicht").location.startswith("/inloggen")
 
 
 def test_sessie_verloopt_na_12_uur(client):
@@ -84,7 +84,7 @@ def test_sessie_verloopt_na_12_uur(client):
     inloggen(client, geheim)
     with client.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 12 * 3600 - 1
-    assert client.get("/rekoverzicht").location.endswith("/inloggen")
+    assert client.get("/rekoverzicht").location.startswith("/inloggen")
 
 
 def test_csrf_verplicht(database):

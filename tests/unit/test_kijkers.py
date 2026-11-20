@@ -176,7 +176,7 @@ def test_een_kijker_mag_inloggen_uitloggen_en_zijn_eigen_profiel_beheren(app):
     assert client.post("/profiel/wachtwoord").status_code == 302
     assert client.post("/profiel/passkey/opties").status_code == 200
     assert client.post("/uitloggen").status_code == 302
-    assert client.get("/rekoverzicht").location.endswith("/inloggen")
+    assert client.get("/rekoverzicht").location.startswith("/inloggen")
 
 
 # Wat een kijker ziet

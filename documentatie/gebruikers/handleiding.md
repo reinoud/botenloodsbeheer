@@ -12,7 +12,7 @@ Je logt in met een passkey (telefoon, vingerafdruk of beveiligingssleutel) of me
 2. Kies **Inloggen met passkey** en volg de vraag van je apparaat. Of klap **Met wachtwoord en code** uit, vul je gebruikersnaam en wachtwoord in en kies **Verder**.
 3. Bij een wachtwoord vraagt de applicatie daarna de code van zes cijfers uit je authenticator-app.
 
-Na het inloggen sta je op het rekoverzicht. Een mislukte poging met je wachtwoord laat het blok **Met wachtwoord en code** open staan, zodat je het direct opnieuw kunt proberen.
+Na het inloggen sta je op het rekoverzicht, tenzij je via een link, een bladwijzer of een verlopen sessie op een andere pagina kwam: dan kom je daar terug (na een formulier op de pagina van dat formulier, zonder de ingevulde gegevens). Een mislukte poging met je wachtwoord laat het blok **Met wachtwoord en code** open staan, zodat je het direct opnieuw kunt proberen.
 
 ![Het inlogscherm met een knop voor de passkey en een dicht blok voor gebruikersnaam en wachtwoord.](afbeeldingen/inloggen.png)
 

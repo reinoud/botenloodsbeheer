@@ -185,7 +185,7 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     expect(page.get_by_role("heading", level=1)).to_have_text("Deze pagina bestaat niet")
     expect(page.locator("header a, .dj-skip")).to_have_count(0)
     page.goto("/indeling")
-    expect(page).to_have_url(re.compile(r"/inloggen$"))
+    expect(page).to_have_url(re.compile(r"/inloggen(\?|$)"))
 
 
 def test_ledenboot_op_clubplaats_en_verkeerde_bootsoort_geweigerd(page):

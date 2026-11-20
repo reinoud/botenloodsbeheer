@@ -179,14 +179,14 @@ def test_opslaan_en_verwijderen_vragen_een_recente_inlog(ingelogd, pad):  # noqa
     with ingelogd.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
     r = ingelogd.post(pad, data={"logo": (io.BytesIO(png(20, 20)), "l.png")})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert instellingen.logo() == vorig and acties() == ["instelling.logo_toegevoegd"]
 
 
 @pytest.mark.parametrize("pad", ["/instellingen/logo", "/instellingen/logo/verwijderen"])
 def test_zonder_inlog_geen_wijziging(client, pad):
     r = client.post(pad, data={"logo": (io.BytesIO(png()), "l.png")})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert aantal_logos() == 0 and acties() == []
 
 

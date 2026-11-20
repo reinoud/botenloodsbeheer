@@ -34,7 +34,7 @@ def bezette_plaats(club=False, foto=None, onbekend=False):
 @pytest.mark.parametrize("pad", BEHEER)
 def test_beheer_vraagt_inloggen(client, pad):
     r = client.get(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 @pytest.mark.parametrize("pad", ["/rekken", "/rekken/1/naam", "/rekken/1/indeling",
@@ -43,7 +43,7 @@ def test_beheer_vraagt_inloggen(client, pad):
                                  "/plaatsen/1", "/plaatsen/1/vrijgeven", "/boten/1"])
 def test_bezoeker_kan_niets_wijzigen(client, pad):
     r = client.post(pad, data={"naam": "X", "vak": "1-1", "bootsoort": 1})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.scalar(select(Rek)) is None
 
 

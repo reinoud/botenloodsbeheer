@@ -94,7 +94,7 @@ def ingelogd(client):
 
 def test_pagina_vraagt_inloggen(client):
     r = client.get("/rekoverzicht")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_menu_item_rekoverzicht(ingelogd):

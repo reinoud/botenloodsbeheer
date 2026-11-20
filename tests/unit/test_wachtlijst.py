@@ -372,9 +372,9 @@ def test_andere_eigenaar_geeft_een_melding_aan_de_beheerder(ingelogd):  # noqa: 
 
 def test_bezoeker_kan_wachtlijst_niet_zien_of_wijzigen(client):
     b = boot(lid().id)
-    assert client.get("/wachtlijst").location.endswith("/inloggen")
+    assert client.get("/wachtlijst").location.startswith("/inloggen")
     for pad in (f"/boten/{b.id}/wachtlijst", f"/boten/{b.id}/wachtlijst/verwijderen"):
-        assert client.post(pad).location.endswith("/inloggen")
+        assert client.post(pad).location.startswith("/inloggen")
     assert op_lijst(b) is None
 
 

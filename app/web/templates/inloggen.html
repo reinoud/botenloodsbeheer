@@ -8,7 +8,7 @@
   <h2 class="dj-panel__title" id="passkey-kop">Met een passkey</h2>
   <button type="button" class="ds-btn ds-btn--primary" id="passkey-inloggen"
           data-opties="{{ url_for('web.inloggen_passkey_opties') }}"
-          data-verifieer="{{ url_for('web.inloggen_passkey') }}">Inloggen met passkey</button>
+          data-verifieer="{{ url_for('web.inloggen_passkey', volgende=volgende) }}">Inloggen met passkey</button>
   <div class="ds-notice ds-notice--danger" hidden>
     <span class="ds-notice__mark" aria-hidden="true">!</span>
     <p class="ds-notice__body" id="passkey-fout"></p>
@@ -19,6 +19,7 @@
   <div class="bl-uitklap__inhoud">
     <form class="bl-formulier" method="post" action="{{ url_for('web.inloggen_wachtwoord') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {% if volgende %}<input type="hidden" name="volgende" value="{{ volgende }}">{% endif %}
       <div class="ds-field">
         <label class="ds-field__label" for="gebruikersnaam">Gebruikersnaam</label>
         <input class="ds-input" id="gebruikersnaam" name="gebruikersnaam" type="text" autocomplete="username" required>
