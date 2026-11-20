@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation, 2026-11-18; open vraag 1 beantwoord door besluit 8 (2026-11-18); koppeling met een lid 2026-11-20
 **Datum:** 2026-11-18
-**Versie:** v1.2.0
+**Versie:** v1.2.1
 **Stories:** BLB-050, BLB-051; issues #322, #348, #353
 
 ## Context
@@ -57,7 +57,7 @@ Een account kan aan een lid gekoppeld zijn, optioneel (issue #353, besluiten sta
 
 **Koppelen.** `beheerders.lid_koppelen(beheerder_id, lid_id, actor)`, onder `_vergrendelen`; `lid_id` None maakt los. Route `POST /gebruikers/<id>/lid`, veld `lid_id` (leeg is los), met recente inlog. Het endpoint staat niet in `KIJKER_TOEGESTAAN`: een kijker krijgt 403. `uitnodigen` en `POST /gebruikers` krijgen het optionele `lid_id` (besluit 4); de CLI koppelt niet. Een onbekend of net opgeschoond lid geeft een `Regelfout`.
 
-**Kijker niet aan een oud-lid (besluit 7).** De server weigert als `is_oud_lid` waar is: een kijker koppelen of uitnodigen, of een gekoppeld account kijker maken. Koppelen en rol wijzigen delen het slot, dus samen maken ze geen kijker aan een oud-lid. Een beheerder mag wel.
+**Kijker niet aan een oud-lid (besluit 7).** De server weigert als `is_oud_lid` waar is: een kijker koppelen of uitnodigen, of een gekoppeld account kijker maken. Koppelen en rol wijzigen delen het slot, dus samen maken ze geen kijker aan een oud-lid. `uitnodigen` neemt het slot niet: een nieuw account is voor niemand anders bereikbaar, dus er is niets om mee te racen. De controle zelf staat in één functie (`_kijker_niet_aan_oud_lid`) voor alle drie. Een beheerder mag wel.
 
 **Log.** Nieuw `beheerder.lid_gewijzigd` in `TECHNISCH`, met `gebruikersnaam` en `lid: [oud, nieuw]` als `lid:<id>` of null, alleen bij een wijziging; verwijzingen naar account en leden. `beheerder.uitgenodigd` krijgt het veld `lid`.
 
@@ -99,6 +99,7 @@ Bestand `0023_gebruiker_lid.py`, `down_revision = '0022'`. Upgrade: kolom `lid_i
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.2.1 | 2026-11-20 | Verduidelijkt: `uitnodigen` neemt het slot niet voor besluit 7 | Bouw van #353 |
 | v1.2.0 | 2026-11-20 | Koppeling met een lid, opschoning van kijkers, migratie 0023 | Issue #353, besluiten stakeholder 2026-11-19 en 2026-11-20 |
 | v1.1.0 | 2026-11-20 | Bij een wijziging naar kijker telt alleen een beheerder die kan inloggen | Verzoek stakeholder 2026-11-19, issue #348 |
 | v1.0.1 | 2026-11-19 | Wachtlijstregels weg uit het log voor een kijker; downgrade logt alleen actieve kijkers; open vraag 1 beantwoord | Besluit stakeholder op AEG-01, issue #322 |

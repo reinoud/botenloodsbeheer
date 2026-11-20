@@ -33,6 +33,8 @@ Versie 2.0.0 bevat migratie 0022 (rollen, de kijker). Migratie 0022 geeft elk be
 
 Versie 2.1.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet. Terug naar 2.0.0 kan zonder downgrade van de database.
 
+Migratie 0023 (een gebruiker koppelen aan een lid, issue #353) voegt de kolom `lid_id` aan `beheerder` toe en geeft `botenloods_taken` het recht om kijkers te verwijderen (lezen van vier kolommen en `DELETE` op `beheerder`). `docker-compose.yml` en `.env` wijzigen niet. Alle accounts staan daarna als niet gekoppeld op de statuspagina, tot een beheerder ze koppelt. De downgrade trekt de rechten in en verwijdert de kolom: de koppelingen gaan verloren.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
@@ -40,7 +42,7 @@ Versie 2.1.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet.
 - Vernieuwen: een nieuw token onder een andere naam maken, in `secrets/api_token` zetten en daarna het oude intrekken.
 - Intrekken: `docker compose exec web flask token intrekken <naam>`.
 - API uitzetten: `API_INGESCHAKELD=false` in `.env` en `docker compose up -d api web`.
-- De statuspagina (`/status`) waarschuwt 31 dagen voordat een token verloopt, met naam en vervaldatum, en toont per robottoken de laatste aanroep.
+- De statuspagina (`/status`) waarschuwt 31 dagen voordat een token verloopt, met naam en vervaldatum, en toont per robottoken de laatste aanroep. Ze waarschuwt ook voor beheerders van wie het gekoppelde lid oud-lid is en voor gebruikers zonder gekoppeld lid, elk met het aantal en de gebruikersnamen (`/status.json`: `beheerders_oud_lid` en `niet_gekoppeld`). Geblokkeerde accounts tellen mee. Een account dat bewust aan geen lid hoort, zoals een account van de hosting, houdt de status op waarschuwing.
 
 ## Logs
 
@@ -58,6 +60,6 @@ De toegangsregels bevatten IP-adressen. Bewaar de logs daarom niet langer dan no
 
 ## Bewaartermijn
 
-De `worker` verwijdert elke dag na `OPSCHOON_TIJDSTIP` (standaard 04:00) de logregels van meer dan 5 jaar oud, en oud-leden van wie de opzegdatum meer dan 5 jaar geleden ligt, met hun boten en foto's. Zonder opzegdatum telt de datum waarop het lid uit de bron verdween. Een oud-lid met een boot op een plaats blijft staan. Loopt er op dat moment een import, dan probeert de opschoning het in de volgende ronde opnieuw, na 15 seconden. De worker gebruikt daarvoor de databaserol `botenloods_taken`, de enige rol die logregels mag verwijderen. Mislukt de opschoning, dan staat dat met de foutklasse op de statuspagina en volgt de volgende dag een nieuwe poging. De uitkomst staat ook in het technische log als `opschoning.uitgevoerd`.
+De `worker` verwijdert elke dag na `OPSCHOON_TIJDSTIP` (standaard 04:00) de logregels van meer dan 5 jaar oud, eerst elke kijker van wie het gekoppelde lid oud-lid is (opzegdatum of datum uit de bron is vandaag of eerder; een beheerder blijft, ook een geblokkeerde kijker gaat weg), met een regel `beheerder.verwijderd` en de reden `oud-lid` in het technische log, en oud-leden van wie de opzegdatum meer dan 5 jaar geleden ligt, met hun boten en foto's. Zonder opzegdatum telt de datum waarop het lid uit de bron verdween. Een oud-lid met een boot op een plaats blijft staan. Loopt er op dat moment een import, dan probeert de opschoning het in de volgende ronde opnieuw, na 15 seconden. De worker gebruikt daarvoor de databaserol `botenloods_taken`, de enige rol die logregels mag verwijderen; op `beheerder` leest ze vier kolommen en mag ze verwijderen (migratie 0023). Een gekoppeld lid dat na 5 jaar wordt opgeschoond, wist de koppeling; het account blijft en staat dan als niet gekoppeld op de statuspagina. Mislukt de opschoning, dan staat dat met de foutklasse op de statuspagina en volgt de volgende dag een nieuwe poging. De uitkomst staat ook in het technische log als `opschoning.uitgevoerd`.
 
 Back-ups vallen buiten de applicatie. Een back-up bevat verwijderde gegevens tot hij zelf wordt verwijderd; bewaar back-ups daarom niet langer dan nodig.

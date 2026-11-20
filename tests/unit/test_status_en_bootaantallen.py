@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 
 import jsonschema
 import pytest
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.domein import CLI, boten, leden, opschonen, toewijzing, tokens, wachtlijst
 from app.models import Logregel, Taakrun, Token, db
@@ -115,6 +115,9 @@ def test_html_en_json_uit_dezelfde_gegevens(app, ingelogd):
     """BLB-037 criterium 1: alle onderdelen, en de opschoning met tijdstip en aantallen
     (BLB-026 criterium 5)."""
     run("heartbeat", uren=0)
+    # Een ongekoppeld account zet het totaal op waarschuwing (ADR-010, #353): koppel het.
+    db.session.execute(text("UPDATE beheerder SET lid_id = :l"), {"l": lid("1001", "Anna").id})
+    db.session.commit()
     run(leden.TAAK, aantallen={"nieuw": 3, "bijgewerkt": 1})
     run(opschonen.TAAK, aantallen={"logregels": 7, "leden": 2, "boten": 3, "fotos": 1})
     s = json_status(ingelogd)

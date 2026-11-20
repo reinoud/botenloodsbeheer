@@ -1,5 +1,5 @@
 """Technische status (BLB-037, ADR-010): één functie voor /status en /status.json. Alleen lezen.
-Er staan geen tokenwaarden, wachtwoorden of gegevens van leden in; een reden van een mislukte
+Er staan geen tokenwaarden, wachtwoorden of gegevens van leden in (alleen gebruikersnamen van accounts); een reden van een mislukte
 import komt uit de vaste lijst van de applicatie (BLB-006)."""
 
 from datetime import UTC, datetime, timedelta
@@ -9,7 +9,7 @@ from flask import current_app
 from sqlalchemy import select, text
 
 from app.domein import boten, leden, opschonen
-from app.models import Taakrun, Token, db
+from app.models import Beheerder, Lid, Taakrun, Token, db
 from app.taken import HEARTBEAT_MAX
 from app.web.health import HEAD
 
@@ -52,6 +52,11 @@ def status():
     verlopend = db.session.scalars(
         actief.where(Token.verloopt_op <= nu + VERLOOPT_BINNEN).order_by(Token.verloopt_op)).all()
 
+    def accounts(*voorwaarden):
+        namen = db.session.scalars(select(Beheerder.gebruikersnaam).where(*voorwaarden)
+                                   .order_by(Beheerder.gebruikersnaam)).all()
+        return {"status": "waarschuwing" if namen else "ok", "aantal": len(namen), "gebruikers": namen}
+
     onderdelen = {
         "database": {
             "status": "ok" if migratie == HEAD else "fout",
@@ -76,6 +81,11 @@ def status():
             "status": "waarschuwing" if verlopend else "ok",
             "tokens": [{"naam": t.naam, "soort": t.soort,
                         "vervaldatum": t.verloopt_op.astimezone(tz).date()} for t in verlopend]},
+        # Geblokkeerde accounts tellen mee; er staan alleen gebruikersnamen (ADR-010, #353).
+        "beheerders_oud_lid": accounts(
+            Beheerder.rol == "beheerder",
+            Beheerder.lid_id.in_(select(Lid.id).where(leden.oud_lid()))),
+        "niet_gekoppeld": accounts(Beheerder.lid_id.is_(None)),
     }
     totaal = max((o["status"] for o in onderdelen.values()), key=ERNST.index)
     return {"status": totaal, "versie": current_app.config["APP_VERSIE"], "tijdstip": nu,

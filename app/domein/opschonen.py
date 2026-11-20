@@ -1,4 +1,5 @@
-"""Bewaartermijn van 5 jaar (BLB-026, ADR-006): logregels, en oud-leden van wie geen boot een
+"""Bewaartermijn van 5 jaar (BLB-026, ADR-006): logregels, kijkers van wie het gekoppelde lid oud-lid is
+(ADR-015, #353; beheerders blijven), en oud-leden van wie geen boot een
 plaats heeft, met hun boten en foto's. Ook verlopen bezettingsimports en naamkoppelingen die 5 jaar
 niet zijn gebruikt (ADR-014 §3); een koppeling aan een verwijderd lid gaat mee met het lid. Draait dagelijks in de worker als botenloods_taken, de
 enige rol die logregels mag verwijderen (ADR-007).
@@ -16,8 +17,18 @@ from flask import current_app
 from sqlalchemy import delete, func, select
 
 from app.domein import Actor, log, vandaag
-from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug, termijn_verlopen
-from app.models import Afbeelding, Bezettingsimport, Boot, Lid, Logregel, Naamkoppeling, Taakrun, db
+from app.domein.leden import BEWAARJAREN, IMPORT_SLOT, jaren_terug, oud_lid, termijn_verlopen
+from app.models import (
+    Afbeelding,
+    Beheerder,
+    Bezettingsimport,
+    Boot,
+    Lid,
+    Logregel,
+    Naamkoppeling,
+    Taakrun,
+    db,
+)
 
 TAAK = "opschoning"
 SLOT = 2  # sleutel van de advisory lock; 1 is de import
@@ -33,6 +44,17 @@ def opschonen(dag):
     logregels = db.session.execute(
         delete(Logregel).where(Logregel.tijdstip < jaren_terug(datetime.now(UTC), BEWAARJAREN))
     ).rowcount
+    # Vóór de leden: daarna zou ON DELETE SET NULL de koppeling al gewist hebben. De voorwaarden staan in
+    # de DELETE zelf, zodat PostgreSQL de rij opnieuw toetst na een gelijktijdige rolwijziging of koppeling.
+    # Core-delete: session.delete leest alle kolommen, en de worker leest er vier (ADR-007).
+    kijkers = db.session.execute(
+        delete(Beheerder).where(Beheerder.rol == "kijker",
+                                Beheerder.lid_id.in_(select(Lid.id).where(oud_lid(dag))))
+        .returning(Beheerder.id, Beheerder.gebruikersnaam, Beheerder.lid_id)
+        .execution_options(synchronize_session=False)).all()
+    for kijker in kijkers:
+        log.schrijf(ACTOR, "beheerder.verwijderd", [f"beheerder:{kijker.id}", f"lid:{kijker.lid_id}"],
+                    {"gebruikersnaam": kijker.gebruikersnaam, "reden": "oud-lid"})
     op_een_plaats = select(Boot.lid_id).join(Boot.plaats).where(Boot.lid_id.is_not(None))
     ids = db.session.scalars(select(Lid.id).where(
         termijn_verlopen(dag), Lid.id.not_in(op_een_plaats))
@@ -52,7 +74,7 @@ def opschonen(dag):
         Bezettingsimport.verloopt_op <= func.now())).rowcount
     koppelingen = db.session.execute(delete(Naamkoppeling).where(
         Naamkoppeling.gebruikt_op < jaren_terug(datetime.now(UTC), BEWAARJAREN))).rowcount
-    return {"logregels": logregels, "leden": len(ids), "boten": len(boten), "fotos": len(fotos),
+    return {"logregels": logregels, "kijkers": len(kijkers), "leden": len(ids), "boten": len(boten), "fotos": len(fotos),
             "imports": imports, "koppelingen": koppelingen}
 
 
