@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.7
+**Versie overlay:** v0.6.8
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -132,6 +132,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen, ook bij een nieuwe E2E-vergelijking, en meld pas daarna groen.
 - Een reviewer draait een mutant met een kopie van `app` in zijn scratchpad als volume: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <kopie>:/app/app:ro test pytest ...`. Hij kiest een verse mapnaam en gebruikt geen `rm -rf` (#268).
+- Draait een reviewer de tests vanuit een kopie of worktree met `--project-directory <kopie>`, dan geeft hij ook `-p botenloods` mee; een andere projectnaam heeft geen database (#362).
 - Een slottest op een slot in een domeinfunctie roept die functie direct aan en probeert het slot met een tweede verbinding (`FOR UPDATE NOWAIT`). Een test via de hele flow laat de mutant overleven als een latere stap hetzelfde slot neemt (#283).
 - Een mutant op `app/config.py` vraagt een nieuwe `web` (`up -d --no-deps --force-recreate web` met `compose.dev.yml`); gunicorn `--reload` laadt de config niet opnieuw (#285). Noem bij een mutant op globale staat (zoals het logo) hoe de reviewer die staat zet en uitleest.
 - ruff draait in de testcontainer (`... run --rm test ruff check --no-cache app tests`), niet op de host (#283).
@@ -562,6 +563,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.8 | 2026-11-20 | Eén regel: projectnaam bij tests vanuit een kopie (Bouw); uit de terugblik van sentinel bij #362 | Lessen |
 | v0.6.7 | 2026-11-20 | Vier regels: rechten- en head-tests vooraf zoeken, DELETE-recht in de ADR, geen gelijktijdige migratietests (Migratie); voorwaardemutant in twee richtingen (Bouw); uit de terugblikken bij #353 deel 1 | Lessen |
 | v0.6.6 | 2026-11-20 | Woorden tellen per sectie, zonder tabelrijen (Documentatie); uit de terugblik bij #353 | Lessen |
 | v0.6.5 | 2026-11-20 | Drie regels: patroon zoeken in unit- én E2E-tests, één TOTP-inlog per E2E-test (Bouw); nareview met oude en nieuwe diff, eigen unitproeven via `/proef` (Review); uit de terugblikken bij #354 | Lessen |
