@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.3
+**Versie overlay:** v0.6.4
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -292,6 +292,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een pull request dat een bestand in `.github/workflows/` wijzigt, mergt alleen met een `gh`-token met de scope `workflow`; zonder die scope weigert GitHub de merge.
 - Noem bij een vraag over meer HTTP-methoden of statussen of de test per methode of status moet bestaan, of dat één codepad dat er geen onderscheid in maakt volstaat.
 - Zeg in een reviewbrief of een risico dat al op een ander pad in dezelfde functie bestaat (zoals een onbegrensde `read()`) als bevinding telt of als adviespunt.
+- Noem in een reviewbrief per gewijzigde domeinfunctie via welke ingangen (web, API, CLI) ze bereikbaar is, en dat ruff de regellengte (E501) niet controleert: een te lange regel is een opmerking, geen blokkade (#348).
 - Noem de Python-versie van de container (3.14) in de brief, zodat de reviewer niet hoeft na te gaan wat de standaardbibliotheek afhandelt.
 - Noem bij een review van een basisimage dat `.github/workflows/images.yml` alleen `linux/amd64` bouwt, zodat de reviewer weet welke architectuur de scan moet dekken.
 - Noem bij een test op een HTTP-antwoord welke vormen hij dekt (met `Content-Length`, chunked, zonder lengte), zodat de reviewer alleen de rest hoeft na te gaan.
@@ -553,6 +554,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.4 | 2026-11-20 | Eén regel bij Review: ingangen per domeinfunctie en regellengte in de reviewbrief; uit de terugblikken bij #348 | Lessen |
 | v0.6.3 | 2026-11-19 | Eén regel bij E2E: de release-E2E in een eigen project met eigen images, en de dev-integratie herstarten na `draai.sh`; uit de terugblik bij #347 | Lessen |
 | v0.6.2 | 2026-11-19 | Vier regels: foutafhandelaar zonder hooks van het blueprint, globale afhandelaar en statische bestanden (Bouw); vervangen guard bij een nareview, duur van de unitsuite (Review); uit de terugblikken bij #341 | Lessen |
 | v0.6.1 | 2026-11-19 | Eén regel (Review): acceptatiecriteria letterlijk in de reviewbrief; uit de terugblik bij #346, #342, #291 en #333 | Lessen |
