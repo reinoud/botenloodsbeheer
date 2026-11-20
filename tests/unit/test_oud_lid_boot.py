@@ -324,14 +324,14 @@ def test_boot_wijzigen_toont_de_melding_bij_een_oud_lid_en_zoekt_oud_leden(ingel
     assert b.lid_id == oud.id and "De eigenaar is oud-lid. De boot is van de wachtlijst gehaald." in r.text
 
 
-def test_leden_toont_de_tag_oud_lid_achter_de_naam_en_escapet(ingelogd):  # noqa: F811
-    # Mutant: `|safe` op l.naam laat <b>x</b> door; de tag buiten het element van de naam valt op de tweede assert.
+def test_leden_toont_lid_en_oud_lid_in_dezelfde_kolom_en_escapet(ingelogd):  # noqa: F811
+    # Mutant: `|safe` op l.naam laat <b>x</b> door; de tag weer achter de naam valt op de assert van rij_oud (#362).
     oud = oud_lid(BINNEN, "1002", "Oud <b>x</b>")
     actief = lid("1001", "Actief")
     t = ingelogd.get("/leden").text
-    assert "<b>x</b>" not in t
-    assert (f'<span><a class="bl-item__titel" data-label="Naam" href="/leden/{oud.id}">Oud &lt;b&gt;x&lt;/b&gt;</a> '
-            '<span class="ds-tag" data-label="Status">oud-lid</span></span>') in t
+    assert "<b>x</b>" not in t and "Oud &lt;b&gt;x&lt;/b&gt;</a>" in t
+    rij_oud = t.split(f'href="/leden/{oud.id}"', 1)[1].split("</li>", 1)[0]
+    assert '<p class="bl-item__zijde"><span class="ds-tag" data-label="Status">oud-lid</span></p>' in rij_oud
     rij_actief = t.split(f'href="/leden/{actief.id}"', 1)[1].split("</li>", 1)[0]
     assert '<p class="bl-item__zijde"><span class="ds-tag" data-label="Status">lid</span></p>' in rij_actief
     assert t.count('data-label="Status">oud-lid') == 1
