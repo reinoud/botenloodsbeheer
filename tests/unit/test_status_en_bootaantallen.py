@@ -108,7 +108,7 @@ def json_status(client):
 def test_status_vraagt_inloggen(client):
     for pad in ("/status", "/status.json"):
         r = client.get(pad)
-        assert r.status_code == 302 and r.location.endswith("/inloggen")
+        assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_html_en_json_uit_dezelfde_gegevens(app, ingelogd):

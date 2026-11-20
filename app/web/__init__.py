@@ -3,6 +3,7 @@
 import time
 from functools import wraps
 from itertools import groupby
+from urllib.parse import unquote, urlsplit
 from zoneinfo import ZoneInfo
 
 from flask import (
@@ -104,11 +105,39 @@ def start_sessie(beheerder):
     )
 
 
+def veilig_doel(doel):
+    """Het doel na het inloggen als het een pad binnen de applicatie is, anders None (open redirect, #354).
+    Eén `/` aan het begin, geen `\\` en geen stuurtekens; ook niet na het decoderen (`%0d`, `/%2f`, `/%5c`)."""
+    if not isinstance(doel, str) or len(doel) > 1000:
+        return None
+    for tekst in (doel, unquote(doel)):
+        if not tekst.startswith("/") or tekst.startswith("//") or "\\" in tekst \
+                or any(ord(c) < 32 or ord(c) == 127 for c in tekst):
+            return None
+    return doel
+
+
+def inlogdoel():
+    """Waar de gebruiker na het inloggen heen moet: bij een GET de opgevraagde pagina, anders (formulier of
+    fetch) de pagina uit de Referer van dezelfde host. None zonder bruikbaar doel (#354)."""
+    if request.method == "GET":
+        return veilig_doel(request.full_path.removesuffix("?"))
+    deel = urlsplit(request.headers.get("Referer", ""))
+    if deel.netloc != request.host:
+        return None
+    return veilig_doel(deel.path + ("?" + deel.query if deel.query else ""))
+
+
+def naar_inloggen():
+    """De URL van het inlogscherm met het doel, als dat er is."""
+    return url_for("web.inloggen", volgende=inlogdoel())
+
+
 def inloggen_vereist(view):
     @wraps(view)
     def binnen(*args, **kwargs):
         if g.beheerder is None:
-            return redirect(url_for("web.inloggen"))
+            return redirect(naar_inloggen())
         return view(*args, **kwargs)
 
     return binnen
@@ -123,8 +152,8 @@ def recent_ingelogd(view):
             session.clear()
             flash(OPNIEUW, "info")
             if request.is_json:
-                return jsonify(fout=OPNIEUW, url=url_for("web.inloggen")), 401
-            return redirect(url_for("web.inloggen"))
+                return jsonify(fout=OPNIEUW, url=naar_inloggen()), 401
+            return redirect(naar_inloggen())
         return view(*args, **kwargs)
 
     return binnen

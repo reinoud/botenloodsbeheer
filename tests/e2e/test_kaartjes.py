@@ -112,7 +112,7 @@ def test_kaartjes_kiezen_printen_en_qr_openen(page, playwright, browser, base_ur
     # De link uit de QR-code, als bezoeker zonder inloggen.
     uitloggen(page)
     page.goto("/kaartjes")
-    expect(page).to_have_url(re.compile(r"/inloggen$"))
+    expect(page).to_have_url(re.compile(r"/inloggen(\?|$)"))
     bezoeker = browser.new_page(base_url=base_url)
     bezoeker.goto(openbare_link)
     expect(bezoeker.get_by_role("heading", level=1)).to_have_text(f"Plaats {nieuw}")

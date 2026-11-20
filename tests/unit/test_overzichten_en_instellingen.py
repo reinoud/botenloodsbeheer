@@ -244,7 +244,7 @@ def test_export_maakt_geen_formule_van_een_naam(ingelogd):  # noqa: F811
 
 def test_export_vraagt_inloggen(client):
     r = client.get("/indeling.xlsx")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 # Naam en logo (BLB-027); de kleuren vervielen met issue #150
@@ -318,17 +318,17 @@ def test_recente_inlog_vereist(ingelogd):  # noqa: F811
     with ingelogd.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
     r = ingelogd.post("/instellingen", data={"naam": "Overgenomen"})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0
 
 
 @pytest.mark.parametrize("pad", ["/instellingen", "/vrij", "/opgezegd", "/leden/1"])
 def test_schermen_vragen_inloggen(client, pad):
     r = client.get(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_bezoeker_wijzigt_geen_instellingen(client):
     r = client.post("/instellingen", data={"naam": "X"})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.scalar(select(func.count()).select_from(Instelling)) == 0

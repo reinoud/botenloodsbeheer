@@ -117,4 +117,4 @@ def test_kiezen_toont_rekken_plaatsen_en_alles(ingelogd):  # noqa: F811
 def test_kaartjes_vragen_inloggen(client, pad):
     plaats()
     r = client.get(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")

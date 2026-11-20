@@ -84,8 +84,29 @@ def test_vergrendeling_na_vijf_foute_wachtwoorden(page):
 
 def test_bezoeker_en_gebruikte_link(page):
     page.goto("/")
-    expect(page).to_have_url(re.compile(r"/inloggen$"))
+    expect(page).to_have_url(re.compile(r"/inloggen(\?|$)"))
     wachtwoord_instellen(page, "bezoeker")  # eigen link, zodat de test ook los draait (#4)
     uitloggen(page)
     page.goto(link("bezoeker"))
     expect(page.get_by_role("alert")).to_contain_text("ongeldig, verlopen of al gebruikt")
+
+
+def inloggen_met_wachtwoord(page, totp):
+    wachtwoord_stap(page, "terugnaar")
+    page.get_by_label("Code van zes cijfers").fill(totp.at(time.time() + 30))
+    page.get_by_role("button", name="Inloggen").click()
+
+
+def test_na_het_inloggen_terug_naar_de_geopende_pagina(page):
+    """#354: een bladwijzer naar een pagina brengt je na het inloggen daar; een doel buiten de applicatie niet."""
+    totp = wachtwoord_instellen(page, "terugnaar")
+    uitloggen(page)
+    page.goto("/boten?soort=alle")
+    expect(page.get_by_role("heading", level=1)).to_have_text("Inloggen")
+    inloggen_met_wachtwoord(page, totp)
+    expect(page.get_by_role("heading", level=1)).to_have_text("Boten")
+    assert page.url.endswith("/boten?soort=alle")
+    uitloggen(page)
+    page.goto("/inloggen?volgende=https://example.org")
+    # Een tweede inlog kan niet: de code van de volgende stap valt buiten het venster. De uitkomst staat in de unittests.
+    expect(page.locator("input[name=volgende]")).to_have_count(0)

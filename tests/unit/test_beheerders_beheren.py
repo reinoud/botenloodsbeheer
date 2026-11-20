@@ -234,7 +234,7 @@ def ingelogd(client, twee):
                                  "/profiel/wachtwoord", "/profiel/passkey/opties"])
 def test_bezoeker_gaat_naar_inloggen(client, pad):
     r = client.post(pad) if pad != "/gebruikers" else client.get(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_uitnodigen_toont_link_eenmalig_zonder_flash(ingelogd):
@@ -268,7 +268,7 @@ def test_recente_inlog_vereist(app, ingelogd):
     with client.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
     r = client.post("/profiel/intrekken", data={"methode": "wachtwoord"})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.get(Beheerder, anna.id).wachtwoordhash is not None
     assert client.get("/rekoverzicht").status_code == 302  # opnieuw inloggen
     r = client.post("/profiel/passkey/opties", json={})
@@ -293,7 +293,7 @@ def test_recente_inlog_vereist_voor_uitnodigen_herstellen_en_toevoegen(ingelogd,
     voor = (db.session.scalar(select(db.func.count()).select_from(Uitnodiging)),
             db.session.scalar(select(db.func.count()).select_from(Passkey)))
     r = client.post(pad.format(bert=bert.id), data={"gebruikersnaam": "carla", "rol": "beheerder"})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla")) is None
     assert (db.session.scalar(select(db.func.count()).select_from(Uitnodiging)),
             db.session.scalar(select(db.func.count()).select_from(Passkey))) == voor
@@ -310,7 +310,7 @@ def test_recente_inlog_vereist_voor_blokkeren_deblokkeren_en_verwijderen(ingelog
     with client.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
     r = client.post(f"/gebruikers/{bert.id}/{actie}")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     db.session.expire_all()
     b = db.session.get(Beheerder, bert.id)
     assert b is not None and b.actief == actief
@@ -324,7 +324,7 @@ def test_intrekken_beeindigt_alle_eigen_sessies_niet_die_van_anderen(app, ingelo
     van_bert = app.test_client()
     inloggen(van_bert, geheim_van(bert), gebruikersnaam="bert")
     r = client.post("/profiel/intrekken", data={"methode": "wachtwoord"})
-    assert r.location.endswith("/inloggen")
+    assert r.location.startswith("/inloggen")
     assert client.get("/rekoverzicht").status_code == 302 and tweede.get("/rekoverzicht").status_code == 302
     assert van_bert.get("/rekoverzicht").status_code == 200
 

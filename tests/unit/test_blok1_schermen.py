@@ -101,7 +101,7 @@ def test_import_export_toont_drie_panelen_en_indeling_geen_import_of_export(inge
 
 def test_import_export_vraagt_inloggen(client):
     r = client.get("/import-export")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_menu_telt_boten_zonder_eigenaar_ook_op_import_export(ingelogd):

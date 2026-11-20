@@ -102,4 +102,4 @@ def test_rek_gat_en_boot_uitzetten_geweigerd_kaartje_en_openbare_pagina(page, br
     assert prive["lidnummer"] not in respons
     bezoeker.close()
     page.goto("/indeling")
-    expect(page).to_have_url(re.compile(r"/inloggen$"))
+    expect(page).to_have_url(re.compile(r"/inloggen(\?|$)"))

@@ -379,7 +379,7 @@ def test_de_rolroute_vraagt_een_recente_inlog_ook_voor_het_eigen_account(scherm,
         with scherm.session_transaction() as s:  # een sessie van 11 minuten oud
             s.update(beheerder_id=anna.id, sessieversie=anna.sessieversie, ingelogd_op=int(time.time()) - 11 * 60)
         r = scherm.post(f"/gebruikers/{doel.id}/rol", data={"rol": "kijker"})
-        assert r.status_code == 302 and r.location.endswith("/inloggen")
+        assert r.status_code == 302 and r.location.startswith("/inloggen")
         with scherm.session_transaction() as s:
             assert "beheerder_id" not in s
     assert rol_van(bert) == "beheerder" and rol_van(anna) == "beheerder"

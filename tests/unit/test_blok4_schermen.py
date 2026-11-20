@@ -49,7 +49,7 @@ def test_wortel_stuurt_een_beheerder_naar_het_rekoverzicht_en_een_bezoeker_naar_
     r = ingelogd.get("/")
     assert r.status_code == 302 and r.location == "/rekoverzicht"
     r = app.test_client().get("/")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_logo_in_de_kop_gaat_naar_het_rekoverzicht(ingelogd):

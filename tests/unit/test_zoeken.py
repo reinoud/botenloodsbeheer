@@ -185,7 +185,7 @@ def pagina(client, term):
 
 def test_zoeken_vraagt_inloggen_zoals_de_andere_beheerroutes(client):
     r = client.get("/zoeken?q=reiger")
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 @pytest.mark.parametrize(("term", "pad"), [

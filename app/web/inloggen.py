@@ -19,7 +19,7 @@ from flask import (
 from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
 
 from app.domein import Actor, Regelfout, beheerders
-from app.web import bp, getal, inloggen_vereist, recent_ingelogd, start_sessie
+from app.web import bp, getal, inloggen_vereist, recent_ingelogd, start_sessie, veilig_doel
 
 MISLUKT = (
     "Inloggen is mislukt. Na vijf fouten is inloggen met wachtwoord 15 minuten geblokkeerd."
@@ -44,19 +44,21 @@ def _challenge():
 def inloggen():
     if g.beheerder:
         return redirect(url_for("web.rekoverzicht"))
-    return render_template("inloggen.html")
+    return render_template("inloggen.html", volgende=veilig_doel(request.args.get("volgende")))
 
 
 @bp.post("/inloggen")
 def inloggen_wachtwoord():
+    volgende = veilig_doel(request.form.get("volgende"))
     b = beheerders.wachtwoord_controleren(
         request.form.get("gebruikersnaam", "").strip(), request.form.get("wachtwoord", "")
     )
     if not b:
         flash(MISLUKT, "fout")
-        return redirect(url_for("web.inloggen"))
+        return redirect(url_for("web.inloggen", volgende=volgende))
+    # Het doel gaat mee in de halve sessie die na het wachtwoord al bestaat; vóór het wachtwoord komt er geen cookie (#9).
     session.clear()
-    session.update(totp_beheerder=b.id, totp_tot=int(time.time()) + TOTP_STAP_GELDIG)
+    session.update(totp_beheerder=b.id, totp_tot=int(time.time()) + TOTP_STAP_GELDIG, volgende=volgende)
     return redirect(url_for("web.inloggen_code"))
 
 
@@ -72,8 +74,9 @@ def inloggen_code():
     if not b:
         flash(MISLUKT, "fout")
         return redirect(url_for("web.inloggen_code"))
+    volgende = veilig_doel(session.get("volgende"))
     start_sessie(b)
-    return redirect(url_for("web.rekoverzicht"))
+    return redirect(volgende or url_for("web.rekoverzicht"))
 
 
 @bp.post("/inloggen/passkey/opties")
@@ -89,7 +92,7 @@ def inloggen_passkey():
     if not b:
         return jsonify(fout=MISLUKT), 400
     start_sessie(b)
-    return jsonify(url=url_for("web.rekoverzicht"))
+    return jsonify(url=veilig_doel(request.args.get("volgende")) or url_for("web.rekoverzicht"))
 
 
 @bp.post("/uitloggen")

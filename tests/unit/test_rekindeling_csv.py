@@ -502,14 +502,14 @@ def test_web_export_geeft_de_weigering_als_melding(ingelogd):  # noqa: F811
 @pytest.mark.parametrize("methode, pad", [("get", "/rekindeling.csv"), ("post", "/rekindeling/import")])
 def test_web_vraagt_inloggen(client, methode, pad):
     r = getattr(client, methode)(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 def test_web_import_vraagt_een_recente_inlog(ingelogd):  # noqa: F811
     with ingelogd.session_transaction() as s:
         s["ingelogd_op"] = int(time.time()) - 601
     r = uploaden(ingelogd, bestand("A;;1;1;Kajak;nee"))
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert db.session.scalar(select(Rek)) is None
 
 

@@ -191,7 +191,7 @@ def test_menu_heeft_het_item_in_beheer_direct_na_kaartjes_en_markeert_het_op_dit
 
 def test_scherm_vraagt_inloggen(client):
     r = client.get(PAD)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 @pytest.mark.parametrize("methode", ["post", "put", "delete"])

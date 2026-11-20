@@ -64,7 +64,7 @@ ROUTES = [("get", "/bezetting.csv"), ("post", "/bezetting/import"), ("get", "/be
 @pytest.mark.parametrize("methode, pad", ROUTES)
 def test_web_vraagt_inloggen(client, methode, pad):
     r = getattr(client, methode)(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
 
 
 @pytest.mark.parametrize("pad, data", [("/bezetting/import", True), ("/bezetting/import/bevestigen", False)])
@@ -78,7 +78,7 @@ def test_upload_en_bevestigen_vragen_een_recente_inlog(ingelogd, pad, data):  # 
         r = uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;"))
     else:
         r = ingelogd.post(pad)
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert (db.session.scalar(select(Bezettingsimport)) is None) == data
     assert db.session.scalar(select(Boot).where(Boot.naam == "Reiger")) is None
 
@@ -93,7 +93,7 @@ def test_koppelen_annuleren_en_koppeling_verwijderen_vragen_alleen_een_inlog(ing
     for pad in ("/bezetting/import/koppelen", f"/bezetting/koppelingen/{kid}/verwijderen",
                 "/bezetting/import/annuleren"):
         r = ingelogd.post(pad, data={"overslaan-2": "on"})
-        assert r.status_code == 302 and not r.location.endswith("/inloggen"), pad
+        assert r.status_code == 302 and not r.location.startswith("/inloggen"), pad
     assert db.session.scalar(select(Bezettingsimport)) is None
     assert db.session.scalar(select(Naamkoppeling)) is None
 

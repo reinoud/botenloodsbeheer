@@ -374,7 +374,7 @@ def test_recente_inlog_vereist_voor_maken_wijzigen_en_intrekken(app, twee, scher
         s["ingelogd_op"] = int(time.time()) - 601
     r = getattr(scherm, methode)(pad.format(id=t.id), data={
         "soort": "persoonlijk", "naam": "nieuw", "dagen": "30", "recht": ["leden:lezen"]})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     db.session.expire_all()
     t = db.session.get(Token, t.id)
     assert (t.rechten, t.ingetrokken_op) == (["boten:lezen"], None)
@@ -404,7 +404,7 @@ def test_menu_item_tokens(app, scherm):
 def test_bezoeker_gaat_naar_inloggen(client):
     for pad in ("/tokens", "/tokens/nieuw"):
         r = client.get(pad)
-        assert r.status_code == 302 and r.location.endswith("/inloggen")
+        assert r.status_code == 302 and r.location.startswith("/inloggen")
     assert client.post("/tokens/1/intrekken").status_code == 302
 
 

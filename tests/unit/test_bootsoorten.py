@@ -239,11 +239,11 @@ def test_scherm_toevoegen_hernoemen_verwijderen(app, ingelogd):  # noqa: F811
 
 @pytest.mark.parametrize("pad", ["/bootsoorten", "/bootsoorten/1/naam", "/bootsoorten/1/verwijderen"])
 def test_scherm_vraagt_recente_inlog(app, ingelogd, pad):  # noqa: F811
-    assert app.test_client().post(pad, data={"naam": "X"}).location.endswith("/inloggen")  # bezoeker
+    assert app.test_client().post(pad, data={"naam": "X"}).location.startswith("/inloggen")  # bezoeker
     with ingelogd.session_transaction() as sessie:
         sessie["ingelogd_op"] = int(time.time()) - 601
     r = ingelogd.post(pad, data={"naam": "Overgenomen"})
-    assert r.status_code == 302 and r.location.endswith("/inloggen")
+    assert r.status_code == 302 and r.location.startswith("/inloggen")
     db.session.expire_all()
     assert [x.naam for x in indeling.bootsoorten()] == [
         "Kajak", "Canadese kano", "Surfski", "C11", "Supboard"]

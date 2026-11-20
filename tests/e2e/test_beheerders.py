@@ -97,7 +97,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     herstel = page.locator("#uitnodigingslink").inner_text()
     qr_zichtbaar(page)
     collega.goto("/")
-    expect(collega).to_have_url(re.compile(r"/inloggen$"))
+    expect(collega).to_have_url(re.compile(r"/inloggen(\?|$)"))
     wachtwoord_instellen(collega, None, url=herstel)
 
     # Blokkeren beëindigt de sessie en inloggen lukt niet meer.
@@ -105,7 +105,7 @@ def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     page.get_by_role("button", name=f"Blokkeren: {nieuw}").click()
     expect(page.get_by_text("Het account is geblokkeerd.")).to_be_visible()
     collega.goto("/")
-    expect(collega).to_have_url(re.compile(r"/inloggen$"))
+    expect(collega).to_have_url(re.compile(r"/inloggen(\?|$)"))
     wachtwoord_inloggen(collega, nieuw)
     expect(collega.get_by_role("alert")).to_contain_text(MISLUKT)
 
