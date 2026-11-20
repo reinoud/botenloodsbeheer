@@ -2,8 +2,8 @@
 
 **Status:** Besloten door Foundation, 2026-11-18; open vraag 1 beantwoord door besluit 8 (2026-11-18)
 **Datum:** 2026-11-18
-**Versie:** v1.0.1
-**Stories:** BLB-050, BLB-051; issue #322
+**Versie:** v1.1.0
+**Stories:** BLB-050, BLB-051; issues #322, #348
 
 ## Context
 
@@ -28,7 +28,7 @@ Een test loopt `app.url_map` langs en doet voor elke regel van `web` buiten de l
 
 **Lidnummer en opzegdatum.** Een kijker ziet geen lidnummer, opzegdatum, datum lid sinds of oud-lidmelding (open vraag 2), en geen link naar een lid. `zoekopdracht.zoek` krijgt het argument `met_leden`; voor een kijker zoekt hij niet in `Lid.lidnummer` en geeft hij geen leden. `log.namen` toont "Lid <naam>" zonder nummer, de link "Meer in het log" vervalt, en de regels `wachtlijst.toegevoegd` en `wachtlijst.verwijderd` zijn voor een kijker helemaal weg uit het log (`log.zichtbaar`, besluit stakeholder op AEG-01). Een test eist dat een herkenbaar lidnummer en opzegdatum op geen toegestaan scherm van een kijker staan, ook niet na zoeken op dat nummer.
 
-**Laatste beheerder.** Gekozen is een vergrendeling, geen database-constraint. Rol wijzigen, blokkeren en verwijderen vergrendelen eerst alle actieve accounts (`FOR UPDATE`, `populate_existing=True`), zoals `_ander_account` nu doet. Onder dat slot is de actor een actieve beheerder en blijft na de wijziging minstens één actieve beheerder over. Bij twee gelijktijdige wijzigingen ziet de tweede de uitkomst van de eerste. De racetest laat twee beheerders tegelijk zichzelf en elkaar kijker maken en faalt met een mutant zonder slot.
+**Laatste beheerder.** Gekozen is een vergrendeling, geen database-constraint. Rol wijzigen, blokkeren en verwijderen vergrendelen eerst alle actieve accounts (`FOR UPDATE`, `populate_existing=True`), zoals `_ander_account` nu doet. Onder dat slot is de actor een actieve beheerder en blijft na de wijziging minstens één actieve beheerder over. Bij een wijziging naar kijker telt alleen een beheerder mee die kan inloggen: met een wachtwoord of minstens één passkey. Een uitnodiging die nog niet is gebruikt, telt niet (#348). Bij twee gelijktijdige wijzigingen ziet de tweede de uitkomst van de eerste. De racetest laat twee beheerders tegelijk zichzelf en elkaar kijker maken en faalt met een mutant zonder slot.
 
 **Gebruikers.** Alleen wat de gebruiker ziet, krijgt de nieuwe naam: menu, titel, teksten en URL. Model `Beheerder`, tabel `beheerder`, `domein/beheerders`, de logacties `beheerder.*`, de verwijzing `beheerder:<id>` en `flask beheerder` blijven. De routes `/beheerders...` worden `/gebruikers...`. `GET /beheerders` verwijst met 301 naar `/gebruikers`; de oude POST-routes vervallen. Het log toont `beheerder:<id>` als "Gebruiker <naam>".
 
@@ -74,5 +74,6 @@ Downgrade: zonder kolom wordt elke kijker beheerder. Daarom blokkeert de downgra
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.1.0 | 2026-11-20 | Bij een wijziging naar kijker telt alleen een beheerder die kan inloggen | Verzoek stakeholder 2026-11-19, issue #348 |
 | v1.0.1 | 2026-11-19 | Wachtlijstregels weg uit het log voor een kijker; downgrade logt alleen actieve kijkers; open vraag 1 beantwoord | Besluit stakeholder op AEG-01, issue #322 |
 | v1.0.0 | 2026-11-18 | Eerste versie | Besluiten stakeholder 2026-11-18, issue #322 |
