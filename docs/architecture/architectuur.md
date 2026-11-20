@@ -1,8 +1,8 @@
 # Architectuur botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.11.0
-**Datum:** 2026-11-17
+**Versie:** v0.12.0
+**Datum:** 2026-11-20
 **Opgesteld door:** Foundation, Principal Architect
 **Status:** Concept, besluiten van de stakeholder verwerkt (2026-10-30 en 2026-10-31)
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluitensecties van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md`, `docs/product/backlog.md` v0.1.0.
@@ -66,7 +66,7 @@ Het datamodel heeft veertien tabellen. Namen volgen de begrippen van de backlog.
 | `boot` | naam, bootsoort, `lid_id`, `clubboot`, `afbeelding_id` | Drie toestanden: een lid (`lid_id` gevuld), de vereniging (`clubboot`, geen lid) of eigenaar onbekend (geen lid, geen clubboot, issue #204). De database eist dat een boot met een lid geen clubboot is (`lid_of_clubboot`). Een clubplaats is alleen voor clubboten; een clubboot mag ook op een gewone plaats (issue #205). Een boot van een lid of met een onbekende eigenaar mag alleen op een gewone plaats. Een boot met een onbekende eigenaar mag op de wachtlijst. |
 | `wachtlijst` | boot (uniek), aangemeld_op | De bootsoort volgt uit de boot, dus er is per bootsoort vanzelf een eigen lijst. |
 | `afbeelding` | soort (foto), mime-type, inhoud (bytea), breedte, hoogte, `sleutel` (willekeurig, voor de URL) | ADR-008. |
-| `beheerder` | naam, gebruikersnaam, actief, sessieversie, wachtwoordhash (leeg zonder wachtwoord), versleuteld TOTP-geheim, laatste TOTP-tijdstap, aantal mislukte pogingen, geblokkeerd_tot | Rol beheerder of kijker (ADR-015). Wachtwoord en TOTP gaan samen (ADR-001). |
+| `beheerder` | naam, gebruikersnaam, actief, sessieversie, wachtwoordhash (leeg zonder wachtwoord), versleuteld TOTP-geheim, laatste TOTP-tijdstap, aantal mislukte pogingen, geblokkeerd_tot, `lid_id` (leeg zonder koppeling) | Rol beheerder of kijker (ADR-015). Meer accounts per lid; vervalt het lid, dan wordt `lid_id` leeg. Wachtwoord en TOTP gaan samen (ADR-001). |
 | `passkey` | beheerder, credential-id, publieke sleutel, teller, naam, laatst_gebruikt | ADR-001. Een beheerder heeft nul of meer passkeys. |
 | `uitnodiging` | beheerder, hash van de eenmalige code, verloopt_op, gebruikt_op | Voor het instellen van een inlogmethode en voor herstel van toegang. |
 | `token` | naam, soort (persoonlijk of robot), beheerder (leeg bij robot), prefix, hash, rechten, ip_whitelist, verloopt_op, ingetrokken_op, laatst_gebruikt_op | ADR-005. |
@@ -288,6 +288,7 @@ De intake gaat voor. Deze botsingen zijn niet gladgestreken; apex hoort de backl
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
 | v0.1.0 | 2026-10-30 | Eerste versie met ADR-001 tot en met ADR-011 |
+| v0.12.0 | 2026-11-20 | Issue #353: `beheerder.lid_id` (ADR-015 v1.2.0, ADR-006 v1.8.0, ADR-007 v1.5.0, ADR-010 v1.3.0) |
 | v0.11.0 | 2026-11-18 | Issue #322: rol beheerder of kijker (ADR-015) in §1 en de tabel `beheerder` |
 | v0.10.1 | 2026-11-18 | Issue #327: een verse stack importeert de leden één keer; de eerste import zonder opzegdatums vervalt (§6.2, §6.3) |
 | v0.10.0 | 2026-11-17 | Issue #298: §10.2 vragen 10, 11 en 12 besloten (verplaatsen buiten de bewaartermijn blijft mogelijk); ADR-003 v2.4.0, ADR-004 v2.10.0, ADR-006 v1.6.1, ADR-012 v1.11.0 |

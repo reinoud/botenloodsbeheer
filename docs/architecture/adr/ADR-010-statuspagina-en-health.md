@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation
 **Datum:** 2026-10-30
-**Versie:** v1.2.1
+**Versie:** v1.3.0
 **Stories:** BLB-036, BLB-037
 
 ## Context
@@ -26,6 +26,7 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 - `GET /status` (HTML) en `GET /status.json` (JSON) uit dezelfde functie (`domein/status`), zodat ze niet uit elkaar lopen. Menu-item **Status**. Zonder inlog verwijzen beide naar `/inloggen`.
 - Inhoud: applicatieversie (buildargument `APP_VERSIE` in het image, de workflow geeft de tag van de release mee), databaseversie en migratieversie, laatste heartbeat van de worker, laatste import van leden via de API (tijdstip, resultaat, aantallen nieuw, bijgewerkt, oud-lid, overgeslagen, en bij een fout de reden uit de vaste lijst van ADR-012), laatste opschoning (tijdstip en aantallen), API aan of uit, laatste aanroep per geldig robottoken, wanneer de bootaantallen voor het laatst zijn opgehaald (een rij in `taakrun` met taak `bootaantallen`), tokens die binnen 31 dagen verlopen met naam en vervaldatum (niet ingetrokken en nog niet verlopen). `web` leest `API_INGESCHAKELD` uit dezelfde omgeving als `api`.
+- Accounts en leden (issue #353): `beheerders_oud_lid` (rol beheerder, gekoppeld lid is oud-lid) en `niet_gekoppeld` (elk account zonder lid), elk met `status`, `aantal` en `gebruikers` (lijst van gebruikersnamen). Bij nul: `ok`, 0 en een lege lijst; anders een waarschuwing. Geblokkeerde accounts tellen mee. `web` leest dit als `botenloods_web`. Lidnaam, lidnummer en opzegdatum staan er niet op. Dat een beheerder oud-lid is, is wel een gegeven over een lid; dat besloot de stakeholder, alleen voor beheerders.
 - Statusregels per onderdeel: ok, waarschuwing of fout. Een heartbeat ouder dan 2 minuten, een mislukte laatste import, een geslaagde import ouder dan 26 uur (of nog geen import), een mislukte laatste opschoning of een token dat binnen 31 dagen verloopt, geeft een waarschuwing. Een migratieversie die niet de verwachte is, geeft een fout. De grens van 26 uur vangt ook een integratiecontainer die niet draait.
 
 **Foutmeldingen zonder geheimen.** De worker en de API leggen bij een fout alleen de foutklasse en een vaste, door de applicatie gekozen omschrijving vast, bijvoorbeeld "ledenbron onbereikbaar". Ruwe exceptieteksten van HTTP-bibliotheken kunnen URL's met inloggegevens bevatten; de integratiecontainer stuurt ze alleen geschoond naar stdout. Een test zet een herkenbaar nepgeheim in de omgeving van `integratie` en controleert dat het niet op de statuspagina en niet in `taakrun` staat (BLB-007).
@@ -49,6 +50,7 @@ De antwoorden bevatten geen versie, foutmelding of hostnaam: wie niet is ingelog
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.0 | 2026-11-20 | Meldingen over beheerders met een oud-lid en accounts zonder lid | Issue #353, besluiten stakeholder 2026-11-19 en 2026-11-20 |
 | v1.2.1 | 2026-11-18 | Kijker geweigerd | ADR-015, issue #322 |
 | v1.2.0 | 2026-11-02 | Gebouwd: `APP_VERSIE`, `API_INGESCHAKELD` ook bij `web`, waarschuwingen voor opschoning en tokens, tijdstip van de bootaantallen in `taakrun` | Bouw slice 9, issue #48 |
 | v1.1.1 | 2026-10-31 | Traefik in plaats van Nginx | Besluit stakeholder 2026-10-31, issue #29 (ADR-013) |
