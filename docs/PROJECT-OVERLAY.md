@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.5
+**Versie overlay:** v0.6.6
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-19
@@ -479,6 +479,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een criterium noemt alleen schermen die het gegeven echt tonen; controleer dat vóór de bouw (kaartjes en `/p/` tonen geen bootsoort).
 - Verandert een story welke regels een scherm toont, noem dan ook de ADR's die het tonen beschrijven (zoals ADR-002 en ADR-006), zodat het agent ze in dezelfde ronde bijwerkt of er vooraf een issue voor is. Verandert een wijziging wanneer een API-route een foutcode geeft, noem dan ook de documentatie en de OpenAPI-beschrijving van die route, zodat bouwer en reviewer ze in dezelfde ronde bijwerken.
 - Tel een nieuw ADR met `wc -w` vóór de oplevering en houd 10 procent marge onder het budget.
+- Laat het agent de woorden na elke sectie tellen met het script, niet pas aan het eind; tabelrijen tellen niet mee (filter `grep -v '^+|'`) (#353).
 - Geef bij een ADR-budget een richtwaarde per besluitpunt en zeg of een tabel met endpoints of kolomnamen meetelt (#322).
 - Werken apex en foundation tegelijk aan hetzelfde issue, noem dan de nummers van de open vragen in de backlog, zodat de ADR naar dezelfde vraag verwijst (#322).
 - Geef bij een woordbudget voor de backlog ook een budget per story, en zeg of §7 (open vragen) en het wijzigingslog meetellen (#322).
@@ -557,6 +558,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.6 | 2026-11-20 | Woorden tellen per sectie, zonder tabelrijen (Documentatie); uit de terugblik bij #353 | Lessen |
 | v0.6.5 | 2026-11-20 | Drie regels: patroon zoeken in unit- én E2E-tests, één TOTP-inlog per E2E-test (Bouw); nareview met oude en nieuwe diff, eigen unitproeven via `/proef` (Review); uit de terugblikken bij #354 | Lessen |
 | v0.6.4 | 2026-11-20 | Eén regel bij Review: ingangen per domeinfunctie en regellengte in de reviewbrief; uit de terugblikken bij #348 | Lessen |
 | v0.6.3 | 2026-11-19 | Eén regel bij E2E: de release-E2E in een eigen project met eigen images, en de dev-integratie herstarten na `draai.sh`; uit de terugblik bij #347 | Lessen |
