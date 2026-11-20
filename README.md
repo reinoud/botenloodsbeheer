@@ -74,3 +74,7 @@ Een update met een nieuwe databaserol (zoals `botenloods_api` in slice 5): zet h
 ## Productie
 
 Zie [installatie achter een gedeelde Traefik](documentatie/beheer/installatie.md). Het logo van de vereniging upload je als beheerder op Instellingen (JPEG, PNG of WebP); zonder logo toont de kopbalk alleen de naam.
+
+## Licentie en bijdragen
+
+botenloodsbeheer valt onder de [EUPL-1.2](LICENSE). De Nederlandse versie van die licentie is even geldig als de Engelse in `LICENSE` en staat op [joinup.ec.europa.eu](https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12). Bijdragen zijn welkom, zie [CONTRIBUTING.md](CONTRIBUTING.md) en de [gedragscode](CODE_OF_CONDUCT.md). Een beveiligingslek meld je volgens [SECURITY.md](SECURITY.md).
