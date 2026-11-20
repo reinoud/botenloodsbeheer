@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Beveiligingslek melden
+    url: https://github.com/reinoud/botenloodsbeheer/security/advisories/new
+    about: Meld een lek privé, niet in een openbaar issue.
