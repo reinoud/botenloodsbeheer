@@ -13,7 +13,7 @@ from app.domein import CLI, Actor, Regelfout, beheerders, log
 from app.models import Beheerder, Token, db
 from tests.unit.conftest import API, EIGENAAR, nieuwe_database
 from tests.unit.hulp import beheerder_met_wachtwoord, race
-from tests.unit.test_beheerders_beheren import logacties
+from tests.unit.test_beheerders_beheren import logacties, met_passkey
 from tests.unit.test_persoonlijke_tokens import boten, logregels, persoonlijk
 from tests.unit.test_tokens import app_uit_omgeving
 from tests.unit.test_web import inloggen
@@ -102,7 +102,7 @@ def test_een_beheerder_maakt_zichzelf_kijker_als_er_een_andere_beheerder_blijft(
 def test_de_laatste_beheerder_wordt_geen_kijker(app, twee):
     anna, _, bert = twee
     beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
-    with pytest.raises(Regelfout, match="Er blijft geen beheerder over. De rol van anna is niet gewijzigd."):
+    with pytest.raises(Regelfout, match="Er blijft geen beheerder over die kan inloggen. De rol van anna is niet gewijzigd."):
         beheerders.rol_wijzigen(anna.id, "kijker", actor(anna))
     assert rol_van(anna) == "beheerder" and len(logregels("beheerder.rol_gewijzigd")) == 1
 
@@ -112,6 +112,35 @@ def test_een_geblokkeerde_beheerder_telt_niet_mee_als_overblijvende_beheerder(ap
     beheerders.blokkeren(bert.id, actor(anna))
     with pytest.raises(Regelfout, match="Er blijft geen beheerder over"):
         beheerders.rol_wijzigen(anna.id, "kijker", actor(anna))
+
+
+def test_een_beheerder_zonder_inlogmethode_telt_niet_mee(app, twee):
+    """#348: carla heeft haar uitnodiging nog niet gebruikt; anna wordt geen kijker, en niets verandert."""
+    anna, _, bert = twee
+    beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
+    beheerders.uitnodigen("carla", "beheerder", CLI)
+    persoonlijk(anna)
+    voor = logacties()
+    with pytest.raises(Regelfout, match="Er blijft geen beheerder over die kan inloggen. De rol van anna is niet gewijzigd."):
+        beheerders.rol_wijzigen(anna.id, "kijker", actor(anna))
+    assert rol_van(anna) == "beheerder" and logacties() == voor
+    assert db.session.scalar(select(Token)).ingetrokken_op is None
+
+
+@pytest.mark.parametrize("methode", ["passkey", "wachtwoord"])
+def test_een_beheerder_met_alleen_een_passkey_of_een_wachtwoord_telt_mee(app, twee, methode):
+    anna, _, bert = twee
+    beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
+    if methode == "passkey":
+        code = beheerders.uitnodigen("carla", "beheerder", CLI)
+        carla = db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla"))
+        met_passkey(carla)
+        assert code and carla.wachtwoordhash is None
+    else:
+        carla = beheerder_met_wachtwoord("carla")[0]
+        assert not carla.passkeys
+    beheerders.rol_wijzigen(anna.id, "kijker", actor(anna))
+    assert rol_van(anna) == "kijker"
 
 
 def test_een_kijker_telt_niet_mee_als_overblijvende_beheerder(app, twee):
@@ -279,7 +308,7 @@ def test_twee_beheerders_maken_zichzelf_tegelijk_kijker(app, twee):
     fouten = race(app, ["SELECT id FROM beheerder WHERE id = :b FOR UPDATE",
                         "UPDATE beheerder SET rol = 'kijker' WHERE id = :b"], {"b": anna.id},
                   lambda: beheerders.rol_wijzigen(bert.id, "kijker", actor(bert)))
-    assert fouten == ["Er blijft geen beheerder over. De rol van bert is niet gewijzigd."]
+    assert fouten == ["Er blijft geen beheerder over die kan inloggen. De rol van bert is niet gewijzigd."]
     assert rol_van(anna) == "kijker" and rol_van(bert) == "beheerder"
 
 
@@ -339,7 +368,7 @@ def test_de_laatste_beheerder_kijker_maken_geeft_een_foutmelding_en_wijzigt_niet
     anna, _, bert = twee
     beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
     r = scherm.post(f"/gebruikers/{anna.id}/rol", data={"rol": "kijker"}, follow_redirects=True)
-    assert "Er blijft geen beheerder over. De rol van anna is niet gewijzigd." in r.text
+    assert "Er blijft geen beheerder over die kan inloggen. De rol van anna is niet gewijzigd." in r.text
     assert 'ds-notice--danger' in r.text and rol_van(anna) == "beheerder"
     assert r.request.path == "/gebruikers"
 

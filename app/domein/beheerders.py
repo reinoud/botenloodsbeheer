@@ -381,7 +381,7 @@ def _ander_account(beheerder_id, actor, wat):
 
 def rol_wijzigen(beheerder_id, rol, actor):
     """Zet een account naar beheerder of kijker, ook het eigen account, zolang er een actieve
-    beheerder overblijft. Wordt iemand kijker, dan trekt dezelfde transactie zijn persoonlijke tokens
+    beheerder met een inlogmethode overblijft. Wordt iemand kijker, dan trekt dezelfde transactie zijn persoonlijke tokens
     in; terug naar beheerder brengt ze niet terug. Sessies blijven: de rol geldt vanaf het volgende
     verzoek (ADR-015). Zonder verschil geen logregel. Geeft de gebruikersnaam."""
     if rol not in ROLLEN:
@@ -391,10 +391,12 @@ def rol_wijzigen(beheerder_id, rol, actor):
     if doel.rol == rol:
         db.session.rollback()
         return naam
-    if rol == "kijker" and not any(b.rol == "beheerder" and b.id != doel.id for b in actief.values()):
+    # Wie zijn uitnodiging nog niet gebruikte, kan niet inloggen en telt niet mee (#348).
+    if rol == "kijker" and not any(b.rol == "beheerder" and b.id != doel.id and (b.wachtwoordhash or b.passkeys)
+                                   for b in actief.values()):
         db.session.rollback()
-        raise Regelfout(f"Er blijft geen beheerder over. De rol van {doel.gebruikersnaam} is niet "
-                        "gewijzigd.")
+        raise Regelfout(f"Er blijft geen beheerder over die kan inloggen. De rol van {doel.gebruikersnaam} is "
+                        "niet gewijzigd.")
     oud, doel.rol = doel.rol, rol
     log.schrijf(actor, "beheerder.rol_gewijzigd", [f"beheerder:{doel.id}"],
                 {"gebruikersnaam": doel.gebruikersnaam, "rol": [oud, rol]})
