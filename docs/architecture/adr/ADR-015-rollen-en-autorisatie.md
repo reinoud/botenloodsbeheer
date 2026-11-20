@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation, 2026-11-18; open vraag 1 beantwoord door besluit 8 (2026-11-18); koppeling met een lid 2026-11-20; schermen volgens BV-96 (2026-11-20)
 **Datum:** 2026-11-18
-**Versie:** v1.3.0
+**Versie:** v1.3.1
 **Stories:** BLB-050, BLB-051; issues #322, #348, #353
 
 ## Context
@@ -55,7 +55,7 @@ Een account kan aan een lid gekoppeld zijn, optioneel (issue #353, besluiten sta
 
 **Datamodel.** Kolom `beheerder.lid_id`, nullable, verwijzing naar `lid.id` met `ON DELETE SET NULL` (besluit 5). Geen uniciteit (besluit 3) en geen index: een handvol accounts. Het model krijgt `Beheerder.lid`, zonder tegenrelatie op `Lid`.
 
-**Koppelen.** `beheerders.lid_koppelen(beheerder_id, lid_id, actor)`, onder `_vergrendelen`; `lid_id` None maakt los. Scherm volgens BV-96 (variant 1B): `GET /gebruikers/<id>/lid` toont per account de lidkeuze (BV-85); `POST /gebruikers/<id>/lid` zoekt of slaat op, beide met recente inlog. De knop Zoeken stuurt `actie=zoeken` met de term in `zoek`; zonder `actie=zoeken` slaat de route het rondje `lid_id` op, en een lege keuze maakt los. Een weigering toont dezelfde pagina met 422 en de fout bij het veld, zoals Eigenaar op Boten. De endpoints staan niet in `KIJKER_TOEGESTAAN`: een kijker krijgt 403. Een onbekend of net opgeschoond lid geeft een `Regelfout`.
+**Koppelen.** `beheerders.lid_koppelen(beheerder_id, lid_id, actor)`, onder `_vergrendelen`; `lid_id` None maakt los. Scherm volgens BV-96 (variant 1B): `GET /gebruikers/<id>/lid` toont per account de lidkeuze (BV-85); `POST /gebruikers/<id>/lid` zoekt of slaat op, beide met recente inlog. Elke knop stuurt een eigen `actie`: `zoeken` (met de term in `zoek`), `koppelen` (met het rondje `lid_id`) of `loskoppelen`. Koppelen zonder gekozen lid geeft 422; alleen `loskoppelen` maakt los. Een onbekende `actie` geeft 400. Zo leest de server een vergeten keuze nooit als loskoppelen (review Aegis op BV-96). Een weigering toont dezelfde pagina met 422 en de fout bij het veld, zoals Eigenaar op Boten. De endpoints staan niet in `KIJKER_TOEGESTAAN`: een kijker krijgt 403. Een onbekend of net opgeschoond lid geeft een `Regelfout`.
 
 **Niet bij het uitnodigen.** De stakeholder koos in BV-96 (variant 2B) bewust voor geen lidveld bij het uitnodigen; dat vervangt besluit 4. Koppelen gebeurt daarna op de pagina van het account. Het optionele `lid_id` van `uitnodigen` uit deel 1 en het veld `lid` in `beheerder.uitgenodigd` vervallen weer. De CLI koppelt niet.
 
@@ -101,6 +101,7 @@ Bestand `0023_gebruiker_lid.py`, `down_revision = '0022'`. Upgrade: kolom `lid_i
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.3.1 | 2026-11-20 | Eigen `actie` per knop op de accountpagina; koppelen zonder lid geeft 422 | Review Aegis op BV-96 |
 | v1.3.0 | 2026-11-20 | Schermen volgens BV-96: pagina per account met zoekstap; geen lidveld bij uitnodigen (vervangt besluit 4); besluit 7 alleen bij koppelen en rol wijzigen | Keuze stakeholder in BV-96 |
 | v1.2.1 | 2026-11-20 | Verduidelijkt: `uitnodigen` neemt het slot niet voor besluit 7 | Bouw van #353 |
 | v1.2.0 | 2026-11-20 | Koppeling met een lid, opschoning van kijkers, migratie 0023 | Issue #353, besluiten stakeholder 2026-11-19 en 2026-11-20 |
