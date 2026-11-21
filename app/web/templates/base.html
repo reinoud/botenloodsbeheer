@@ -26,8 +26,8 @@
       </form>
       {# Een kijker heeft menu 2B (BV-92): één lijst zonder groepskoppen en zonder tellingen. #}
       {# De vier groepen van BV-76 (BV-42); de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
-      {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd met aria-current="true". #}
-      {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail"} %}
+      {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd (BV-96: bij Lid koppelen Gebruikers) met aria-current="true". #}
+      {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail", "web.beheerders_overzicht": "web.beheerder_lid"} %}
       {% set menu = [
         ("Dagelijks", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.wachtlijst_overzicht", "Wachtlijst"),
                        ("web.boten_zonder_eigenaar", "Boten zonder eigenaar"), ("web.opzeggend", "Gaan opzeggen")]),

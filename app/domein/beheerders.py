@@ -83,12 +83,19 @@ def _lidverwijzing(lid_id):
     return lid_id and f"lid:{lid_id}"
 
 
-def _kijker_niet_aan_oud_lid(rol, lid):
+# Teksten van BV-96: koppelen, en kijker maken (README blok-6, Koppeling aan een lid)
+OUD_KOPPELEN = ("{naam} is niet aan {lid} gekoppeld: dat lid is oud-lid. Een kijker kan niet aan een oud-lid "
+                "worden gekoppeld. Kies een ander lid of maak het account eerst beheerder.")
+OUD_KIJKER = ("{naam} is niet kijker gemaakt: het gekoppelde lid is oud-lid. Een kijker met een oud-lid "
+              "verwijdert de nachtelijke opschoning. Maak eerst de koppeling los of laat het account beheerder.")
+
+
+def _kijker_niet_aan_oud_lid(rol, lid, tekst, naam):
     """Besluit 7 (#353): een kijker hoort niet bij een oud-lid, want de opschoning verwijdert hem. Een
     beheerder mag wel; de status meldt hem."""
     if rol == "kijker" and lid is not None and leden.is_oud_lid(lid):
         db.session.rollback()
-        raise Regelfout("Een kijker kan niet aan een oud-lid gekoppeld zijn.")
+        raise Regelfout(tekst.format(naam=naam, lid=lid.naam))
 
 
 @contextmanager
@@ -103,25 +110,21 @@ def _lid_bestaat():
         raise Regelfout("Dit lid bestaat niet meer.") from None
 
 
-def uitnodigen(gebruikersnaam, rol, actor, *, lid_id=None):
-    """Maakt een account met deze rol zonder inlogmethode en geeft de eenmalige code terug. Optioneel
-    gekoppeld aan een lid (#353); een kijker niet aan een oud-lid."""
+def uitnodigen(gebruikersnaam, rol, actor):
+    """Maakt een account met deze rol zonder inlogmethode en geeft de eenmalige code terug. Het lid
+    koppel je daarna met lid_koppelen (#353, BV-96)."""
     if rol not in ROLLEN:
         raise Regelfout("Kies een rol: beheerder of kijker.")
     if not GEBRUIKERSNAAM.fullmatch(gebruikersnaam):
         raise Regelfout("Gebruikersnaam: 2 tot 50 tekens, alleen a-z, cijfers, punt, - en _.")
     if db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == gebruikersnaam)):
         raise Regelfout("Deze gebruikersnaam bestaat al.")
-    if lid_id is not None:
-        _kijker_niet_aan_oud_lid(rol, _lid(lid_id))
-    beheerder = Beheerder(naam=gebruikersnaam, gebruikersnaam=gebruikersnaam, rol=rol, lid_id=lid_id)
+    beheerder = Beheerder(naam=gebruikersnaam, gebruikersnaam=gebruikersnaam, rol=rol)
     db.session.add(beheerder)
-    with _lid_bestaat():
-        db.session.flush()
+    db.session.flush()
     code, verloopt_op = _nieuwe_uitnodiging(beheerder)
-    log.schrijf(actor, "beheerder.uitgenodigd",
-                [f"beheerder:{beheerder.id}", *([_lidverwijzing(lid_id)] if lid_id else [])],
-                {"gebruikersnaam": gebruikersnaam, "rol": rol, "lid": _lidverwijzing(lid_id),
+    log.schrijf(actor, "beheerder.uitgenodigd", [f"beheerder:{beheerder.id}"],
+                {"gebruikersnaam": gebruikersnaam, "rol": rol,
                  "geldig_tot": verloopt_op.isoformat(timespec="minutes")})
     db.session.commit()
     return code
@@ -384,6 +387,14 @@ def uitloggen(beheerder):
 # Gebruikers beheren (BLB-023, BLB-050). Een beheerder wijzigt alles; een kijker wijzigt hier niets.
 
 
+def account(beheerder_id):
+    """Het account met dit id, of een Regelfout."""
+    b = db.session.get(Beheerder, beheerder_id) if 0 < beheerder_id <= INT_MAX else None
+    if b is None:
+        raise Regelfout("Deze gebruiker bestaat niet.")
+    return b
+
+
 def alle():
     return db.session.scalars(select(Beheerder).order_by(Beheerder.gebruikersnaam)).all()
 
@@ -433,7 +444,7 @@ def rol_wijzigen(beheerder_id, rol, actor):
         db.session.rollback()
         return naam
     if rol == "kijker" and doel.lid_id is not None:
-        _kijker_niet_aan_oud_lid(rol, _lid(doel.lid_id))
+        _kijker_niet_aan_oud_lid(rol, _lid(doel.lid_id), OUD_KIJKER, naam)
     # Wie zijn uitnodiging nog niet gebruikte, kan niet inloggen en telt niet mee (#348).
     if rol == "kijker" and not any(b.rol == "beheerder" and b.id != doel.id and (b.wachtwoordhash or b.passkeys)
                                    for b in actief.values()):
@@ -456,7 +467,7 @@ def lid_koppelen(beheerder_id, lid_id, actor):
     _, doel = _vergrendelen(beheerder_id, actor)
     naam = doel.gebruikersnaam
     lid = None if lid_id is None else _lid(lid_id)
-    _kijker_niet_aan_oud_lid(doel.rol, lid)
+    _kijker_niet_aan_oud_lid(doel.rol, lid, OUD_KOPPELEN, naam)
     if doel.lid_id == lid_id:
         db.session.rollback()
         return naam

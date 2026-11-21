@@ -619,7 +619,51 @@ def beheerders_oud():
 @bp.get("/gebruikers")
 @inloggen_vereist
 def beheerders_overzicht():
-    return render_template("beheerders.html", beheerders=beheerders.alle())
+    return render_template("beheerders.html", beheerders=beheerders.alle(), is_oud_lid=leden.is_oud_lid)
+
+
+def _lid_scherm(doel, veld=None, code=200):
+    return render_template("beheerder_lid.html", doel=doel, veld=veld or lidkeuze.Keuzeveld(),
+                           is_oud_lid=leden.is_oud_lid), code
+
+
+def _lid_veld(doel, fout=""):
+    """Het zoekveld van Lid koppelen na Zoeken of een weigering. Een kijker krijgt geen oud-leden als treffer
+    (besluit 7); de server weigert ze ook als de waarde toch komt (beheerders.lid_koppelen). `fout` vervangt
+    de fout van het zoeken: de groep treffers krijgt zelf nooit een fout (BV-96)."""
+    veld = lidkeuze.veld(request.form.get("zoek"), request.form.get("lid_id", ""), club=False,
+                         oud=doel.rol == "beheerder")
+    veld.fout = fout or veld.fout
+    return veld
+
+
+@bp.route("/gebruikers/<int:beheerder_id>/lid", methods=["GET", "POST"])
+@inloggen_vereist
+@recent_ingelogd
+def beheerder_lid(beheerder_id):
+    """Een account aan een lid koppelen of losmaken (#353, BV-96). Elke knop stuurt een eigen `actie`, zodat
+    een vergeten keuze nooit als loskoppelen wordt gelezen."""
+    doel = _of_404(beheerders.account, beheerder_id)
+    if request.method == "GET":
+        return _lid_scherm(doel)
+    actie = request.form.get("actie")
+    if actie == "zoeken":
+        return _lid_scherm(doel, _lid_veld(doel))
+    if actie not in ("koppelen", "loskoppelen"):
+        abort(400)
+    lid = None
+    if actie == "koppelen":
+        keuze = request.form.get("lid_id", "").strip()
+        lid = lidkeuze.lid_van_waarde(keuze, oud=True)
+        if lid is None:
+            return _lid_scherm(doel, _lid_veld(doel, lidkeuze.ONGELDIG if keuze else lidkeuze.NIET_GEKOZEN), 422)
+    try:
+        naam = beheerders.lid_koppelen(beheerder_id, lid and lid.id, Actor.van(g.beheerder))
+    except Regelfout as fout:
+        return _lid_scherm(doel, _lid_veld(doel, str(fout)), 422)
+    flash(f"{naam} is gekoppeld aan {lid.naam} ({lid.lidnummer})." if lid
+          else f"De koppeling van {naam} met een lid is losgemaakt.", "info")
+    return redirect(url_for("web.beheerders_overzicht"))
 
 
 def _link(code, titel, uitleg):

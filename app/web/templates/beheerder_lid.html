@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% from "_lidkeuze.html" import zoekveld with context %}
+{% block titel %}{{ 'Lid wijzigen' if doel.lid else 'Lid koppelen' }}: {{ doel.gebruikersnaam }} · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+{% set gekoppeld = doel.lid is not none %}
+<h1>{{ 'Lid wijzigen' if gekoppeld else 'Lid koppelen' }}: {{ doel.gebruikersnaam }}</h1>
+<p data-veld="stand">Rol: {{ 'Kijker' if doel.rol == 'kijker' else 'Beheerder' }}. Nu gekoppeld aan: {% if gekoppeld %}{{ doel.lid.naam }} ({{ doel.lid.lidnummer }}){% if is_oud_lid(doel.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}niemand{% endif %}.</p>
+
+<section class="dj-panel" aria-labelledby="lid-kop">
+  <h2 class="dj-panel__title" id="lid-kop">Lid kiezen</h2>
+  {# Zoeken staat vóór Koppelen en Loskoppelen: Enter in het zoekveld gebruikt de eerste knop en maakt nooit los. #}
+  <form class="bl-formulier" method="post" action="{{ url_for('web.beheerder_lid', beheerder_id=doel.id) }}">
+    {% include "_csrf.html" %}
+    {{ zoekveld(veld, 'lid-zoek', 'zoek', 'lid_id', 'Zoek een ander lid: naam of lidnummer' if gekoppeld else 'Zoek lid: naam of lidnummer', legend=doel.gebruikersnaam, hint='lid-zoek-hint') }}
+    <p class="bl-hint" id="lid-zoek-hint">Zoek op naam of lidnummer. Voor een kijker staan oud-leden niet in de treffers.</p>
+    <button type="submit" class="ds-btn" name="actie" value="zoeken">Zoeken</button>
+    {% if gekoppeld %}
+    <button type="submit" class="ds-btn" name="actie" value="loskoppelen" aria-label="Lid loskoppelen: {{ doel.gebruikersnaam }}">Lid loskoppelen</button>
+    {% endif %}
+    {% if veld.treffers %}
+    <button type="submit" class="ds-btn ds-btn--primary" name="actie" value="koppelen">Koppelen</button>
+    {% endif %}
+  </form>
+</section>
+<p><a href="{{ url_for('web.beheerders_overzicht') }}">Terug naar Gebruikers</a></p>
+{% endblock %}

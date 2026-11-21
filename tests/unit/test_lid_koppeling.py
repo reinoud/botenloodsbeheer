@@ -7,7 +7,7 @@ from unittest import mock
 import pytest
 from alembic import command
 from sqlalchemy import create_engine, select, text
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import IntegrityError, ProgrammingError
 
 from app import INT_MAX
 from app.domein import CLI, Regelfout, beheerders, leden, vandaag
@@ -23,7 +23,10 @@ from tests.unit.test_tokens import eigenaar
 
 twee = _twee  # fixtures
 ingelogd = _ingelogd
-OUD = "Een kijker kan niet aan een oud-lid gekoppeld zijn."
+OUD = ("bert is niet aan Oud gekoppeld: dat lid is oud-lid. Een kijker kan niet aan een oud-lid worden "
+       "gekoppeld. Kies een ander lid of maak het account eerst beheerder.")
+OUD_KIJKER = ("bert is niet kijker gemaakt: het gekoppelde lid is oud-lid. Een kijker met een oud-lid "
+              "verwijdert de nachtelijke opschoning. Maak eerst de koppeling los of laat het account beheerder.")
 
 
 def datum(dagen):
@@ -135,39 +138,34 @@ def test_een_lid_dat_tussen_controle_en_opslaan_verdwijnt_geeft_een_regelfout(ap
     vangst volgt een IntegrityError, dus een fout 500."""
     anna, _, bert = twee
     spook = mock.Mock(spec=Lid, id=4242)
-    with mock.patch.object(beheerders, "_lid", return_value=spook):
-        with pytest.raises(Regelfout, match="Dit lid bestaat niet meer."):
-            beheerders.lid_koppelen(bert.id, 4242, actor(anna))
-        with pytest.raises(Regelfout, match="Dit lid bestaat niet meer."):
-            beheerders.uitnodigen("carla", "beheerder", actor(anna), lid_id=4242)
-    assert lid_van(bert) is None and db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla")) is None
+    with mock.patch.object(beheerders, "_lid", return_value=spook), \
+            pytest.raises(Regelfout, match="Dit lid bestaat niet meer."):
+        beheerders.lid_koppelen(bert.id, 4242, actor(anna))
+    assert lid_van(bert) is None
 
 
-# Uitnodigen met een lid
+def test_een_andere_integrityerror_dan_de_lidverwijzing_wordt_geen_regelfout(app, twee):
+    """_lid_bestaat vangt alleen beheerder_lid_id_fkey: een andere constraint is een fout in de code of
+    de database en moet doorgaan, zodat ze niet als "Dit lid bestaat niet meer." verdwijnt."""
+    anna, _, bert = twee
+    orig = mock.Mock(diag=mock.Mock(constraint_name="beheerder_rol_geldig"))
+    fout = IntegrityError("UPDATE beheerder", {}, orig)
+    with mock.patch.object(db.session, "commit", side_effect=fout), pytest.raises(IntegrityError):
+        beheerders.lid_koppelen(bert.id, lid().id, actor(anna))
+    assert lid_van(bert) is None
 
 
-def test_uitnodigen_met_een_lid_legt_de_koppeling_vast_en_logt_haar(app, twee):
-    anna = twee[0]
-    ld = lid()
-    beheerders.uitnodigen("carla", "kijker", actor(anna), lid_id=ld.id)
-    carla = db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla"))
-    assert carla.lid_id == ld.id and carla.lid.naam == "Anna de Vries"
-    regel = logregels("beheerder.uitgenodigd")[-1]  # na de twee van de fixture
-    assert regel.gegevens["lid"] == f"lid:{ld.id}" and regel.verwijzingen == [f"beheerder:{carla.id}", f"lid:{ld.id}"]
+# Uitnodigen zonder lid (BV-96, variant 2B)
 
 
-def test_uitnodigen_zonder_lid_blijft_zoals_het_was(app):
+def test_uitnodigen_heeft_geen_lid_en_het_log_noemt_er_geen(app):
+    with pytest.raises(TypeError):
+        beheerders.uitnodigen("carla", "kijker", CLI, lid_id=1)
     beheerders.uitnodigen("carla", "kijker", CLI)
     carla = db.session.scalar(select(Beheerder))
     assert carla.lid_id is None
     [regel] = logregels("beheerder.uitgenodigd")
-    assert regel.gegevens["lid"] is None and regel.verwijzingen == [f"beheerder:{carla.id}"]
-
-
-def test_uitnodigen_met_een_onbekend_lid(app):
-    with pytest.raises(Regelfout, match="Dit lid bestaat niet."):
-        beheerders.uitnodigen("carla", "beheerder", CLI, lid_id=999)
-    assert db.session.scalar(select(Beheerder)) is None
+    assert "lid" not in regel.gegevens and regel.verwijzingen == [f"beheerder:{carla.id}"]
 
 
 # Besluit 7: een kijker niet aan een oud-lid, een beheerder wel
@@ -187,18 +185,12 @@ def test_koppelen_van_een_kijker_aan_een_oud_lid_wordt_geweigerd(app, twee, veld
     assert lid_van(bert) is None and not logregels("beheerder.lid_gewijzigd")
 
 
-def test_uitnodigen_van_een_kijker_aan_een_oud_lid_wordt_geweigerd(app, twee):
-    with pytest.raises(Regelfout, match=OUD):
-        beheerders.uitnodigen("carla", "kijker", actor(twee[0]), lid_id=oud_lid().id)
-    assert db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla")) is None
-
-
 def test_een_gekoppeld_account_wordt_geen_kijker_als_het_lid_oud_is(app, twee):
     anna, _, bert = twee
     ld = lid("1", "Straks oud")
     beheerders.lid_koppelen(bert.id, ld.id, actor(anna))
     zeg_op(ld, vandaag())
-    with pytest.raises(Regelfout, match=OUD):
+    with pytest.raises(Regelfout, match=OUD_KIJKER):
         beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
     assert rol_van(bert) == "beheerder" and not logregels("beheerder.rol_gewijzigd")
 
@@ -207,16 +199,18 @@ def test_een_beheerder_mag_aan_een_oud_lid_gekoppeld_worden_en_blijven(app, twee
     anna, _, bert = twee
     ld = oud_lid()
     beheerders.lid_koppelen(bert.id, ld.id, actor(anna))
-    beheerders.uitnodigen("carla", "beheerder", actor(anna), lid_id=ld.id)
+    beheerders.uitnodigen("carla", "beheerder", actor(anna))
     carla = db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "carla"))
+    beheerders.lid_koppelen(carla.id, ld.id, actor(anna))
     assert lid_van(bert) == lid_van(carla) == ld.id
 
 
 def test_een_kijker_wordt_weer_beheerder_ook_als_zijn_lid_intussen_oud_lid_werd(app, twee):
     anna = twee[0]
     ld = lid("2", "Straks oud")
-    beheerders.uitnodigen("dave", "kijker", actor(anna), lid_id=ld.id)
+    beheerders.uitnodigen("dave", "kijker", actor(anna))
     dave = db.session.scalar(select(Beheerder).where(Beheerder.gebruikersnaam == "dave"))
+    beheerders.lid_koppelen(dave.id, ld.id, actor(anna))
     zeg_op(ld, vandaag())
     beheerders.rol_wijzigen(dave.id, "beheerder", actor(anna))
     assert rol_van(dave) == "beheerder"
@@ -229,7 +223,6 @@ def test_een_kijker_aan_een_lid_dat_nog_niet_is_opgezegd_mag(app, twee, dagen):
     ld = lid(opzegdatum=vandaag() + timedelta(days=dagen))
     beheerders.lid_koppelen(bert.id, ld.id, actor(anna))
     beheerders.rol_wijzigen(bert.id, "kijker", actor(anna))
-    beheerders.uitnodigen("carla", "kijker", actor(anna), lid_id=ld.id)
     assert rol_van(bert) == "kijker"
 
 
@@ -257,7 +250,7 @@ def test_koppelen_aan_een_oud_lid_en_maak_kijker_tegelijk_geven_geen_kijker_aan_
 
     fouten = race(app, ["SELECT id FROM beheerder WHERE id = :b FOR UPDATE",
                         "UPDATE beheerder SET lid_id = :l WHERE id = :b"], {"b": bert.id, "l": oud.id}, actie)
-    assert fouten == [OUD]
+    assert fouten == [OUD_KIJKER]
     assert rol_van(bert) == "beheerder" and lid_van(bert) == oud.id
 
 
@@ -287,13 +280,16 @@ def test_status_met_nul_een_en_meer_accounts(app, ingelogd):
     assert s["niet_gekoppeld"] == {"status": "waarschuwing", "aantal": 1, "gebruikers": ["anna"]}
     assert s["beheerders_oud_lid"] == {"status": "ok", "aantal": 0, "gebruikers": []}
     html = ingelogd.get("/status").get_data(as_text=True)
-    assert "Gebruikers zonder lid" in html and "1: anna" in html and "Beheerders met een oud-lid" in html
+    assert "Gebruikers zonder lid" in html and "1: anna" in html and "Beheerders met een oud-lid" not in html
 
     actief, oud = lid("1", "Nog lid"), oud_lid()
     db.session.execute(text("UPDATE beheerder SET lid_id = :l WHERE gebruikersnaam = 'anna'"), {"l": actief.id})
     db.session.commit()
     s = json_status(ingelogd)
     assert s["niet_gekoppeld"] == {"status": "ok", "aantal": 0, "gebruikers": []}
+    # BV-96: bij nul geen rij in de HTML; /status.json houdt de sleutels.
+    html = ingelogd.get("/status").get_data(as_text=True)
+    assert "Gebruikers zonder lid" not in html and "Beheerders met een oud-lid" not in html
 
     # Meer: twee beheerders met een oud-lid (een geblokkeerd), een kijker met een oud-lid hoort er niet in,
     # twee ongekoppelde accounts, gesorteerd.
@@ -307,7 +303,7 @@ def test_status_met_nul_een_en_meer_accounts(app, ingelogd):
     assert s["beheerders_oud_lid"] == {"status": "waarschuwing", "aantal": 2, "gebruikers": ["bas", "zoe"]}
     assert s["niet_gekoppeld"] == {"status": "waarschuwing", "aantal": 2, "gebruikers": ["eva", "tom"]}
     html = ingelogd.get("/status").get_data(as_text=True)
-    assert "2: bas, zoe" in html and "2: eva, tom" in html
+    assert "Beheerders met een oud-lid" in html and "2: bas, zoe" in html and "2: eva, tom" in html
 
 
 def test_status_beheerder_met_lid_dat_morgen_opzegt_is_geen_oud_lid(app, ingelogd):

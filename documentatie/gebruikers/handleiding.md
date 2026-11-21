@@ -42,6 +42,21 @@ Het scherm `/gebruikers` toont alle accounts met hun rol, status en inlogmethode
 
 Achter elk account, ook het jouwe, staat één knop met de andere rol: **Maak kijker** of **Maak beheerder**. De wijziging geldt bij het volgende verzoek van die gebruiker, zonder dat hij opnieuw inlogt. Een kijker mag niets wijzigen, dus zijn persoonlijke tokens vervallen op het moment dat hij kijker wordt; terug naar beheerder brengt ze niet terug, hij maakt zo nodig nieuwe. Robottokens blijven werken. Er blijft altijd minstens één beheerder die kan inloggen: de laatste actieve beheerder kan geen kijker worden, ook niet als twee beheerders het tegelijk proberen. Een beheerder die zijn uitnodiging nog niet heeft gebruikt, telt daarbij niet mee. De applicatie meldt dan dat er geen beheerder overblijft die kan inloggen. Maak je jezelf kijker, dan kom je op het rekoverzicht met een melding en kun je dit scherm niet meer openen. De wijziging staat in het technische log als `beheerder.rol_gewijzigd`, met de oude en de nieuwe rol.
 
+### Een gebruiker aan een lid koppelen
+
+In de lijst met accounts staat onder elke gebruikersnaam het lid waaraan het account hangt, bijvoorbeeld "Lid: Anna de Vries (1001)", of "Lid: niet gekoppeld". Heet het lid oud-lid, dan staat daarachter de tag **oud-lid**. De koppeling is niet verplicht. Bij het uitnodigen kies je geen lid; dat doe je daarna.
+
+![De pagina Lid koppelen met een zoekveld en een lijst met treffers.](afbeeldingen/lid-koppelen.png)
+
+1. Kies in de lijst **Lid koppelen** (of **Lid wijzigen** als er al een lid is) bij het account. Je komt op de pagina van dat account.
+2. Typ een deel van de naam of het lidnummer (minstens 2 tekens) en kies **Zoeken**.
+3. Kies een lid uit de treffers en kies **Koppelen**. Kies je geen lid, dan blijft de koppeling zoals ze was en staat er een foutregel bij het zoekveld.
+4. Met **Lid loskoppelen** (alleen bij een gekoppeld account) maak je de koppeling los. Je komt terug op Gebruikers met een melding.
+
+Een lid mag aan meer dan één account gekoppeld zijn. Een kijker koppel je niet aan een oud-lid: voor een kijker staan oud-leden niet in de treffers, en de applicatie weigert ze ook als iemand het formulier nabootst. Een beheerder mag wel aan een oud-lid gekoppeld zijn. Maak je een account kijker dat aan een oud-lid hangt, dan weigert de applicatie dat, met de melding dat je eerst de koppeling losmaakt of het account beheerder laat. De wijziging staat in het technische log als `beheerder.lid_gewijzigd`, met het oude en het nieuwe lid.
+
+De nachtelijke opschoning verwijdert een kijker zodra het gekoppelde lid oud-lid is (opzegdatum of datum uit de bron is vandaag of eerder), met een regel `beheerder.verwijderd` in het technische log. Een beheerder blijft staan; de [technische status](#de-technische-status) meldt hem. Wordt een lid na de bewaartermijn van 5 jaar opgeschoond, dan vervalt de koppeling en staat het account weer als niet gekoppeld.
+
 ### Een collega blokkeren, herstellen of verwijderen
 
 Achter elk ander account staan naast de rolknop drie knoppen. Je eigen account kun je hier niet blokkeren, herstellen of verwijderen, zodat er altijd een actieve beheerder blijft; alleen de rol kun je wijzigen.
@@ -284,7 +299,7 @@ Er zijn twee logs. Elke beheerder ziet ze allebei; een kijker ziet geen van beid
 | Log | Menu | Inhoud |
 |---|---|---|
 | Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot verplaatst ("boot verplaatst"), een boot op de wachtlijst gezet ("wachtlijst toegevoegd", met de aanmelddatum) of eraf gehaald ("wachtlijst verwijderd") |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, gebruikers (ook een rolwijziging, `beheerder.rol_gewijzigd`) en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen) |
+| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, gebruikers (ook een rolwijziging, `beheerder.rol_gewijzigd`) en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen), en het koppelen van een gebruiker aan een lid (`beheerder.lid_gewijzigd`) |
 
 Het mutatielog toont bij elke regel waarop de handeling betrekking had als tekst: "Plaats B/2/2", "Rek B", "Boot Zeemeeuw", "Lid Anna de Vries (1001)" en "Gebruiker anna" (een account). Een kijker ziet het lid zonder lidnummer, geen regels over de wachtlijst ("wachtlijst toegevoegd" en "wachtlijst verwijderd"), en niet de link **Meer in het log**. Bestaat een boot of lid niet meer, dan staat de verwijzing er zoals opgeslagen, bijvoorbeeld `boot:183`. Het technische log toont de verwijzingen zoals opgeslagen. Beide tonen per pagina 50 regels, de nieuwste bovenaan, onder een kop per dag met de weekdag (in de tijdzone van de installatie, niet in UTC); met **Oudere regels** en **Nieuwere regels** blader je verder. Onder een overzicht staat het log in een uitklapblok **Log** dat dicht begint; open het met een klik. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen, vrijgaven en verplaatsingen op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen, vrijgaven en verplaatsingen op hun plaatsen. Onder `/indeling` en de schermen voor gebruikers, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
@@ -305,6 +320,8 @@ Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel
 | API | aan of uit | |
 | Bootaantallen | wanneer de integratiecontainer ze voor het laatst ophaalde | |
 | Tokens die verlopen | tokens die binnen 31 dagen verlopen, met naam en vervaldatum | er zo'n token is |
+| Beheerders met een oud-lid | het aantal en de gebruikersnamen van beheerders van wie het gekoppelde lid oud-lid is; de rij staat er alleen bij een aantal boven nul | er zo'n beheerder is |
+| Gebruikers zonder lid | het aantal en de gebruikersnamen van accounts zonder gekoppeld lid, ook geblokkeerde; de rij staat er alleen bij een aantal boven nul | er zo'n account is |
 
 Onderaan staat per robottoken de laatste aanroep. De pagina toont geen tokenwaarden, wachtwoorden of gegevens van leden. Dezelfde gegevens staan als JSON op `/status.json`, voor wie de installatie bewaakt.
 
@@ -404,6 +421,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/uitnodiging/{code}` | Account instellen met een uitnodigingslink |
 | `/profiel` | Je inlogmethodes |
 | `/gebruikers` | Gebruikers uitnodigen, hun rol wijzigen en ze beheren |
+| `/gebruikers/{nummer}/lid` | Een gebruiker aan een lid koppelen of losmaken |
 | `/beheerders` | De oude url van Gebruikers; verwijst door |
 | `/tokens` | Tokens voor de API |
 | `/tokens/nieuw` | Een token maken |
