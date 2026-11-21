@@ -37,6 +37,8 @@ Versie 2.2.0 bevat migratie 0023. Migratie 0023 (een gebruiker koppelen aan een 
 
 Na de update verwijdert de nachtelijke opschoning elke kijker die gekoppeld is aan een lid dat geen lid meer is. Direct na de upgrade is niemand gekoppeld, dus de eerste nacht verdwijnt er niemand; dat begint pas na het koppelen op Gebruikers (**Lid koppelen**). Een beheerder met een oud-lid blijft staan en komt op de statuspagina. Terug naar 2.1.0 vraagt de downgrade van 0023.
 
+Versie 2.2.1 heeft geen migratie. In `docker-compose.yml` is het pad van het tokenbestand nu `${API_TOKEN_BESTAND:-./secrets/api_token}`; laat `API_TOKEN_BESTAND` leeg, dan verandert er niets. `.env` wijzigt niet. Terug naar 2.2.0 kan zonder downgrade van de database.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.

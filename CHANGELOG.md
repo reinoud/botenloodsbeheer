@@ -2,6 +2,27 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.2.1 (2026-11-21)
+
+Onderhoudsversie met restpunten na 2.2.0 (milestone "Restpunten en v2.2.1"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.2.1`
+- `ghcr.io/reinoud/botenloods-integratie:2.2.1`
+
+Ook beschikbaar onder de tags `2.2` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.2.1.cdx.json` en `botenloods-integratie-2.2.1.cdx.json`.
+
+**Gewijzigd**
+- Een ongeldig verzoek (foutcode 400) toont de foutpagina in de huisstijl, in het Nederlands, zoals bij 403 en 404. Dat geldt ook als een formulier verlopen is (#364).
+- De keuzerondjes op Token maken komen uit de basis van het designsystem (`ds-radio`); het uiterlijk is gelijk (#366).
+
+**Opgelost**
+- Lid loskoppelen bij een account zonder gekoppeld lid meldt niet meer dat de koppeling is losgemaakt (#364).
+
+**Overig**
+- In `docker-compose.yml` is het pad van het tokenbestand van de integratiecontainer instelbaar met `API_TOKEN_BESTAND`, alleen voor testomgevingen naast elkaar. Zonder die variabele blijft het `./secrets/api_token`; een installatie hoeft niets te doen (#368).
+- De E2E-tests wachten tot Traefik de route naar de API heeft (#368).
+
 ## 2.2.0 (2026-11-21)
 
 Versie met de koppeling van een gebruiker aan een lid (milestone "Koppeling met leden en v2.2.0"). Een minorversie, omdat er een migratie bij komt en je na het inloggen op een andere pagina uitkomt.
