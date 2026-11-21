@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.12
+**Versie overlay:** v0.6.13
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-21
@@ -378,6 +378,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De E2E-basislijn noemt het aantal testfuncties per bestand (`grep -c '^def test_' tests/e2e/test_*.py`) naast het aantal geslaagd; `draai.sh` draait pytest meer dan eens. De volledige run duurt langer dan 600 seconden: wacht in twee until-lussen (#322).
 - Docker op de Mac van de stakeholder draait arm64; `uname -m` in de agentshell zegt x86_64 (Rosetta). Bouw de amd64-images voor trivy onder een eigen tag (`--platform linux/amd64`), nooit als `latest`. De E2E-stack draait het native image; controleer vóór de run met `docker image inspect -f '{{.Architecture}}' botenloods-app:latest` dat het arm64 is. Onder qemu haalt de worker zijn healthcheck niet en faalt de E2E (#344).
 - De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met een override in de scratchpad die `ports` leegt, en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. `draai.sh` vervangt ook dan `secrets/api_token` in de gedeelde werkmap: herstart daarna de integratiecontainer van de dev-stack (#347).
+- Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
 
 #### Migratie en database
 
@@ -570,6 +571,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.13 | 2026-11-21 | Eén regel (E2E): één E2E-run voor een release | Besluit stakeholder (#356) |
 | v0.6.12 | 2026-11-21 | Eén regel (Bouw): `web` opnieuw aanmaken bij een E2E-mutant met `DRAAI_OVERRIDE`; uit de terugblik van sentinel bij #345 | Lessen |
 | v0.6.11 | 2026-11-21 | Eén regel (Bouw): basisversie en aanvulling bij een afname, rondjes per scherm; uit de terugblik van prism bij #345 | Lessen |
 | v0.6.10 | 2026-11-21 | Eén regel (Review): `<int:>` of `getal` per id-parameter; uit de terugblik van aegis bij #353 deel 2 | Lessen |
