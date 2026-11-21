@@ -250,7 +250,9 @@ def test_token_maken_toont_de_vijf_webrechten_en_niet_leden_importeren(ingelogd)
     assert re.findall(r'name="recht" value="([^"]+)"', tekst) == list(tokens.WEBRECHTEN) and len(tokens.WEBRECHTEN) == 5
     assert "leden:importeren" not in tekst
     assert "Wie en hoe lang" in tekst and "Wat mag het token" in tekst
-    assert tekst.count('class="bl-radio"') == 2 and tekst.count("bl-vast") == 1
+    assert tekst.count("bl-vast") == 1
+    # #366, mutant: een rondje terug op `ds-check` zonder `ds-radio` in token_nieuw.html.
+    assert re.findall(r'<div class="([^"]*)"><input type="radio"', tekst) == ["ds-check ds-radio"] * 2
 
 
 def test_token_met_leden_importeren_toont_de_cli_zin(ingelogd):

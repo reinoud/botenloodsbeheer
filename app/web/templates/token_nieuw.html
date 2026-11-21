@@ -9,8 +9,8 @@
       <h2 class="dj-panel__title" id="wie-kop">Wie en hoe lang</h2>
       <fieldset class="dj-choices">
         <legend>Soort</legend>
-        <div class="ds-check"><input class="bl-radio" type="radio" id="soort-persoonlijk" name="soort" value="persoonlijk"{% if invoer.soort != 'robot' %} checked{% endif %}><label for="soort-persoonlijk">Persoonlijk: hoort bij jou en werkt niet meer als je account geblokkeerd of verwijderd is</label></div>
-        <div class="ds-check"><input class="bl-radio" type="radio" id="soort-robot" name="soort" value="robot"{% if invoer.soort == 'robot' %} checked{% endif %}><label for="soort-robot">Robot: voor een koppeling, blijft werken als jij vertrekt</label></div>
+        <div class="ds-check ds-radio"><input type="radio" id="soort-persoonlijk" name="soort" value="persoonlijk"{% if invoer.soort != 'robot' %} checked{% endif %}><label for="soort-persoonlijk">Persoonlijk: hoort bij jou en werkt niet meer als je account geblokkeerd of verwijderd is</label></div>
+        <div class="ds-check ds-radio"><input type="radio" id="soort-robot" name="soort" value="robot"{% if invoer.soort == 'robot' %} checked{% endif %}><label for="soort-robot">Robot: voor een koppeling, blijft werken als jij vertrekt</label></div>
       </fieldset>
       <div class="ds-field">
         <label class="ds-field__label" for="naam">Naam (a-z, cijfers, punt, - en _)</label>
