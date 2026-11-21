@@ -11,6 +11,7 @@ from app.domein import beheerders, lidkeuze, vandaag
 from app.models import Beheerder, db
 from app.web import RECENT
 from tests.unit.hulp import lid
+from tests.unit.test_foutpagina import pagina
 from tests.unit.test_gebruikers_rollen import actor
 from tests.unit.test_gebruikers_rollen import scherm as _scherm
 from tests.unit.test_gebruikers_rollen import twee as _twee
@@ -119,6 +120,15 @@ def test_loskoppelen_maakt_los_en_meldt_het(scherm, twee):
     assert lid_van(bert) is None
 
 
+def test_loskoppelen_zonder_lid_meldt_niets(scherm, twee):
+    # #364, mutant: de voorwaarde `lid or was_gekoppeld` weg in beheerder_lid meldt "losgemaakt".
+    _, _, bert = twee
+    r = scherm.post(pad(bert), data={"actie": "loskoppelen"})
+    assert r.status_code == 302 and r.location == "/gebruikers"
+    assert "losgemaakt" not in scherm.get("/gebruikers").text
+    assert lid_van(bert) is None and logregels("beheerder.lid_gewijzigd") == []
+
+
 def test_koppelen_zonder_rondje_is_422_en_maakt_nooit_los(scherm, twee):
     """Een vergeten keuze is geen loskoppelen (review Aegis op BV-96). Mutant: koppelen zonder rondje valt
     door naar lid_id None."""
@@ -151,7 +161,8 @@ def test_een_onbekende_actie_is_400_en_wijzigt_niets(scherm, twee, data):
     anna, _, bert = twee
     ld = lid()
     beheerders.lid_koppelen(bert.id, ld.id, actor(anna))
-    assert scherm.post(pad(bert), data=data).status_code == 400
+    # #364, mutant: 400 weg uit de app_errorhandler van foutpagina geeft de Engelse pagina van Werkzeug.
+    pagina(scherm.post(pad(bert), data=data), 400, "/rekoverzicht", True)
     assert lid_van(bert) == ld.id and len(logregels("beheerder.lid_gewijzigd")) == 1
 
 
