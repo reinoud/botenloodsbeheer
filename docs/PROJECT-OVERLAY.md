@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.14
+**Versie overlay:** v0.6.15
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-21
@@ -146,7 +146,6 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
-- Een E2E-mutant met `DRAAI_OVERRIDE`: maak eerst `web` opnieuw aan met de override (`up -d --no-deps --force-recreate web` met `-f <mutant.yml>`, wacht op healthy), draai dan `draai.sh`, en zet `web` daarna terug zonder override; `draai.sh` doet dat zelf niet (#345).
 - Controleer of elke letter van `reknaam()` in `tests/e2e/` uniek is met `grep -onE 'reknaam\([^)]*\)' tests/e2e/*.py`; dezelfde letter voor het rek en de bootnaam binnen één test telt niet als dubbel.
 - Verandert een validatieregel in het domein, draai dan eerst de volledige unitsuite: die geeft de lijst van tests en E2E-helpers die met de oude regel gegevens maken.
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
@@ -353,7 +352,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De rate limit op `/inloggen` en `/uitnodiging` telt alle E2E-tests samen; `tests/e2e/draai.sh` draait per bestand met 40 seconden pauze. Houd een nieuw E2E-bestand onder 20 inlogverzoeken. Een nieuwe E2E-test die inlogt, krijgt een eigen soort in de lijst van uitnodigingen in `tests/e2e/draai.sh`, vóór `passkey`.
 - `tests/e2e/draai.sh` herstart de integratiecontainer en vervangt `secrets/api_token`; meld dat aan de andere agents als die de stack tegelijk gebruiken. `draai.sh` bouwt niet: wijzigt `tests/e2e/requirements.txt`, herbouw dan eerst het e2e-image (`docker compose -f docker-compose.yml -f compose.dev.yml --profile e2e build e2e`) en controleer de versies met `pip list`.
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
-- Een E2E-mutant op een template: leg het mutant-template met een override (`<scratchpad>/compose.<mutant>.yml`) als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`, maak `web` eerst zelf opnieuw aan met die override (`docker compose -f docker-compose.yml -f compose.dev.yml -f <override> up -d --no-deps --force-recreate web`), controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat de mutant draait, en draai dan `tests/e2e/draai.sh -k <test>`. `DRAAI_OVERRIDE` alleen maakt `web` niet opnieuw aan, dan draait de mutant niet (#206). Een mutant die in de test geen verschil kan geven (zoals een `rollback` na een weigering), benoem je als gelijkwaardig in plaats van hem te forceren. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
+- Een E2E-mutant op een template: leg het mutant-template met een override (`<scratchpad>/compose.<mutant>.yml`) als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`, maak `web` eerst zelf opnieuw aan met die override (`docker compose -f docker-compose.yml -f compose.dev.yml -f <override> up -d --no-deps --force-recreate web`), controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat de mutant draait, en draai dan `tests/e2e/draai.sh -k <test>`. `DRAAI_OVERRIDE` alleen maakt `web` niet opnieuw aan, dan draait de mutant niet (#206, opnieuw bij #345). Een mutant die in de test geen verschil kan geven (zoals een `rollback` na een weigering), benoem je als gelijkwaardig in plaats van hem te forceren. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
 - Geeft `schermafbeeldingen.sh` een `FileNotFoundError`, draai hem dan met `DOC_UIT=/documentatie/gebruikers/<tijdelijke map>` en kopieer alleen de eigen afbeeldingen.
 - Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
@@ -573,6 +572,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.15 | 2026-11-21 | Opgeschoond na de retrospective van milestone 12: de regel uit v0.6.12 viel samen met die over een E2E-mutant op een template (#206) | Retrospective |
 | v0.6.14 | 2026-11-21 | Twee regels (E2E): akkoord voor de release-E2E vooraf, nieuw token voor de dev-stack daarna; uit de terugblik van pipeline bij #356 | Lessen |
 | v0.6.13 | 2026-11-21 | Eén regel (E2E): één E2E-run voor een release | Besluit stakeholder (#356) |
 | v0.6.12 | 2026-11-21 | Eén regel (Bouw): `web` opnieuw aanmaken bij een E2E-mutant met `DRAAI_OVERRIDE`; uit de terugblik van sentinel bij #345 | Lessen |
