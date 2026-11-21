@@ -43,6 +43,17 @@ def treffer(page, lid):
     return page.locator("main fieldset.dj-choices label", has_text=f"({lid['lidnummer']})")
 
 
+def rond(page, radios):
+    """Elk keuzerondje heeft de rondheid van --radius-round, in beide thema's (#345)."""
+    assert radios.count() >= 1
+    for thema in ("light", "dark"):
+        page.evaluate("t => document.documentElement.dataset.theme = t", thema)
+        rond = page.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--radius-round').trim()")
+        assert rond not in ("", "0px")
+        for i in range(radios.count()):
+            assert radios.nth(i).evaluate("e => getComputedStyle(e).borderRadius") == rond, (thema, i)
+
+
 def test_koppelen_oud_lid_status_en_loskoppelen(page):
     wachtwoord_instellen(page, "lidkoppeling")
     oud = {**OUD, "opzegdatum": (date.today() - timedelta(days=30)).isoformat()}
@@ -52,6 +63,9 @@ def test_koppelen_oud_lid_status_en_loskoppelen(page):
         account_uitnodigen(page, "lkbeheerder", "beheerder")
         page.goto("/gebruikers")
         kijker, beheerder = gebruikersnaam("lkkijker"), gebruikersnaam("lkbeheerder")
+
+        # De rondjes bij Rol zijn rond. Mutant: de regel `.ds-radio input` weg uit de kopie van ds-components.css.
+        rond(page, page.locator("main form[action='/gebruikers'] input[type=radio]"))
 
         # Gebruikers: zonder koppeling de regel "niet gekoppeld" en de link Lid koppelen. Mutant: link- of hinttekst anders.
         expect(rij(page, "lkkijker").locator("[data-veld=lid]")).to_have_text("Lid: niet gekoppeld")
@@ -69,6 +83,8 @@ def test_koppelen_oud_lid_status_en_loskoppelen(page):
         lid_zoeken(page, ACTIEF["lidnummer"])
         expect(treffer(page, ACTIEF)).to_have_count(1)
         expect(treffer(page, ACTIEF).locator(".ds-tag")).to_have_count(0)
+        # Ook de rondjes in de lidkeuze. Mutant: dezelfde regel weg; of `ds-radio` terug op `dj-radio` in _lidkeuze.html.
+        rond(page, page.locator("main fieldset.dj-choices input[type=radio]"))
         page.get_by_role("button", name="Koppelen", exact=True).click()
         expect(page.get_by_role("status").filter(has_text="is gekoppeld aan")).to_have_text(
             f"{kijker} is gekoppeld aan {ACTIEF['naam']} ({ACTIEF['lidnummer']}).")
