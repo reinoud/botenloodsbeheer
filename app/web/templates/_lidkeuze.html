@@ -9,7 +9,7 @@
   <fieldset class="dj-choices"{% if veld.meer %} aria-describedby="{{ id }}-meer"{% endif %}>
     <legend>Treffers voor {{ legend or label }}</legend>
     {% for t in veld.treffers %}
-    <div class="ds-check dj-radio"><input type="radio" id="{{ id }}-t{{ loop.index0 }}" name="{{ keuzenaam }}" value="{{ t.waarde }}"{% if t.waarde == veld.gekozen %} checked{% endif %}><label for="{{ id }}-t{{ loop.index0 }}">{% if t.lid %}{{ t.lid.naam }} ({{ t.lid.lidnummer }}){% if t.oud %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}{{ vereniging }} (clubboot){% endif %}</label></div>
+    <div class="ds-check ds-radio"><input type="radio" id="{{ id }}-t{{ loop.index0 }}" name="{{ keuzenaam }}" value="{{ t.waarde }}"{% if t.waarde == veld.gekozen %} checked{% endif %}><label for="{{ id }}-t{{ loop.index0 }}">{% if t.lid %}{{ t.lid.naam }} ({{ t.lid.lidnummer }}){% if t.oud %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}{{ vereniging }} (clubboot){% endif %}</label></div>
     {% endfor %}
   </fieldset>
   {% if veld.meer %}<p class="ds-field__hint" id="{{ id }}-meer">Meer dan 10 treffers. Zoek preciezer.</p>{% endif %}

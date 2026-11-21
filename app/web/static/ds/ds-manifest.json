@@ -1,13 +1,13 @@
 {
-  "repo": "Mathison/design-system",
-  "versie": "0.3.0",
-  "commit": "3f212e0746d5bd40352c32f90c0c65ec123d8500",
-  "datum": "2026-11-06",
+  "repo": "reinoud/designsystem",
+  "versie": "1.0.1",
+  "commit": "67bdd28c6bb1808c6a0c62ab6a2aac2b52b82649",
+  "datum": "2026-11-21",
   "label": "dajaks",
   "bestanden": [
     {
       "pad": "ds-components.css",
-      "sha256": "220c104fd75d9b2fade306c71e4d4f903ad4e184079c73ec181cea62f29fd0b8"
+      "sha256": "53cb43a655495c4c46603ea91b5b90c342d2310123a2d197fa51e5fedcfa6485"
     },
     {
       "pad": "fonts/OFL-pt-sans.txt",
