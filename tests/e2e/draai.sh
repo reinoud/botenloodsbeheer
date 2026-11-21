@@ -6,6 +6,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 c=(docker compose -f docker-compose.yml -f compose.dev.yml ${DRAAI_OVERRIDE:+-f "$DRAAI_OVERRIDE"})
 # Een eigen stack naast de gedeelde: COMPOSE_PROJECT_NAME, KOPPELNET, INSTALLATIE en DRAAI_OVERRIDE=documentatie/gebruikers/compose.doc.yml (geen poorten naar de host).
+# Bij de up van zo'n stack ook API_TOKEN_BESTAND=./secrets/api_token.<project>, vooraf aangemaakt met mode 600 (#368).
 stempel=$(date +%s)
 
 # BLB-042 criterium 7: compose.api-extern.yml start niet zonder API_EXTERN_BRONNEN, en met een
@@ -23,9 +24,17 @@ for leeg in "-u API_EXTERN_BRONNEN" "API_EXTERN_BRONNEN="; do
 done
 API_EXTERN_BRONNEN=192.0.2.0/24 "${extern[@]}" | grep -q "sourcerange: 192.0.2.0/24" \
   || { echo "API_EXTERN_BRONNEN komt niet in de whitelist van Traefik." >&2; exit 1; }
+# #368: zonder API_TOKEN_BESTAND het pad van een installatie, met een waarde dat bestand.
+basis=(docker compose --env-file "$dummy" -f docker-compose.yml config)
+env -u API_TOKEN_BESTAND "${basis[@]}" | grep -qx "    file: $PWD/secrets/api_token" \
+  || { echo "Zonder API_TOKEN_BESTAND is het tokenbestand niet secrets/api_token." >&2; exit 1; }
+API_TOKEN_BESTAND=./secrets/api_token.proef "${basis[@]}" \
+  | grep -qx "    file: $PWD/secrets/api_token.proef" \
+  || { echo "API_TOKEN_BESTAND komt niet in het tokenbestand van compose." >&2; exit 1; }
 
 # De leden komen via de integratiecontainer met de stub (ADR-012), zoals in de
-# beheerdocumentatie. Een nieuw token in secrets/api_token. De container staat stil terwijl
+# beheerdocumentatie. Een nieuw token in het bestand dat de container leest (secrets/api_token, of
+# API_TOKEN_BESTAND bij de up van een eigen project). De container staat stil terwijl
 # er een importverzoek klaarkomt; anders pakt hij het op vóór het log hieronder begint, en
 # zonder verzoek importeert hij tussen 00:00 en SYNC_TIJDSTIP niet (#45).
 # Na elke run, ook na een mislukte, ruimt tests/e2e/opruimen.sql op wat van een E2E-run is, ook de
@@ -47,9 +56,33 @@ trap opruimen EXIT
 robot() {
   "${c[@]}" exec -T web flask token robot "$@" 2>"$fout" | tail -n 1 \
     || { echo "Token $1 aanmaken mislukt:" >&2; cat "$fout" >&2; return 1; }; }
+# Een eigen project mag het token van de dev-stack niet overschrijven (#368): het moet met een eigen
+# API_TOKEN_BESTAND gestart zijn, en dat bestand ligt in secrets/ (buiten git en de build context).
+container=$("${c[@]}" ps -aq integratie)
+token_bestand=$([ -z "$container" ] || docker inspect -f \
+  '{{range .Mounts}}{{if eq .Destination "/run/secrets/api_token"}}{{.Source}}{{end}}{{end}}' "$container")
+project=$("${c[@]}" config | awk '$1 == "name:" {print $2; exit}')
+if [ -z "$token_bestand" ] || [[ "$(realpath "$token_bestand")" != "$(realpath secrets)"/* ]] \
+   || { [ "$project" != botenloods ] && [ "$token_bestand" -ef secrets/api_token ]; }; then
+  echo "Project $project leest het token uit '$token_bestand' (of heeft geen integratiecontainer)." \
+    "Start een eigen project met API_TOKEN_BESTAND=./secrets/api_token.$project (bestand vooraf" \
+    "aanmaken, mode 600)." >&2
+  exit 1
+fi
+# Wacht tot Traefik de router van de API heeft. Zonder router geeft Traefik 404, en na één fout
+# wacht de integratiecontainer een uur (#368). Een PUT met alleen een te grote Content-Length
+# krijgt 413 van de router zelf en bereikt de API niet.
+api_router() { "${c[@]}" exec -T integratie python -c 'import http.client, os, urllib.parse
+u = urllib.parse.urlsplit(os.environ["API_URL"])
+v = http.client.HTTPConnection(u.hostname, u.port, timeout=5)
+v.putrequest("PUT", u.path + "/leden"); v.putheader("Content-Length", "3145729"); v.endheaders()
+raise SystemExit(v.getresponse().status != 413)' 2>/dev/null; }
+for _ in $(seq 60); do api_router && break; sleep 1; done
+api_router || { echo "Na 60 seconden geen router naar de API in Traefik (404), of de" \
+  "integratiecontainer draait niet." >&2; exit 1; }
 robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:lezen \
-  > secrets/api_token
-chmod 600 secrets/api_token
+  > "$token_bestand"
+chmod 600 "$token_bestand"
 stil=1
 "${c[@]}" stop integratie >/dev/null
 koppel_ip=$(docker inspect -f '{{range $n, $v := .NetworkSettings.Networks}}{{$n}} {{$v.IPAddress}}
@@ -103,8 +136,16 @@ robot "e2e-kort-$stempel" --recht bootaantallen:lezen --dagen 10 >/dev/null
 e2e() {
   local nieuw="e2e-nieuw-$stempel-$((++aanroep))"
   robot "$nieuw" --recht bootaantallen:lezen >/dev/null || exit 1  # set -e telt niet achter ||
+  local rc=0
   "${c[@]}" --profile e2e run --rm -e E2E_STEMPEL="$stempel" -e E2E_TOKEN_NIEUW_NAAM="$nieuw" \
-    "${links[@]}" "${tokens[@]}" "${tokens_lezen[@]}" e2e pytest -p no:cacheprovider "$@"; }
+    "${links[@]}" "${tokens[@]}" "${tokens_lezen[@]}" e2e pytest -p no:cacheprovider "$@" || rc=$?
+  # Na een fout wacht de integratiecontainer een uur en faalt test_import.py; toon dan de oorzaak (#368).
+  if "${c[@]}" logs --since "$start" integratie | grep "Import mislukt" >&2; then
+    echo "De integratiecontainer meldde een fout tijdens de run. 404's van Traefik op /api/:" >&2
+    "${c[@]}" logs --since "$start" traefik | grep ' /api/v1/[^ ]* HTTP/1.1" 404 ' >&2 || true
+    start=$(date -u +%Y-%m-%dT%H:%M:%SZ)  # elke fout één keer melden
+  fi
+  return $rc; }
 aanroep=0
 
 # Traefik staat 20 inlogverzoeken direct toe en daarna 30 per minuut per IP-adres (ADR-001).
