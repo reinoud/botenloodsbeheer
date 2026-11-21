@@ -172,7 +172,8 @@ def uitvoeren(functie, *args, gelukt=None):
     return resultaat
 
 
-FOUTEN = {403: ("Geen toegang", "Met je account kun je deze pagina niet openen."),
+FOUTEN = {400: ("Ongeldig verzoek", "Deze aanvraag klopt niet. Ga terug en probeer het opnieuw."),
+          403: ("Geen toegang", "Met je account kun je deze pagina niet openen."),
           404: ("Pagina niet gevonden",
                 "Dit adres leidt nergens heen. Misschien is de link verouderd of staat er een tikfout in.")}
 
@@ -180,6 +181,7 @@ FOUTEN = {403: ("Geen toegang", "Met je account kun je deze pagina niet openen."
 # app_errorhandler: een onbekend adres raakt geen view van de blueprint, dus before_request is niet gelopen
 # en g.beheerder niet gezet. De sessie lezen we hier opnieuw, zonder de kijkerweigering (BV-95, #341).
 # De dienst api registreert deze blueprint niet en houdt zijn eigen JSON-fouten.
+@bp.app_errorhandler(400)
 @bp.app_errorhandler(403)
 @bp.app_errorhandler(404)
 def foutpagina(fout):

@@ -1,4 +1,4 @@
-"""Foutpagina 403 en 404 in de webinterface (BV-95, issue #341): huisstijl, juiste statuscode, een link terug
+"""Foutpagina 400, 403 en 404 in de webinterface (BV-95, issue #341; 400 sinds #364, getest in test_lid_koppeling_web): huisstijl, juiste statuscode, een link terug
 per situatie, en de sessie wordt gelezen zoals laad_beheerder dat doet. De API houdt zijn JSON-fout
 (test_leesaanroepen.py::test_onbekend_pad_en_verkeerde_methode_geven_json)."""
 
@@ -9,7 +9,7 @@ import pytest
 from app.domein import CLI, instellingen
 from tests.unit.test_kijkers import als_kijker, beheerder, main  # noqa: F401
 
-KOP = {403: "Geen toegang", 404: "Pagina niet gevonden"}
+KOP = {400: "Ongeldig verzoek", 403: "Geen toegang", 404: "Pagina niet gevonden"}
 
 
 def pagina(r, code, terug_naar, kop_met_menu):
@@ -98,3 +98,11 @@ def test_routes_met_een_eigen_404_blijven_zoals_ze_waren(client, pad):
     assert r.status_code == 404
     assert ("Deze pagina bestaat niet" in r.text) is pad.startswith("/p/")
     assert ("Foutcode" in r.text) is False
+
+
+def test_csrf_fout_zonder_sessie_krijgt_400_zonder_cookie_en_zonder_de_oorzaak(app):
+    # #364: een CSRF-fout is een 400 en loopt dus via foutpagina. Mutant: 400 weg uit de app_errorhandler.
+    app.config["WTF_CSRF_ENABLED"] = True  # zoals in productie
+    r = app.test_client().post("/inloggen", data={"gebruikersnaam": "x"})
+    pagina(r, 400, "/inloggen", False)
+    assert "Set-Cookie" not in r.headers and "csrf" not in r.text.lower()  # geen sessie (#9) en geen oorzaak

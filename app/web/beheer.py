@@ -657,12 +657,14 @@ def beheerder_lid(beheerder_id):
         lid = lidkeuze.lid_van_waarde(keuze, oud=True)
         if lid is None:
             return _lid_scherm(doel, _lid_veld(doel, lidkeuze.ONGELDIG if keuze else lidkeuze.NIET_GEKOZEN), 422)
+    was_gekoppeld = doel.lid_id is not None  # vóór de commit, die doel verloopt
     try:
         naam = beheerders.lid_koppelen(beheerder_id, lid and lid.id, Actor.van(g.beheerder))
     except Regelfout as fout:
         return _lid_scherm(doel, _lid_veld(doel, str(fout)), 422)
-    flash(f"{naam} is gekoppeld aan {lid.naam} ({lid.lidnummer})." if lid
-          else f"De koppeling van {naam} met een lid is losgemaakt.", "info")
+    if lid or was_gekoppeld:  # loskoppelen zonder lid verandert niets, dus geen melding (#364)
+        flash(f"{naam} is gekoppeld aan {lid.naam} ({lid.lidnummer})." if lid
+              else f"De koppeling van {naam} met een lid is losgemaakt.", "info")
     return redirect(url_for("web.beheerders_overzicht"))
 
 
