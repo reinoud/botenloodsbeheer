@@ -269,11 +269,10 @@ td form { gap: var(--space-2); }
 .bl-waarde { padding: var(--space-4); border: var(--stroke-2) solid var(--line-strong); background: var(--surface); color: var(--ink); user-select: all; overflow-wrap: anywhere; }
 .bl-waarde code { word-break: break-all; }
 
-/* Token maken (5B): twee panelen naast elkaar vanaf 60rem, de knop blijft onderaan in beeld; een keuzerondje is rond */
+/* Token maken (5B): twee panelen naast elkaar vanaf 60rem, de knop blijft onderaan in beeld */
 .bl-paar { display: grid; gap: var(--space-5); align-items: start; }
 .bl-paar > * { min-width: 0; margin-block: 0; }
 .bl-vast { position: sticky; bottom: 0; z-index: 1; padding-block: var(--space-3); border-top: var(--stroke-1) solid var(--line); background: var(--page); }
-.bl-radio[type="radio"] { border-radius: var(--radius-round); }
 
 /* Kaartjes (5B): elk rek een vak dat altijd open staat; "Heel rek" eerst over de volle breedte */
 .bl-rekkeuze { padding: var(--space-4); border: var(--stroke-1) solid var(--line-strong); border-radius: var(--radius-surface); background: var(--surface); }
