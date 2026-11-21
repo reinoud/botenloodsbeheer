@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.10
+**Versie overlay:** v0.6.12
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-21
@@ -146,6 +146,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een controle op een reeks statuscodes toetst ook de herkomst van elke code (applicatie of Traefik), niet alleen de code.
 - Noem bij een telling met de waarde 0 in het bewijs of die 0 verwacht is, en waarom.
 - Noem bij elke nieuwe E2E-assertie de mutant die hij moet vangen, of zeg dat de E2E-test niet gemuteerd wordt.
+- Een E2E-mutant met `DRAAI_OVERRIDE`: maak eerst `web` opnieuw aan met de override (`up -d --no-deps --force-recreate web` met `-f <mutant.yml>`, wacht op healthy), draai dan `draai.sh`, en zet `web` daarna terug zonder override; `draai.sh` doet dat zelf niet (#345).
 - Controleer of elke letter van `reknaam()` in `tests/e2e/` uniek is met `grep -onE 'reknaam\([^)]*\)' tests/e2e/*.py`; dezelfde letter voor het rek en de bootnaam binnen één test telt niet als dubbel.
 - Verandert een validatieregel in het domein, draai dan eerst de volledige unitsuite: die geeft de lijst van tests en E2E-helpers die met de oude regel gegevens maken.
 - Noem bij een volgordetest elke sorteersleutel en zeg per sleutel of een mutant die hem weglaat moet vallen.
@@ -155,6 +156,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `Plaats.bootsoorten` staat op id gesorteerd; "eerste soort" is de laagste id, niet de volgorde van aanvinken. `plaats()` in `tests/unit/hulp.py` weigert een lege soortenlijst; een plaats zonder soort maak je via `rek_aanmaken`.
 - Verandert een wijziging de volgorde of weergave op één scherm, noem dan de andere schermen die hetzelfde gegeven tonen en of die bewust ongewijzigd blijven.
 - Een bron buiten de repository (zoals designsystem) wordt gelezen op een genoemde commit, met `git show <commit>:<pad>`; noem in de opdracht het volledige pad vanaf de root van die repository, ook voor submappen; de werkboom telt niet. Draai na een afname van de Dajaks-basis vóór de oplevering `python3 basis/controleer_product.py <repo> --doel app/web/static/ds --ref main` vanuit designsystem en meld de uitkomst; bestanden die niet uit de afname komen, staan buiten die map.
+- Noem bij een afname de basisversie van de gekozen commit uit `basis/VERSION`, en zeg dat `afname.py` de aanvulling (`dj-components.css`) niet meeneemt. Noem per scherm hoeveel keuzerondjes het toont, met de route waarop dat zo is (#345).
 - Wijzigt de HTML-structuur (zoals een wrapper om een tabel), zoek dan eerst met `grep -rn` naar CSS-selectors in `tests/e2e/` die op de structuur leunen (`main > table`, `h2 + p + table`, `section.kaart`) en noem ze. Controleer een scherm ook op 360 pixels breed.
 - Een nieuwe macro of een gewijzigd sjabloon dat gebruikersinvoer toont, krijgt een unittest met `<b>x</b>` die de geëscapete vorm toetst; de mutant met `|safe` op dat veld moet falen. Een fonttest controleert familie plus gewicht.
 - Een test op het aantal migratieheads gebruikt de fixture `database` niet, zodat een tweede head op de eigen assert valt.
@@ -568,6 +570,8 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.12 | 2026-11-21 | Eén regel (Bouw): `web` opnieuw aanmaken bij een E2E-mutant met `DRAAI_OVERRIDE`; uit de terugblik van sentinel bij #345 | Lessen |
+| v0.6.11 | 2026-11-21 | Eén regel (Bouw): basisversie en aanvulling bij een afname, rondjes per scherm; uit de terugblik van prism bij #345 | Lessen |
 | v0.6.10 | 2026-11-21 | Eén regel (Review): `<int:>` of `getal` per id-parameter; uit de terugblik van aegis bij #353 deel 2 | Lessen |
 | v0.6.9 | 2026-11-21 | Vier regels (Bouw): nieuwe test eerst los groen, sr-only linknaam, README-teksten, test op `recent_ingelogd`; uit de terugblik van prism bij #353 deel 2 | Lessen |
 | v0.6.8 | 2026-11-20 | Eén regel: projectnaam bij tests vanuit een kopie (Bouw); uit de terugblik van sentinel bij #362 | Lessen |
