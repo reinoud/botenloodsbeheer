@@ -33,7 +33,9 @@ Versie 2.0.0 bevat migratie 0022 (rollen, de kijker). Migratie 0022 geeft elk be
 
 Versie 2.1.0 heeft geen migratie en wijzigt `docker-compose.yml` en `.env` niet. Terug naar 2.0.0 kan zonder downgrade van de database.
 
-Migratie 0023 (een gebruiker koppelen aan een lid, issue #353) voegt de kolom `lid_id` aan `beheerder` toe en geeft `botenloods_taken` het recht om kijkers te verwijderen (lezen van vier kolommen en `DELETE` op `beheerder`). `docker-compose.yml` en `.env` wijzigen niet. Alle accounts staan daarna als niet gekoppeld op de statuspagina, tot een beheerder ze koppelt. De downgrade trekt de rechten in en verwijdert de kolom: de koppelingen gaan verloren.
+Versie 2.2.0 bevat migratie 0023. Migratie 0023 (een gebruiker koppelen aan een lid, issue #353) voegt de kolom `lid_id` aan `beheerder` toe en geeft `botenloods_taken` het recht om kijkers te verwijderen (lezen van vier kolommen en `DELETE` op `beheerder`). `docker-compose.yml` en `.env` wijzigen niet. Alle accounts staan daarna als niet gekoppeld op de statuspagina, tot een beheerder ze koppelt. De downgrade trekt de rechten in en verwijdert de kolom: de koppelingen gaan verloren.
+
+Na de update verwijdert de nachtelijke opschoning elke kijker die gekoppeld is aan een lid dat geen lid meer is. Direct na de upgrade is niemand gekoppeld, dus de eerste nacht verdwijnt er niemand; dat begint pas na het koppelen op Gebruikers (**Lid koppelen**). Een beheerder met een oud-lid blijft staan en komt op de statuspagina. Terug naar 2.1.0 vraagt de downgrade van 0023.
 
 ## Tokens
 

@@ -2,6 +2,35 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.2.0 (2026-11-21)
+
+Versie met de koppeling van een gebruiker aan een lid (milestone "Koppeling met leden en v2.2.0"). Een minorversie, omdat er een migratie bij komt en je na het inloggen op een andere pagina uitkomt.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.2.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.2.0`
+
+Ook beschikbaar onder de tags `2.2` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.2.0.cdx.json` en `botenloods-integratie-2.2.0.cdx.json`.
+
+**Nieuw**
+- Een beheerder koppelt een account aan een lid op een eigen pagina per account (**Lid koppelen** op Gebruikers), met zoeken op naam of lidnummer. Gebruikers toont onder de naam het gekoppelde lid, of "niet gekoppeld". Eén lid mag bij meer accounts horen. Een kijker kan niet aan een oud-lid worden gekoppeld (#353).
+- De nachtelijke opschoning verwijdert een kijker van wie het gekoppelde lid geen lid meer is, met een regel in het technische log. Een kijker zonder koppeling en elke beheerder blijven staan (#353).
+- De statuspagina en `/status.json` melden de beheerders met een gekoppeld lid dat geen lid meer is, en de accounts zonder koppeling, met hun naam. Op de pagina staan die regels alleen als het aantal groter is dan nul (#353).
+
+**Gewijzigd**
+- Na het inloggen kom je terug op de pagina die je opende, ook na een verlopen sessie of de vraag om opnieuw in te loggen. Een adres buiten de applicatie telt niet (#354).
+- Bij het uitnodigen staat geen lidveld; het lid koppel je daarna op Gebruikers (#353).
+- Op Leden staat de tag oud-lid rechts, onder de tag lid (#362).
+- Het keuzerondje komt uit de basis van het designsystem (`ds-radio`, basis 1.0.1); het uiterlijk is gelijk (#345).
+
+**Opgelost**
+- Je kunt jezelf geen kijker maken als geen andere actieve beheerder een inlogmethode heeft (#348).
+
+**Overig**
+- Licentie EUPL-1.2, gedragscode, `CONTRIBUTING.md`, `SECURITY.md` en sjablonen voor issues en pull requests (#360).
+
+**Bijwerken vanaf 2.1.0** (zie `documentatie/beheer/bijwerken.md`). Migratie 0023 voegt de koppeling met een lid toe en geeft de worker het recht om kijkers te verwijderen. `docker-compose.yml` en `.env` zijn niet gewijzigd. Na de upgrade is niemand gekoppeld; de opschoning verwijdert pas kijkers nadat een beheerder ze koppelt. De downgrade verwijdert de koppelingen.
+
 ## 2.1.0 (2026-11-19)
 
 Versie met de restpunten na 2.0.0 (milestone "Restpunten na v2.0.0"). Een minorversie, omdat de foutpagina voor 403 en 404 zichtbaar verandert.
