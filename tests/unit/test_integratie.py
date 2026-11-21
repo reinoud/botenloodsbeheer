@@ -538,7 +538,8 @@ def test_integratie_zonder_root_en_alleen_lezen():
     assert integratie["read_only"] is True and integratie["cap_drop"] == ["ALL"]
     assert integratie["security_opt"] == ["no-new-privileges:true"]
     assert integratie["build"] == "integratie" and integratie["secrets"] == ["api_token"]
-    assert COMPOSE["secrets"]["api_token"] == {"file": "./secrets/api_token"}
+    # Zonder API_TOKEN_BESTAND het pad van een installatie; de variabele is voor de E2E (#368).
+    assert COMPOSE["secrets"]["api_token"] == {"file": "${API_TOKEN_BESTAND:-./secrets/api_token}"}
 
 
 def test_applicatie_kent_de_bron_niet():

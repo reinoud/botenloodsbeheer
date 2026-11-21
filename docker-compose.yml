@@ -227,7 +227,8 @@ services:
 
 secrets:
   api_token:
-    file: ./secrets/api_token
+    # API_TOKEN_BESTAND alleen voor een E2E-stack naast de dev-stack (#368); anders leeg laten.
+    file: ${API_TOKEN_BESTAND:-./secrets/api_token}
 
 # ADR-012, ADR-013. voorkant en koppeling maakt de beheerder eenmalig aan, met
 # `docker network create --internal`; koppeling met het subnet KOPPELNET. Op voorkant staan
