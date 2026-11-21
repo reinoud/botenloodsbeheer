@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.9
+**Versie overlay:** v0.6.10
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-21
@@ -243,6 +243,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
 - Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
+- Noem per id-parameter of de route `<int:>` of `getal` gebruikt, zodat de reviewer de juiste grenscontrole toetst (#353).
 - Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
@@ -567,6 +568,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.10 | 2026-11-21 | Eén regel (Review): `<int:>` of `getal` per id-parameter; uit de terugblik van aegis bij #353 deel 2 | Lessen |
 | v0.6.9 | 2026-11-21 | Vier regels (Bouw): nieuwe test eerst los groen, sr-only linknaam, README-teksten, test op `recent_ingelogd`; uit de terugblik van prism bij #353 deel 2 | Lessen |
 | v0.6.8 | 2026-11-20 | Eén regel: projectnaam bij tests vanuit een kopie (Bouw); uit de terugblik van sentinel bij #362 | Lessen |
 | v0.6.7 | 2026-11-20 | Vier regels: rechten- en head-tests vooraf zoeken, DELETE-recht in de ADR, geen gelijktijdige migratietests (Migratie); voorwaardemutant in twee richtingen (Bouw); uit de terugblikken bij #353 deel 1 | Lessen |
