@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.16
+**Versie overlay:** v0.6.17
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-21
@@ -242,6 +242,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Krijgt een gedeelde foutafhandeling een nieuwe statuscode, noem dan in de opdracht elke bron van die code in de dienst (zoals CSRF en de nulbyteweigering) en of er per bron een unittest is (#364).
 - Raakt de diff alleen sjablonen en CSS, dan draait de reviewer de geraakte testbestanden en de mutant; de regie draait de volledige unitsuite één keer vóór de merge (#366).
 - Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
 - Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
@@ -573,6 +574,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.17 | 2026-11-21 | Eén regel (Review): bij een nieuwe statuscode in een gedeelde foutafhandeling elke bron noemen; uit de terugblik van aegis bij #364. De les van sentinel (suite en mutanten delen `botenloods_test`) stond er al | Lessen |
 | v0.6.16 | 2026-11-21 | Eén regel (Review): bij alleen sjablonen en CSS draait de reviewer de geraakte testbestanden, de regie de volledige suite; uit de terugblik van sentinel bij #366 | Lessen |
 | v0.6.15 | 2026-11-21 | Opgeschoond na de retrospective van milestone 12: de regel uit v0.6.12 viel samen met die over een E2E-mutant op een template (#206) | Retrospective |
 | v0.6.14 | 2026-11-21 | Twee regels (E2E): akkoord voor de release-E2E vooraf, nieuw token voor de dev-stack daarna; uit de terugblik van pipeline bij #356 | Lessen |
