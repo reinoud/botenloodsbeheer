@@ -24,7 +24,7 @@ TECHNISCH = frozenset(
      "bootsoort.hernoemd", "bootsoort.verwijderd", "beheerder.uitgenodigd",
      "beheerder.methode_ingesteld", "beheerder.methode_toegevoegd", "beheerder.methode_ingetrokken",
      "beheerder.vergrendeld", "beheerder.ingelogd", "beheerder.uitgelogd", "beheerder.geblokkeerd",
-     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld", "beheerder.rol_gewijzigd",
+     "beheerder.gedeblokkeerd", "beheerder.verwijderd", "beheerder.hersteld", "beheerder.rol_gewijzigd", "beheerder.lid_gewijzigd",
      "opschoning.uitgevoerd", "indeling.geimporteerd", "bezetting.geimporteerd",
      "naamkoppeling.verwijderd"}
 )

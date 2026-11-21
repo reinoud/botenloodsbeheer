@@ -70,6 +70,12 @@ def is_oud_lid(lid, dag=None):
     return any(d is not None and d <= dag for d in (lid.opzegdatum, lid.uit_bron_op))
 
 
+def oud_lid(dag=None):
+    """SQL-voorwaarde van `is_oud_lid`, voor een query op Lid; twee-waardig (nooit NULL), dus ook onder NOT te gebruiken."""
+    dag = dag or vandaag()
+    return or_(Lid.opzegdatum <= dag, Lid.uit_bron_op <= dag).is_(True)
+
+
 def actieve_leden(zoek="", met_oud=False):
     """De leden die geen oud-lid zijn; met zoek alleen die waarvan naam of lidnummer de tekst bevat.
     Met met_oud ook de oud-leden binnen de bewaartermijn (#298)."""

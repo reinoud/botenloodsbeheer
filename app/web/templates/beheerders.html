@@ -19,6 +19,7 @@
     </fieldset>
     <button type="submit" class="ds-btn ds-btn--primary">Uitnodigen</button>
   </form>
+  <p class="bl-hint">Het lid koppel je daarna in de lijst met accounts.</p>
 </section>
 
 <section class="dj-panel" aria-labelledby="accounts-kop">
@@ -29,7 +30,9 @@
     <tbody role="rowgroup">
     {% for b in beheerders %}
       <tr role="row">
-        <td role="cell" data-label="Gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</td>
+        <td role="cell" data-label="Gebruikersnaam"><span data-veld="gebruikersnaam">{{ b.gebruikersnaam }}{% if b.id == g.beheerder.id %} (jij){% endif %}</span>
+          <p class="ds-field__hint" data-veld="lid">{% if b.lid %}Lid: {{ b.lid.naam }} ({{ b.lid.lidnummer }}){% if is_oud_lid(b.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}{% else %}Lid: niet gekoppeld{% endif %}</p>
+          <a href="{{ url_for('web.beheerder_lid', beheerder_id=b.id) }}">{{ 'Lid wijzigen' if b.lid else 'Lid koppelen' }}<span class="dj-sr-only">: {{ b.gebruikersnaam }}</span></a></td>
         <td role="cell" data-label="Rol">{{ 'Kijker' if b.rol == 'kijker' else 'Beheerder' }}</td>
         <td role="cell" data-label="Status">{{ 'Actief' if b.actief else 'Geblokkeerd' }}</td>
         <td role="cell" data-label="Inlogmethodes">{{ [(b.passkeys|length ~ ' passkey(s)') if b.passkeys, 'wachtwoord en TOTP' if b.wachtwoordhash]|select|join(', ') or 'nog niet ingesteld' }}</td>
@@ -55,6 +58,7 @@
   </table>
   </div>
   <p class="bl-hint" id="rol-hint">Wordt een beheerder kijker, dan vervallen zijn persoonlijke tokens; terug naar beheerder brengt ze niet terug. Maak je jezelf kijker, dan kun je dit scherm daarna niet meer openen. Er blijft altijd minstens één beheerder.</p>
+  <p class="bl-hint" id="lid-hint">Wordt het lid van een kijker oud-lid, dan verwijdert de nachtelijke opschoning dat account; een beheerder blijft staan.</p>
 </section>
 
 {% endblock %}

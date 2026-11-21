@@ -14,7 +14,7 @@ from sqlalchemy.exc import ProgrammingError
 from app import create_app, taken
 from app.domein import CLI, leden, log, opschonen, toewijzing, vandaag, wachtlijst
 from app.models import Afbeelding, Boot, Lid, Logregel, Taakrun, Wachtlijst, db
-from tests.unit.conftest import TAKEN, WEB
+from tests.unit.conftest import EIGENAAR, TAKEN, WEB
 from tests.unit.hulp import als_api, lid, png
 from tests.unit.test_indeling_en_toewijzing import boot, plaats
 from tests.unit.test_leden import record
@@ -68,7 +68,7 @@ def test_oud_lid_weg_met_boten_fotos_en_wachtlijst(app):
     blijft = lid("1002", "Bert").id
     foto_erbij(boot(blijft, naam="Fuut").id, "foto-blijft")
 
-    assert opschonen.draai() == {"logregels": 0, "leden": 1, "boten": 2, "fotos": 1, "imports": 0,
+    assert opschonen.draai() == {"logregels": 0, "kijkers": 0, "leden": 1, "boten": 2, "fotos": 1, "imports": 0,
                                  "koppelingen": 0}
     assert not bestaat(weg) and bestaat(blijft)
     assert db.session.get(Boot, eigen) is None and tel(Boot) == 1
@@ -137,7 +137,7 @@ def test_uitkomst_in_taakrun_en_technisch_log_zonder_persoonsgegevens(app):
     opschonen.draai()
     [run] = db.session.scalars(select(Taakrun).where(Taakrun.taak == opschonen.TAAK)).all()
     assert (run.status, run.aantallen) == ("geslaagd",
-                                           {"logregels": 0, "leden": 1, "boten": 1, "fotos": 0,
+                                           {"logregels": 0, "kijkers": 0, "leden": 1, "boten": 1, "fotos": 0,
                                                 "imports": 0, "koppelingen": 0})
     [r] = log.regels(technisch=True, acties=("opschoning.",))
     assert (r.actor_naam, r.verwijzingen, r.gegevens) == (
@@ -192,6 +192,102 @@ def test_gelijktijdig_toewijzen_en_opschonen_faalt_veilig(app):
     assert uitkomst == ["IntegrityError"]
     assert bestaat(oud.id) and db.session.get(Boot, b.id).plaats.id == p.id
     assert runs() == ["mislukt"]
+
+
+# Kijkers met een oud-lid (ADR-015, #353)
+
+
+def account(naam, rol="kijker", lid_=None, actief=True):
+    """Zet een account neer als eigenaar: de worker maakt er geen aan en leest er vier kolommen van."""
+    eigenaar("INSERT INTO beheerder (naam, gebruikersnaam, rol, actief, lid_id) VALUES (:n, :n, :r, :a, :l)",
+             n=naam, r=rol, a=actief, l=lid_ and lid_.id)
+
+
+def accounts():
+    """Gebruikersnaam, rol en lid_id van elk account, met de kolommen die de worker mag lezen."""
+    db.session.rollback()
+    return {n: (r, lid_id) for n, r, lid_id in db.session.execute(text(
+        "SELECT gebruikersnaam, rol, lid_id FROM beheerder"))}
+
+
+def test_kijker_met_een_oud_lid_gaat_weg_de_rest_blijft(app):
+    """Besluiten 1 en 6: weg is alleen een kijker met een gekoppeld oud-lid. Een kijker met een lid, een kijker
+    zonder koppeling en een beheerder met een oud-lid blijven; het oud-lid zelf blijft binnen de termijn."""
+    oud, actief = opgezegd(vandaag() - timedelta(days=3), "1"), lid("2", "Nog lid")
+    account("kijker_oud", lid_=oud)
+    account("kijker_actief", lid_=actief)
+    account("kijker_los")
+    account("beheerder_oud", "beheerder", oud)
+    aantallen = opschonen.draai()
+    assert aantallen["kijkers"] == 1 and aantallen["leden"] == 0
+    assert accounts() == {"kijker_actief": ("kijker", actief.id), "kijker_los": ("kijker", None),
+                          "beheerder_oud": ("beheerder", oud.id)}
+    assert bestaat(oud.id)
+
+
+@pytest.mark.parametrize("dagen,weg", [(-1, True), (0, True), (1, False)], ids=["gisteren", "vandaag", "morgen"])
+@pytest.mark.parametrize("veld", ["opzegdatum", "uit_bron_op"])
+def test_grens_van_het_oud_lid_voor_de_kijker(app, veld, dagen, weg):
+    """Dezelfde regel als is_oud_lid: vandaag is al oud-lid, morgen nog niet."""
+    account("kijker", lid_=opgezegd(vandaag() + timedelta(days=dagen), "1", veld))
+    assert opschonen.draai()["kijkers"] == int(weg)
+    assert ("kijker" in accounts()) is not weg
+
+
+def test_een_geblokkeerde_kijker_gaat_ook_weg(app):
+    account("kijker", lid_=opgezegd(vandaag(), "1"), actief=False)
+    assert opschonen.draai()["kijkers"] == 1 and accounts() == {}
+
+
+def test_de_opschoning_van_een_kijker_krijgt_een_logregel_zonder_lidgegevens(app):
+    oud = opgezegd(vandaag(), "1")
+    account("kijker", lid_=oud)
+    kijker_id = db.session.scalar(text("SELECT id FROM beheerder"))
+    db.session.rollback()
+    opschonen.draai()
+    [regel] = log.regels(technisch=True, acties=("beheerder.",))
+    assert (regel.actie, regel.actor_soort, regel.actor_naam) == ("beheerder.verwijderd", "taak", "opschoning")
+    assert regel.verwijzingen == [f"beheerder:{kijker_id}", f"lid:{oud.id}"]
+    assert regel.gegevens == {"gebruikersnaam": "kijker", "reden": "oud-lid"}
+
+
+def test_een_kijker_gaat_weg_voor_zijn_lid_dat_in_dezelfde_run_wordt_opgeschoond(app):
+    """Volgorde: na het verwijderen van het lid had SET NULL de koppeling al gewist en bleef de kijker staan.
+    Een beheerder aan dat lid blijft, zonder koppeling (besluit 5)."""
+    oud = opgezegd(grens() - timedelta(days=1), "1")
+    account("kijker", lid_=oud)
+    account("beheerder", "beheerder", oud)
+    oud = oud.id
+    aantallen = opschonen.draai()
+    assert (aantallen["kijkers"], aantallen["leden"]) == (1, 1)
+    assert not bestaat(oud)
+    assert accounts() == {"beheerder": ("beheerder", None)}
+
+
+def test_passkeys_uitnodigingen_en_tokens_van_de_kijker_gaan_mee(app):
+    """De cascades draaien met de rechten van de eigenaar van de tabellen: de worker heeft ze zelf niet."""
+    account("kijker", lid_=opgezegd(vandaag(), "1"))
+    eigenaar("INSERT INTO passkey (beheerder_id, credential_id, publieke_sleutel, teller, naam) "
+             "SELECT id, 'c', 'k', 0, 'toestel' FROM beheerder")
+    eigenaar("INSERT INTO uitnodiging (beheerder_id, code_hash, verloopt_op) SELECT id, 'h', now() FROM beheerder")
+    eigenaar("INSERT INTO token (naam, soort, prefix, hash, rechten, verloopt_op, beheerder_id, gemaakt_door) "
+             "SELECT 'pers', 'persoonlijk', 'blb_abcd', 'h', ARRAY['leden:lezen'], now(), id, 'test' FROM beheerder")
+    opschonen.draai()
+    for tabel in ("beheerder", "passkey", "uitnodiging", "token"):
+        assert eigenaar_telt(tabel) == 0, tabel
+
+
+def eigenaar_telt(tabel):
+    engine = create_engine(EIGENAAR)
+    with engine.connect() as c:
+        n = c.execute(text(f"SELECT count(*) FROM {tabel}")).scalar()
+    engine.dispose()
+    return n
+
+
+def test_zonder_kijkers_met_een_oud_lid_blijft_alles_en_staat_kijkers_op_nul(app):
+    account("kijker")
+    assert opschonen.draai()["kijkers"] == 0 and len(accounts()) == 1
 
 
 # Planning in de worker (ADR-007)

@@ -153,6 +153,14 @@ def schermen(browser):
     page.get_by_role("button", name="Uitnodigen").click()
     kijker_link = page.locator("#uitnodigingslink").inner_text()
     page.goto("/gebruikers")
+    # BV-96: koppelen op de pagina van het account. De naam heet "Lid koppelen : kijker.een": de sr-only span telt als blok.
+    page.get_by_role("link", name=re.compile(r"Lid koppelen\s*: kijker\.een")).click()
+    page.get_by_label("Zoek lid: naam of lidnummer").fill("Vos")
+    page.locator("main").get_by_role("button", name="Zoeken", exact=True).click()
+    page.locator("main fieldset.dj-choices input[type=radio]").first.check()
+    o.maak("lid-koppelen", hoogte=900)
+    page.get_by_role("button", name="Koppelen", exact=True).click()
+    expect(page.get_by_text("kijker.een is gekoppeld aan")).to_be_visible()
     o.maak("beheerders", hoogte=1750)
     # Tokens: een persoonlijk token en een robottoken, binnen 10 minuten na het inloggen.
     page.goto("/tokens/nieuw")

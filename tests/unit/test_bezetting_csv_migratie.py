@@ -32,7 +32,7 @@ def test_migratie_0016_upgrade_downgrade_upgrade_met_de_rechten_van_adr_014(data
     command.upgrade(cfg, "0015")
     assert not tabellen(cfg)
     voor = {rol: rechten_taken(cfg, rol) for rol in ("botenloods_web", "botenloods_taken", "botenloods_api")}
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0016")
     assert tabellen(cfg) == set(TABELLEN)
     web, taken, api = (rechten_taken(cfg, rol) for rol in ("botenloods_web", "botenloods_taken", "botenloods_api"))
     assert web - voor["botenloods_web"] == {
@@ -43,7 +43,7 @@ def test_migratie_0016_upgrade_downgrade_upgrade_met_de_rechten_van_adr_014(data
     command.downgrade(cfg, "0015")
     assert not tabellen(cfg)
     assert {rol: rechten_taken(cfg, rol) for rol in voor} == voor  # de rechten verdwijnen met de tabellen
-    command.upgrade(cfg, "head")
+    command.upgrade(cfg, "0016")
     assert tabellen(cfg) == set(TABELLEN)
     assert rechten_taken(cfg, "botenloods_web") == web and rechten_taken(cfg, "botenloods_taken") == taken
 

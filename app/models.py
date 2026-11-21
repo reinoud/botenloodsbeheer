@@ -60,7 +60,10 @@ class Beheerder(db.Model):
     mislukte_pogingen: Mapped[int] = mapped_column(default=0, server_default=text("0"))
     geblokkeerd_tot: Mapped[datetime | None] = mapped_column(Tijdstip)
     aangemaakt_op: Mapped[datetime] = mapped_column(Tijdstip, server_default=func.now())
+    # Optionele koppeling aan een lid (ADR-015, #353); geen uniciteit, en een opgeschoond lid wist haar.
+    lid_id: Mapped[int | None] = mapped_column(ForeignKey("lid.id", ondelete="SET NULL"))
 
+    lid: Mapped["Lid | None"] = relationship()
     # Verwijderen laat de database de passkeys opruimen (ON DELETE CASCADE).
     passkeys: Mapped[list["Passkey"]] = relationship(
         back_populates="beheerder", passive_deletes=True, order_by="Passkey.id"

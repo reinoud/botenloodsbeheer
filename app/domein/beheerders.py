@@ -7,6 +7,7 @@ import hmac
 import re
 import secrets
 import time
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from urllib.parse import urlsplit
 
@@ -16,6 +17,7 @@ from argon2.exceptions import InvalidHashError, VerificationError
 from cryptography.fernet import Fernet
 from flask import current_app
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from webauthn import (
     generate_authentication_options,
     generate_registration_options,
@@ -32,8 +34,9 @@ from webauthn.helpers.structs import (
     UserVerificationRequirement,
 )
 
-from app.domein import SYSTEEM, Actor, Regelfout, log, tokens
-from app.models import Beheerder, Passkey, Token, Uitnodiging, db
+from app import INT_MAX
+from app.domein import SYSTEEM, Actor, Regelfout, leden, log, tokens
+from app.models import Beheerder, Lid, Passkey, Token, Uitnodiging, db
 
 ROLLEN = ("beheerder", "kijker")
 UITNODIGING_GELDIG = timedelta(hours=24)
@@ -67,8 +70,49 @@ def _rp():
 # Uitnodigen
 
 
+def _lid(lid_id):
+    """Het lid met dit id, vers uit de database, of een Regelfout."""
+    lid = db.session.get(Lid, lid_id, populate_existing=True) if 0 < lid_id <= INT_MAX else None
+    if lid is None:
+        db.session.rollback()
+        raise Regelfout("Dit lid bestaat niet.")
+    return lid
+
+
+def _lidverwijzing(lid_id):
+    return lid_id and f"lid:{lid_id}"
+
+
+# Teksten van BV-96: koppelen, en kijker maken (README blok-6, Koppeling aan een lid)
+OUD_KOPPELEN = ("{naam} is niet aan {lid} gekoppeld: dat lid is oud-lid. Een kijker kan niet aan een oud-lid "
+                "worden gekoppeld. Kies een ander lid of maak het account eerst beheerder.")
+OUD_KIJKER = ("{naam} is niet kijker gemaakt: het gekoppelde lid is oud-lid. Een kijker met een oud-lid "
+              "verwijdert de nachtelijke opschoning. Maak eerst de koppeling los of laat het account beheerder.")
+
+
+def _kijker_niet_aan_oud_lid(rol, lid, tekst, naam):
+    """Besluit 7 (#353): een kijker hoort niet bij een oud-lid, want de opschoning verwijdert hem. Een
+    beheerder mag wel; de status meldt hem."""
+    if rol == "kijker" and lid is not None and leden.is_oud_lid(lid):
+        db.session.rollback()
+        raise Regelfout(tekst.format(naam=naam, lid=lid.naam))
+
+
+@contextmanager
+def _lid_bestaat():
+    """Het lid kan tussen controle en opslaan zijn opgeschoond: de foreign key vangt dat."""
+    try:
+        yield
+    except IntegrityError as fout:
+        db.session.rollback()
+        if getattr(fout.orig.diag, "constraint_name", None) != "beheerder_lid_id_fkey":
+            raise
+        raise Regelfout("Dit lid bestaat niet meer.") from None
+
+
 def uitnodigen(gebruikersnaam, rol, actor):
-    """Maakt een account met deze rol zonder inlogmethode en geeft de eenmalige code terug."""
+    """Maakt een account met deze rol zonder inlogmethode en geeft de eenmalige code terug. Het lid
+    koppel je daarna met lid_koppelen (#353, BV-96)."""
     if rol not in ROLLEN:
         raise Regelfout("Kies een rol: beheerder of kijker.")
     if not GEBRUIKERSNAAM.fullmatch(gebruikersnaam):
@@ -343,6 +387,14 @@ def uitloggen(beheerder):
 # Gebruikers beheren (BLB-023, BLB-050). Een beheerder wijzigt alles; een kijker wijzigt hier niets.
 
 
+def account(beheerder_id):
+    """Het account met dit id, of een Regelfout."""
+    b = db.session.get(Beheerder, beheerder_id) if 0 < beheerder_id <= INT_MAX else None
+    if b is None:
+        raise Regelfout("Deze gebruiker bestaat niet.")
+    return b
+
+
 def alle():
     return db.session.scalars(select(Beheerder).order_by(Beheerder.gebruikersnaam)).all()
 
@@ -391,6 +443,8 @@ def rol_wijzigen(beheerder_id, rol, actor):
     if doel.rol == rol:
         db.session.rollback()
         return naam
+    if rol == "kijker" and doel.lid_id is not None:
+        _kijker_niet_aan_oud_lid(rol, _lid(doel.lid_id), OUD_KIJKER, naam)
     # Wie zijn uitnodiging nog niet gebruikte, kan niet inloggen en telt niet mee (#348).
     if rol == "kijker" and not any(b.rol == "beheerder" and b.id != doel.id and (b.wachtwoordhash or b.passkeys)
                                    for b in actief.values()):
@@ -403,6 +457,26 @@ def rol_wijzigen(beheerder_id, rol, actor):
     if rol == "kijker":
         tokens.intrekken_van(doel.id, actor)
     db.session.commit()
+    return naam
+
+
+def lid_koppelen(beheerder_id, lid_id, actor):
+    """Koppelt een account aan een lid, of maakt het los met lid_id None (#353). Zelfde slot als
+    rol_wijzigen, dus samen maken ze geen kijker aan een oud-lid. Zonder verschil geen logregel.
+    Geeft de gebruikersnaam."""
+    _, doel = _vergrendelen(beheerder_id, actor)
+    naam = doel.gebruikersnaam
+    lid = None if lid_id is None else _lid(lid_id)
+    _kijker_niet_aan_oud_lid(doel.rol, lid, OUD_KOPPELEN, naam)
+    if doel.lid_id == lid_id:
+        db.session.rollback()
+        return naam
+    oud, doel.lid_id = doel.lid_id, lid_id
+    log.schrijf(actor, "beheerder.lid_gewijzigd",
+                [f"beheerder:{doel.id}", *(_lidverwijzing(i) for i in (oud, lid_id) if i)],
+                {"gebruikersnaam": naam, "lid": [_lidverwijzing(oud), _lidverwijzing(lid_id)]})
+    with _lid_bestaat():
+        db.session.commit()
     return naam
 
 

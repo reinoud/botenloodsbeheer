@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.6
+**Versie overlay:** v0.6.10
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-19
+**Bijgewerkt:** 2026-11-21
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -131,7 +131,12 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Heeft een criterium een uitsluiting (zoals "ingetrokken of al verlopen"), dan krijgt elke uitsluiting een eigen geval in de test.
 - Noem bij een grenstest beide kanten van de grens met de testnaam die elke kant dekt. Een test op een grens (grootte, aantal, duur) gebruikt invoer die zonder die grens geldig is, en de mutant zonder de grens moet falen.
 - Draai na het toevoegen van een test eerst de mutant die hij moet vangen, ook bij een nieuwe E2E-vergelijking, en meld pas daarna groen.
+- Een nieuwe test draait eerst los en groen, vóór de mutantrun; een mutantrun waarin alle mutanten op dezelfde regel falen, is ongeldig (#353).
+- Een link met een sr-only toevoeging heeft de toegankelijke naam met een spatie voor de dubbele punt ("Lid koppelen : naam"); zoek zo'n link binnen de rij of met een regex (#353).
+- Zeg in de opdracht of de voorbeeldteksten uit de README van Design System de teksten uit het domein vervangen (#353).
+- Een test op `recent_ingelogd` zet `ingelogd_op` tussen 10 minuten en 12 uur oud; bij 0 verloopt de hele sessie en overleeft de mutant zonder `recent_ingelogd` (#353).
 - Een reviewer draait een mutant met een kopie van `app` in zijn scratchpad als volume: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm -v <kopie>:/app/app:ro test pytest ...`. Hij kiest een verse mapnaam en gebruikt geen `rm -rf` (#268).
+- Draait een reviewer de tests vanuit een kopie of worktree met `--project-directory <kopie>`, dan geeft hij ook `-p botenloods` mee; een andere projectnaam heeft geen database (#362).
 - Een slottest op een slot in een domeinfunctie roept die functie direct aan en probeert het slot met een tweede verbinding (`FOR UPDATE NOWAIT`). Een test via de hele flow laat de mutant overleven als een latere stap hetzelfde slot neemt (#283).
 - Een mutant op `app/config.py` vraagt een nieuwe `web` (`up -d --no-deps --force-recreate web` met `compose.dev.yml`); gunicorn `--reload` laadt de config niet opnieuw (#285). Noem bij een mutant op globale staat (zoals het logo) hoe de reviewer die staat zet en uitleest.
 - ruff draait in de testcontainer (`... run --rm test ruff check --no-cache app tests`), niet op de host (#283).
@@ -181,6 +186,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Haalt een wijziging een veld, element, tekst of kop uit een sjabloon, zoek dan in heel `tests/` (ook `tests/unit/`) naar de naam of de tekst (`grep -rn 'data-veld=<naam>\|"<naam>"' tests/`) en noem elke vindplaats; de regie doet dat ook bij een eigen kleine wijziging, en draait daarna de volledige unitsuite, niet alleen het eigen testbestand.
 - Een mutant via tekstvervanging gebeurt met python3, met een assert dat de kopie verschilt van het origineel; een mutant die niet is toegepast, laat alles slagen.
 - Noem per mutant welke waarde de falende assert moet tonen (zoals het lidnummer dat ontbreekt of erbij komt), zodat de verwachting vooraf vastligt (#226).
+- Geef bij een mutant op een voorwaarde beide richtingen (altijd waar, altijd onwaar), elk met de assert die moet vallen (#353).
 - Normaliseert een wijziging externe invoer, noem dan in de securitybrief of het terugschrijven dezelfde selectie gebruikt (#226).
 - Een nieuwe `if` met meer voorwaarden krijgt per voorwaarde een eigen mutant die alleen die voorwaarde weglaat, met de assert die valt; een mutant die de hele regel uitzet, telt niet voor de afzonderlijke voorwaarden. Dat geldt ook voor een herstel door de regie.
 - Neemt een agent een gestopte bouw over, noem dan in de opdracht welke teststappen al groen zijn, met het pad van de uitvoer, en welke niet bekend zijn.
@@ -237,6 +243,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
 - Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
+- Noem per id-parameter of de route `<int:>` of `getal` gebruikt, zodat de reviewer de juiste grenscontrole toetst (#353).
 - Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
@@ -392,6 +399,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Geeft een migratie een rol een recht op een nieuwe tabel, noem dan per recht de code die het gebruikt. Een recht dat alleen via een cascade nodig lijkt, is niet nodig: de cascade draait als eigenaar van de tabel.
 - Een nieuw `with_for_update(key_share=True)` krijgt een racetest zoals `tests/unit/test_bootsoorten.py:198`, of een notitie in het issue waarom die ontbreekt.
 - Controleer de migratiehead met `ScriptDirectory` in de testcontainer; `run migrate` vraagt om akkoord.
+- Mutanten en proeven draaien na elkaar, nooit tegelijk op dezelfde `TEST_DB`. `nieuwe_database('botenloods_migratie')` is gedeeld tussen alle runs: draai geen twee migratietests tegelijk, ook niet over reviewers heen (#353).
+- Geeft een migratie een rol DELETE op een tabel, dan noemt de ADR welke rijen de rol technisch kan verwijderen en of een databasemaatregel (RLS) bewust achterwege blijft (#353).
+- Zoek vóór de bouw van een migratie in `tests/` naar asserts op de rechten van de rol die de migratie wijzigt en naar tests die op `head` meten, en pas die in dezelfde ronde aan (#353).
 - Bij een rechtenwijziging in een migratie noem je in de brief zowel het testbestand van de migratie als dat van de domeinfunctie; de reviewer draait de mutanten tegen beide samen.
 - Bij een rechtenwijziging: draai per recht dat de rol houdt een mutant die alleen dat recht intrekt, en noem per mutant de test die valt; een recht zonder vallende test is niet gedekt. Meld de reviewer of de gedeelde database al op de nieuwe migratie staat, zodat hij de live ACL toetst.
 - Bij een rechtenwijziging: zoek in alle tests met de marker `worker` (of `api`) naar setup via de domeinlaag in tabellen die de rol straks niet meer mag schrijven (zoals `foto=` of `png()`), en noem ze vooraf in de opdracht.
@@ -558,6 +568,10 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.10 | 2026-11-21 | Eén regel (Review): `<int:>` of `getal` per id-parameter; uit de terugblik van aegis bij #353 deel 2 | Lessen |
+| v0.6.9 | 2026-11-21 | Vier regels (Bouw): nieuwe test eerst los groen, sr-only linknaam, README-teksten, test op `recent_ingelogd`; uit de terugblik van prism bij #353 deel 2 | Lessen |
+| v0.6.8 | 2026-11-20 | Eén regel: projectnaam bij tests vanuit een kopie (Bouw); uit de terugblik van sentinel bij #362 | Lessen |
+| v0.6.7 | 2026-11-20 | Vier regels: rechten- en head-tests vooraf zoeken, DELETE-recht in de ADR, geen gelijktijdige migratietests (Migratie); voorwaardemutant in twee richtingen (Bouw); uit de terugblikken bij #353 deel 1 | Lessen |
 | v0.6.6 | 2026-11-20 | Woorden tellen per sectie, zonder tabelrijen (Documentatie); uit de terugblik bij #353 | Lessen |
 | v0.6.5 | 2026-11-20 | Drie regels: patroon zoeken in unit- én E2E-tests, één TOTP-inlog per E2E-test (Bouw); nareview met oude en nieuwe diff, eigen unitproeven via `/proef` (Review); uit de terugblikken bij #354 | Lessen |
 | v0.6.4 | 2026-11-20 | Eén regel bij Review: ingangen per domeinfunctie en regellengte in de reviewbrief; uit de terugblikken bij #348 | Lessen |

@@ -57,6 +57,22 @@
       <td role="cell" data-label="Status">{{ s.tokens_verlopen.status }}</td>
       <td role="cell" data-label="Gegevens">{{ s.tokens_verlopen.tokens|length }} binnen 31 dagen</td>
     </tr>
+    {# BV-96: een rij alleen bij een aantal boven nul #}
+    {% if s.beheerders_oud_lid.aantal %}
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Beheerders met een oud-lid</td>
+      <td role="cell" data-label="Status">{{ s.beheerders_oud_lid.status }}</td>
+      <td role="cell" data-label="Gegevens">{{ s.beheerders_oud_lid.aantal }}{% if s.beheerders_oud_lid.gebruikers %}: {{ s.beheerders_oud_lid.gebruikers|join(', ') }}{% endif %}</td>
+    </tr>
+    {% endif %}
+    {# BV-96: een rij alleen bij een aantal boven nul #}
+    {% if s.niet_gekoppeld.aantal %}
+    <tr role="row">
+      <td role="cell" data-label="Onderdeel">Gebruikers zonder lid</td>
+      <td role="cell" data-label="Status">{{ s.niet_gekoppeld.status }}</td>
+      <td role="cell" data-label="Gegevens">{{ s.niet_gekoppeld.aantal }}{% if s.niet_gekoppeld.gebruikers %}: {{ s.niet_gekoppeld.gebruikers|join(', ') }}{% endif %}</td>
+    </tr>
+    {% endif %}
   </tbody>
 </table>
 </div>

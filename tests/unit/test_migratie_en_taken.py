@@ -144,7 +144,7 @@ def test_precies_een_migratiehead():
     """Leest de scriptmap rechtstreeks: bij een tweede head faalt de assert hieronder, niet de
     fixture `database` (#161)."""
     scripts = ScriptDirectory.from_config(Config("alembic.ini"))
-    assert scripts.get_heads() == ["0022"]
+    assert scripts.get_heads() == ["0023"]
 
 
 @pytest.mark.parametrize("sql", ["INSERT INTO lid (lidnummer, naam) VALUES ('9', 'X')",
@@ -248,12 +248,13 @@ def test_seed_weigert_in_productie(app):
 
 @pytest.mark.parametrize("sql", [
     "INSERT INTO beheerder (naam, gebruikersnaam, rol, actief, sessieversie) VALUES ('X', 'x', 'beheerder', true, 1)",
-    "UPDATE beheerder SET actief = false", "DELETE FROM beheerder",
+    "UPDATE beheerder SET actief = false",
     "SELECT 1 FROM passkey", "SELECT 1 FROM uitnodiging", "SELECT 1 FROM token", "UPDATE instelling SET waarde = 'x'",
     "DELETE FROM rek", "DELETE FROM plaats", "DELETE FROM bootsoort", "DELETE FROM taakrun"])
 @pytest.mark.worker
 def test_worker_heeft_geen_rechten_buiten_taken_en_seed(app, sql):
-    """#60: de worker kan geen beheerder aanmaken of de indeling en instellingen wijzigen."""
+    """#60: de worker kan geen beheerder aanmaken of de indeling en instellingen wijzigen. Sinds 0023
+    verwijdert hij kijkers en leest hij vier kolommen van beheerder (test_lid_koppeling)."""
     with pytest.raises(ProgrammingError, match="permission denied"):
         db.session.execute(text(sql))
     db.session.rollback()
