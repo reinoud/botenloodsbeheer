@@ -6,10 +6,11 @@
 <h1>Wachtlijst</h1>
 <p>Boten zonder plaats, per bootsoort, de langst wachtende bovenaan. De volgorde is informatie: jij kiest welke boot een vrije plaats krijgt. Een boot zet je op de lijst vanaf de pagina van de boot.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Zoeken in Wachtlijst">
+<form class="bl-filter" method="get" action="{{ url_for('web.wachtlijst_overzicht') }}" role="search" aria-label="Zoeken in Wachtlijst" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="wacht-zoek">Zoek op boot of lid</label>
     <input class="ds-input" type="search" id="wacht-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+    <p class="ds-field__hint" id="wacht-zoek-hint" data-zoekhint hidden>Het zoeken start vanaf 3 tekens.</p>
   </div>
   <div class="ds-field">
     <label class="ds-field__label" for="wacht-soort">Alleen soort</label>
@@ -20,6 +21,8 @@
   </div>
   <button type="submit" class="ds-btn ds-btn--primary">Toon wachtlijst</button>
 </form>
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if lijsten %}
 {% set totaal = lijsten|sum(attribute=1, start=[])|length %}
 <p class="bl-aantal">{{ totaal }} {{ 'boot' if totaal == 1 else 'boten' }} op de wachtlijst</p>
@@ -46,6 +49,8 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek or soort_id else 'Er staan geen boten op de wachtlijst.' }}{% endcall %}
 {% endfor %}
+</div>
 
 {{ logblok(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}

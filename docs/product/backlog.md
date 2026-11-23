@@ -1,8 +1,8 @@
 # Productbacklog botenloodsbeheer
 
 **Project:** botenloodsbeheer
-**Versie:** v0.7.0
-**Datum:** 2026-11-18
+**Versie:** v0.7.1
+**Datum:** 2026-11-23
 **Opgesteld door:** Apex, Senior Product Owner
 **Status:** Slice 1 tot en met 6 af; besluiten van de stakeholder van 2026-10-31 en ADR-012 verwerkt; issue #80 verwerkt, tot en met 2026-11-03; issue #82 verwerkt
 **Bronnen, in volgorde van gezag:** `docs/business/intake.md` (inclusief de besluiten van 2026-10-30 en 2026-10-31), `docs/PROJECT-OVERLAY.md` (§5 en §6), `docs/business/business-outline.md`. Voor het ontwerp: `docs/architecture/architectuur.md` v0.3.0 en ADR-012.
@@ -172,7 +172,7 @@ De keuze Eigenaar gaat met zoeken en een tussenstap (BV-85, vervangt BV-83; besl
 - Gegeven een boot van een oud-lid zonder plaats, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie met de reden (issue #298, besluit 2; BLB-013).
 - Gegeven een boot op de wachtlijst, wanneer de beheerder bij Boot wijzigen een oud-lid als eigenaar kiest, dan gaat de boot van de wachtlijst, ziet de beheerder dat in een melding en staat dat in het log van de bootmutaties met de reden `oud-lid` (besluit stakeholder 2026-11-17, issue #298, vraag 27).
 - Gegeven een bezettingsimport met een regel waarvan de eigenaar een oud-lid is, wanneer de beheerder het overzicht opent, dan blijft de regel een fout als die een nieuwe boot of een nieuwe toewijzing zou geven. Dat geldt ook binnen de bewaartermijn (BLB-048; issue #298, besluit 1).
-- Gegeven het overzicht van boten, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon boten** kiest, dan staan alleen de boten waarvan de boot of de eigenaar de tekst bevat en die van die soort zijn in de lijst, met het aantal erboven. De zoektekst telt letterlijk (ook `%` en `_`) en hoofdletters tellen niet mee. Geen enkel filter geeft alle boten. Een onbekende bootsoort geeft geen boten en geen foutmelding. Een keuzelijst verstuurt niet zelf (WCAG 3.2.2).
+- Gegeven het overzicht van boten, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest, dan staan direct alleen de boten waarvan de boot of de eigenaar de tekst bevat en die van die soort zijn in de lijst, met het aantal erboven. De zoektekst telt letterlijk (ook `%` en `_`) en hoofdletters tellen niet mee. Geen enkel filter geeft alle boten. Een onbekende bootsoort geeft geen boten en geen foutmelding. Een andere keuze in de keuzelijst ververst alleen de lijst; met script telt de zoektekst vanaf 3 tekens. Zonder script blijft de knop **Toon boten** als reserve (#380).
 
 #### BLB-046 Boten zonder eigenaar
 
@@ -367,7 +367,7 @@ Als beheerder wil ik boten van leden zonder plaats op een wachtlijst per bootsoo
 - Gegeven een boot die al een plaats heeft of al op de wachtlijst staat, wanneer de beheerder de boot op de wachtlijst wil zetten, dan weigert de applicatie.
 - Gegeven een boot op de wachtlijst, wanneer de beheerder die van de lijst haalt, dan is de boot niet meer op de lijst en staat dat in het log.
 - Gegeven een boot die op de wachtlijst komt of eraf gaat, wanneer de beheerder het log van de bootmutaties of de pagina van de boot opent, dan staat die handeling daar en niet in het technische log (BLB-043, besluit 2026-11-01).
-- Gegeven de wachtlijst, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest en **Toon wachtlijst** kiest, dan staan alleen de boten waarvan de boot of het lid de tekst bevat en die van die soort zijn op de lijst, met het aantal boten erboven. Zonder treffer staat er "Geen boten gevonden.".
+- Gegeven de wachtlijst, wanneer de beheerder in **Zoek op boot of lid** een tekst invult of bij **Alleen soort** een bootsoort kiest, dan staan direct alleen de boten waarvan de boot of het lid de tekst bevat (met script de zoektekst vanaf 3 tekens; zonder script met de knop **Toon wachtlijst**, #380) en die van die soort zijn op de lijst, met het aantal boten erboven. Zonder treffer staat er "Geen boten gevonden.".
 
 #### BLB-014 Vanaf de wachtlijst een plaats kiezen
 
@@ -390,7 +390,7 @@ Als beheerder wil ik een overzicht van vrije plaatsen, te filteren op bootsoort,
 - Gegeven vrije en bezette plaatsen, wanneer de beheerder het overzicht opent, dan staan alleen vrije plaatsen in de lijst, met aanduiding en geschikte bootsoorten. Clubplaatsen staan er niet in.
 - Gegeven het filter surfski, wanneer de beheerder dat kiest, dan staan alleen vrije plaatsen die voor surfski geschikt zijn in de lijst.
 - Gegeven een filter waarvoor geen vrije plaats bestaat, wanneer de beheerder dat kiest, dan staat er dat er geen vrije plaatsen zijn.
-- Gegeven een keuze in de lijst Geschikt voor, wanneer de beheerder Toon vrije plaatsen kiest, dan staat boven de lijst het aantal, zoals "4 vrije plaatsen voor surfski" ("1 vrije plaats voor surfski" bij één; zonder gekozen soort zonder "voor …"). De keuzelijst verstuurt het formulier niet zelf (WCAG 3.2.2; BV-44, issue #150).
+- Gegeven een keuze in de lijst Geschikt voor, dan staat direct boven de lijst het aantal, zoals "4 vrije plaatsen voor surfski" ("1 vrije plaats voor surfski" bij één; zonder gekozen soort zonder "voor …"). Een andere keuze ververst alleen de lijst; zonder script blijft de knop Toon vrije plaatsen als reserve (#380; vervangt BV-44).
 
 #### BLB-016 Indeling van de loods op het scherm
 
@@ -939,6 +939,7 @@ De stakeholder besloot vraag 27 tot en met 31 op 2026-11-17, in een commentaar o
 
 | Versie | Datum | Wijziging |
 |--------|-------|-----------|
+| v0.7.1 | 2026-11-23 | Issue #380: criteria van Boten, Wachtlijst en Vrije plaatsen zonder knop (besluiten stakeholder 2026-11-23) |
 | v0.7.0 | 2026-11-18 | Issue #322: BLB-050 en BLB-051 (kijker, Gebruikers), milestone 10; EP-07, uitgangspunten, BLB-023 en §6 bijgewerkt; vragen 32 tot en met 34 besloten (besluit 8, ADR-015); criteria uit ADR-015 |
 | v0.6.23 | 2026-11-18 | Issue #315: BLB-049, een lijst met boten zonder foto onder Beheer (besluiten stakeholder 2026-11-17, BV-88) |
 | v0.6.22 | 2026-11-18 | Issue #321, besluit stakeholder 2026-11-17 en BV-90: Boten zonder eigenaar is een lijst zonder keuze en zonder knop; de eigenaar kies je bij Boot wijzigen op de pagina van de boot. Het criterium met het zoekveld en het criterium met de foutregel bij Eigenaar opslaan vervallen; de criteria over het oud-lid en de wachtlijst gelden bij Boot wijzigen (BLB-005, 046; vraag 27) |

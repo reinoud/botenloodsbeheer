@@ -52,15 +52,32 @@ def test_vrije_plaatsen_zonder_bezet_en_clubplaats(app):
     assert indeling.vrije_plaatsen(soort("Supboard")) == []
 
 
-def test_vrije_plaatsen_filter_met_zichtbare_knop_zonder_script_en_focus(ingelogd):  # noqa: F811
+def test_vrije_plaatsen_filter_met_knop_als_reserve_en_focus(ingelogd):  # noqa: F811
     loods()
     zonder = ingelogd.get("/vrij").text
     assert re.search(r'<button type="submit" class="ds-btn ds-btn--primary">Toon vrije plaatsen</button>', zonder)
-    assert "<noscript" not in zonder and "Filteren" not in zonder, "de knop staat er altijd"
-    assert "<script" not in zonder and "vrij.js" not in zonder and "onchange" not in zonder, "geen script"
+    assert "<noscript" not in zonder and "Filteren" not in zonder, "de knop staat in de HTML; het script verbergt hem"
+    assert "onchange" not in zonder, "geen inline script"
     assert "autofocus" not in zonder, "autofocus zonder gekozen bootsoort"
     met = ingelogd.get(f"/vrij?bootsoort={soort('Surfski')}").text
     assert re.search(r'<select[^>]* id="bootsoort"[^>]* autofocus', met), "autofocus met gekozen bootsoort"
+
+
+@pytest.mark.parametrize("pad, knop, zoekveld", [
+    ("/vrij", "Toon vrije plaatsen", False), ("/wachtlijst", "Toon wachtlijst", True),
+    ("/boten", "Toon boten", True)])
+def test_lijstfilter_markup_voor_het_script_op_vrij_wachtlijst_en_boten(ingelogd, pad, knop, zoekveld):  # noqa: F811
+    """#380: het script vervangt alleen [data-lijstdeel] (aantal en lijst, niet het log), meldt het aantal in een
+    statusveld buiten dat deel, en verbergt de knop die in de HTML blijft."""
+    loods()
+    tekst = ingelogd.get(pad).text
+    assert tekst.count('<script src="/static/lijstfilter.js">') == 1 and "<script>" not in tekst, "eigen bestand"
+    assert tekst.count("data-lijstfilter") == 1 and f">{knop}</button>" in tekst
+    assert tekst.count('role="status" data-lijststatus') == 1 and tekst.count("data-lijstdeel") == 1
+    assert tekst.index("data-lijststatus") < tekst.index("data-lijstdeel"), "het statusveld wordt niet vervangen"
+    assert re.search(r'<div data-lijstdeel>\s*(<p class="bl-aantal">|<div class="ds-notice)', tekst), "aantal of melding eerst"
+    assert ("data-zoekhint hidden" in tekst) is zoekveld, "de hint voor 3 tekens alleen waar een zoekveld staat"
+    assert ingelogd.get("/static/lijstfilter.js").status_code == 200
 
 
 def test_vrije_plaatsen_aantal_enkelvoud_meervoud_en_zonder_soort(ingelogd):  # noqa: F811

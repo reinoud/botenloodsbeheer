@@ -32,18 +32,16 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
     meldingen = []
     page.on("console", lambda m: meldingen.append(m.text) if m.type == "error" else None)
     page.goto("/vrij")
+    page.get_by_label("Geschikt voor").focus()  # select_option zet de focus niet zelf
     page.get_by_label("Geschikt voor").select_option(label="Surfski")
-    expect(page).to_have_url(re.compile(r"/vrij$"))  # de keuzelijst verstuurt niet zelf (WCAG 3.2.2)
-    page.get_by_role("button", name="Toon vrije plaatsen").click()
-    page.wait_for_url(re.compile(r"/vrij\?bootsoort=\d+$"))
+    page.wait_for_url(re.compile(r"/vrij\?bootsoort=\d+$"))  # de keuze filtert zelf, zonder knop (#380)
     expect(page.get_by_label("Geschikt voor")).to_be_focused()
     expect(page.get_by_role("link", name=ski, exact=True)).to_be_visible()
     expect(page.get_by_role("link", name=club, exact=True)).to_have_count(0)
     expect(page.get_by_role("link", name=kajak, exact=True)).to_have_count(0)
-    for rij in page.locator("main > .ds-table-wrap > table tbody tr").all():
+    for rij in page.locator("main [data-lijstdeel] table tbody tr").all():
         expect(rij.locator("td").nth(2)).to_contain_text("Surfski")
     page.get_by_label("Geschikt voor").select_option(label="Alle bootsoorten")
-    page.get_by_role("button", name="Toon vrije plaatsen").click()
     page.wait_for_url(re.compile(r"/vrij\?bootsoort=$"))
     expect(page.get_by_role("link", name=kajak, exact=True)).to_be_visible()
     expect(page.get_by_role("link", name=ski, exact=True)).to_be_visible()

@@ -6,7 +6,7 @@
 <h1>Vrije plaatsen</h1>
 <p>Plaatsen zonder boot, voor boten van leden. Clubplaatsen staan er niet in.</p>
 
-<form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="bl-filter">
+<form method="get" action="{{ url_for('web.vrije_plaatsen') }}" class="bl-filter" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="bootsoort">Geschikt voor</label>
     <select class="dj-select" id="bootsoort" name="bootsoort"{% if gekozen %} autofocus{% endif %}>
@@ -19,6 +19,8 @@
   <button type="submit" class="ds-btn ds-btn--primary">Toon vrije plaatsen</button>
 </form>
 
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if plaatsen %}
 <p class="bl-aantal">{{ plaatsen|length }} {{ 'vrije plaats' if plaatsen|length == 1 else 'vrije plaatsen' }}{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}</p>
 <div class="ds-table-wrap">
@@ -38,6 +40,8 @@
 {% else %}
 {% call meldingblok() %}Er zijn geen vrije plaatsen{% if gekozen %} voor {{ gekozen.naam|lower }}{% endif %}.{% endcall %}
 {% endif %}
+</div>
 
 {{ logblok(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}
