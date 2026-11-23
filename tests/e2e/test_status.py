@@ -10,6 +10,8 @@ from collections import Counter
 from conftest import STEMPEL, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_api import API, roep, token
+from test_import import FIXTURE
+from test_import import roep as importeer
 
 
 def test_statuspagina_html_en_json_met_tokenwaarschuwing(page):
@@ -34,6 +36,31 @@ def test_statuspagina_html_en_json_met_tokenwaarschuwing(page):
     assert s["import"]["laatst_geslaagd"] is not None
     for tekst in (antwoord.text(), page.content()):
         assert token("lezen") not in tekst and "blb_" not in tekst
+
+
+def test_ongeldige_records_van_de_laatste_import_op_de_statuspagina(page):
+    """#381: een record zonder naam, met datum 12-03-2019, een dubbel lidnummer en een record zonder
+    lidnummer. De records maken geen lid aan; daarna een schone import, zodat de lijst weer weg is.
+    Rechtstreeks via de API met het importtoken: de stub-bron is een gedeeld, alleen-lezen bestand."""
+    dubbel = FIXTURE[0]["lidnummer"]
+    ongeldig = [{"lidnummer": dubbel, "naam": "Dubbel"},
+                {"lidnummer": "E2E381A", "naam": " ", "lid_sinds": "2020-01-01"},
+                {"lidnummer": "E2E381B", "naam": "Datum", "lid_sinds": "12-03-2019"},
+                {"naam": "Zonder lidnummer"}]
+    try:
+        status, uitkomst = importeer("PUT", "/leden", {"leden": FIXTURE + ongeldig})
+        assert status == 200 and uitkomst["ongeldig"] == 4
+        assert all(type(v) is int for v in uitkomst.values())  # het antwoord bevat geen lidnummers
+        wachtwoord_instellen(page, "ongeldigeleden")
+        page.get_by_role("navigation").get_by_role("link", name="Status").click()
+        lijst = page.locator("#ongeldige-leden li")
+        assert lijst.all_inner_texts() == [f"{dubbel}: lidnummer dubbel", "E2E381A: naam ontbreekt",
+                                           "E2E381B: datum niet als JJJJ-MM-DD", "1 zonder lidnummer"]
+        assert page.request.get("/status.json").json()["import"]["ongeldige_leden"] == {
+            "lijst": [[dubbel, "lidnummer dubbel"], ["E2E381A", "naam ontbreekt"],
+                      ["E2E381B", "datum niet als JJJJ-MM-DD"]], "niet_getoond": 0, "zonder_lidnummer": 1}
+    finally:
+        assert importeer("PUT", "/leden", {"leden": FIXTURE})[0] == 200
 
 
 def test_status_zonder_inloggen_naar_inloggen(page):

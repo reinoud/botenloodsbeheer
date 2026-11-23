@@ -7,7 +7,7 @@ PUT /api/v1/leden schrijft. Records uit de bron zijn externe invoer en worden hi
 import re
 from datetime import UTC, date, datetime
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, update
 from sqlalchemy.orm import selectinload
 
 from app.domein import Regelfout, log, vandaag, wachtlijst
@@ -27,6 +27,13 @@ LIDNUMMER = re.compile(r"[A-Za-z0-9-]{1,20}")
 # Tekstvelden en hun maximumlengte; langer wordt ingekort.
 TEKST = {"naam": 100}
 DATUMS = ("lid_sinds", "opzegdatum")
+# Vaste redenen voor de lijst op de statuspagina (#381); nooit tekst of waarden uit de bron.
+NAAM_ONTBREEKT = "naam ontbreekt"
+DATUM_FOUT = "datum niet als JJJJ-MM-DD"
+NUMMER_DUBBEL = "lidnummer dubbel"
+TEKST_FOUT = "ongeldige tekst"
+MAX_ONGELDIG = 10  # lidnummers die bij de run bewaard en getoond worden
+ONGELDIGE_LEDEN = "ongeldige_leden"  # sleutel in taakrun.aantallen, nooit in het API-antwoord
 
 
 class Ongeldig(ValueError):
@@ -131,7 +138,7 @@ def _tekst(record, veld):
         return None
     # PostgreSQL weigert een NUL-teken in tekst: het record telt als ongeldig, geen 500 (#74).
     if not isinstance(waarde, str) or "\x00" in waarde:
-        raise Ongeldig(veld)
+        raise Ongeldig(TEKST_FOUT)
     return waarde.strip()[: TEKST[veld]] or None
 
 
@@ -140,11 +147,11 @@ def _datum(record, veld):
     if waarde in (None, ""):
         return None
     if not isinstance(waarde, str):
-        raise Ongeldig(veld)
+        raise Ongeldig(DATUM_FOUT)
     try:
         return date.fromisoformat(waarde)
     except ValueError:
-        raise Ongeldig(veld) from None
+        raise Ongeldig(DATUM_FOUT) from None
 
 
 def lidnummer_van(record):
@@ -157,10 +164,11 @@ def lidnummer_van(record):
 
 
 def valideer(record):
-    """Geeft de velden van een geldig record, of gooit Ongeldig. Het lidnummer is al gecontroleerd."""
+    """Geeft de velden van een geldig record, of gooit Ongeldig met de reden van de eerste fout (een
+    vaste tekst hierboven). Het lidnummer is al gecontroleerd."""
     velden = {v: _tekst(record, v) for v in TEKST} | {d: _datum(record, d) for d in DATUMS}
     if not velden["naam"]:
-        raise Ongeldig("naam")
+        raise Ongeldig(NAAM_ONTBREEKT)
     return velden
 
 
@@ -171,6 +179,7 @@ def synchroniseer(records, actor):
     nog niets gewijzigd. Records met een opzegdatum op of vóór vandaag tellen niet mee (#307).
     Wijzigingen in leden komen niet in het log (ADR-004 v2.1.0); de aantallen gaan naar
     taakrun. Boten van oud-leden gaan van de wachtlijst, met actor in het log (BLB-008, #27).
+    Geeft (aantallen, ongeldige_leden); de tweede bevat lidnummers en hoort alleen in taakrun (#381).
     """
     dag = vandaag()
     aantallen = {"ontvangen": len(records), "nieuw": 0, "bijgewerkt": 0, "uit_bron": 0,
@@ -179,15 +188,26 @@ def synchroniseer(records, actor):
     # Ook een record met een geldig lidnummer maar ongeldige velden telt als gezien: anders
     # zou een tikfout in een datum van een lid een oud-lid maken.
     gezien, geldig, tellend = set(), {}, 0
+    lijst, zonder_nummer, met_nummer = [], 0, 0
     for record in records:
         nummer = lidnummer_van(record)
-        if nummer is None or nummer in gezien:
+        reden = None
+        if nummer is None:
+            zonder_nummer += 1
+        elif nummer in gezien:
+            reden = NUMMER_DUBBEL
+        if nummer is None or reden:
             aantallen["ongeldig"] += 1
+            if reden:
+                met_nummer += 1
+                lijst.append([nummer, reden])
             continue
         gezien.add(nummer)
         try:
             geldig[nummer] = valideer(record)
-        except Ongeldig:
+        except Ongeldig as fout:
+            met_nummer += 1
+            lijst.append([nummer, str(fout)])
             # Zonder de inhoud te loggen. Telt niet mee voor de grens: een opzegdatum in een ander
             # formaat mag een halve lijst niet doorlaten; een 409 wijzigt niets (#307).
             aantallen["ongeldig"] += 1
@@ -226,11 +246,16 @@ def synchroniseer(records, actor):
             lid.uit_bron_op = dag
             aantallen["uit_bron"] += 1
     wachtlijst.oud_leden_eraf(actor, dag)
-    return aantallen
+    ongeldige = {"lijst": lijst[:MAX_ONGELDIG], "niet_getoond": met_nummer - len(lijst[:MAX_ONGELDIG]),
+                 "zonder_lidnummer": zonder_nummer}
+    return aantallen, ongeldige
 
 
 def _run_afsluiten(status, aantallen=None, foutmelding=None):
-    """Legt de uitkomst vast in het oudste open verzoek, of in een nieuwe run (ADR-012)."""
+    """Legt de uitkomst vast in het oudste open verzoek, of in een nieuwe run (ADR-012). Elke afsluiting
+    haalt de lidnummers uit eerdere runs: ze blijven alleen tot de volgende import (#381)."""
+    db.session.execute(update(Taakrun).where(Taakrun.taak == TAAK, Taakrun.aantallen.has_key(ONGELDIGE_LEDEN))
+                       .values(aantallen=Taakrun.aantallen.op("-")(ONGELDIGE_LEDEN)))
     run = db.session.scalar(
         select(Taakrun).where(Taakrun.taak == TAAK, Taakrun.status == "aangevraagd")
         .order_by(Taakrun.id).limit(1).with_for_update()
@@ -251,13 +276,14 @@ def importeer(records, actor):
         db.session.rollback()
         raise ImportLoopt("Er loopt al een import.")
     try:
-        aantallen = synchroniseer(records, actor)
+        aantallen, ongeldige = synchroniseer(records, actor)
     except Veiligheidsgrens as fout:
         db.session.rollback()
         _run_afsluiten("mislukt", foutmelding=str(fout))
         db.session.commit()
         raise
-    _run_afsluiten("geslaagd", aantallen)
+    # De lijst gaat alleen naar taakrun; het antwoord aan de container (en zijn log) houdt alleen tellingen.
+    _run_afsluiten("geslaagd", aantallen | ({ONGELDIGE_LEDEN: ongeldige} if aantallen["ongeldig"] else {}))
     db.session.commit()
     return aantallen
 

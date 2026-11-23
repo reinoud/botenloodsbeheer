@@ -315,7 +315,7 @@ Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel
 |---|---|---|
 | Database | versie van PostgreSQL en van de migratie | de migratie niet de verwachte is (fout) |
 | Worker | laatste heartbeat | die ouder is dan 2 minuten |
-| Import van leden | laatste import met resultaat, aantallen en bij een fout de reden; laatste geslaagde import | de laatste import mislukte, of de laatste geslaagde is ouder dan 26 uur |
+| Import van leden | laatste import met resultaat, aantallen en bij een fout de reden; bij ongeldige records de lidnummers met de reden; laatste geslaagde import | de laatste import mislukte, of de laatste geslaagde is ouder dan 26 uur |
 | Opschoning | laatste opschoning met het aantal verwijderde logregels, leden, boten, foto's, verlopen imports en koppelingen | de laatste opschoning mislukte; de worker probeert het de volgende nacht opnieuw |
 | API | aan of uit | |
 | Bootaantallen | wanneer de integratiecontainer ze voor het laatst ophaalde | |
@@ -323,7 +323,9 @@ Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel
 | Beheerders met een oud-lid | het aantal en de gebruikersnamen van beheerders van wie het gekoppelde lid oud-lid is; de rij staat er alleen bij een aantal boven nul | er zo'n beheerder is |
 | Gebruikers zonder lid | het aantal en de gebruikersnamen van accounts zonder gekoppeld lid, ook geblokkeerde; de rij staat er alleen bij een aantal boven nul | er zo'n account is |
 
-Onderaan staat per robottoken de laatste aanroep. De pagina toont geen tokenwaarden, wachtwoorden of gegevens van leden. Dezelfde gegevens staan als JSON op `/status.json`, voor wie de installatie bewaakt.
+Onderaan staat per robottoken de laatste aanroep. De pagina toont geen tokenwaarden of wachtwoorden. Van leden toont ze alleen de lidnummers van ongeldige records, zie hieronder. Dezelfde gegevens staan als JSON op `/status.json`, voor wie de installatie bewaakt.
+
+Telt de laatste import ongeldige records, dan staan onder Import van leden hooguit 10 lidnummers met de reden: naam ontbreekt, datum niet als JJJJ-MM-DD, lidnummer dubbel of ongeldige tekst. Zoek die relaties in e-boekhouden en verbeter ze; bij de volgende import verdwijnen ze uit de lijst. Mislukt de volgende import, dan staat er geen lijst; die komt terug bij een geslaagde import met ongeldige records. Zijn er meer dan 10, dan staat erbij hoeveel lidnummers niet getoond worden. Een record zonder bruikbaar lidnummer staat als aantal onder de lijst; dat zoek je in e-boekhouden op de relaties zonder lidnummer. Alleen een beheerder ziet deze lijst.
 
 Een waarschuwing bij de import betekent meestal dat de integratiecontainer niet draait of dat zijn token verlopen is. Een token dat bijna verloopt, vervang je op tijd; dat doet wie de installatie beheert.
 

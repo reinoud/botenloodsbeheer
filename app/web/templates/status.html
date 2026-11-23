@@ -35,7 +35,15 @@
     <tr role="row">
       <td role="cell" data-label="Onderdeel">Import van leden</td>
       <td role="cell" data-label="Status">{{ s.import.status }}</td>
-      <td role="cell" data-label="Gegevens">Laatste import: {{ moment(s.import.tijdstip) }}{% if s.import.resultaat %}, {{ s.import.resultaat }}{% endif %}{% if s.import.reden %}: {{ s.import.reden }}{% endif %}{% if s.import.aantallen %} ({{ aantallen(s.import.aantallen) }}){% endif %}. Laatst geslaagd: {{ moment(s.import.laatst_geslaagd) }}.{% if s.import.status != 'ok' %} Een import hoort elke dag te slagen; kijk of de integratiecontainer draait.{% endif %}</td>
+      <td role="cell" data-label="Gegevens">Laatste import: {{ moment(s.import.tijdstip) }}{% if s.import.resultaat %}, {{ s.import.resultaat }}{% endif %}{% if s.import.reden %}: {{ s.import.reden }}{% endif %}{% if s.import.aantallen %} ({{ aantallen(s.import.aantallen) }}){% endif %}. Laatst geslaagd: {{ moment(s.import.laatst_geslaagd) }}.{% if s.import.status != 'ok' %} Een import hoort elke dag te slagen; kijk of de integratiecontainer draait.{% endif %}
+        {% set o = s.import.ongeldige_leden %}{% if o %}
+        <p>Ongeldige records in de laatste import:</p>
+        <ul id="ongeldige-leden">
+        {% for nummer, reden in o.lijst %}<li>{{ nummer }}: {{ reden }}</li>{% endfor %}
+        {% if o.zonder_lidnummer %}<li>{{ o.zonder_lidnummer }} zonder lidnummer</li>{% endif %}
+        </ul>
+        {% if o.niet_getoond %}<p>Nog {{ o.niet_getoond }} ongeldige lidnummers worden niet getoond.</p>{% endif %}
+        {% endif %}</td>
     </tr>
     <tr role="row">
       <td role="cell" data-label="Onderdeel">Opschoning</td>
