@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.24
+**Versie overlay:** v0.6.25
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -106,6 +106,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een herreview welke onderdelen de eerste review al akkoord gaf, zodat de reviewer alleen het herstel toetst (#380).
 - De CSP staat als Traefik-label in `docker-compose.yml` (middleware `-kop`), niet in de app; een stack zonder Traefik heeft geen CSP (#380).
 - Lees `.env` nooit met `cat` of `grep`; noem alleen de sleutels (`cut -d= -f1 .env`) of controleer met `docker compose config --quiet` (#377).
+- Wat een kijker mag openen, staat in `KIJKER_TOEGESTAAN` in `app/web/__init__.py`; zoek een route daar op voordat een besluit of opdracht iets over de kijker zegt (#381).
+- Bewaart een wijziging een persoonsgegeven, ook in een bestaande tabel (zoals `taakrun`), noem dan de afgesproken bewaarduur en of de opschoning (ADR-006) die tabel raakt. De bouwer toetst de bewaarduur met een test op de rijen in de database, niet alleen op het scherm (#381).
+- Bouwt een agent in een worktree en hoort er een E2E-test bij, zeg dan vooraf of hij een eigen project mag starten (akkoord stakeholder) of dat de regie de test na overname op de lokale stack draait (#381).
+- Draaien twee reviewers tegelijk, zeg dan wie de unittests draait op de gedeelde testdatabase; de ander gebruikt een eigen `TEST_DB` (zie Bouw) of draait niets, en ruimt een eigen database na afloop op (#381).
 - Noem een aanname over wie welk element ziet (beheerder, kijker) met het bestand waar die vandaan komt, zoals `app/web/templates/base.html` of `tests/e2e/test_kijkers.py`; een aanname uit het hoofd is geen bron. Noem een vermoedelijke oorzaak alleen als vermoeden en laat eerst meten (#379).
 
 #### Bouw
@@ -591,6 +595,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.25 | 2026-11-23 | Vier regels (Algemeen): kijkerrechten in `KIJKER_TOEGESTAAN`, bewaarduur van persoonsgegevens getoetst in de database, E2E bij een worktree, unittests bij twee reviewers; uit de terugblikken bij #381 | Lessen |
 | v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` bij elke aanroep, e2e-image opnieuw bouwen bij een gewijzigde runner; tokenbestand als de hook de `rm` tegenhoudt, scripts in een worktree (E2E; #378) | Lessen |
 | v0.6.23 | 2026-11-23 | Twee regels: bron voor zichtbaarheid per rol en oorzaak als vermoeden (Algemeen); mutant via bind mount noemen in een reviewbrief (E2E); uit de terugblikken bij #379 | Lessen |
 | v0.6.22 | 2026-11-23 | Zes regels: omgekeerd besluit, herreview, CSP (Algemeen); schermafbeelding smal, focus bij een keuzelijst, `main >`-selectors (Bouw); E2E-mutant op `static/` als bind mount, vervangt de regel over legen in de werkmap (E2E); uit de terugblikken bij #380 | Lessen |
