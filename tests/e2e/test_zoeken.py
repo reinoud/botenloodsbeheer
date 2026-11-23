@@ -1,5 +1,5 @@
 """Zoeken vanuit de kop (#154), de route voor een mens: een term met twee treffers geeft de lijst,
-een deel van een bootnaam met één treffer opent de boot, op 360 en 1100 pixels breed. Eén
+een deel van een bootnaam met één treffer opent de boot, op 360 en 1100 pixels breed, met veld, knop en menuknop op één middenlijn (#379). Eén
 inlogverzoek. Elk bestand van de run gebruikt een eigen rek, dus de rekletter is hier niet gedeeld."""
 
 import re
@@ -41,6 +41,9 @@ def test_zoeken_vanuit_de_kop_geeft_een_lijst_of_opent_de_boot(page):
         for element in (veld, kop.get_by_role("button", name="Zoeken"), *menu):
             doos = element.bounding_box()
             assert doos["x"] >= 0 and doos["x"] + doos["width"] <= breedte, (breedte, doos)
+        # #379: veld, knop en menuknop hebben dezelfde verticale middenlijn (een menuknop stond 8 px lager).
+        midden = [d["y"] + d["height"] / 2 for d in (e.bounding_box() for e in (veld, kop.get_by_role("button", name="Zoeken"), *menu))]
+        assert max(midden) - min(midden) <= 1, (breedte, midden)
         # BV-78 (designsystem 7503a1c): onder 30rem een vergrootglas, het veld meet dan 157 px op 360 px.
         assert veld.bounding_box()["width"] >= 150, breedte
         knop = kop.get_by_role("button", name="Zoeken").bounding_box()
