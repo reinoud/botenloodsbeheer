@@ -2,6 +2,26 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.3.0 (2026-11-23)
+
+Minorversie (milestones "Filters en restpunten" en "Ongeldige leden zichtbaar en v2.3.0"). Geen migratie.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.3.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.3.0`
+
+Ook beschikbaar onder de tags `2.3` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.3.0.cdx.json` en `botenloods-integratie-2.3.0.cdx.json`.
+
+**Nieuw**
+- De statuspagina toont bij de laatste ledenimport hooguit 10 lidnummers van ongeldige records, met de reden (naam ontbreekt, datum niet als JJJJ-MM-DD, lidnummer dubbel of ongeldige tekst) en het aantal records zonder lidnummer. Alleen beheerders zien de lijst; de volgende import haalt hem weg, ook uit de database. Het antwoord van de API en de logs bevatten geen lidnummers (#381).
+
+**Gewijzigd**
+- Op Boten, Vrije plaatsen en Wachtlijst filtert de keuze van een bootsoort direct, en het zoekveld zoekt vanaf 3 tekens, zonder knop. Zonder JavaScript blijft de knop werken (#380).
+- Op een smal scherm staat de menuknop op één lijn met het zoekveld en de zoekknop (#379).
+
+**Overig**
+- Een vaste compose-override voor de E2E-tests van een release: `tests/e2e/compose.release.yml` (#378).
+
 ## 2.2.2 (2026-11-23)
 
 Onderhoudsversie (milestone "Integratie robuuster en v2.2.2"). Geen migratie en geen nieuwe functies.
