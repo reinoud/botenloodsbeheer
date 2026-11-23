@@ -2,6 +2,22 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.2.2 (2026-11-23)
+
+Onderhoudsversie (milestone "Integratie robuuster en v2.2.2"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.2.2`
+- `ghcr.io/reinoud/botenloods-integratie:2.2.2`
+
+Ook beschikbaar onder de tags `2.2` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.2.2.cdx.json` en `botenloods-integratie-2.2.2.cdx.json`.
+
+**Gewijzigd**
+- Geeft Traefik een 404 omdat de API nog niet bereikbaar is (bijvoorbeeld kort na een start), dan probeert de integratiecontainer het elke minuut opnieuw, hooguit vijf keer, en daarna weer na een uur. Een importverzoek van een beheerder wacht zo niet meer onnodig een uur (#372).
+
+**Overig**
+- De E2E-tests zetten op de ontwikkelstack het oorspronkelijke tokenbestand van de integratiecontainer terug, ook na een mislukte run (#374).
+
 ## 2.2.1 (2026-11-21)
 
 Onderhoudsversie met restpunten na 2.2.0 (milestone "Restpunten en v2.2.1"). Geen migratie en geen nieuwe functies.

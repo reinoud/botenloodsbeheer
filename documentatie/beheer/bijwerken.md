@@ -39,6 +39,8 @@ Na de update verwijdert de nachtelijke opschoning elke kijker die gekoppeld is a
 
 Versie 2.2.1 heeft geen migratie. In `docker-compose.yml` is het pad van het tokenbestand nu `${API_TOKEN_BESTAND:-./secrets/api_token}`; laat `API_TOKEN_BESTAND` leeg, dan verandert er niets. `.env` wijzigt niet. Terug naar 2.2.0 kan zonder downgrade van de database.
 
+Versie 2.2.2 heeft geen migratie en wijzigt `.env` niet; in `docker-compose.yml` verandert alleen een opmerking. Alleen het image van de integratiecontainer verandert van gedrag. Terug naar 2.2.1 kan zonder downgrade van de database.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
