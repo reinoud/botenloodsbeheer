@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.20
+**Versie overlay:** v0.6.21
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -102,6 +102,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Werkt een agent in een worktree, geef dan het commando voor de unittests mee: `docker compose -p botenloods --env-file /Users/reinoud/git/botenloods/.env -f docker-compose.yml -f compose.dev.yml run --rm --no-deps ...` vanuit de worktree. Een worktree heeft geen `.env` en een eigen projectnaam. Wie een eigen testdatabase maakt, ruimt die na afloop op (#372).
 - Zet een besluit van de stakeholder in het issue vóór de brief, en controleer met `gh issue view <nr> --json comments` dat het commentaar er staat. Staat het er niet, zet dan de tekst van het besluit in de brief (#372).
 - Zeg bij "hooguit N keer" of het om N pogingen of N herhalingen gaat (#372).
+- Lees `.env` nooit met `cat` of `grep`; noem alleen de sleutels (`cut -d= -f1 .env`) of controleer met `docker compose config --quiet` (#377).
 
 #### Bouw
 
@@ -242,7 +243,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een nieuw menu-item: zoek de E2E-tests met een vaste menulijst (zoals `tests/e2e/test_rekindeling_csv.py`) en werk ze bij (#315).
 - Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
 - Een E2E-selector op een formulierveld noemt het type (`input[type=radio][name=...]`); rij-acties met verborgen velden van dezelfde naam tellen anders mee (#322).
-- Een teller of wachttijd die een herhaling begrenst, gaat pas terug naar nul als de ronde slaagt én het eigenlijke werk gedaan is. Noem in de opdracht elke manier waarop de teller terugspringt en elke toestand waarin een ronde slaagt zonder het werk (zoals een GET zonder import tijdens een wachttijd). Lever per manier een mutant met de test die erop valt. De reviewer loopt herhalende patronen van uitkomsten systematisch af (lengte 1 tot 4, 24 uur) in plaats van losse gevallen; #372 had vier rondes nodig omdat elke ronde één nieuw patroon vond.
+- Een teller of wachttijd die een herhaling begrenst, gaat pas terug naar nul als de ronde slaagt én het eigenlijke werk gedaan is. Noem in de opdracht elke manier waarop de teller terugspringt en elke toestand waarin een ronde slaagt zonder het werk (zoals een GET zonder import tijdens een wachttijd). Lever per manier een mutant met de test die erop valt. De reviewer loopt herhalende patronen van uitkomsten systematisch af (lengte 1 tot 4, 24 uur) in plaats van losse gevallen; #372 had vier rondes nodig omdat elke ronde één nieuw patroon vond. Een open verzoek sluit in zo'n proef zoals de API het sluit; een verzoek dat een beheerder telkens opnieuw opent, is een aparte bovengrens, vergeleken met de code uit `HEAD`.
 
 #### Review
 
@@ -385,7 +386,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met een override in de scratchpad die `ports` leegt, en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. Start het project met `API_TOKEN_BESTAND=./secrets/api_token.<project>`, vooraf aangemaakt met `install -m 600 /dev/null <pad>` en na `down -v` verwijderd; zonder eigen bestand stopt `draai.sh` (#368).
 - Tijdens de release-E2E staat de werkmap op de releasecommit en wijzigt geen agent iets onder `app/`: `compose.dev.yml` mount `./app` met `--reload`, dus de run test de werkmap. Bewaar vóór `down -v` de logs van traefik, api en integratie en `docker inspect` van api in de scratchpad; zonder die logs is een eenmalige fout niet te verklaren (#368).
 - Een opdracht voor een release-E2E laat vóór de start de toestand van de dev-integratie vastleggen (de laatste regel `Import geslaagd` of `Import mislukt` in het log van `integratie`). Een 401 van vóór de run wordt gemeld, niet in de opdracht opgelost (#369).
-- Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374).
+- Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377).
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
@@ -582,6 +583,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.21 | 2026-11-23 | Drie regels aangevuld of nieuw: `.env` alleen op sleutels lezen (Algemeen), open verzoek in een proef met een teller (Bouw), tijdstip na het opruimen (E2E); uit de terugblikken bij #372 en #377 | Lessen |
 | v0.6.20 | 2026-11-23 | Regel over een nieuw token na `draai.sh` vervangen (#374 opgelost); zes regels: unittests in een worktree, besluit eerst in het issue, pogingen of herhalingen (Algemeen); teller in een herhaallus (Bouw); bewijs na het opruimen, `draai.sh` toetsen vanuit een worktree (E2E); uit de terugblikken bij #372 en #374 | Lessen |
 | v0.6.19 | 2026-11-21 | Drie regels (E2E): toestand van de dev-integratie vooraf vastleggen, nieuw token na `draai.sh` op de dev-stack tot #374, tokenbestand als losse stap verwijderen; uit de terugblik van pipeline bij #369 | Lessen |
 | v0.6.18 | 2026-11-21 | E2E bijgewerkt na #368: tokenbestand per project (`API_TOKEN_BESTAND`), docker-stub, werkmap op de releasecommit en logs bewaren vóór `down -v`; de regel over een nieuw robottoken na een release-E2E vervalt | #368, terugblik pipeline |
