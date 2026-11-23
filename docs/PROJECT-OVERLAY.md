@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.23
+**Versie overlay:** v0.6.24
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -390,7 +390,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - `schermafbeeldingen.sh` draait op een vaste projectnaam (`botenloods-doc`) en een vast subnet, dus nooit tegelijk met een ander agent. Zegt een opdracht een scherm te vereenvoudigen, noem dan of de schermafbeelding opnieuw moet en wie dat doet (#321).
 - De E2E-basislijn noemt het aantal testfuncties per bestand (`grep -c '^def test_' tests/e2e/test_*.py`) naast het aantal geslaagd; `draai.sh` draait pytest meer dan eens. De volledige run duurt langer dan 600 seconden: wacht in twee until-lussen (#322).
 - Docker op de Mac van de stakeholder draait arm64; `uname -m` in de agentshell zegt x86_64 (Rosetta). Bouw de amd64-images voor trivy onder een eigen tag (`--platform linux/amd64`), nooit als `latest`. De E2E-stack draait het native image; controleer vóór de run met `docker image inspect -f '{{.Architecture}}' botenloods-app:latest` dat het arm64 is. Onder qemu haalt de worker zijn healthcheck niet en faalt de E2E (#344).
-- De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met een override in de scratchpad die `ports` leegt, en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. Start het project met `API_TOKEN_BESTAND=./secrets/api_token.<project>`, vooraf aangemaakt met `install -m 600 /dev/null <pad>` en na `down -v` verwijderd; zonder eigen bestand stopt `draai.sh` (#368).
+- De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met `tests/e2e/compose.release.yml` (`DRAAI_OVERRIDE`; leegt `ports` en neemt de images uit `RELEASE_TAG`, verplicht bij elke compose-aanroep met dit bestand, ook `logs` en `down -v`; geen override in de scratchpad; `e2e` gebruikt het lokale `botenloods-e2e`, dus bouw dat eerst opnieuw als de release `tests/e2e/Dockerfile` of `tests/e2e/requirements.txt` wijzigt), en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. Start het project met `API_TOKEN_BESTAND=./secrets/api_token.<project>`, vooraf aangemaakt met `install -m 600 /dev/null <pad>` en na `down -v` verwijderd; zonder eigen bestand stopt `draai.sh` (#368).
 - Tijdens de release-E2E staat de werkmap op de releasecommit en wijzigt geen agent iets onder `app/`: `compose.dev.yml` mount `./app` met `--reload`, dus de run test de werkmap. Bewaar vóór `down -v` de logs van traefik, api en integratie en `docker inspect` van api in de scratchpad; zonder die logs is een eenmalige fout niet te verklaren (#368).
 - Een opdracht voor een release-E2E laat vóór de start de toestand van de dev-integratie vastleggen (de laatste regel `Import geslaagd` of `Import mislukt` in het log van `integratie`). Een 401 van vóór de run wordt gemeld, niet in de opdracht opgelost (#369).
 - Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377).
@@ -590,6 +590,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` (E2E; #378) | Lessen |
 | v0.6.23 | 2026-11-23 | Twee regels: bron voor zichtbaarheid per rol en oorzaak als vermoeden (Algemeen); mutant via bind mount noemen in een reviewbrief (E2E); uit de terugblikken bij #379 | Lessen |
 | v0.6.22 | 2026-11-23 | Zes regels: omgekeerd besluit, herreview, CSP (Algemeen); schermafbeelding smal, focus bij een keuzelijst, `main >`-selectors (Bouw); E2E-mutant op `static/` als bind mount, vervangt de regel over legen in de werkmap (E2E); uit de terugblikken bij #380 | Lessen |
 | v0.6.21 | 2026-11-23 | Drie regels aangevuld of nieuw: `.env` alleen op sleutels lezen (Algemeen), open verzoek in een proef met een teller (Bouw), tijdstip na het opruimen (E2E); uit de terugblikken bij #372 en #377 | Lessen |

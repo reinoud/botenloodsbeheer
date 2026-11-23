@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 c=(docker compose -f docker-compose.yml -f compose.dev.yml ${DRAAI_OVERRIDE:+-f "$DRAAI_OVERRIDE"})
-# Een eigen stack naast de gedeelde: COMPOSE_PROJECT_NAME, KOPPELNET, INSTALLATIE en DRAAI_OVERRIDE=documentatie/gebruikers/compose.doc.yml (geen poorten naar de host).
+# Een eigen stack naast de gedeelde: COMPOSE_PROJECT_NAME, KOPPELNET, INSTALLATIE en DRAAI_OVERRIDE=documentatie/gebruikers/compose.doc.yml of, voor een release, tests/e2e/compose.release.yml met RELEASE_TAG (geen poorten naar de host).
 # Bij de up van zo'n stack ook API_TOKEN_BESTAND=./secrets/api_token.<project>, vooraf aangemaakt met mode 600 (#368).
 stempel=$(date +%s)
 

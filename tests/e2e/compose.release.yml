@@ -1,0 +1,22 @@
+# Aanvulling voor de release-E2E: een eigen, wegwerpbare stack naast de lokale (project pl<nr>),
+# met de images van de releasecommit en geen poorten naar de host. Gebruik:
+#   RELEASE_TAG=pl<nr> DRAAI_OVERRIDE=tests/e2e/compose.release.yml tests/e2e/draai.sh
+# Start met `up -d --no-build --wait`; de images botenloods-app:<tag> en botenloods-integratie:<tag>
+# zijn vooraf native gebouwd. Overige regels: docs/PROJECT-OVERLAY.md §4 (E2E voor een release).
+services:
+  db:
+    ports: !override []
+  traefik:
+    ports: !override []
+  migrate:
+    image: botenloods-app:${RELEASE_TAG:?RELEASE_TAG ontbreekt}
+  web:
+    image: botenloods-app:${RELEASE_TAG:?RELEASE_TAG ontbreekt}
+  api:
+    image: botenloods-app:${RELEASE_TAG:?RELEASE_TAG ontbreekt}
+  worker:
+    image: botenloods-app:${RELEASE_TAG:?RELEASE_TAG ontbreekt}
+  integratie:
+    image: botenloods-integratie:${RELEASE_TAG:?RELEASE_TAG ontbreekt}
+  e2e:
+    image: botenloods-e2e  # het image van de lokale stack, geen tweede kopie
