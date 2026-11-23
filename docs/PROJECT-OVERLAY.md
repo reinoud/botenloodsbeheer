@@ -396,6 +396,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377).
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
+- Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
 
@@ -590,7 +591,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
-| v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` (E2E; #378) | Lessen |
+| v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` bij elke aanroep, e2e-image opnieuw bouwen bij een gewijzigde runner; tokenbestand als de hook de `rm` tegenhoudt, scripts in een worktree (E2E; #378) | Lessen |
 | v0.6.23 | 2026-11-23 | Twee regels: bron voor zichtbaarheid per rol en oorzaak als vermoeden (Algemeen); mutant via bind mount noemen in een reviewbrief (E2E); uit de terugblikken bij #379 | Lessen |
 | v0.6.22 | 2026-11-23 | Zes regels: omgekeerd besluit, herreview, CSP (Algemeen); schermafbeelding smal, focus bij een keuzelijst, `main >`-selectors (Bouw); E2E-mutant op `static/` als bind mount, vervangt de regel over legen in de werkmap (E2E); uit de terugblikken bij #380 | Lessen |
 | v0.6.21 | 2026-11-23 | Drie regels aangevuld of nieuw: `.env` alleen op sleutels lezen (Algemeen), open verzoek in een proef met een teller (Bouw), tijdstip na het opruimen (E2E); uit de terugblikken bij #372 en #377 | Lessen |
