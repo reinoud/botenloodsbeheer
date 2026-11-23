@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.5.1
+**Versie:** v1.5.2
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -22,7 +22,7 @@ Systeembeheerders draaien de applicatie naast andere diensten achter één Traef
 | `achterkant` | web, api, worker, migrate, db | ongewijzigd, zonder proxy |
 | `buiten` | integratie | ongewijzigd |
 
-`integratie` bereikt alleen Traefik; `api` staat niet op `koppeling`. `integratie` start pas als `api` gezond is (`depends_on` met `service_healthy`): zolang `api` start, geeft Traefik 404, en na een mislukte eerste ronde wacht de container een uur.
+`integratie` bereikt alleen Traefik; `api` staat niet op `koppeling`. `integratie` start pas als `api` gezond is (`depends_on` met `service_healthy`): zolang `api` start, geeft Traefik 404, en een 404 van Traefik probeert de container elke minuut opnieuw, hooguit vijf keer, voordat het gewone uur geldt (#372).
 
 **Controles.** Middlewares en routers staan als labels op `web` en `api`. Elke router noemt zijn entrypoint, anders hangt Traefik hem aan alle entrypoints.
 
@@ -115,6 +115,7 @@ Proef (losse Traefik v3.7.17, Gunicorn met Flask, lege bucket): `/%2Finloggen`, 
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.2 | 2026-11-23 | Na een 404 van Traefik probeert de integratiecontainer het elke minuut opnieuw, hooguit vijf keer | Issue #372 |
 | v1.5.1 | 2026-11-11 | Voorbeeld van de gedeelde Traefik: images op een digest, onder Dependabot, `read_only`, `cap_drop` en `no-new-privileges` | Issue #230, AEG-08 |
 | v1.5.0 | 2026-11-10 | Buitengrens van 25 MB op `/boten` en `/instellingen/logo` (middleware `25mb`), de applicatie houdt 10 MB | Besluit stakeholder 2026-11-10, issue #190 |
 | v1.4.2 | 2026-11-05 | Verschil met de verworpen opties op het entrypoint; eisen aan load balancer en `trustedips` | Review aegis, issue #54 |

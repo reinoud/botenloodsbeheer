@@ -4,8 +4,9 @@ Naar de API alleen met de standaardbibliotheek en alleen de aanroepen uit
 documentatie/beheer/integratiecontainer.md; zeep is alleen voor de bron e-boekhouden.
 Elke ronde: is er een importverzoek, of is SYNC_TIJDSTIP gepasseerd zonder geslaagde import die
 dag, dan importeert hij. Na een fout hooguit één geplande poging per uur; een verzoek van een
-beheerder wacht niet (#28). De log bevat nooit het token,
-inloggegevens van de bron of gegevens van leden.
+beheerder wacht niet (#28). Een 404 van Traefik (geen router geladen) telt niet als fout van de
+API: elke minuut opnieuw, hooguit vijf keer, daarna het gewone uur (#372). De log bevat nooit het
+token, inloggegevens van de bron of gegevens van leden.
 """
 
 import json
@@ -18,12 +19,16 @@ from zoneinfo import ZoneInfo
 from koppeling import bronnen
 
 NIEUWE_POGING = timedelta(hours=1)
+TRAEFIK_POGING = timedelta(minutes=1)
+TRAEFIK_HERHALINGEN = 5
 # De grenzen van PUT /api/v1/leden; daarboven meldt de container de bron als onleesbaar.
 MAX_RECORDS = 5000
 MAX_BYTES = 2 * 1024 * 1024
 # De antwoorden van de API zijn kleine JSON-objecten; meer leest de container niet (#109).
 ANTWOORD_MAX = 256 * 1024  # ruim genoeg voor GET /bootaantallen met veel bootsoorten
 IMPORT_LOOPT = b"Er loopt al een import."  # de tekst van de 409 bij een vastgehouden importslot
+# De 404 van Traefik zonder router is platte tekst; de 404 van de API is JSON met "fout" (#372).
+TRAEFIK_404 = b"404 page not found"
 
 log = logging.getLogger("koppeling")
 
@@ -70,6 +75,8 @@ class Koppeling:
         self.fout_op = None
         self.fout_token = None
         self.fout_van_api = False
+        self.traefik_404 = 0  # opeenvolgende 404's van Traefik
+        self.wacht = NIEUWE_POGING
 
     def lees_token(self):
         """Bij elke ronde opnieuw, zodat een nieuw token geen herstart vraagt (BLB-039)."""
@@ -93,7 +100,9 @@ class Koppeling:
         except urllib.error.HTTPError as fout:
             # Een lopende import houdt het slot vast en sluit het verzoek niet (#31).
             slot = fout.code == 409 and IMPORT_LOOPT in fout.read(ANTWOORD_MAX)
-            raise ApiFout(f"HTTP {fout.code}" + (" importslot" if slot else "")) from None
+            traefik = fout.code == 404 and fout.read(ANTWOORD_MAX).strip() == TRAEFIK_404
+            raise ApiFout(f"HTTP {fout.code}" + (" importslot" if slot else "")
+                          + (" traefik" if traefik else "")) from None
         except (OSError, ValueError) as fout:  # URLError en time-out zijn OSError
             raise ApiFout(type(fout).__name__) from None
 
@@ -138,7 +147,7 @@ class Koppeling:
             return
         # Een nieuw token mag meteen; met hetzelfde token na een fout pas na een uur een geplande
         # import. Een verzoek van een beheerder wacht niet (besluit 2026-10-31, #28).
-        wachten = self.fout_op and nu - self.fout_op < NIEUWE_POGING and token == self.fout_token
+        wachten = self.fout_op and nu - self.fout_op < self.wacht and token == self.fout_token
         if wachten and self.fout_van_api:
             return  # het verzoek blijft open en een geweigerde aanroep komt in het log van de API
         try:
@@ -147,6 +156,10 @@ class Koppeling:
                        and self.geslaagd_op != nu.date())
             if verzoek or gepland:
                 self.importeer(token, nu)
+            # Pas na een import, of zonder lopende wachttijd: anders telt een 404 op de PUT of na
+            # een bronfout nooit door (reviews aegis en sentinel bij #372).
+            if verzoek or not wachten:
+                self.traefik_404 = 0
         except bronnen.LedenbronFout as fout:
             self._fout(nu, token, str(fout), van_api=False)
         except ApiFout as fout:
@@ -158,6 +171,14 @@ class Koppeling:
             self._fout(nu, token, type(fout).__name__, van_api=True)
 
     def _fout(self, nu, token, tekst, van_api):
+        # Een 404 van Traefik: vijf keer een minuut wachten, de zesde keer het gewone uur (#372).
+        # Alleen een geslaagde ronde zet de telling terug; een andere fout ertussen telt dus niet
+        # opnieuw vanaf nul (tweede review aegis).
+        traefik = tekst.endswith(" traefik")
+        self.traefik_404 += traefik
+        kort = traefik and self.traefik_404 <= TRAEFIK_HERHALINGEN
+        self.wacht = TRAEFIK_POGING if kort else NIEUWE_POGING
         self.fout_op, self.fout_token, self.fout_van_api = nu, token, van_api
-        log.warning("Import mislukt (%s); nieuwe poging over een uur%s.", tekst,
+        log.warning("Import mislukt (%s); nieuwe poging over %s%s.", tekst,
+                    "een minuut" if self.wacht == TRAEFIK_POGING else "een uur",
                     "" if van_api else ", of direct na een verzoek van een beheerder")

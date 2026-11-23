@@ -221,7 +221,7 @@ services:
     # Het bestand moet bestaan, ook leeg: zonder token wacht de container (beheerdocumentatie).
     secrets: [api_token]
     networks: [koppeling, buiten]
-    # Traefik slaat een api die nog start over (404); zonder wachten volgt een uur pauze.
+    # Traefik slaat een api die nog start over (404); de container probeert het dan elke minuut (#372).
     depends_on:
       api: {condition: service_healthy}
 
