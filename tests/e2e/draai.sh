@@ -42,15 +42,19 @@ API_TOKEN_BESTAND=./secrets/api_token.proef "${basis[@]}" \
 opruimen() {
   local rc=$?
   trap - EXIT
-  if [ "$stil" = 1 ]; then  # een foutroute na 'stop integratie' laat hem anders uit (#223)
+  if [ -n "$oorspronkelijk" ]; then  # het e2e-token verdwijnt hieronder uit de db (#374)
+    cat "$oorspronkelijk" > "$token_bestand" || { echo "Tokenbestand terugzetten mislukt." >&2; rc=1; }
+    "${c[@]}" restart integratie >/dev/null || { echo "Integratiecontainer herstarten mislukt." >&2; rc=1; }
+  elif [ "$stil" = 1 ]; then  # een foutroute na 'stop integratie' laat hem anders uit (#223)
     "${c[@]}" start integratie >/dev/null || { echo "Integratiecontainer starten mislukt." >&2; rc=1; }
   fi
   "${c[@]}" exec -T db psql -q -U botenloods -d botenloods -v stempel="$stempel" \
     < tests/e2e/opruimen.sql >/dev/null || { echo "Opruimen van de E2E-gegevens mislukt." >&2; rc=1; }
-  rm -f "$dummy" "$fout"
+  rm -f "$dummy" "$fout" "$oorspronkelijk"
   exit $rc
 }
 stil=0
+oorspronkelijk=  # kopie van het tokenbestand tot de run klaar is (#374)
 trap opruimen EXIT
 # Maakt een robottoken en geeft alleen de waarde; de uitleg op stderr komt alleen bij een fout.
 robot() {
@@ -80,6 +84,8 @@ raise SystemExit(v.getresponse().status != 413)' 2>/dev/null; }
 for _ in $(seq 60); do api_router && break; sleep 1; done
 api_router || { echo "Na 60 seconden geen router naar de API in Traefik (404), of de" \
   "integratiecontainer draait niet." >&2; exit 1; }
+oorspronkelijk=$(mktemp)  # mode 600
+cat "$token_bestand" > "$oorspronkelijk"
 robot "e2e-integratie-$stempel" --recht leden:importeren --recht bootaantallen:lezen \
   > "$token_bestand"
 chmod 600 "$token_bestand"
