@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.21
+**Versie overlay:** v0.6.22
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -102,6 +102,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Werkt een agent in een worktree, geef dan het commando voor de unittests mee: `docker compose -p botenloods --env-file /Users/reinoud/git/botenloods/.env -f docker-compose.yml -f compose.dev.yml run --rm --no-deps ...` vanuit de worktree. Een worktree heeft geen `.env` en een eigen projectnaam. Wie een eigen testdatabase maakt, ruimt die na afloop op (#372).
 - Zet een besluit van de stakeholder in het issue vóór de brief, en controleer met `gh issue view <nr> --json comments` dat het commentaar er staat. Staat het er niet, zet dan de tekst van het besluit in de brief (#372).
 - Zeg bij "hooguit N keer" of het om N pogingen of N herhalingen gaat (#372).
+- Keert een besluit een eerder besluit om, noem dan welke documenten meegaan: ADR, criteria in de backlog, handleiding, en het besluit bij Design System (#380).
+- Noem bij een herreview welke onderdelen de eerste review al akkoord gaf, zodat de reviewer alleen het herstel toetst (#380).
+- De CSP staat als Traefik-label in `docker-compose.yml` (middleware `-kop`), niet in de app; een stack zonder Traefik heeft geen CSP (#380).
 - Lees `.env` nooit met `cat` of `grep`; noem alleen de sleutels (`cut -d= -f1 .env`) of controleer met `docker compose config --quiet` (#377).
 
 #### Bouw
@@ -174,7 +177,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Draai vóór de bouw de E2E-suite op `main` en noem de bekende rode of wisselvallige tests in de opdracht.
 - Noem in een bouwopdracht het commando voor de unitsuite: `docker compose -f docker-compose.yml -f compose.dev.yml run --rm --no-deps test pytest -q` (dienst `test`). Faalt een E2E-test in de volledige run, herhaal hem dan eerst los met `draai.sh -k`.
 - Controleer of een schermafbeelding van het scherm bestaat voordat de opdracht haar opnieuw laat maken.
-- `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`.
+- `schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw. De bouwer zet daarna alles behalve de afbeeldingen van het eigen scherm terug met `git checkout`. `DOC_BREEDTE=390` geldt voor het hele script; een smal scherm controleer je met een eigen meting in de scratchpad (#380).
+- Een E2E-test die een keuzelijst wijzigt en daarna de focus toetst, roept eerst `focus()` aan op het element; `select_option` doet dat niet (#380).
+- Zet een wijziging een blok in een omhullende `div`, zoek dan in `app/web/static/` en `tests/` naar selectors met `main >` (#380).
 - Noem bij een grens op bestandsgrootte of aantal regels of die ook voor het framework geldt: CSRFProtect leest het formulier tot `UPLOAD_MAX` voordat de route draait.
 - Een import of export volgt de regels van de schermactie die dezelfde gegevens wijzigt. Noem in de opdracht die functie en haar test (bijvoorbeeld `_soorten` en `tests/unit/test_plaats_wijzigen_en_vrijgeven.py`), en laat het agent bij elke kolom beslissen wat een lege waarde betekent, voor een nieuw en een bestaand record.
 - Test een rondgang (export, ongewijzigd importeren) ook met elke toestand die het scherm toelaat, zoals een plaats zonder bootsoort, en niet alleen met de standaardwaarden van de testhulpfuncties.
@@ -361,7 +366,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Proef een foutpad in een shellscript in elke context waarin het script de functie aanroept: een arraytoewijzing met meer `$(...)` (alleen de laatste telt voor `set -e`), een functie achter `||` of in `if` (daar werkt `set -e` niet), niet alleen de functie los. Proef de versie uit de index (`git show :pad`) in de scratchpad, met een stub voor externe commando's, en vergelijk de uitvoer van een geslaagde run met die van vóór de wijziging.
 - Een E2E-mutant op een template: leg het mutant-template met een override (`<scratchpad>/compose.<mutant>.yml`) als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`, maak `web` eerst zelf opnieuw aan met die override (`docker compose -f docker-compose.yml -f compose.dev.yml -f <override> up -d --no-deps --force-recreate web`), controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat de mutant draait, en draai dan `tests/e2e/draai.sh -k <test>`. `DRAAI_OVERRIDE` alleen maakt `web` niet opnieuw aan, dan draait de mutant niet (#206, opnieuw bij #345). Een mutant die in de test geen verschil kan geven (zoals een `rollback` na een weigering), benoem je als gelijkwaardig in plaats van hem te forceren. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
 - Geeft `schermafbeeldingen.sh` een `FileNotFoundError`, draai hem dan met `DOC_UIT=/documentatie/gebruikers/<tijdelijke map>` en kopieer alleen de eigen afbeeldingen.
-- Een E2E-mutant op een bestand in `app/web/static/` kan niet als bind mount, want de E2E-run gebruikt de draaiende `web`. Zeg in de opdracht dat het agent het bestand tijdelijk in de werkmap mag legen en daarna met `cmp` herstelt, en dat geen ander agent tegelijk de stack gebruikt.
+- Een E2E-mutant op een bestand in `app/web/static/` draait als `:ro` bind mount via een override op `web`, net als een templatemutant; de werkmap blijft ongewijzigd. Zet `web` daarna terug en controleer met `cmp` (#380; vervangt de regel over het bestand in de werkmap legen).
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
 - Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`, de regel `    file: <werkmap>/secrets/api_token` (met `API_TOKEN_BESTAND` dat pad) en `name: <project>`; `ps -aq` en `inspect` geven een container en een mountbron onder `secrets/` (#368). Anders stopt het script vóór de regel die je test.
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
@@ -583,6 +588,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.22 | 2026-11-23 | Zes regels: omgekeerd besluit, herreview, CSP (Algemeen); schermafbeelding smal, focus bij een keuzelijst, `main >`-selectors (Bouw); E2E-mutant op `static/` als bind mount, vervangt de regel over legen in de werkmap (E2E); uit de terugblikken bij #380 | Lessen |
 | v0.6.21 | 2026-11-23 | Drie regels aangevuld of nieuw: `.env` alleen op sleutels lezen (Algemeen), open verzoek in een proef met een teller (Bouw), tijdstip na het opruimen (E2E); uit de terugblikken bij #372 en #377 | Lessen |
 | v0.6.20 | 2026-11-23 | Regel over een nieuw token na `draai.sh` vervangen (#374 opgelost); zes regels: unittests in een worktree, besluit eerst in het issue, pogingen of herhalingen (Algemeen); teller in een herhaallus (Bouw); bewijs na het opruimen, `draai.sh` toetsen vanuit een worktree (E2E); uit de terugblikken bij #372 en #374 | Lessen |
 | v0.6.19 | 2026-11-21 | Drie regels (E2E): toestand van de dev-integratie vooraf vastleggen, nieuw token na `draai.sh` op de dev-stack tot #374, tokenbestand als losse stap verwijderen; uit de terugblik van pipeline bij #369 | Lessen |
