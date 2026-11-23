@@ -35,10 +35,11 @@
 </details>
 {% endif %}
 
-<form class="bl-filter" method="get" action="{{ url_for('web.boten_overzicht') }}" role="search" aria-label="Zoeken in Boten">
+<form class="bl-filter" method="get" action="{{ url_for('web.boten_overzicht') }}" role="search" aria-label="Zoeken in Boten" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="boten-zoek">{{ "Zoek op boot of eigenaar" if is_kijker() else "Zoek op boot of lid" }}</label>
     <input class="ds-input" type="search" id="boten-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+    <p class="ds-field__hint" id="boten-zoek-hint" data-zoekhint hidden>Het zoeken start vanaf 3 tekens.</p>
   </div>
   <div class="ds-field">
     <label class="ds-field__label" for="boten-soort">Alleen soort</label>
@@ -49,6 +50,8 @@
   </div>
   <button type="submit" class="ds-btn ds-btn--primary">Toon boten</button>
 </form>
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if boten %}
 <p class="bl-aantal">{{ boten|length }} {{ 'boot' if boten|length == 1 else 'boten' }}</p>
 <ul class="bl-lijst">
@@ -62,5 +65,7 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek or soort_id else 'Er zijn nog geen boten.' }}{% endcall %}
 {% endif %}
+</div>
 {{ logblok(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}

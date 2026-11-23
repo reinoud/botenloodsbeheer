@@ -115,7 +115,7 @@ Is er precies één treffer, dan opent die meteen: de boot, het lid of de plaats
 
 ## Boten
 
-Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**; kies daarna **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
+Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**. De lijst verandert direct: bij een andere keuze, en bij het zoeken zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal boten. Zonder JavaScript staat er een knop **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
 
 ![De pagina Boten met de lijst met boten en het uitgeklapte formulier voor een nieuwe boot.](afbeeldingen/boten.png)
 
@@ -147,7 +147,7 @@ Open een boot uit de lijst en voeg bij **Foto vervangen** een foto toe (zie Bote
 
 ## De wachtlijst
 
-Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort en kies **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort. De lijst verandert direct, bij het zoeken vanaf drie tekens; zonder JavaScript staat er een knop **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
 
 ![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
 
@@ -195,7 +195,7 @@ In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit 
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
-| Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort en kies **Toon vrije plaatsen**. |
+| Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort; de lijst verandert direct. Zonder JavaScript staat er een knop **Toon vrije plaatsen**. |
 | Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid en kies **Toon plaatsen**; hoofdletters en accenten tellen niet mee. |
 | Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid en kies **Toon boten**; hoofdletters en accenten tellen niet mee. |
 

@@ -19,7 +19,7 @@ from test_loods import (
 
 
 def regel_van(page, boot):
-    return page.locator("main > ul.bl-lijst > li").filter(has=page.get_by_role("link", name=boot, exact=True))
+    return page.locator("main ul.bl-lijst > li").filter(has=page.get_by_role("link", name=boot, exact=True))
 
 
 def zonder_scroll(page):

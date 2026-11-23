@@ -165,11 +165,14 @@ td form { gap: var(--space-2); }
   .blad:last-child { break-after: auto; }
 }
 
-/* Vrije plaatsen (BV-44): keuzelijst en knop op een regel, aantal eronder; op een telefoon een kaart per plaats */
+/* Filters (BV-44, #380): velden en, zonder script, de knop op een regel, aantal eronder; zonder knop (script) staan de velden bovenaan; op een telefoon een kaart per plaats */
 .bl-filter { display: flex; flex-wrap: wrap; align-items: end; gap: var(--space-3); margin: 0; }
 .bl-filter .ds-field { flex: 1 1 16rem; max-width: 26rem; }
 .bl-filter .ds-btn { min-height: var(--control-height); }
+.bl-filter:has(> .ds-btn[hidden]) { align-items: start; }
 .bl-aantal { margin: 0; color: var(--ink); font: var(--type-label); }
+/* #380: het lijstdeel dat lijstfilter.js vervangt, met dezelfde ruimte als de kinderen van main */
+.bl-main > [data-lijstdeel] { display: grid; gap: var(--space-5); }
 @media (width < 40rem) {
   .bl-vrij tr { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-4); margin-bottom: var(--space-3); padding-block: var(--space-1); }
   .bl-vrij td { gap: 0; padding-block: var(--space-1); }
