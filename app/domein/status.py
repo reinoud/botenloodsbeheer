@@ -1,5 +1,6 @@
 """Technische status (BLB-037, ADR-010): één functie voor /status en /status.json. Alleen lezen.
-Er staan geen tokenwaarden, wachtwoorden of gegevens van leden in (alleen gebruikersnamen van accounts); een reden van een mislukte
+Er staan geen tokenwaarden, wachtwoorden of gegevens van leden in (alleen gebruikersnamen van accounts, en bij de
+import hooguit 10 lidnummers van ongeldige records met een vaste reden, #381; de pagina is alleen voor beheerders); een reden van een mislukte
 import komt uit de vaste lijst van de applicatie (BLB-006)."""
 
 from datetime import UTC, datetime, timedelta
@@ -27,8 +28,8 @@ def _laatste(taak, statussen=("geslaagd", "mislukt")):
 def _run(run):
     if run is None:
         return {"tijdstip": None, "resultaat": None, "aantallen": {}, "reden": None}
-    return {"tijdstip": run.beeindigd_op, "resultaat": run.status, "aantallen": run.aantallen,
-            "reden": run.foutmelding}
+    aantallen = {k: v for k, v in run.aantallen.items() if k != leden.ONGELDIGE_LEDEN}
+    return {"tijdstip": run.beeindigd_op, "resultaat": run.status, "aantallen": aantallen, "reden": run.foutmelding}
 
 
 def status():
@@ -67,7 +68,8 @@ def status():
             "heartbeat": hartslag},
         "import": {
             "status": "waarschuwing" if import_oud or import_.status == "mislukt" else "ok",
-            **_run(import_), "laatst_geslaagd": geslaagd and geslaagd.beeindigd_op},
+            **_run(import_), "laatst_geslaagd": geslaagd and geslaagd.beeindigd_op,
+            "ongeldige_leden": import_ and import_.aantallen.get(leden.ONGELDIGE_LEDEN)},
         "opschoning": {
             "status": "waarschuwing" if opschoning and opschoning.status == "mislukt" else "ok",
             **_run(opschoning)},
