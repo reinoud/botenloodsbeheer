@@ -1,8 +1,8 @@
 # Werking van de integratiecontainer
 
-**Versie:** v1.1.0
-**Datum:** 2026-11-10
-**Bronnen:** ADR-004, ADR-012, ADR-013, issue #178
+**Versie:** v1.2.0
+**Datum:** 2026-11-23
+**Bronnen:** ADR-004, ADR-012, ADR-013, issues #178 en #372
 
 De integratiecontainer houdt de ledenlijst van de applicatie gelijk aan e-boekhouden en schrijft per lid terug hoeveel plaatsen dat lid in de loods heeft. Hij is de enige dienst die met e-boekhouden praat. De applicatie zelf kent e-boekhouden niet en bevat geen code ervoor.
 
@@ -10,7 +10,7 @@ De integratiecontainer houdt de ledenlijst van de applicatie gelijk aan e-boekho
 
 De container staat op twee netwerken. Op `koppeling` ziet hij alleen Traefik, onder de naam `traefik`. Daarover gaan alle aanroepen naar de API, via het entrypoint `intern` op poort 8081. Traefik stuurt alleen `/api/v1/` vanaf het subnet `KOPPELNET` door naar de dienst `api`. De database en de dienst `api` zelf bereikt de container niet. Op `buiten` heeft hij verkeer naar e-boekhouden, en alleen daar.
 
-Bij elke aanroep stuurt de container het robottoken mee uit `/run/secrets/api_token`. Hij leest dat bestand elke ronde opnieuw, dus een nieuw token vraagt geen herstart. Elke minuut vraagt hij of een beheerder een import heeft aangevraagd. Is dat zo, of is het tijdstip van de dagelijkse import gepasseerd, dan haalt hij de leden op uit e-boekhouden en stuurt hij ze in één keer naar de API. Gaat er iets mis bij e-boekhouden, dan meldt hij een van drie vaste redenen (onbereikbaar, onleesbaar of geweigerd) en geen tekst van e-boekhouden.
+Bij elke aanroep stuurt de container het robottoken mee uit `/run/secrets/api_token`. Hij leest dat bestand elke ronde opnieuw, dus een nieuw token vraagt geen herstart. Elke minuut vraagt hij of een beheerder een import heeft aangevraagd. Is dat zo, of is het tijdstip van de dagelijkse import gepasseerd, dan haalt hij de leden op uit e-boekhouden en stuurt hij ze in één keer naar de API. Geeft Traefik daarbij 404 omdat de API nog niet bereikbaar is, dan probeert hij het elke minuut opnieuw, hooguit vijf keer, en daarna weer na een uur. Gaat er iets mis bij e-boekhouden, dan meldt hij een van drie vaste redenen (onbereikbaar, onleesbaar of geweigerd) en geen tekst van e-boekhouden.
 
 ## Namen en nummers van leden
 
@@ -29,3 +29,9 @@ De container logt per ronde één regel met de aantallen geschreven, ongewijzigd
 ## Verbinding met e-boekhouden
 
 De container gebruikt de bibliotheek zeep en een kopie van de WSDL van e-boekhouden in het image, dus hij heeft bij het starten geen verbinding nodig en schrijft niets naar schijf. De WSDL noemt een http-adres; de container gebruikt vast `https://soap.e-boekhouden.nl/soap.asmx`. Wijzigt e-boekhouden zijn interface, dan vervang je de kopie `integratie/koppeling/eboekhouden.wsdl` en bouw je het image opnieuw.
+
+## Wijzigingslog
+
+| Versie | Datum | Wijziging | Reden |
+|--------|-------|-----------|-------|
+| v1.2.0 | 2026-11-23 | Na een 404 van Traefik elke minuut opnieuw, hooguit vijf keer | Issue #372 |

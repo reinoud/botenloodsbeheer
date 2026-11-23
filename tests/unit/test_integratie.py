@@ -35,6 +35,7 @@ class NepApi(ThreadingHTTPServer):
         super().__init__(("127.0.0.1", 0), Handler)
         self.aanroepen, self.verzoek, self.status, self.fout = [], False, {}, "Geen toegang."
         self.groot, self.vrij, self.klaar = False, threading.Event(), False
+        self.traefik = False  # een 404 antwoordt als Traefik zonder router: platte tekst
         self.bootaantallen = [{"lidnummer": "1001", "aantallen": {"Kajak": 1, "Surfski": 0}}]
         threading.Thread(target=self.serve_forever, daemon=True).start()
 
@@ -69,7 +70,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         if 300 <= status < 400:
             self.send_header("Location", self.server.locatie)
-        self.send_header("Content-Type", "application/json")
+        soort = "application/json"
+        if self.server.traefik and status == 404:
+            tekst, soort = b"404 page not found\n", "text/plain; charset=utf-8"
+        self.send_header("Content-Type", soort)
         self.send_header("Content-Length", str(len(tekst)))
         self.end_headers()
         self.wfile.write(tekst)
@@ -175,6 +179,93 @@ def test_fout_van_de_api_een_uur_stil_ook_bij_een_verzoek_behalve_met_een_nieuw_
     del api.status[pad]
     koppeling.ronde(OCHTEND + timedelta(minutes=2))
     assert [a for _m, _p, a, _l in api.aanroepen[eerst:]] == [f"Bearer {nieuw}"] * 2
+
+
+def test_404_van_traefik_elke_minuut_opnieuw_en_na_de_vijfde_herhaling_het_uur(api, koppeling):
+    """#372: geen router geladen; zes 404's (de eerste en vijf herhalingen), dan het gewone uur."""
+    api.status["/leden/importverzoek"], api.traefik, api.verzoek = 404, True, True
+    for minuut in range(6):
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert len(api.aanroepen) == 6
+    koppeling.ronde(OCHTEND + timedelta(minutes=6))  # de grens: na de vijfde herhaling stil
+    koppeling.ronde(OCHTEND + timedelta(minutes=64))
+    assert len(api.aanroepen) == 6
+    del api.status["/leden/importverzoek"]
+    koppeling.ronde(OCHTEND + timedelta(minutes=5 + 60))
+    assert paden(api)[6:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+
+
+def test_404_van_traefik_binnen_de_minuut_geen_nieuwe_aanroep_en_daarna_herstel(
+        api, koppeling, caplog):
+    api.status["/leden/importverzoek"], api.traefik, api.verzoek = 404, True, True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(seconds=59))
+    assert len(api.aanroepen) == 1
+    assert "HTTP 404 traefik); nieuwe poging over een minuut" in caplog.text
+    del api.status["/leden/importverzoek"]
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    assert paden(api)[1:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+
+
+def test_telling_van_traefik_begint_opnieuw_na_een_geslaagde_aanroep(api, koppeling):
+    api.status["/leden/importverzoek"], api.traefik = 404, True
+    koppeling.geslaagd_op = OCHTEND.date()  # geen geplande import tussendoor
+    for minuut in range(3):
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    del api.status["/leden/importverzoek"]
+    koppeling.ronde(OCHTEND + timedelta(minutes=3))
+    api.status["/leden/importverzoek"] = 404
+    for minuut in range(4, 8):  # 4 nieuwe 404's: nog steeds elke minuut
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert len(api.aanroepen) == 8
+
+
+def test_404_van_traefik_op_de_put_telt_door_en_na_de_vijfde_herhaling_het_uur(api, koppeling):
+    """Aegis bij #372: de GET slaagt, de PUT krijgt de 404; de telling mag niet terug naar 0."""
+    api.status["/leden"], api.traefik, api.verzoek = 404, True, True
+    for minuut in range(8):
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert [p for _m, p in paden(api)].count("/leden") == 6
+
+
+def test_een_andere_fout_na_een_404_van_traefik_wacht_het_uur(api, koppeling):
+    """Sentinel bij #372: na twee 404's van Traefik een 404 van de API zelf, dan het uur."""
+    api.status["/leden/importverzoek"], api.traefik, api.verzoek = 404, True, True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    api.traefik = False
+    koppeling.ronde(OCHTEND + timedelta(minutes=2))
+    koppeling.ronde(OCHTEND + timedelta(minutes=3))
+    assert len(api.aanroepen) == 3
+
+
+def test_404_van_traefik_afgewisseld_met_een_fout_van_de_bron_hooguit_vijf_keer_kort(
+        api, koppeling, tmp_path):
+    """Aegis bij #372: een bronfout zet de telling niet terug, anders haalt de container de bron
+    eindeloos elke twee minuten op."""
+    koppeling.cfg["bron"] = bronnen.StubBron(str(tmp_path / "ontbreekt.json"))
+    api.traefik = True
+    for minuut in range(60):
+        api.status["/leden/importverzoek"] = 404 if minuut % 2 else 200
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert [p for _m, p in paden(api)].count("/leden/import-mislukt") == 6
+
+
+def test_geslaagde_get_tijdens_de_wachttijd_zet_de_telling_niet_terug(api, koppeling, tmp_path):
+    """Sentinel bij #372: na een bronfout het patroon 200, 200, 404; anders elke drie minuten de bron."""
+    koppeling.cfg["bron"] = bronnen.StubBron(str(tmp_path / "ontbreekt.json"))
+    api.traefik = True
+    for minuut in range(120):
+        api.status["/leden/importverzoek"] = 404 if minuut % 3 == 2 else 200
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert [p for _m, p in paden(api)].count("/leden/import-mislukt") <= 6
+
+
+def test_404_met_een_antwoord_van_de_api_zelf_is_een_gewone_fout_een_uur_stil(api, koppeling):
+    api.status["/leden/importverzoek"], api.fout, api.verzoek = 404, "Onbekend pad.", True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    assert len(api.aanroepen) == 1
 
 
 def test_onverwachte_fout_ook_een_uur_stil(api, koppeling):

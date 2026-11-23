@@ -1,14 +1,14 @@
 # Integratiecontainer
 
-**Versie:** v2.5.0
-**Datum:** 2026-11-17
+**Versie:** v2.6.0
+**Datum:** 2026-11-23
 **Bronnen:** ADR-004, ADR-012, ADR-013, `app/api/openapi.yaml`; de globale werking staat in [integratie-werking](integratie-werking.md)
 
 De integratiecontainer haalt de leden uit de ledenbron en stuurt ze naar de API, via het entrypoint `intern` van Traefik over het netwerk `koppeling`. De database en de dienst `api` bereikt hij niet. De inloggegevens van de bron staan alleen in zijn omgeving.
 
 ## Werking
 
-Elke minuut vraagt de container of een beheerder een import heeft aangevraagd ("Leden nu ophalen" op de pagina Leden). Is dat zo, of is `SYNC_TIJDSTIP` gepasseerd zonder geslaagde import die dag, dan stuurt hij de ledenlijst. Na een fout probeert hij het hooguit één keer per uur opnieuw; een nieuw token heft die wachttijd op. Een fout van de bron en de veiligheidsgrens sluiten het verzoek, dus een nieuw verzoek van een beheerder gaat direct. Een fout van de API en een lopende import of opschoning (409, "Er loopt al een import.") laten het verzoek open; dan wacht de container ook met het verzoek een uur. De uitkomst staat op de pagina Leden.
+Elke minuut vraagt de container of een beheerder een import heeft aangevraagd ("Leden nu ophalen" op de pagina Leden). Is dat zo, of is `SYNC_TIJDSTIP` gepasseerd zonder geslaagde import die dag, dan stuurt hij de ledenlijst. Na een fout probeert hij het hooguit één keer per uur opnieuw; een nieuw token heft die wachttijd op. Een fout van de bron en de veiligheidsgrens sluiten het verzoek, dus een nieuw verzoek van een beheerder gaat direct. Een fout van de API en een lopende import of opschoning (409, "Er loopt al een import.") laten het verzoek open; dan wacht de container ook met het verzoek een uur. Een 404 van Traefik (platte tekst "404 page not found", bijvoorbeeld kort na een start, als er nog geen router is) telt niet als fout van de API: de container probeert het elke minuut opnieuw, hooguit vijf keer. Blijft het 404, dan geldt het gewone uur. Pas na een geslaagde ronde begint die telling opnieuw; een andere fout tussendoor zet haar niet terug. Een 404 met JSON van de API zelf is een gewone fout van de API. De uitkomst staat op de pagina Leden.
 
 | Variabele | Standaard | Betekenis |
 |-----------|-----------|-----------|
@@ -100,6 +100,7 @@ Het voorbeeld is `integratie/`: `koppeling/__init__.py` bevat de lus, `koppeling
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v2.6.0 | 2026-11-23 | Na een 404 van Traefik elke minuut opnieuw, hooguit vijf keer | Issue #372 |
 | v2.5.0 | 2026-11-17 | De import neemt oud-leden binnen 5 jaar op; `GET /bootaantallen` laat oud-leden weg | Issue #298 |
 | v2.4.0 | 2026-11-08 | Bron `eboekhouden`, inloggegevens en schakelaar voor terugschrijven | Issue #178 |
 | v2.3.0 | 2026-11-05 | Na een 409 door een lopende import een uur stil | Issue #31 |
