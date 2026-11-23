@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.25
+**Versie overlay:** v0.6.26
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -397,7 +397,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De E2E voor een release draait in een eigen project (`COMPOSE_PROJECT_NAME`, een vrij `KOPPELNET` zoals `10.213.0.0/24`, eigen `INSTALLATIE`) met `tests/e2e/compose.release.yml` (`DRAAI_OVERRIDE`; leegt `ports` en neemt de images uit `RELEASE_TAG`, verplicht bij elke compose-aanroep met dit bestand, ook `logs` en `down -v`; geen override in de scratchpad; `e2e` gebruikt het lokale `botenloods-e2e`, dus bouw dat eerst opnieuw als de release `tests/e2e/Dockerfile` of `tests/e2e/requirements.txt` wijzigt), en met native images `botenloods-app:<tag>` en `botenloods-integratie:<tag>` die vanaf de releasecommit zijn gebouwd. Controleer vooraf of `botenloods-app:latest` ouder is dan de laatste wijziging in `app/`; dan is het niet bruikbaar. Start het project met `API_TOKEN_BESTAND=./secrets/api_token.<project>`, vooraf aangemaakt met `install -m 600 /dev/null <pad>` en na `down -v` verwijderd; zonder eigen bestand stopt `draai.sh` (#368).
 - Tijdens de release-E2E staat de werkmap op de releasecommit en wijzigt geen agent iets onder `app/`: `compose.dev.yml` mount `./app` met `--reload`, dus de run test de werkmap. Bewaar vóór `down -v` de logs van traefik, api en integratie en `docker inspect` van api in de scratchpad; zonder die logs is een eenmalige fout niet te verklaren (#368).
 - Een opdracht voor een release-E2E laat vóór de start de toestand van de dev-integratie vastleggen (de laatste regel `Import geslaagd` of `Import mislukt` in het log van `integratie`). Een 401 van vóór de run wordt gemeld, niet in de opdracht opgelost (#369).
-- Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377).
+- Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377). De database en de containerlogs gebruiken UTC, de hostklok CET: reken het tijdstip om, en wacht in een lus met `date +%s` of python3, niet met `date -j` (#387).
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
@@ -595,6 +595,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.26 | 2026-11-23 | E2E: tijdstip na het opruimen in UTC, wachtlus zonder `date -j`; uit de terugblik bij #387 | Lessen |
 | v0.6.25 | 2026-11-23 | Vier regels (Algemeen): kijkerrechten in `KIJKER_TOEGESTAAN`, bewaarduur van persoonsgegevens getoetst in de database, E2E bij een worktree, unittests bij twee reviewers; uit de terugblikken bij #381 | Lessen |
 | v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` bij elke aanroep, e2e-image opnieuw bouwen bij een gewijzigde runner; tokenbestand als de hook de `rm` tegenhoudt, scripts in een worktree (E2E; #378) | Lessen |
 | v0.6.23 | 2026-11-23 | Twee regels: bron voor zichtbaarheid per rol en oorzaak als vermoeden (Algemeen); mutant via bind mount noemen in een reviewbrief (E2E); uit de terugblikken bij #379 | Lessen |
