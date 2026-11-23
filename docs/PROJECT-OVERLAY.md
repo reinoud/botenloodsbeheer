@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.22
+**Versie overlay:** v0.6.23
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -106,6 +106,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een herreview welke onderdelen de eerste review al akkoord gaf, zodat de reviewer alleen het herstel toetst (#380).
 - De CSP staat als Traefik-label in `docker-compose.yml` (middleware `-kop`), niet in de app; een stack zonder Traefik heeft geen CSP (#380).
 - Lees `.env` nooit met `cat` of `grep`; noem alleen de sleutels (`cut -d= -f1 .env`) of controleer met `docker compose config --quiet` (#377).
+- Noem een aanname over wie welk element ziet (beheerder, kijker) met het bestand waar die vandaan komt, zoals `app/web/templates/base.html` of `tests/e2e/test_kijkers.py`; een aanname uit het hoofd is geen bron. Noem een vermoedelijke oorzaak alleen als vermoeden en laat eerst meten (#379).
 
 #### Bouw
 
@@ -367,6 +368,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een E2E-mutant op een template: leg het mutant-template met een override (`<scratchpad>/compose.<mutant>.yml`) als `:ro` bind mount over `/app/app/web/templates/<naam>.html` van `web`, maak `web` eerst zelf opnieuw aan met die override (`docker compose -f docker-compose.yml -f compose.dev.yml -f <override> up -d --no-deps --force-recreate web`), controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat de mutant draait, en draai dan `tests/e2e/draai.sh -k <test>`. `DRAAI_OVERRIDE` alleen maakt `web` niet opnieuw aan, dan draait de mutant niet (#206, opnieuw bij #345). Een mutant die in de test geen verschil kan geven (zoals een `rollback` na een weigering), benoem je als gelijkwaardig in plaats van hem te forceren. Zet `web` daarna zonder override terug (`up -d --no-deps --force-recreate web`) en controleer met `docker exec botenloods-web-1 grep -c <sleutel> <pad>` dat het origineel draait. De gedeelde `web` herstart daarvoor twee keer; meld dat.
 - Geeft `schermafbeeldingen.sh` een `FileNotFoundError`, draai hem dan met `DOC_UIT=/documentatie/gebruikers/<tijdelijke map>` en kopieer alleen de eigen afbeeldingen.
 - Een E2E-mutant op een bestand in `app/web/static/` draait als `:ro` bind mount via een override op `web`, net als een templatemutant; de werkmap blijft ongewijzigd. Zet `web` daarna terug en controleer met `cmp` (#380; vervangt de regel over het bestand in de werkmap legen).
+- Noem in een reviewbrief met een mutant op CSS of een template de regel hierboven over de bind mount met override; "een kopie" zonder die verwijzing leidde tot een mutant in de werkmap (#379).
 - Bewerk `tests/e2e/draai.sh` niet terwijl het draait; bash leest het script tijdens de run.
 - Een docker-stub voor `tests/e2e/draai.sh` laat `config -q` falen en geeft bij `config` de regel `sourcerange: 192.0.2.0/24`, de regel `    file: <werkmap>/secrets/api_token` (met `API_TOKEN_BESTAND` dat pad) en `name: <project>`; `ps -aq` en `inspect` geven een container en een mountbron onder `secrets/` (#368). Anders stopt het script vóór de regel die je test.
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
@@ -588,6 +590,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.23 | 2026-11-23 | Twee regels: bron voor zichtbaarheid per rol en oorzaak als vermoeden (Algemeen); mutant via bind mount noemen in een reviewbrief (E2E); uit de terugblikken bij #379 | Lessen |
 | v0.6.22 | 2026-11-23 | Zes regels: omgekeerd besluit, herreview, CSP (Algemeen); schermafbeelding smal, focus bij een keuzelijst, `main >`-selectors (Bouw); E2E-mutant op `static/` als bind mount, vervangt de regel over legen in de werkmap (E2E); uit de terugblikken bij #380 | Lessen |
 | v0.6.21 | 2026-11-23 | Drie regels aangevuld of nieuw: `.env` alleen op sleutels lezen (Algemeen), open verzoek in een proef met een teller (Bouw), tijdstip na het opruimen (E2E); uit de terugblikken bij #372 en #377 | Lessen |
 | v0.6.20 | 2026-11-23 | Regel over een nieuw token na `draai.sh` vervangen (#374 opgelost); zes regels: unittests in een worktree, besluit eerst in het issue, pogingen of herhalingen (Algemeen); teller in een herhaallus (Bouw); bewijs na het opruimen, `draai.sh` toetsen vanuit een worktree (E2E); uit de terugblikken bij #372 en #374 | Lessen |
