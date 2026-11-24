@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.26
+**Versie overlay:** v0.6.27
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -250,6 +250,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Versoepelt de wijziging een regel in de kern, noem dan elke andere route die op de oude weigering leunde (zoals de bezettingsimport), en eis per route een test met een geval binnen de nieuwe grens, met een mutant (#298).
 - Een afkapgrens op een veld met een samengestelde tekst (zoals "Naam (lidnummer)") is minstens de som van de kolomlengtes plus de scheiders, afgeleid uit het model. De test staat precies op de nieuwe grens, met de langste geldige waarde (#316).
 - Verandert een redirect, een URL of een tekst waarop tests controleren, zoek het patroon dan in `tests/unit/` én `tests/e2e/` (zoals `grep -rn 'inloggen\$\|endswith("/inloggen")' tests/`) en draai de geraakte E2E-tests, niet alleen de nieuwe. Een E2E-test logt hooguit één keer in met een TOTP-account; de tweede code valt buiten het venster (#354).
+- Zet je een blok op een scherm in een omhullende `div` (zoals `data-lijstdeel`), zoek dan in `tests/e2e/` naar `main >`-selectors op dat scherm, ook in een f-string met querystring (`grep -rn -B8 'main >' tests/e2e/`, met de `goto` erboven voor het scherm), draai alleen de bestanden op dat scherm en noem ze in de reviewbrief (#395).
 - Een nieuw menu-item: zoek de E2E-tests met een vaste menulijst (zoals `tests/e2e/test_rekindeling_csv.py`) en werk ze bij (#315).
 - Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
 - Een E2E-selector op een formulierveld noemt het type (`input[type=radio][name=...]`); rij-acties met verborgen velden van dezelfde naam tellen anders mee (#322).
@@ -595,6 +596,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.27 | 2026-11-24 | Eén regel (Bouw): `main >`-selectors zoeken en draaien na een omhullende `div`; uit de terugblik van sentinel bij #395 | Lessen |
 | v0.6.26 | 2026-11-23 | E2E: tijdstip na het opruimen in UTC, wachtlus zonder `date -j`; uit de terugblik bij #387 | Lessen |
 | v0.6.25 | 2026-11-23 | Vier regels (Algemeen): kijkerrechten in `KIJKER_TOEGESTAAN`, bewaarduur van persoonsgegevens getoetst in de database, E2E bij een worktree, unittests bij twee reviewers; uit de terugblikken bij #381 | Lessen |
 | v0.6.24 | 2026-11-23 | Vaste override `tests/e2e/compose.release.yml` voor de release-E2E, tag uit `RELEASE_TAG` bij elke aanroep, e2e-image opnieuw bouwen bij een gewijzigde runner; tokenbestand als de hook de `rm` tegenhoudt, scripts in een worktree (E2E; #378) | Lessen |
