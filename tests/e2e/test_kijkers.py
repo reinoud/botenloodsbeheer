@@ -49,6 +49,7 @@ def test_kijker_ziet_de_loods_zonder_knoppen_en_de_server_weigert_zijn_mutaties(
     for breedte in (360, 1280):
         kijker.set_viewport_size({"width": breedte, "height": 740})
         kijker.goto("/rekoverzicht")
+        menu_openen(kijker, "Loods")  # smal staat het hele menu achter de knop Menu, buiten de toegankelijkheidsboom
         expect(menu.locator("details.dj-menu__kop > summary")).to_have_text(["Loods", "Boten", "Account"])
         expect(menu.locator("summary[aria-current='true']")).to_have_text("Loods")
         expect(menu_openen(kijker, "Loods").get_by_role("link")).to_have_text(["Rekoverzicht", "Vrije plaatsen"])

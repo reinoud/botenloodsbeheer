@@ -5,7 +5,7 @@ naar een boot klikken en daar een eigenaar kiezen (#321). Op
 
 import re
 
-from conftest import reknaam, wachtwoord_instellen
+from conftest import menu_openen, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_bezetting_csv import KOP, uploaden
 from test_loods import (
@@ -58,8 +58,9 @@ def test_eigenaar_onbekend_vastleggen_importeren_en_een_eigenaar_kiezen(page):
 
     page.goto("/boten")
     expect(regel_van(page, tureluur)).to_contain_text("eigenaar onbekend")
-    expect(page.get_by_role("link", name=re.compile(r"^Boten zonder eigenaar \d+$"))).to_have_count(1)
-    page.get_by_role("link", name=re.compile(r"^Boten zonder eigenaar")).evaluate("e => e.click()")
+    boten = menu_openen(page, "Boten")  # de link zit in een kop die dicht kan staan
+    expect(boten.get_by_role("link", name=re.compile(r"^Boten zonder eigenaar \d+$"))).to_have_count(1)
+    boten.get_by_role("link", name=re.compile(r"^Boten zonder eigenaar")).click()
     expect(page.get_by_role("heading", level=1)).to_have_text("Boten zonder eigenaar")
     for boot, plaats in ((tureluur, f"{rek}/1/1"), (kluut, f"{rek}/1/2"), (wulp, "geen plaats")):
         expect(regel_van(page, boot)).to_contain_text(plaats)
