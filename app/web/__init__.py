@@ -37,7 +37,7 @@ OPNIEUW = "Je inlog is ouder dan 10 minuten. Log opnieuw in en probeer het nog e
 # route (ADR-015). Alleen de POST-routes onder Eigen inlog mag een kijker doen (besluit 8, #322).
 KIJKER_TOEGESTAAN = frozenset(f"web.{naam}" for naam in (
     # Inzien
-    "start", "rekoverzicht", "vrije_plaatsen", "boten_overzicht", "boot_detail", "plaats_detail", "zoeken",
+    "start", "rekoverzicht", "vrije_plaatsen", "boten_overzicht", "boten_zonder_plaats", "boot_detail", "plaats_detail", "zoeken",
     "afbeelding", "logo", "openbare_plaats",
     # Eigen inlog: de endpoints van app/web/inloggen.py
     "inloggen", "inloggen_wachtwoord", "inloggen_code", "inloggen_passkey_opties", "inloggen_passkey",

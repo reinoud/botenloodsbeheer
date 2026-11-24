@@ -60,6 +60,16 @@ def _datum(waarde):
     return dag
 
 
+def weigering(b):
+    """Waarom een boot niet op de lijst mag om wat hij is (clubboot, oud-lid), of None. Eén bron voor
+    erop_zetten en het scherm Boten zonder plaats; plaats en lijst controleert erop_zetten onder het slot."""
+    if b.clubboot:
+        return f"Boot {b.naam} is een clubboot. Een clubboot kan niet op de wachtlijst."
+    if b.lid is not None and leden.is_oud_lid(b.lid):
+        return f"De eigenaar van boot {b.naam} is oud-lid. De boot kan niet op de wachtlijst."
+    return None
+
+
 def erop_zetten(boot_id, aangemeld_op, actor):
     """Zet een boot van een lid zonder plaats op de lijst van zijn bootsoort. Eerst de boot
     vergrendelen, net als toewijzen: zo krijgt een boot niet tegelijk een plaats en een plek op
@@ -69,11 +79,8 @@ def erop_zetten(boot_id, aangemeld_op, actor):
         b = db.session.get(Boot, boot_id, with_for_update=True, populate_existing=True)
         if b is None:
             raise Regelfout("Deze boot bestaat niet.")
-        if b.clubboot:
-            raise Regelfout(f"Boot {b.naam} is een clubboot. Een clubboot kan niet op de wachtlijst.")
-        if b.lid is not None and leden.is_oud_lid(b.lid):
-            raise Regelfout(f"De eigenaar van boot {b.naam} is oud-lid. De boot kan niet op de "
-                            "wachtlijst.")
+        if reden := weigering(b):
+            raise Regelfout(reden)
         if db.session.scalar(select(Plaats.code).where(Plaats.boot_id == b.id)):
             raise Regelfout(f"Boot {b.naam} heeft al een plaats.")
         if db.session.get(Wachtlijst, b.id, populate_existing=True):

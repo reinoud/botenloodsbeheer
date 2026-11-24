@@ -99,10 +99,10 @@ def test_elk_endpoint_in_de_lijst_bestaat(app):
     assert KIJKER_TOEGESTAAN <= {r.endpoint for r in web_routes(app)}
 
 
-def test_de_lijst_heeft_de_tien_inzien_endpoints_en_de_vijftien_van_inloggen(app):
+def test_de_lijst_heeft_de_elf_inzien_endpoints_en_de_vijftien_van_inloggen(app):
     inloggen_py = {r.endpoint for r in web_routes(app) if app.view_functions[r.endpoint].__module__ == "app.web.inloggen"}
     assert len(inloggen_py) == 15 and inloggen_py <= KIJKER_TOEGESTAAN
-    assert len(KIJKER_TOEGESTAAN) == 25
+    assert len(KIJKER_TOEGESTAAN) == 26
     # Een route die de lijst niet noemt, is dicht; de lijst wijzigt alleen met een besluit.
     for dicht in ("web.wachtlijst_overzicht", "web.leden_overzicht", "web.lid_detail", "web.logboek", "web.technisch_log",
                   "web.tokens_overzicht", "web.statuspagina", "web.instellingen_scherm", "web.beheerders_overzicht",
