@@ -115,7 +115,7 @@ def test_boten_van_leden_die_gaan_opzeggen(page):
     try:
         assert roep("PUT", "/leden", {"leden": later})[0] == 200
         page.get_by_role("link", name="Gaan opzeggen").click()
-        rijen = page.locator("main > ul.bl-lijst > li")
+        rijen = page.locator("main ul.bl-lijst > li")
         expect(rijen.first).to_be_visible()
         assert set(rijen.locator("[data-label='Opzegdatum']").all_inner_texts()) == {"31-12-2099"}
         eerste = rijen.first

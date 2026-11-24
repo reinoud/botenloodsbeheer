@@ -6,13 +6,16 @@
 <h1>Plaatsen van opgezegde leden</h1>
 <p>Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Open een plaats om haar vrij te geven.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.opgezegd') }}" role="search" aria-label="Zoeken in Opgezegd">
+<form class="bl-filter" method="get" action="{{ url_for('web.opgezegd') }}" role="search" aria-label="Zoeken in Opgezegd" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="opgezegd-zoek">Zoek op boot of oud-lid</label>
     <input class="ds-input" type="search" id="opgezegd-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+    <p class="ds-field__hint" id="opgezegd-zoek-hint" data-zoekhint hidden>Het zoeken start vanaf 3 tekens.</p>
   </div>
   <button type="submit" class="ds-btn ds-btn--primary">Toon plaatsen</button>
 </form>
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if rijen %}
 <p class="bl-aantal">{{ rijen|length }} {{ 'plaats' if rijen|length == 1 else 'plaatsen' }}</p>
 <ul class="bl-lijst">
@@ -26,6 +29,8 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen plaatsen gevonden.' if zoek else 'Er zijn geen plaatsen van opgezegde leden.' }}{% endcall %}
 {% endif %}
+</div>
 
 {{ logblok(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}

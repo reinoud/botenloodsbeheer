@@ -197,13 +197,13 @@ Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link 
 
 ## Overzichten
 
-In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf. Opgezegd en Gaan opzeggen hebben een zoekveld met een eigen knop, en tonen het aantal erboven.
+In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf. Opgezegd en Gaan opzeggen hebben een zoekveld en tonen het aantal erboven; de lijst verandert direct, zoals bij Boten en Leden.
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
 | Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort; de lijst verandert direct. Zonder JavaScript staat er een knop **Toon vrije plaatsen**. |
-| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid en kies **Toon plaatsen**; hoofdletters en accenten tellen niet mee. |
-| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid en kies **Toon boten**; hoofdletters en accenten tellen niet mee. |
+| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon plaatsen**. |
+| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon boten**. |
 
 ![De vrije plaatsen voor kajaks, met rek, aanduiding en geschikte bootsoorten.](afbeeldingen/vrij.png)
 

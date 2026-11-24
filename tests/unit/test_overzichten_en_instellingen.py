@@ -65,8 +65,9 @@ def test_vrije_plaatsen_filter_met_knop_als_reserve_en_focus(ingelogd):  # noqa:
 
 @pytest.mark.parametrize("pad, knop, zoekveld", [
     ("/vrij", "Toon vrije plaatsen", False), ("/wachtlijst", "Toon wachtlijst", True),
-    ("/boten", "Toon boten", True), ("/leden", "Toon leden", True)])
-def test_lijstfilter_markup_voor_het_script_op_vrij_wachtlijst_boten_en_leden(ingelogd, pad, knop, zoekveld):  # noqa: F811
+    ("/boten", "Toon boten", True), ("/leden", "Toon leden", True),
+    ("/opgezegd", "Toon plaatsen", True), ("/opzeggend", "Toon boten", True)])
+def test_lijstfilter_markup_voor_het_script_op_alle_lijsten(ingelogd, pad, knop, zoekveld):  # noqa: F811
     """#380: het script vervangt alleen [data-lijstdeel] (aantal en lijst, niet het log), meldt het aantal in een
     statusveld buiten dat deel, en verbergt de knop die in de HTML blijft."""
     loods()
