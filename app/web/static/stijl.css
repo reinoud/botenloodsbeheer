@@ -64,8 +64,6 @@ td form { gap: var(--space-2); }
 /* de algemene regel details { margin-top } geeft het menu op een smal scherm 16px marge, en zet de menuknop zo 8px onder de middenlijn van het zoekveld (#379) */
 @media (width < 56.25rem) { .bl-kop .dj-menu { margin-top: 0; } }
 .bl-kop .dj-menu__panel { max-height: calc(100dvh - 10rem); overflow-y: auto; }
-.bl-nav__blok { min-width: 0; }
-.bl-nav__groep { margin: 0; padding: var(--space-3) var(--space-4) 0; color: var(--ink-muted); font: var(--type-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
 .bl-nav__knop { width: 100%; margin: 0; border: 0 solid transparent; border-left-width: var(--stroke-4); background: transparent; text-align: left; cursor: pointer; }
 .bl-nav__form { margin: 0; }
 
@@ -74,8 +72,6 @@ td form { gap: var(--space-2); }
   .bl-kop .dj-search { flex: 0 1 30rem; margin-left: auto; }
   .bl-kop .dj-menu { flex: 1 1 100%; }
   .bl-kop .dj-menu__panel { display: flex; flex-wrap: wrap; gap: 0 var(--space-3); }
-  .bl-nav__groep { padding-block: var(--space-2) 0; }
-  .bl-kop .dj-nav__list { flex-wrap: wrap; }
   .bl-nav__knop { border-left-width: 0; border-bottom-width: var(--stroke-4); width: auto; }
 }
 
