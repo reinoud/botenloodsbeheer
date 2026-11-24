@@ -2,6 +2,24 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.5.0 (2026-11-24)
+
+Minorversie (milestone "Boten zonder plaats en v2.5.0"). Geen migratie.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.5.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.5.0`
+
+Ook beschikbaar onder de tags `2.5` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.5.0.cdx.json` en `botenloods-integratie-2.5.0.cdx.json`.
+
+**Nieuw**
+- Het scherm Boten zonder plaats (`/boten/zonder-plaats`, in het menu onder Dagelijks) toont alle boten zonder plaats, ook die op de wachtlijst. Met de knop Zet op de wachtlijst zet een beheerder een boot op de wachtlijst met de datum van vandaag. Een kijker ziet de lijst zonder knop en zonder wachtliststatus (#399).
+- Op Leden staat in de grijze regel van elk lid het aantal boten, ongeacht plaats of wachtlijst (#400, #406).
+
+**Gewijzigd**
+- De knop Leden nu ophalen en de laatste importruns staan op Import/export, in het paneel "Leden uit e-boekhouden", en niet meer op Leden (#401).
+- Op Opgezegd en Gaan opzeggen zoekt het zoekveld vanaf 3 tekens, zonder knop, zoals op de andere lijsten. Zonder JavaScript blijft de knop werken (#403).
+
 ## 2.4.0 (2026-11-24)
 
 Minorversie (milestone "Restpunten toegankelijkheid en weergave"). Geen migratie.
