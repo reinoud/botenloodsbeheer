@@ -2,6 +2,22 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.6.0 (2026-11-24)
+
+Minorversie (milestone "Hoofdmenu met vijf koppen en v2.6.0"). Geen migratie.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.6.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.6.0`
+
+Ook beschikbaar onder de tags `2.6` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.6.0.cdx.json` en `botenloods-integratie-2.6.0.cdx.json`.
+
+**Gewijzigd**
+- Het menu heeft vijf koppen met een uitklapmenu: Loods, Boten, Leden, Beheer en Account. De kop en het item van de huidige pagina zijn gemarkeerd. Escape of een klik ernaast sluit een open kop; zonder JavaScript werkt het menu ook. Een kijker ziet dezelfde koppen met alleen zijn items, nu ook Boten zonder plaats (#402).
+
+**Opgelost**
+- Een statisch bestand zet geen sessiecookie meer. Een laat antwoord kon een oudere sessie terugzetten, waardoor het toevoegen van een passkey soms mislukte met "Start het toevoegen opnieuw." (#402; restrisico voor andere late antwoorden in #419).
+
 ## 2.5.0 (2026-11-24)
 
 Minorversie (milestone "Boten zonder plaats en v2.5.0"). Geen migratie.
