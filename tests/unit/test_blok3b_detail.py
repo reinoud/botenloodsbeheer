@@ -8,6 +8,7 @@ import pytest
 
 from app.domein import CLI, leden, toewijzing, vandaag, wachtlijst
 from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats, png
+from tests.unit.test_blok1_schermen import menu_koppen
 from tests.unit.test_blok3a_lijsten import GEESCAPET, XSS
 from tests.unit.test_indeling_en_toewijzing import boot
 from tests.unit.test_overzichten_en_instellingen import opzeggen
@@ -50,6 +51,7 @@ def test_menu_markeert_boten_op_een_boot_en_leden_op_een_lid(ingelogd):
         tekst = ingelogd.get(pad).text
         assert re.findall(r'<a class="dj-nav__link" href="[^"]*" aria-current="true">([^<]*)</a>', tekst) == [naam], pad
         assert 'aria-current="page"' not in tekst, pad
+        assert menu_koppen(tekst)[1] == [naam], pad  # ook de kop is gemarkeerd en open
     assert 'href="/boten" aria-current="page">Boten' in ingelogd.get("/boten").text  # het overzicht zelf blijft "page"
 
 

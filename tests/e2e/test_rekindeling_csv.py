@@ -5,7 +5,7 @@ geweigerd wordt zonder dat er iets verandert. Eigen rek met een naam die per run
 import re
 from pathlib import Path
 
-from conftest import reknaam, wachtwoord_instellen
+from conftest import menu_kiezen, menu_openen, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import rek_aanmaken, sectie_van
 
@@ -44,7 +44,7 @@ def test_csv_exporteren_aangepast_importeren_en_fout_bestand_geweigerd(page):
     sectie = sectie_van(page, rek)
     expect(sectie).to_contain_text("Via CSV")
     expect(sectie.locator("tbody a")).to_have_text([f"{rek}/1/1", f"{rek}/1/2", f"{rek}/1/3"])
-    page.get_by_role("link", name="Rekoverzicht", exact=True).click()
+    menu_kiezen(page, "Loods", "Rekoverzicht")
     sectie = sectie_van(page, rek)
     expect(sectie.locator("a.bl-vak")).to_have_count(3)
     expect(sectie.locator("a.bl-vak--leeg")).to_have_count(1)
@@ -58,24 +58,21 @@ def test_csv_exporteren_aangepast_importeren_en_fout_bestand_geweigerd(page):
     expect(alert).to_contain_text("Het bestand is niet geïmporteerd. Er is niets veranderd.")
     expect(alert).to_contain_text("Regel 3: de bootsoort Zeilboot bestaat niet.")
     expect(alert).to_contain_text(f"Regel 2: rek {rek}: Verdieping 1 heeft een gat")
-    page.get_by_role("link", name="Rekoverzicht", exact=True).click()
+    menu_kiezen(page, "Loods", "Rekoverzicht")
     sectie = sectie_van(page, rek)
     expect(sectie.locator("a.bl-vak")).to_have_count(3)
     page.goto("/indeling")
     expect(sectie_van(page, rek)).to_contain_text("Via CSV")
 
-    # Het menu heeft vier groepen; Import/export staat onder Beheer en is de huidige pagina (BV-76).
-    page.goto("/import-export")
+    # Het menu heeft vijf koppen; Import/export staat onder Beheer en is de huidige pagina (BV-100).
     for breedte in (1100, 360):
         page.set_viewport_size({"width": breedte, "height": 740})
+        page.goto("/import-export")
         menu = page.get_by_role("navigation", name="Hoofdmenu")
-        if breedte == 360:
-            page.get_by_text("Menu", exact=True).click()
-        for groep in ("Dagelijks", "Lijsten", "Beheer", "Account"):
-            expect(menu.get_by_text(groep, exact=True)).to_be_visible()
-        beheer = menu.get_by_role("list", name="Beheer")
+        beheer = menu_openen(page, "Beheer")
+        expect(beheer.locator("summary")).to_have_attribute("aria-current", "true")
         expect(beheer.get_by_role("link")).to_have_text([
-            "Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Gebruikers", "Technisch log", "Tokens",
-            "Instellingen", "Status"])
+            "Indeling", "Kaartjes", "Import/export", "Gebruikers", "Tokens", "Instellingen", "Status", "Technisch log"])
         expect(menu.locator('a[aria-current="page"]')).to_have_text("Import/export")
+        expect(menu.locator("summary[aria-current]")).to_have_count(1)
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth"), breedte

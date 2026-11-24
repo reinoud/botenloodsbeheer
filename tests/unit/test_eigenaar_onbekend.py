@@ -226,9 +226,9 @@ def test_menu_toont_het_aantal_in_de_link_en_bij_nul_alleen_de_naam(ingelogd):  
     onbekend("Wulp"), onbekend("Kluut")
     assert link.search(ingelogd.get("/rekoverzicht").text).group(1) == (
         'Boten zonder eigenaar <span class="ds-tag ds-tag--telling bl-nav__aantal">2</span>')
-    # na Wachtlijst, onder Dagelijks
+    # na Boten zonder plaats, onder de kop Boten
     namen = re.findall(r'class="dj-nav__link"[^>]*>([^<]+)', ingelogd.get("/rekoverzicht").text)
-    assert namen.index("Boten zonder eigenaar ") == namen.index("Wachtlijst") + 1
+    assert namen.index("Boten zonder eigenaar ") == namen.index("Boten zonder plaats") + 1
 
 
 def test_menu_item_is_gemarkeerd_op_de_eigen_pagina(ingelogd):  # noqa: F811

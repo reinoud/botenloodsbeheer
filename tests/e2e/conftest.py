@@ -90,6 +90,23 @@ def wachtwoord_instellen(page, soort, url=None):
     return totp
 
 
+def menu_openen(page, kop):
+    """Opent de kop van het hoofdmenu (BV-100): op een telefoon eerst de knop Menu, daarna de kop. Geeft de
+    details van de kop terug. Een kop die al open staat (de huidige) blijft open."""
+    knop = page.locator("summary.dj-menu__button")
+    if knop.is_visible() and not knop.evaluate("e => e.parentElement.open"):
+        knop.click()
+    details = page.locator("details.dj-menu__kop").filter(has=page.locator("summary", has_text=re.compile(f"^{kop}$")))
+    if not details.evaluate("e => e.open"):
+        details.locator("summary").click()
+    return details
+
+
+def menu_kiezen(page, kop, item, rol="link"):
+    """Kiest een item in het hoofdmenu zoals een mens: kop openen, item klikken."""
+    menu_openen(page, kop).get_by_role(rol, name=item, exact=True).click()
+
+
 def uitloggen(page):
-    page.get_by_role("button", name="Uitloggen").click()
+    menu_kiezen(page, "Account", "Uitloggen", rol="button")
     expect(page.get_by_text("Je bent uitgelogd.")).to_be_visible()

@@ -1,4 +1,4 @@
-"""Blok 1 van het nieuwe ontwerp (issue #150): het menu in vier groepen (BV-76), de plaats in twee kolommen,
+"""Blok 1 van het nieuwe ontwerp (issue #150): het menu in vijf koppen (BV-100), de plaats in twee kolommen,
 de indeling in panelen. Gebruikersinvoer blijft geëscapet."""
 
 import pathlib
@@ -11,12 +11,24 @@ from tests.unit.hulp import beheerder_met_wachtwoord, lid, plaats
 from tests.unit.test_indeling_en_toewijzing import boot, soort
 from tests.unit.test_web import inloggen
 
-GROEPEN = {
-    "Dagelijks": ["Rekoverzicht", "Vrije plaatsen", "Wachtlijst", "Boten zonder eigenaar", "Boten zonder plaats", "Gaan opzeggen"],
-    "Lijsten": ["Boten", "Leden", "Opgezegd", "Log"],
-    "Beheer": ["Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Gebruikers", "Technisch log", "Tokens", "Instellingen", "Status"],
+KOPPEN = {
+    "Loods": ["Rekoverzicht", "Vrije plaatsen", "Log"],
+    "Boten": ["Boten", "Wachtlijst", "Boten zonder plaats", "Boten zonder eigenaar", "Boten zonder foto"],
+    "Leden": ["Leden", "Gaan opzeggen", "Opgezegd"],
+    "Beheer": ["Indeling", "Kaartjes", "Import/export", "Gebruikers", "Tokens", "Instellingen", "Status", "Technisch log"],
     "Account": ["Profiel", "Uitloggen"],
 }
+
+
+def menu_koppen(tekst):
+    """De koppen van het hoofdmenu (BV-100) als {naam: items}, in de volgorde van de pagina; per kop of hij open is
+    en aria-current heeft."""
+    menu = re.search(r'<nav class="dj-menu__panel".*?</nav>', tekst, re.DOTALL).group(0)
+    koppen = re.findall(r'<details class="dj-menu__kop" name="hoofdmenu"( open)?>\s*<summary( aria-current="true")?>(\w+)</summary>(.*?)</details>', menu, re.DOTALL)
+    items = {naam: re.findall(r">([^<>]+?)(?: <span[^>]*>\d+</span>)?</(?:a|button)>", rest) for _, _, naam, rest in koppen}
+    huidig = [naam for open_, current, naam, _ in koppen if current]
+    assert [naam for open_, _, naam, _ in koppen if open_] == huidig  # de huidige kop, en alleen die, is open
+    return items, huidig
 
 
 @pytest.fixture
@@ -26,15 +38,29 @@ def ingelogd(client):
     return client
 
 
-def test_menu_heeft_vier_groepen_met_elk_hun_items_in_de_volgorde_van_het_ontwerp(ingelogd):
-    # Mutant: een item in een andere groep of een andere volgorde valt hier.
+def test_menu_heeft_vijf_koppen_met_elk_hun_items_in_de_volgorde_van_het_ontwerp(ingelogd):
+    # Mutant: een item in een andere kop of een andere volgorde valt hier.
     tekst = ingelogd.get("/rekoverzicht").text
-    blokken = re.findall(r'<p class="bl-nav__groep" id="(menu-\d)">(\w+)</p>\s*<ul[^>]*aria-labelledby="(menu-\d)"[^>]*>(.*?)</ul>', tekst, re.DOTALL)
-    assert {g: re.findall(r">([^<>]+)</(?:a|button)>", rest) for _, g, _, rest in blokken} == GROEPEN
-    assert [g for _, g, _, _ in blokken] == list(GROEPEN)
-    # Elke lijst verwijst naar de kop van zijn eigen groep.
-    assert all(kop == lijst for kop, _, lijst, _ in blokken) and len({k for k, *_ in blokken}) == 4
-    assert tekst.count('aria-labelledby="menu-') == 4
+    items, _ = menu_koppen(tekst)
+    assert items == KOPPEN and list(items) == list(KOPPEN)
+    # Zonder JavaScript: details met een gedeelde name, geen role="menu" en geen oude groepskoppen.
+    assert tekst.count('name="hoofdmenu"') == 5 and 'role="menu"' not in tekst and "bl-nav__groep" not in tekst
+    assert '<script src="/static/menu.js"></script>' in tekst
+
+
+@pytest.mark.parametrize("pad, kop, item", [
+    ("/rekoverzicht", "Loods", "Rekoverzicht"), ("/boten", "Boten", "Boten"), ("/boten/zonder-plaats", "Boten", "Boten zonder plaats"),
+    ("/leden", "Leden", "Leden"), ("/import-export", "Beheer", "Import/export"), ("/profiel", "Account", "Profiel")])
+def test_menu_markeert_de_huidige_kop_en_het_huidige_item(ingelogd, pad, kop, item):
+    # Mutant: de kop niet markeren, een andere kop openen of twee koppen markeren valt hier.
+    tekst = ingelogd.get(pad).text
+    assert menu_koppen(tekst)[1] == [kop]
+    assert re.findall(r'aria-current="page">([^<]+)</a>', tekst) == [item]
+
+
+def test_menu_zonder_huidige_pagina_heeft_geen_open_kop(ingelogd):
+    # /tokens/nieuw staat niet in het menu (en de foutpagina, BV-95, toetst test_foutpagina).
+    assert menu_koppen(ingelogd.get("/tokens/nieuw").text)[1] == []
 
 
 def test_menu_markeert_de_huidige_pagina_en_alleen_die(ingelogd):

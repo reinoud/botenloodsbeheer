@@ -24,44 +24,53 @@
         <input class="ds-input dj-search__field" type="search" id="kop-zoek" name="q" value="{{ zoekterm|default('') }}" maxlength="100" placeholder="Plaats, boot of eigenaar">
         <button type="submit" class="ds-btn ds-btn--primary"><span class="dj-icon dj-icon--zoek" aria-hidden="true"></span> <span class="dj-search__tekst">Zoeken</span></button>
       </form>
-      {# Een kijker heeft menu 2B (BV-92): één lijst zonder groepskoppen en zonder tellingen. #}
-      {# De vier groepen van BV-76 (BV-42); de volgorde binnen een groep is die van het ontwerp, de namen zijn ongewijzigd. #}
+      {# BV-100 (#402): vijf koppen, elk een details met een gedeelde name (disclosure, geen role="menu"); preview/menu.html van het ontwerp is leidend. #}
+      {# Een kijker ziet dezelfde koppen met alleen de items die hij mag openen (kijker_mag); een kop zonder items valt weg. Uitloggen staat in Account. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd (BV-96: bij Lid koppelen Gebruikers) met aria-current="true". #}
+      {# Op de foutpagina (BV-95) is niets de huidige pagina en is geen kop open. #}
       {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail", "web.beheerders_overzicht": "web.beheerder_lid"} %}
       {% set menu = [
-        ("Dagelijks", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.wachtlijst_overzicht", "Wachtlijst"),
-                       ("web.boten_zonder_eigenaar", "Boten zonder eigenaar"),
-                       ("web.boten_zonder_plaats", "Boten zonder plaats"), ("web.opzeggend", "Gaan opzeggen")]),
-        ("Lijsten", [("web.boten_overzicht", "Boten"), ("web.leden_overzicht", "Leden"), ("web.opgezegd", "Opgezegd"), ("web.logboek", "Log")]),
-        ("Beheer", [("web.indeling_overzicht", "Indeling"), ("web.kaartjes_kiezen", "Kaartjes"), ("web.boten_zonder_foto", "Boten zonder foto"),
-                    ("web.import_export_scherm", "Import/export"),
-                    ("web.beheerders_overzicht", "Gebruikers"), ("web.technisch_log", "Technisch log"), ("web.tokens_overzicht", "Tokens"),
-                    ("web.instellingen_scherm", "Instellingen"), ("web.statuspagina", "Status")]),
+        ("Loods", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.logboek", "Log")]),
+        ("Boten", [("web.boten_overzicht", "Boten"), ("web.wachtlijst_overzicht", "Wachtlijst"), ("web.boten_zonder_plaats", "Boten zonder plaats"),
+                   ("web.boten_zonder_eigenaar", "Boten zonder eigenaar"), ("web.boten_zonder_foto", "Boten zonder foto")]),
+        ("Leden", [("web.leden_overzicht", "Leden"), ("web.opzeggend", "Gaan opzeggen"), ("web.opgezegd", "Opgezegd")]),
+        ("Beheer", [("web.indeling_overzicht", "Indeling"), ("web.kaartjes_kiezen", "Kaartjes"), ("web.import_export_scherm", "Import/export"),
+                    ("web.beheerders_overzicht", "Gebruikers"), ("web.tokens_overzicht", "Tokens"), ("web.instellingen_scherm", "Instellingen"),
+                    ("web.statuspagina", "Status"), ("web.technisch_log", "Technisch log")]),
         ("Account", [("web.profiel", "Profiel")])] %}
-      {% if is_kijker() %}{% set menu = [("", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.boten_overzicht", "Boten"), ("web.profiel", "Profiel")])] %}{% endif %}
-      <details class="dj-menu">
+      {% set nu = namespace(kop="") %}
+      {% if not foutcode %}{% for kop, items in menu %}{% for endpoint, naam in items %}{% if (huidig or request.endpoint) == endpoint or request.endpoint == detail.get(endpoint) %}{% set nu.kop = kop %}{% endif %}{% endfor %}{% endfor %}{% endif %}
+      <details class="dj-menu dj-menu--koppen">
         <summary class="dj-menu__button">Menu</summary>
         <nav class="dj-menu__panel" aria-label="Hoofdmenu">
-          {% for groep, items in menu %}
-          <div class="bl-nav__blok">
-            {% if groep %}<p class="bl-nav__groep" id="menu-{{ loop.index0 }}">{{ groep }}</p>{% endif %}
-            <ul class="dj-nav__list"{% if groep %} aria-labelledby="menu-{{ loop.index0 }}"{% endif %}>
-              {% for endpoint, naam in items %}
-              <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if foutcode %}{% elif (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
-              {% endfor %}
-              {% if loop.last %}
-              <li>
-                <form class="bl-nav__form" method="post" action="{{ url_for('web.uitloggen') }}">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <button type="submit" class="dj-nav__link bl-nav__knop">Uitloggen</button>
-                </form>
-              </li>
-              {% endif %}
-            </ul>
-          </div>
-          {% endfor %}
+          <ul class="dj-menu__koppen">
+            {% for kop, items in menu %}
+            {% set zichtbaar = [] %}{% for item in items %}{% if not is_kijker() or kijker_mag(item[0]) %}{% set _ = zichtbaar.append(item) %}{% endif %}{% endfor %}
+            {% if zichtbaar %}
+            <li>
+              <details class="dj-menu__kop" name="hoofdmenu"{% if kop == nu.kop %} open{% endif %}>
+                <summary{% if kop == nu.kop %} aria-current="true"{% endif %}>{{ kop }}</summary>
+                <ul class="dj-menu__lijst">
+                  {% for endpoint, naam in zichtbaar %}
+                  <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if foutcode %}{% elif (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
+                  {% endfor %}
+                  {% if kop == "Account" %}
+                  <li>
+                    <form class="bl-nav__form" method="post" action="{{ url_for('web.uitloggen') }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="dj-nav__link bl-nav__knop">Uitloggen</button>
+                    </form>
+                  </li>
+                  {% endif %}
+                </ul>
+              </details>
+            </li>
+            {% endif %}
+            {% endfor %}
+          </ul>
         </nav>
       </details>
+      <script src="{{ url_for('static', filename='menu.js') }}"></script>
       {% endif %}{% endblock %}
     </div>
   </header>

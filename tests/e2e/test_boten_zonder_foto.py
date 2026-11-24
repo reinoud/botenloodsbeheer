@@ -1,9 +1,9 @@
-"""Boten zonder foto (#315), de route voor een mens: kies in het menu onder Beheer de lijst, zie een boot
+"""Boten zonder foto (#315), de route voor een mens: kies in het menu onder Boten de lijst, zie een boot
 zonder foto erop en een boot met foto niet, voeg via de pagina van de boot een foto toe en zie dat de boot
 van de lijst is. Op 1100 en 360 pixels breed. De boten hebben geen plaats (geen rek nodig); de volgorde
 staat in de unittests."""
 
-from conftest import STEMPEL, wachtwoord_instellen
+from conftest import STEMPEL, menu_kiezen, menu_openen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, png
 
@@ -18,12 +18,11 @@ def test_boot_zonder_foto_staat_op_de_lijst_en_na_een_foto_niet_meer(page):
     boot_vastleggen(page, kaal, "Kajak", eigenaar_index=2)
     boot_vastleggen(page, met, "Kajak", eigenaar_index=2, foto=png())
 
-    # Het menu-item staat in Beheer, direct na Kaartjes, zonder aantal.
+    # Het menu-item staat onder Boten, als laatste, zonder aantal.
     page.goto("/rekoverzicht")
-    beheer = page.locator("nav[aria-label='Hoofdmenu'] ul[aria-labelledby='menu-2'] a")
-    namen = beheer.all_inner_texts()
-    assert namen[namen.index("Kaartjes") + 1] == "Boten zonder foto"
-    page.get_by_role("link", name="Boten zonder foto", exact=True).evaluate("e => e.click()")
+    namen = menu_openen(page, "Boten").get_by_role("link").all_inner_texts()
+    assert namen[-1] == "Boten zonder foto"
+    menu_kiezen(page, "Boten", "Boten zonder foto")
     expect(page.get_by_role("heading", level=1)).to_have_text("Boten zonder foto")
     expect(page.locator("p.bl-aantal")).to_contain_text("zonder foto")
     expect(regel_van(page, kaal)).to_contain_text("geen plaats")

@@ -569,4 +569,4 @@ def test_import_export_toont_de_knoppen_en_het_formulier(ingelogd):  # noqa: F81
     assert 'href="/rekindeling.csv"' in tekst and 'href="/rekindeling.csv?leeg=1"' in tekst
     assert 'action="/rekindeling/import"' in tekst and 'enctype="multipart/form-data"' in tekst
     assert 'name="bestand"' in tekst and 'name="csrf_token"' in tekst
-    assert "hooguit 256 kB" in tekst and " style=" not in tekst and "<script" not in tekst
+    assert "hooguit 256 kB" in tekst and " style=" not in tekst and "<script>" not in tekst

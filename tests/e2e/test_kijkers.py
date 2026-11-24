@@ -7,7 +7,7 @@ dragen de mutanten."""
 
 import re
 
-from conftest import gebruikersnaam, wachtwoord_instellen
+from conftest import gebruikersnaam, menu_kiezen, menu_openen, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 
 # De foutpagina van de applicatie (#341); de 403 van Traefik is een kale "Forbidden".
@@ -33,7 +33,7 @@ def post_geweigerd(page, pad, **velden):
 def test_kijker_ziet_de_loods_zonder_knoppen_en_de_server_weigert_zijn_mutaties(page, browser, base_url):
     wachtwoord_instellen(page, "kijkers")
     nieuw = gebruikersnaam("kijkernieuw")
-    page.get_by_role("link", name="Gebruikers").click()
+    menu_kiezen(page, "Beheer", "Gebruikers")
     page.get_by_label("Gebruikersnaam").fill(nieuw)
     expect(page.locator("input[type=radio][name=rol]")).to_have_count(2)  # zonder voorkeur (BV-91)
     expect(page.locator("input[type=radio][name=rol]:checked")).to_have_count(0)
@@ -44,15 +44,20 @@ def test_kijker_ziet_de_loods_zonder_knoppen_en_de_server_weigert_zijn_mutaties(
     kijker = browser.new_context(base_url=base_url).new_page()
     wachtwoord_instellen(kijker, None, url=uitnodiging)
 
-    # Menu 2B: één lijst zonder groepskoppen.
+    # BV-100: dezelfde koppen als de beheerder, met alleen zijn items; Leden en Beheer ontbreken. Eerst smal, dan breed.
     menu = kijker.get_by_role("navigation", name="Hoofdmenu")
-    kijker.set_viewport_size({"width": 360, "height": 740})
-    kijker.get_by_text("Menu", exact=True).click()
-    expect(menu.get_by_role("link")).to_have_text(["Rekoverzicht", "Vrije plaatsen", "Boten", "Profiel"])
-    expect(menu.get_by_role("button")).to_have_text(["Uitloggen"])
-    expect(menu.get_by_role("list")).to_have_count(1)
-    expect(menu.locator(".bl-nav__groep")).to_have_count(0)
-    kijker.set_viewport_size({"width": 1280, "height": 720})
+    for breedte in (360, 1280):
+        kijker.set_viewport_size({"width": breedte, "height": 740})
+        kijker.goto("/rekoverzicht")
+        expect(menu.locator("details.dj-menu__kop > summary")).to_have_text(["Loods", "Boten", "Account"])
+        expect(menu.locator("summary[aria-current='true']")).to_have_text("Loods")
+        expect(menu_openen(kijker, "Loods").get_by_role("link")).to_have_text(["Rekoverzicht", "Vrije plaatsen"])
+        expect(menu_openen(kijker, "Boten").get_by_role("link")).to_have_text(["Boten", "Boten zonder plaats"])
+        expect(menu_openen(kijker, "Account").get_by_role("link")).to_have_text(["Profiel"])
+        expect(menu.get_by_role("button", name="Uitloggen")).to_be_visible()
+        # De open kop sluit bij Escape (menu.js) en de focus staat dan op de kop.
+        kijker.keyboard.press("Escape")
+        expect(menu.locator("details.dj-menu__kop[open]")).to_have_count(0)
 
     # Boten: geen Nieuwe boot; een boot: geen knoppen en de eigenaar zonder link.
     kijker.goto("/boten")
@@ -79,7 +84,7 @@ def test_kijker_ziet_de_loods_zonder_knoppen_en_de_server_weigert_zijn_mutaties(
     expect(kijker.get_by_role("heading", level=1)).to_be_visible()
 
     # Eigen profiel en uitloggen mogen wel (besluit 8): geen 403 op de POST-route van het profiel.
-    kijker.get_by_role("link", name="Profiel").click()
+    menu_kiezen(kijker, "Account", "Profiel")
     expect(kijker.get_by_role("heading", level=1)).to_have_text(f"Profiel van {nieuw}")
     r = kijker.request.post("/profiel/intrekken", form={"csrf_token": csrf(kijker), "methode": "wachtwoord"},
                             max_redirects=0)
@@ -98,8 +103,7 @@ def test_kijker_ziet_de_loods_zonder_knoppen_en_de_server_weigert_zijn_mutaties(
     expect(page.locator("section.log")).to_contain_text("beheerder.rol_gewijzigd")
 
     kijker.goto("/rekoverzicht")
-    kijker.get_by_role("button", name="Uitloggen").click()
-    expect(kijker.get_by_text("Je bent uitgelogd.")).to_be_visible()
+    uitloggen(kijker)
     kijker.context.close()
 
 

@@ -88,6 +88,12 @@ def is_kijker():
     return g.get("beheerder") is not None and g.beheerder.rol != "beheerder"
 
 
+@bp.app_template_global("kijker_mag")
+def kijker_mag(endpoint):
+    """Het menu toont een kijker alleen de items die hij mag openen (BV-100)."""
+    return endpoint in KIJKER_TOEGESTAAN
+
+
 @bp.after_request
 def niet_bewaren(response):
     # Beheerpagina's en het TOTP-geheim bij het instellen horen niet in een browsercache.

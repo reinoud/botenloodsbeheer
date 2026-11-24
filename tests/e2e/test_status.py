@@ -7,7 +7,7 @@ import os
 import re
 from collections import Counter
 
-from conftest import STEMPEL, wachtwoord_instellen
+from conftest import STEMPEL, menu_kiezen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_api import API, roep, token
 from test_import import FIXTURE
@@ -18,7 +18,7 @@ def test_statuspagina_html_en_json_met_tokenwaarschuwing(page):
     """BLB-037 criteria 1, 4 en 5. Of de opschoning al draaide, hangt af van de klok
     (OPSCHOON_TIJDSTIP); de unittests dekken tijdstip en aantallen (BLB-026 criterium 5)."""
     wachtwoord_instellen(page, "status")
-    page.get_by_role("navigation").get_by_role("link", name="Status").click()
+    menu_kiezen(page, "Beheer", "Status")
     expect(page.get_by_role("heading", name="Technische status")).to_be_visible()
     waarschuwing = page.get_by_role("alert")
     expect(waarschuwing).to_contain_text(f"e2e-kort-{STEMPEL} (robot), vervalt op")
@@ -52,7 +52,7 @@ def test_ongeldige_records_van_de_laatste_import_op_de_statuspagina(page):
         assert status == 200 and uitkomst["ongeldig"] == 4
         assert all(type(v) is int for v in uitkomst.values())  # het antwoord bevat geen lidnummers
         wachtwoord_instellen(page, "ongeldigeleden")
-        page.get_by_role("navigation").get_by_role("link", name="Status").click()
+        menu_kiezen(page, "Beheer", "Status")
         lijst = page.locator("#ongeldige-leden li")
         assert lijst.all_inner_texts() == [f"{dubbel}: lidnummer dubbel", "E2E381A: naam ontbreekt",
                                            "E2E381B: datum niet als JJJJ-MM-DD", "1 zonder lidnummer"]
