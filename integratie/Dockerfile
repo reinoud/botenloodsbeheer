@@ -1,7 +1,7 @@
 # Integratiecontainer (ADR-012): eigen image zonder applicatiecode. De API-aanroepen gebruiken alleen
 # de standaardbibliotheek; zeep (met zijn afhankelijkheden, vastgepind met hashes) is er alleen voor
 # de bron e-boekhouden.
-FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d AS bouw
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928 AS bouw
 COPY requirements.txt .
 RUN pip install --no-cache-dir --require-hashes --only-binary :all: --target /pakketten -r requirements.txt
 
@@ -16,7 +16,7 @@ RUN useradd --system --uid 10001 koppeling
 USER 10001
 CMD ["python", "-m", "pytest", "-p", "no:cacheprovider", "-q", "/tests"]
 
-FROM python:3.14-slim@sha256:af8a5aa14780025dbfbcfbc81bd8a91ebd87711dd5b0f48ed71090949dd7cb1d
+FROM python:3.15-slim@sha256:65a65fc7b30b06cb6df4930fd4650697cb23f4c2698ab81fc87e4b031bc36928
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/pakketten
