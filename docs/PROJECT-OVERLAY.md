@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.32
+**Versie overlay:** v0.6.33
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-24
+**Bijgewerkt:** 2026-11-25
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -267,6 +267,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### Review
 
+- Verwijs in een brief naar een overlayregel met een zoekterm (zoals `grep -n get_signing_serializer docs/PROJECT-OVERLAY.md`), niet met een regelnummer.
+- Een reviewer die een eigen test naast de suite draait, mount zijn scratchpad read-only op `/scratch` en draait `pytest -p tests.unit.conftest --rootdir /app -p no:cacheprovider /scratch/<bestand>` met `-e PYTHONPATH=/app`; nooit een mount in `tests/`, want die maakt een bestand in de werkmap.
+- Bij een wijziging van een instelling van de Flask-sessie zoekt de reviewer naar sessiewaarden die ter plekke worden gewijzigd (`grep -rnE 'session(\.get\(|\[).*\.(append|update|pop)' app/`) en meldt of een wijziging stil verloren kan gaan (#419).
 - Krijgt een gedeelde foutafhandeling een nieuwe statuscode, noem dan in de opdracht elke bron van die code in de dienst (zoals CSRF en de nulbyteweigering) en of er per bron een unittest is (#364).
 - Raakt de diff alleen sjablonen en CSS, dan draait de reviewer de geraakte testbestanden en de mutant; de regie draait de volledige unitsuite één keer vóór de merge (#366).
 - Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
@@ -610,6 +613,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.33 | 2026-11-25 | Drie regels (Review): overlayregel met zoekterm, eigen test via `/scratch`, sessiewaarden ter plekke gewijzigd; uit de terugblikken van sentinel en aegis bij #419 | Lessen |
 | v0.6.32 | 2026-11-24 | Twee regels (Security en proxy): bron van de cooldowndatum, alle plekken van een image; uit de terugblik van sentinel bij #410 tot #415 | Lessen |
 | v0.6.31 | 2026-11-24 | Twee regels (E2E): bewijs voor de dev-integratie zonder 401, geen `rm -rf` in de scratchpad; uit de terugblik van pipeline bij #421 | Lessen |
 | v0.6.30 | 2026-11-24 | Vier regels (Algemeen): volledige unitsuite niet tegelijk, ongedraaide E2E telt als ongetoetst, menu openen in E2E, statisch antwoord zonder sessiecookie; uit de retrospective van milestones 17 tot 19 | Retrospective |
