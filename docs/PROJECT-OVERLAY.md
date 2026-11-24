@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.28
+**Versie overlay:** v0.6.29
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -100,6 +100,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Staat een ontwerpvraag open in de README van Design System, zeg dan vóór de bouw welk antwoord de bouwer gebruikt; de bouwer volgt het ontwerp en meldt de vraag (#322).
 - Noem bij een vorige testtelling ook de lijst testnamen of het pad van de uitvoer, zodat een reviewer een verschil per bestand kan verklaren (#322).
 - Werkt een agent in een worktree, geef dan het commando voor de unittests mee: `docker compose -p botenloods --env-file /Users/reinoud/git/botenloods/.env -f docker-compose.yml -f compose.dev.yml run --rm --no-deps ...` vanuit de worktree. Een worktree heeft geen `.env` en een eigen projectnaam. Wie een eigen testdatabase maakt, ruimt die na afloop op (#372).
+- Draaien twee agents tegelijk unittests, dan krijgt elk een eigen testdatabase: een kopie van `tests/unit/conftest.py` in de scratchpad met `TEST_DB = "bl_test_<nr><letter>"`, gezet met python3 (in deze shell is `sed` GNU sed), gecontroleerd met `grep -n '^TEST_DB' <kopie>` en gemount met `-v <kopie>:/app/tests/unit/conftest.py:ro`. De agent verwijdert die database na de laatste run (`DROP DATABASE ... WITH (FORCE)`) en meldt dat. Eén van hen draait de volledige suite (#399, #400).
+- Noemt een contract een domeinfunctie, zoek dan eerst of ze bestaat (`grep -n 'def <naam>' app/domein/`) en zeg of hergebruik mag (#399).
+- E2E-bootnamen krijgen een voorvoegsel dat uniek is per testbestand (#399).
+- Krijgt de kijker een nieuwe route, zeg dan of er een menu-item bij komt (het kijkermenu in `base.html` is een vaste lijst) en noem de test met de omvang van `KIJKER_TOEGESTAAN` in `tests/unit/test_kijkers.py`. Wijzigt het menu, zoek dan met `grep -rn 'Hoofdmenu\|menu-[0-9]' tests/e2e/ documentatie/gebruikers/schermafbeeldingen.py` en draai die bestanden (#399).
+- Geef bij een merge nooit `--delete-branch` mee: het verwijderen van een remote branch vraagt per keer akkoord van de stakeholder.
 - Zet een besluit van de stakeholder in het issue vóór de brief, en controleer met `gh issue view <nr> --json comments` dat het commentaar er staat. Staat het er niet, zet dan de tekst van het besluit in de brief (#372).
 - Zeg bij "hooguit N keer" of het om N pogingen of N herhalingen gaat (#372).
 - Keert een besluit een eerder besluit om, noem dan welke documenten meegaan: ADR, criteria in de backlog, handleiding, en het besluit bij Design System (#380).
@@ -597,6 +602,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.29 | 2026-11-24 | Vijf regels (Algemeen): eigen testdatabase per agent, bestaande domeinfunctie zoeken, unieke E2E-bootnamen, kijkerroute en menu, geen `--delete-branch`; uit de terugblikken bij #399 en #400 | Lessen |
 | v0.6.28 | 2026-11-24 | Eén regel (E2E): native image uit de cache alleen bij een ongewijzigde map; uit de terugblik van pipeline bij #398 | Lessen |
 | v0.6.27 | 2026-11-24 | Eén regel (Bouw): `main >`-selectors zoeken en draaien na een omhullende `div`; uit de terugblik van sentinel bij #395 | Lessen |
 | v0.6.26 | 2026-11-23 | E2E: tijdstip na het opruimen in UTC, wachtlus zonder `date -j`; uit de terugblik bij #387 | Lessen |
