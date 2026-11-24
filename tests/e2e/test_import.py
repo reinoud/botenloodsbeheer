@@ -85,21 +85,22 @@ def test_zonder_recht_403():
 
 
 def test_beheerder_vraagt_import_aan_en_ziet_de_uitkomst(page):
-    """BLB-006 criterium 5: de integratiecontainer begint binnen een minuut."""
+    """BLB-006 criterium 5: de integratiecontainer begint binnen een minuut. #401: vanaf Import/export."""
     wachtwoord_instellen(page, "import")
     page.goto("/leden")
-    page.get_by_text("Import", exact=True).click()
+    expect(page.get_by_role("heading", level=1)).to_have_text("Leden")  # ingelogd, niet het inlogscherm
+    expect(page.get_by_role("button", name="Leden nu ophalen")).to_have_count(0)
+    page.goto("/import-export")
     page.get_by_role("button", name="Leden nu ophalen").click()
+    expect(page).to_have_url(re.compile(r"/import-export$"))
     expect(page.get_by_text("De import is aangevraagd.")).to_be_visible()
-    page.get_by_text("Import", exact=True).click()  # na het versturen staat het blok weer dicht
-    nieuwste = page.locator("section.kaart table tbody tr").first
+    nieuwste = page.locator("section[aria-labelledby=leden-import] table tbody tr").first
     expect(nieuwste.locator("td[data-label='Status']")).to_have_text("aangevraagd")
     assert roep("GET", "/leden/importverzoek") == (200, {"aangevraagd": True})
     einde = datetime.now() + timedelta(seconds=75)
     while datetime.now() < einde:
         page.wait_for_timeout(5000)
         page.reload()
-        page.get_by_text("Import", exact=True).click()
         if nieuwste.locator("td[data-label='Status']").inner_text() != "aangevraagd":
             break
     expect(nieuwste.locator("td[data-label='Status']")).to_have_text("geslaagd")
