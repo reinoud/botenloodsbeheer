@@ -12,7 +12,7 @@ from tests.unit.test_indeling_en_toewijzing import boot, soort
 from tests.unit.test_web import inloggen
 
 GROEPEN = {
-    "Dagelijks": ["Rekoverzicht", "Vrije plaatsen", "Wachtlijst", "Boten zonder eigenaar", "Gaan opzeggen"],
+    "Dagelijks": ["Rekoverzicht", "Vrije plaatsen", "Wachtlijst", "Boten zonder eigenaar", "Boten zonder plaats", "Gaan opzeggen"],
     "Lijsten": ["Boten", "Leden", "Opgezegd", "Log"],
     "Beheer": ["Indeling", "Kaartjes", "Boten zonder foto", "Import/export", "Gebruikers", "Technisch log", "Tokens", "Instellingen", "Status"],
     "Account": ["Profiel", "Uitloggen"],

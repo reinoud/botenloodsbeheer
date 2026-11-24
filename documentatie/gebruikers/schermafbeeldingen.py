@@ -244,6 +244,8 @@ def schermen(browser):
     expect(page.get_by_text("De boot is vastgelegd.")).to_be_visible()
     page.goto("/boten/zonder-eigenaar")
     o.maak("boten-zonder-eigenaar", hoogte=800)
+    page.goto("/boten/zonder-plaats")  # #399
+    o.maak("boten-zonder-plaats", hoogte=800)
 
     # Overzichten.
     page.goto("/vrij")

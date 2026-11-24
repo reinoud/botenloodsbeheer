@@ -139,6 +139,12 @@ Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met 
 
 ![De pagina Boten zonder eigenaar met een lijst van boten, met bootsoort en plaats.](afbeeldingen/boten-zonder-eigenaar.png)
 
+## Boten zonder plaats
+
+Op `/boten/zonder-plaats` staan alle boten zonder plaats, ook die op de wachtlijst, een clubboot en de boot van een oud-lid. Je vindt de lijst in het menu onder Dagelijks, na **Boten zonder eigenaar**; het menu toont hier geen aantal. Boven de lijst staat hoeveel boten het zijn. Bij elke boot staan de bootsoort en de eigenaar, met de tag **oud-lid** bij een oud-lid. Klik op de naam van een boot om op de pagina van de boot een plaats toe te wijzen; daarna staat de boot niet meer op de lijst. Staat een boot op de wachtlijst, dan staat er "op de wachtlijst sinds" met de datum. Bij een boot die er nog niet op staat, zet **Zet [boot] op de wachtlijst** hem op de lijst van zijn bootsoort, met de datum van vandaag, en kom je terug op dit scherm met de melding "De boot staat op de wachtlijst." Een eerdere aanmelddatum kies je op de pagina van de boot. Bij een clubboot of de boot van een oud-lid staat geen knop maar "kan niet op de wachtlijst". Zijn er geen boten zonder plaats, dan staat er "Alle boten hebben een plaats." Een kijker ziet dezelfde lijst met de eigenaar als platte tekst, zonder uitleg boven de lijst, zonder knop, zonder wachtliststatus, zonder de tag oud-lid en zonder link naar een lid; het menu van een kijker heeft geen item voor dit scherm.
+
+![De pagina Boten zonder plaats met een lijst van boten, met bootsoort, eigenaar en de knop Zet op de wachtlijst.](afbeeldingen/boten-zonder-plaats.png)
+
 ## Boten zonder foto
 
 Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met **Boten zonder foto** in het menu, onder Beheer direct na **Kaartjes**; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
@@ -388,6 +394,7 @@ Het menu van een kijker is één lijst, zonder groepskoppen: Rekoverzicht, Vrije
 | Boten | De lijst en het filter, zonder **Nieuwe boot**; de eigenaar is platte tekst, zonder link. Het filter zoekt op de naam van de boot of van de eigenaar, niet op een lidnummer, ook al heet het veld "Zoek op boot of lid". |
 | Een boot | De feiten (bootsoort, eigenaar, plaats, foto) en het log. Geen taken, geen **Boot verplaatsen**, **Boot wijzigen** of **Foto vervangen**, en bij een boot zonder plaats geen regel Wachtlijst. |
 | Een plaats | De panelen Boot, Eigenaar (alleen de naam) en Openbare pagina. Een vrije plaats zegt alleen dat ze vrij is. |
+| Boten zonder plaats | Via het adres `/boten/zonder-plaats`: de lijst met de eigenaar als platte tekst, zonder knop en zonder wachtliststatus. |
 | Zoeken | Boten en vrije plaatsen, geen leden, en een eigenaar zonder lidnummer of tag oud-lid. Een zoekterm met een lidnummer geeft geen treffer. |
 | Profiel | De eigen inlogmethodes, zoals bij een beheerder. |
 
@@ -448,6 +455,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/wachtlijst` | Wachtlijst per bootsoort |
 | `/zoeken` | Zoeken vanuit de kop, de lijst met treffers |
 | `/boten/zonder-eigenaar` | Boten met een onbekende eigenaar, met een link naar de boot |
+| `/boten/zonder-plaats` | Boten zonder plaats, met de knop om een boot op de wachtlijst te zetten |
 | `/boten-zonder-foto` | Boten zonder foto |
 | `/opgezegd` | Plaatsen van opgezegde leden |
 | `/opzeggend` | Boten van leden die gaan opzeggen |

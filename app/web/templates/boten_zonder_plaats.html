@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "_melding.html" import meldingblok %}
+{% block titel %}Boten zonder plaats · {{ vereniging }}{% endblock %}
+{% block inhoud %}
+<h1>Boten zonder plaats</h1>
+{% if boten %}
+<p class="bl-aantal">{{ boten|length }} {{ 'boot' if boten|length == 1 else 'boten' }} zonder plaats</p>
+{% if not is_kijker() %}<p class="bl-hint">Klik op de boot om een plaats toe te wijzen. Met de knop zet je een boot op de wachtlijst, met de datum van vandaag. Een eerdere datum kies je op de pagina van de boot.</p>{% endif %}
+<ul class="bl-lijst">
+  {% for b in boten %}
+  <li class="bl-item">
+    <div class="bl-item__main"><a class="bl-item__titel" data-label="Boot" href="{{ url_for('web.boot_detail', boot_id=b.id) }}">{{ b.naam }}</a> <span class="bl-item__sub"><span data-label="Bootsoort">{{ b.bootsoort.naam }}</span> · {% if b.lid and not is_kijker() %}<a data-label="Lid" href="{{ url_for('web.lid_detail', lid_id=b.lid.id) }}">{{ b.lid.naam }}</a>{% else %}<span data-label="Eigenaar">{{ b.lid.naam if b.lid else 'clubboot' if b.clubboot else 'eigenaar onbekend' }}</span>{% endif %}
+      {%- if not is_kijker() %}{% set reden = weigering(b) %}{% if b.lid and is_oud_lid(b.lid) %} <span class="ds-tag">oud-lid</span>{% endif %}
+      {%- if b.wachtlijst %} · <span data-label="Wachtlijst">op de wachtlijst sinds {{ b.wachtlijst.aangemeld_op.strftime('%d-%m-%Y') }}</span>
+      {%- elif reden %} · <span data-label="Wachtlijst">kan niet op de wachtlijst</span>{% endif %}{% endif %}</span></div>
+    {% if not is_kijker() and not b.wachtlijst and not reden %}
+    <div class="bl-item__actie">
+      <form method="post" action="{{ url_for('web.boot_op_wachtlijst', boot_id=b.id) }}">
+        {% include "_csrf.html" %}
+        <input type="hidden" name="terug" value="zonder-plaats">
+        <button type="submit" class="ds-btn">Zet {{ b.naam }} op de wachtlijst</button>
+      </form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+{% call meldingblok() %}Alle boten hebben een plaats.{% endcall %}
+{% endif %}
+{% endblock %}

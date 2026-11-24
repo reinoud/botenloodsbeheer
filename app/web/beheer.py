@@ -458,6 +458,13 @@ def boten_zonder_eigenaar():
     return render_template("boten_zonder_eigenaar.html", boten=boten.zonder_eigenaar())
 
 
+@bp.get("/boten/zonder-plaats")
+@inloggen_vereist
+def boten_zonder_plaats():
+    return render_template("boten_zonder_plaats.html", boten=boten.zonder_plaats(),
+                           weigering=wachtlijst.weigering, is_oud_lid=leden.is_oud_lid)
+
+
 def _boot_scherm(boot_id, code=200, eigenaarveld=None):
     """Detail Boot. Na Zoeken of een foutregel bij het veld Eigenaar (eigenaarveld) staat het blok
     Boot wijzigen open; anders toont het veld de huidige eigenaar."""
@@ -566,6 +573,8 @@ def wachtlijst_overzicht():
 def boot_op_wachtlijst(boot_id):
     uitvoeren(wachtlijst.erop_zetten, boot_id, request.form.get("aangemeld_op"),
               gelukt="De boot staat op de wachtlijst.")
+    if request.form.get("terug") == "zonder-plaats":
+        return redirect(url_for("web.boten_zonder_plaats"))
     return redirect(url_for("web.boot_detail", boot_id=boot_id))
 
 
