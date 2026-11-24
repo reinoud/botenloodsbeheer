@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.30
+**Versie overlay:** v0.6.31
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -413,6 +413,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
 - Komt een native image voor de release-E2E volledig uit de cache, noem dan de aanmaakdatum en bevestig met `git log <vorige tag>..<releasecommit> -- <map>` dat de map niet is gewijzigd; anders bouw je met `--no-cache` (#398).
+- Het bewijs dat de dev-integratie na de release-E2E zonder 401 werkt, is de leesquery op `token.laatst_gebruikt_op` na het opruimen plus nul regels met `mislukt` of `401` in het integratielog sinds de laatste start. Een nieuwe regel `Import geslaagd` verschijnt alleen bij een importverzoek of de dagelijkse import (#421).
+- Begin een commando niet met `rm -rf` van een map in de scratchpad, ook niet als die nog niet bestaat: de hook Blast Radius houdt het hele commando tegen. Maak een nieuwe map met een eigen naam (#421).
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
 
 #### Migratie en database
@@ -606,6 +608,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.31 | 2026-11-24 | Twee regels (E2E): bewijs voor de dev-integratie zonder 401, geen `rm -rf` in de scratchpad; uit de terugblik van pipeline bij #421 | Lessen |
 | v0.6.30 | 2026-11-24 | Vier regels (Algemeen): volledige unitsuite niet tegelijk, ongedraaide E2E telt als ongetoetst, menu openen in E2E, statisch antwoord zonder sessiecookie; uit de retrospective van milestones 17 tot 19 | Retrospective |
 | v0.6.29 | 2026-11-24 | Vijf regels (Algemeen): eigen testdatabase per agent, bestaande domeinfunctie zoeken, unieke E2E-bootnamen, kijkerroute en menu, geen `--delete-branch`; uit de terugblikken bij #399 en #400 | Lessen |
 | v0.6.28 | 2026-11-24 | Eén regel (E2E): native image uit de cache alleen bij een ongewijzigde map; uit de terugblik van pipeline bij #398 | Lessen |
