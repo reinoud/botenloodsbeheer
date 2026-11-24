@@ -88,7 +88,7 @@ def test_filters_zonder_knop_op_alle_lijsten(page, browser, base_url):
     expect(veld).to_be_focused()
     assert not meldingen, meldingen
 
-    # Opgezegd en Gaan opzeggen (#403): zoeken zonder knop; een term zonder treffer geeft de melding, wissen de lijst terug.
+    # Opgezegd en Gaan opzeggen (#403): zoeken zonder knop; een term zonder treffer geeft de melding.
     for pad, knop, label, leeg in (("/opgezegd", "Toon plaatsen", "Zoek op boot of oud-lid", "Geen plaatsen gevonden."),
                                    ("/opzeggend", "Toon boten", "Zoek op boot of lid", "Geen boten gevonden.")):
         page.goto(pad)

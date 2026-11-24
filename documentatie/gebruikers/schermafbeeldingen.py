@@ -196,7 +196,7 @@ def schermen(browser):
 
     # Plaatsen: een bezette en een vrije.
     page.goto("/opzeggend")
-    page.locator("main > ul.bl-lijst > li").first.get_by_role("link").last.click()
+    page.locator("main ul.bl-lijst > li").first.get_by_role("link").last.click()
     o.maak("plaats-bezet", hoogte=1000)
     page.goto("/vrij")
     page.locator("tbody tr").first.get_by_role("link").click()
