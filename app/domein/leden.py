@@ -107,11 +107,17 @@ def bevat(kolom, zoek):
 
 
 def alle_leden(zoek=""):
-    """Alle leden, of die waarvan naam of lidnummer de zoektekst bevat (BLB-019)."""
-    q = select(Lid).order_by(Lid.naam, Lid.lidnummer)
+    """Alle leden, of die waarvan naam of lidnummer de zoektekst bevat (BLB-019). Elk lid krijgt
+    `aantal_boten` mee (#400): al zijn boten, met of zonder plaats, op de wachtlijst of niet; een
+    clubboot en een boot zonder eigenaar hebben geen lid. Eén query, geen telling per lid."""
+    aantal = select(func.count(Boot.id)).where(Boot.lid_id == Lid.id).scalar_subquery()
+    q = select(Lid, aantal).order_by(Lid.naam, Lid.lidnummer)
     if zoek := (zoek or "").strip():
         q = q.where(or_(bevat(Lid.naam, zoek), bevat(Lid.lidnummer, zoek)))
-    return db.session.scalars(q).all()
+    rijen = db.session.execute(q).all()
+    for lid, n in rijen:
+        lid.aantal_boten = n  # gewoon attribuut, geen kolom: wordt niet bewaard
+    return [lid for lid, _ in rijen]
 
 
 def boot_of_lid_bevat(zoek):
