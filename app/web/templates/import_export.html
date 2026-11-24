@@ -9,6 +9,32 @@
 <ul>{% for f in import_fouten %}<li>{{ f }}</li>{% endfor %}</ul>
 {% endcall %}
 {% endif %}
+<section class="dj-panel" aria-labelledby="leden-import">
+  <h2 class="dj-panel__title" id="leden-import">Leden uit e-boekhouden</h2>
+  <form method="post" action="{{ url_for('web.leden_ophalen') }}">
+    {% include "_csrf.html" %}
+    <button type="submit" class="ds-btn ds-btn--primary">Leden nu ophalen</button>
+  </form>
+  {% if runs %}
+  <div class="ds-table-wrap">
+  <table class="ds-table dj-table--stack" role="table">
+    <thead role="rowgroup"><tr role="row"><th role="columnheader">Aangevraagd of gestart</th><th role="columnheader">Status</th><th role="columnheader">Resultaat</th></tr></thead>
+    <tbody role="rowgroup">
+    {% for r in runs %}
+      <tr role="row">
+        <td role="cell" data-label="Tijdstip">{{ (r.gestart_op or r.aangevraagd_op)|tijd }}</td>
+        <td role="cell" data-label="Status">{{ r.status }}</td>
+        <td role="cell" data-label="Resultaat">{{ r.foutmelding or '' }}{% for k, v in r.aantallen.items() if k != 'ongeldige_leden' %}{{ k }}: {{ v }}{% if not loop.last %}; {% endif %}{% endfor %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <p>Er is nog geen import geweest.</p>
+  {% endif %}
+</section>
+
 <section class="dj-panel" aria-labelledby="excel-indeling">
   <h2 class="dj-panel__title" id="excel-indeling">Indeling als Excel</h2>
   <p><a href="{{ url_for('web.indeling_export') }}" download>Indeling exporteren naar Excel</a></p>

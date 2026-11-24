@@ -86,7 +86,6 @@ def test_filters_zonder_knop_op_vrij_wachtlijst_boten_en_leden(page, browser, ba
     expect(page).to_have_url(re.compile(rf"/leden\?zoek={nr_a}$"))
     expect(page.get_by_role("status").filter(has_text=re.compile(r"^\d+ "))).to_have_count(1)
     expect(veld).to_be_focused()
-    expect(page.get_by_text("Import", exact=True)).to_be_visible()
     assert not meldingen, meldingen
 
     # Zonder JavaScript staat de knop er en filtert hij met een gewone GET.

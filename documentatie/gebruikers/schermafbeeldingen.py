@@ -183,7 +183,9 @@ def schermen(browser):
     page.goto("/indeling")
     o.maak("indeling", hoogte=1100)
     page.goto("/import-export")
-    o.maak("import-export", hoogte=1500)
+    page.get_by_role("button", name="Leden nu ophalen").click()  # #401: de import van leden staat hier
+    expect(page.get_by_text("De import is aangevraagd.")).to_be_visible()
+    o.maak("import-export", hoogte=1900)
     page.goto("/indeling")
     sectie = page.locator("section.dj-panel", has=page.get_by_role("heading", name="J", exact=True))
     sectie.get_by_text("Rek wijzigen of verwijderen").click()
@@ -272,11 +274,8 @@ def schermen(browser):
     page.get_by_role("button", name="Kaartjes maken").click()
     o.maak("kaartjes", hoogte=900)
 
-    # Leden en import.
+    # Leden: alleen de lijst (de import staat bij Import/export, #401).
     page.goto("/leden")
-    page.get_by_text("Import", exact=True).click()
-    page.get_by_role("button", name="Leden nu ophalen").click()
-    expect(page.get_by_text("De import is aangevraagd.")).to_be_visible()
     o.maak("leden", hoogte=800)
 
     page.goto("/log")

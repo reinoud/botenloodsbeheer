@@ -79,7 +79,8 @@ def _import_export_scherm(**extra):
     # Ook de 422 uit een importroute markeert Import/export in het menu (BV-76).
     return render_template("import_export.html", huidig="web.import_export_scherm",
                            csv_max=csvbestand.MAX_BYTES // 1024,
-                           lopende_import=bezetting_csv.lopend(), **extra)
+                           lopende_import=bezetting_csv.lopend(),
+                           runs=leden.laatste_runs(), **extra)
 
 
 @bp.get("/import-export")
@@ -595,7 +596,7 @@ def boot_van_wachtlijst(boot_id):
 def leden_overzicht():
     zoek = request.args.get("zoek", "")
     return render_template("leden.html", leden=leden.alle_leden(zoek), zoek=zoek,
-                           runs=leden.laatste_runs(), is_oud_lid=leden.is_oud_lid)
+                           is_oud_lid=leden.is_oud_lid)
 
 
 @bp.get("/leden/<int:lid_id>")
@@ -613,7 +614,7 @@ def leden_ophalen():
     uitvoeren(leden.import_aanvragen,
               gelukt="De import is aangevraagd. De integratiecontainer begint binnen een minuut; "
                      "ververs daarna de pagina.")
-    return redirect(url_for("web.leden_overzicht"))
+    return redirect(url_for("web.import_export_scherm"))
 
 
 # Gebruikers (BLB-023, BLB-050): in de interface heten de beheerders gebruikers, met een rol (ADR-015)

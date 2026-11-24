@@ -217,7 +217,7 @@ Een lid verhuist van **Gaan opzeggen** naar **Opgezegd** zodra de opzegdatum is 
 
 Op `/import-export` staat onder **Indeling als Excel** de link **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
 
-![De pagina Import/export met drie panelen: Indeling als Excel, Indeling als CSV en Bezetting als CSV.](afbeeldingen/import-export.png)
+![De pagina Import/export met vier panelen: Leden uit e-boekhouden, Indeling als Excel, Indeling als CSV en Bezetting als CSV.](afbeeldingen/import-export.png)
 
 ## Indeling als CSV exporteren en importeren
 
@@ -276,15 +276,15 @@ Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleu
 
 De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applicatie. De integratiecontainer haalt de lijst dagelijks op en stuurt haar naar de applicatie.
 
-Op `/leden` staat per lid de naam, het aantal boten tussen haakjes (zoals "(4 boten)", "(1 boot)" of "(0 boten)"; alle boten van het lid tellen, ook zonder plaats of op de wachtlijst), het lidnummer, de datum van lid sinds met bij een oud-lid de tag **oud-lid** achter de naam, en het aantal leden erboven. Zoek op naam of lidnummer; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal leden. Zonder JavaScript staat er een knop **Toon leden**. Het blok **Import** met de knop **Leden nu ophalen** en de laatste importruns is dicht; open het met een klik. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt een oud-lid dat nog niet in de applicatie stond op als de opzegdatum hooguit 5 jaar geleden is (precies 5 jaar valt er nog binnen), zodat je het kunt kiezen als eigenaar van een boot. Een lid dat langer geleden opzegde, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt ook binnen.
+Op `/leden` staat per lid de naam, het aantal boten tussen haakjes (zoals "(4 boten)", "(1 boot)" of "(0 boten)"; alle boten van het lid tellen, ook zonder plaats of op de wachtlijst), het lidnummer, de datum van lid sinds met bij een oud-lid de tag **oud-lid** achter de naam, en het aantal leden erboven. Zoek op naam of lidnummer; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal leden. Zonder JavaScript staat er een knop **Toon leden**. De import van leden staat niet op deze pagina, maar bij Import/export. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt een oud-lid dat nog niet in de applicatie stond op als de opzegdatum hooguit 5 jaar geleden is (precies 5 jaar valt er nog binnen), zodat je het kunt kiezen als eigenaar van een boot. Een lid dat langer geleden opzegde, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt ook binnen.
 
 Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. De aantallen per bootsoort staan niet op deze pagina. De integratiecontainer haalt ze op via de API: alleen boten met een plaats tellen, een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet, en een oud-lid staat er niet in, ook niet als zijn boot een plaats heeft. De ledenadministratie kan ze later overnemen. Terugschrijven naar de ledenbron staat standaard uit; de beheerder kan het aanzetten.
 
 **Bewaartermijn.** Elke nacht om 04:00 verwijdert de applicatie gegevens die ouder zijn dan 5 jaar. Een oud-lid verdwijnt 5 jaar na de opzegdatum, met zijn boten en foto's. Heeft een boot van het oud-lid nog een plaats, dan blijft alles staan tot je de plaats vrijgeeft. Een regel in een log verdwijnt 5 jaar na de wijziging. Een verwijderd oud-lid komt niet terug met de volgende import, want de import neemt geen lid op dat langer dan 5 jaar geleden opzegde. De termijn van 5 jaar geldt ook voor wat je kunt kiezen: een oud-lid daarbuiten staat niet in de treffers van **Eigenaar** en krijgt geen plaats meer. In de logs blijft een verwijderd lid staan als `lid:` met een nummer, zonder naam.
 
-**Een import aanvragen.** Kies op `/leden` bij **Import** de knop **Leden nu ophalen**. De integratiecontainer begint binnen een minuut. Ververs daarna de pagina. Een tweede verzoek terwijl er al een klaarstaat, weigert de applicatie.
+**Een import aanvragen.** Kies op `/import-export` in het paneel **Leden uit e-boekhouden** de knop **Leden nu ophalen**. Je komt terug op Import/export, met de melding en de laatste importruns eronder. De integratiecontainer begint binnen een minuut. Ververs daarna de pagina. Een tweede verzoek terwijl er al een klaarstaat, weigert de applicatie.
 
-![De pagina Leden met de melding dat de import is aangevraagd en de uitkomsten van eerdere imports.](afbeeldingen/leden.png)
+![Het paneel Leden uit e-boekhouden op Import/export, met de melding dat de import is aangevraagd en de uitkomsten van eerdere imports.](afbeeldingen/import-export.png)
 
 **De uitkomst lezen.** De tabel toont de laatste vijf imports met tijdstip, status en resultaat.
 
@@ -435,7 +435,7 @@ Wat tussen accolades staat, vult de applicatie zelf in.
 | `/tokens` | Tokens voor de API |
 | `/tokens/nieuw` | Een token maken |
 | `/indeling` | Rekken, omschrijvingen en plaatsen |
-| `/import-export` | Indeling en bezetting exporteren en importeren |
+| `/import-export` | Leden ophalen, indeling en bezetting exporteren en importeren |
 | `/indeling.xlsx` | Export naar Excel |
 | `/rekindeling.csv` | Export van de indeling als CSV, met `?leeg=1` het sjabloon |
 | `/bezetting.csv` | Export van de bezetting als CSV, met `?leeg=1` het sjabloon |

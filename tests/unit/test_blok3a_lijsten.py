@@ -124,10 +124,15 @@ def test_leden_zoekterm_komt_geescapet_terug(ingelogd):
     assert XSS not in tekst and f'value="{GEESCAPET}"' in tekst
 
 
-def test_leden_import_is_een_dicht_uitklapblok(ingelogd):
+def test_leden_import_staat_bij_import_export_en_niet_op_leden(ingelogd):
+    """#401: Leden toont alleen de lijst, zonder importblok of verwijzing; het paneel staat bij Import/export."""
     tekst = ingelogd.get("/leden").text
-    assert '<summary id="import-kop">Import</summary>' in tekst and "<details open" not in tekst
+    assert "import-kop" not in tekst and "Leden nu ophalen" not in tekst and "/import-export" not in tekst.split("<main")[1]
     assert 'section class="log"' not in tekst  # Leden heeft geen log
+    ie = ingelogd.get("/import-export").text
+    assert 'id="leden-import"' in ie and "Leden nu ophalen" in ie and "Er is nog geen import geweest." in ie
+    r = ingelogd.post("/leden/ophalen")
+    assert r.status_code == 302 and r.headers["Location"].endswith("/import-export")
 
 
 # Opgezegd en Gaan opzeggen

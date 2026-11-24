@@ -78,9 +78,9 @@ def test_de_pagina_toont_nummer_en_reden_en_een_schone_import_wist_de_lijst(inge
     assert lijst(ingelogd) is None and "Ongeldige records" not in ingelogd.get("/status").get_data(as_text=True)
 
 
-def test_het_leden_scherm_toont_de_lijst_niet_als_telling(ingelogd):
+def test_het_importscherm_toont_de_lijst_niet_als_telling(ingelogd):  # #401: de runs staan bij Import/export
     imp([record("1"), record("7", naam="")])
-    html = ingelogd.get("/leden").get_data(as_text=True)
+    html = ingelogd.get("/import-export").get_data(as_text=True)
     assert "ongeldig: 1" in html and "ongeldige_leden" not in html and "naam ontbreekt" not in html
 
 

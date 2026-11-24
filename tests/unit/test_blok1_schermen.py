@@ -86,11 +86,11 @@ def test_indeling_toont_een_paneel_per_rek_met_status_in_een_tag_en_escapet(inge
 # Import/export als eigen pagina (issue #262, BV-76)
 
 
-def test_import_export_toont_drie_panelen_en_indeling_geen_import_of_export(ingelogd):
+def test_import_export_toont_vier_panelen_en_indeling_geen_import_of_export(ingelogd):
     # Mutant: de blokken terug in indeling.html, of een paneel weg uit import_export.html, valt hier.
     tekst = ingelogd.get("/import-export").text
     assert re.findall(r'<h2 class="dj-panel__title"[^>]*>([^<]+)</h2>', tekst) == [
-        "Indeling als Excel", "Indeling als CSV", "Bezetting als CSV"]
+        "Leden uit e-boekhouden", "Indeling als Excel", "Indeling als CSV", "Bezetting als CSV"]
     assert 'href="/indeling.xlsx"' in tekst and 'id="csv-bestand"' in tekst and 'id="bezetting-bestand"' in tekst
     assert "<h1>Import/export</h1>" in tekst and 'role="alert"' not in tekst
     indeling_tekst = ingelogd.get("/indeling").text
