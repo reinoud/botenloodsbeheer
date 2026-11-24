@@ -5,6 +5,7 @@ import logging
 import sys
 
 from flask import Flask, abort, request
+from flask.sessions import SecureCookieSessionInterface
 from flask_wtf.csrf import CSRFProtect
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.routing import IntegerConverter
@@ -15,6 +16,14 @@ from app.models import db
 csrf = CSRFProtect()
 # Bovengrens van integer in PostgreSQL; een groter getal geeft daar een fout en dus een 500.
 INT_MAX = 2**31 - 1
+
+
+class _Sessie(SecureCookieSessionInterface):
+    """Een statisch bestand zet geen sessiecookie. Anders stuurt het late antwoord van bijvoorbeeld menu.js
+    de oude cookie terug en wist het wat een gelijktijdig verzoek in de sessie zette (#402)."""
+
+    def should_set_cookie(self, app, session):
+        return request.endpoint != "static" and super().should_set_cookie(app, session)
 
 
 class _Id(IntegerConverter):
@@ -55,6 +64,7 @@ def create_app(overrides=None):
     app.url_map.converters["int"] = _Id
     app.config.update(config.laad())
     app.config.update(overrides or {})
+    app.session_interface = _Sessie()
 
     handler = logging.StreamHandler(sys.stdout)
     handler.setFormatter(_JsonLog())
