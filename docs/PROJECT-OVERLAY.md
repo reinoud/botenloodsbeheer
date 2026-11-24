@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.31
+**Versie overlay:** v0.6.32
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-23
+**Bijgewerkt:** 2026-11-24
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -487,6 +487,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een sprong over minorversies van uv legt de reviewer de breaking changes uit de releasenotes naast `uv.lock` (archiefformaten, hashtypen) en naast de Python-versie in `/opt/venv`.
 - Is de doelversie van een Dependabot-PR jonger dan de cooldown, neem dan de nieuwste versie die wel oud genoeg is en sluit de PR met een verwijzing naar het issue (#196).
 - Controleer bij elke Dependabot-PR de publicatiedatum van de doelversie tegen de cooldown van 14 dagen, en lees de PR-tekst op "Cooldown could not be applied". Voor images uit ghcr.io (zoals uv) werkt de cooldown niet vanzelf.
+- Noem bij een datum voor de cooldown van een image de bron: de annotatie `created`, de pushdatum op Docker Hub of de releasepagina. Ze kunnen een dag verschillen.
+- Staat een image op meer plekken dan Dependabot leest (zoals `tests/proxy/compose.traefik.yml`), noem dan alle plekken en neem ze mee in dezelfde wijziging.
 - Een uitzondering in `exclude-newer-package` noemt één einddatum: de waarde van `exclude-newer` waarbij hij vervalt, geen tweede kalenderdatum.
 - Verdwijnt een trivy-melding na een wijziging van versie of architectuur, vergelijk dan de meegeleverde `.libs`-map van de wheel per architectuur (amd64 en arm64). Een verdwenen melding is pas een oplossing als de bibliotheek zelf is vervangen. De release scant alleen amd64; een lokale scan op een Mac scant arm64.
 - Een release krijgt een volledige semver-tag (`v0.1.0`, niet `v0.1`); anders levert de metadata-stap van de workflow geen tags.
@@ -608,6 +610,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.32 | 2026-11-24 | Twee regels (Security en proxy): bron van de cooldowndatum, alle plekken van een image; uit de terugblik van sentinel bij #410 tot #415 | Lessen |
 | v0.6.31 | 2026-11-24 | Twee regels (E2E): bewijs voor de dev-integratie zonder 401, geen `rm -rf` in de scratchpad; uit de terugblik van pipeline bij #421 | Lessen |
 | v0.6.30 | 2026-11-24 | Vier regels (Algemeen): volledige unitsuite niet tegelijk, ongedraaide E2E telt als ongetoetst, menu openen in E2E, statisch antwoord zonder sessiecookie; uit de retrospective van milestones 17 tot 19 | Retrospective |
 | v0.6.29 | 2026-11-24 | Vijf regels (Algemeen): eigen testdatabase per agent, bestaande domeinfunctie zoeken, unieke E2E-bootnamen, kijkerroute en menu, geen `--delete-branch`; uit de terugblikken bij #399 en #400 | Lessen |
