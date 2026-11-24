@@ -109,4 +109,7 @@ def laad():
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
         "PERMANENT_SESSION_LIFETIME": timedelta(hours=12),
+        # Set-Cookie alleen bij een gewijzigde sessie: een laat antwoord zet anders een oudere sessie terug (#419).
+        # De sessieduur loopt al vast vanaf ingelogd_op, dus een schuivende cookie levert niets op.
+        "SESSION_REFRESH_EACH_REQUEST": False,
     }
