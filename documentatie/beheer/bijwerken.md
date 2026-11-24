@@ -43,6 +43,8 @@ Versie 2.2.2 heeft geen migratie en wijzigt `.env` niet; in `docker-compose.yml`
 
 Versie 2.3.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Terug naar 2.2.2 kan zonder downgrade van de database.
 
+Versie 2.4.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Terug naar 2.3.0 kan zonder downgrade van de database.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.

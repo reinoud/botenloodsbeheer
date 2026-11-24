@@ -2,6 +2,23 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.4.0 (2026-11-24)
+
+Minorversie (milestone "Restpunten toegankelijkheid en weergave"). Geen migratie.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.4.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.4.0`
+
+Ook beschikbaar onder de tags `2.4` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.4.0.cdx.json` en `botenloods-integratie-2.4.0.cdx.json`.
+
+**Gewijzigd**
+- Op Leden zoekt het zoekveld vanaf 3 tekens, zonder knop, zoals op Boten. Alleen de lijst ververst; het blok Import blijft staan. Zonder JavaScript werkt de knop Toon leden (#395).
+
+**Overig**
+- De gestapelde tabellen en de lijstfilters zijn getest met VoiceOver, zonder bevindingen (#151).
+- Het restrisico van de menuknop in browsers zonder `::details-content` is aanvaard tot 2027-04-30 (#384).
+
 ## 2.3.0 (2026-11-23)
 
 Minorversie (milestones "Filters en restpunten" en "Ongeldige leden zichtbaar en v2.3.0"). Geen migratie.
