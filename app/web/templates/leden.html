@@ -5,13 +5,16 @@
 <h1>Leden</h1>
 <p>De ledenlijst komt uit de ledenbron. De integratiecontainer haalt haar dagelijks op en stuurt haar naar de applicatie. Leden aanmaken of wijzigen gebeurt in de bron, niet hier.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.leden_overzicht') }}" role="search" aria-label="Zoeken in Leden">
+<form class="bl-filter" method="get" action="{{ url_for('web.leden_overzicht') }}" role="search" aria-label="Zoeken in Leden" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="zoek">Zoek op naam of lidnummer</label>
     <input class="ds-input" id="zoek" name="zoek" type="search" value="{{ zoek }}" maxlength="100">
+    <p class="ds-field__hint" id="zoek-hint" data-zoekhint hidden>Het zoeken start vanaf 3 tekens.</p>
   </div>
-  <button type="submit" class="ds-btn ds-btn--primary">Zoeken</button>
+  <button type="submit" class="ds-btn ds-btn--primary">Toon leden</button>
 </form>
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if leden %}
 <p class="bl-aantal">{{ leden|length }} {{ 'lid' if leden|length == 1 else 'leden' }}</p>
 <ul class="bl-lijst">
@@ -25,6 +28,7 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen leden gevonden.' if zoek else 'Er zijn nog geen leden.' }}{% endcall %}
 {% endif %}
+</div>
 
 <section class="kaart" aria-labelledby="import-kop">
 <details class="dj-disclosure">
@@ -57,3 +61,4 @@
 </section>
 
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}

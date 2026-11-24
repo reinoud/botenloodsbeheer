@@ -1,4 +1,4 @@
-"""Filters zonder knop (#380) op /vrij, /wachtlijst en /boten: een andere keuze filtert direct, zoeken
+"""Filters zonder knop (#380, #395) op /vrij, /wachtlijst, /boten en /leden: een andere keuze filtert direct, zoeken
 begint bij 3 tekens, alleen de lijst ververst en de focus blijft staan. Zonder script werkt de knop.
 Eén inlogverzoek; de boten heten Zxq en Yxq met de stempel, zodat alleen de eigen rijen tellen."""
 
@@ -6,7 +6,7 @@ import re
 
 from conftest import STEMPEL, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
-from test_loods import boot_vastleggen, rek_met_plaats
+from test_loods import boot_vastleggen, kiesbare_leden, rek_met_plaats
 
 PAUZE_MS = 800  # ruim boven de 300 ms wachttijd na het typen
 
@@ -17,7 +17,7 @@ def op_de_wachtlijst(page, naam, soort):
     expect(page.get_by_text("De boot staat op de wachtlijst.")).to_be_visible()
 
 
-def test_filters_zonder_knop_op_vrij_wachtlijst_en_boten(page, browser, base_url):
+def test_filters_zonder_knop_op_vrij_wachtlijst_boten_en_leden(page, browser, base_url):
     wachtwoord_instellen(page, "lijstfilter")
     ski = rek_met_plaats(page, reknaam("lfs"), ["Surfski"])
     kajak = rek_met_plaats(page, reknaam("lfk"), ["Kajak"])
@@ -51,7 +51,7 @@ def test_filters_zonder_knop_op_vrij_wachtlijst_en_boten(page, browser, base_url
         page.goto(pad)
         veld = page.get_by_label(label)
         expect(page.get_by_text("Het zoeken start vanaf 3 tekens.")).to_be_visible()
-        expect(veld).to_have_attribute("aria-describedby", re.compile(r"-zoek-hint$"))  # het script koppelt de hint
+        expect(veld).to_have_attribute("aria-describedby", re.compile(r"zoek-hint$"))  # het script koppelt de hint
         verzoeken.clear()
         veld.press_sequentially("Zx", delay=50)
         page.wait_for_timeout(PAUZE_MS)
@@ -66,6 +66,24 @@ def test_filters_zonder_knop_op_vrij_wachtlijst_en_boten(page, browser, base_url
         veld.press("Backspace")  # terug onder de 3 tekens: de term geldt niet meer
         expect(page.get_by_role("link", name=yxq, exact=True)).to_be_visible()
         expect(veld).to_be_focused()
+
+    # Leden (#395): dezelfde afspraken, met een lidnummer uit de stack; het importblok blijft staan.
+    (a, nr_a), (b, nr_b) = kiesbare_leden(page, 2)
+    veld = page.get_by_label("Zoek op naam of lidnummer")
+    expect(page.locator("main").get_by_role("button", name="Toon leden")).to_be_hidden()
+    expect(page.get_by_text("Het zoeken start vanaf 3 tekens.")).to_be_visible()
+    verzoeken.clear()
+    veld.press_sequentially(nr_a[:2], delay=50)
+    page.wait_for_timeout(PAUZE_MS)
+    assert not verzoeken, verzoeken
+    veld.fill(nr_a)
+    expect(page.get_by_role("link", name=a, exact=True)).to_be_visible()
+    if nr_a not in nr_b:
+        expect(page.get_by_role("link", name=b, exact=True)).to_have_count(0)
+    expect(page).to_have_url(re.compile(rf"/leden\?zoek={nr_a}$"))
+    expect(page.get_by_role("status").filter(has_text=re.compile(r"^\d+ "))).to_have_count(1)
+    expect(veld).to_be_focused()
+    expect(page.get_by_text("Import", exact=True)).to_be_visible()
     assert not meldingen, meldingen
 
     # Zonder JavaScript staat de knop er en filtert hij met een gewone GET.
@@ -84,4 +102,8 @@ def test_filters_zonder_knop_op_vrij_wachtlijst_en_boten(page, browser, base_url
         expect(kaal.get_by_label(label).locator("option:checked")).to_have_text("Surfski")
         vreemd = kajak if pad == "/vrij" else zxq
         expect(kaal.get_by_role("link", name=vreemd, exact=True)).to_have_count(0)
+    kaal.goto("/leden")
+    kaal.get_by_label("Zoek op naam of lidnummer").fill(nr_a)
+    kaal.locator("main").get_by_role("button", name="Toon leden").click()
+    expect(kaal.get_by_role("link", name=a, exact=True)).to_be_visible()
     kaal.close()

@@ -65,8 +65,8 @@ def test_vrije_plaatsen_filter_met_knop_als_reserve_en_focus(ingelogd):  # noqa:
 
 @pytest.mark.parametrize("pad, knop, zoekveld", [
     ("/vrij", "Toon vrije plaatsen", False), ("/wachtlijst", "Toon wachtlijst", True),
-    ("/boten", "Toon boten", True)])
-def test_lijstfilter_markup_voor_het_script_op_vrij_wachtlijst_en_boten(ingelogd, pad, knop, zoekveld):  # noqa: F811
+    ("/boten", "Toon boten", True), ("/leden", "Toon leden", True)])
+def test_lijstfilter_markup_voor_het_script_op_vrij_wachtlijst_boten_en_leden(ingelogd, pad, knop, zoekveld):  # noqa: F811
     """#380: het script vervangt alleen [data-lijstdeel] (aantal en lijst, niet het log), meldt het aantal in een
     statusveld buiten dat deel, en verbergt de knop die in de HTML blijft."""
     loods()
@@ -78,6 +78,9 @@ def test_lijstfilter_markup_voor_het_script_op_vrij_wachtlijst_en_boten(ingelogd
     assert re.search(r'<div data-lijstdeel>\s*(<p class="bl-aantal">|<div class="ds-notice)', tekst), "aantal of melding eerst"
     assert ("data-zoekhint hidden" in tekst) is zoekveld, "de hint voor 3 tekens alleen waar een zoekveld staat"
     assert ingelogd.get("/static/lijstfilter.js").status_code == 200
+    if pad == "/leden":  # #395: het importblok valt buiten het lijstdeel en ververst niet mee
+        deel = tekst[tekst.index("data-lijstdeel"):tekst.index('id="import-kop"')]
+        assert deel.count("</div>") > deel.count("<div"), "lijstdeel sluit vóór het importblok"
 
 
 def test_vrije_plaatsen_aantal_enkelvoud_meervoud_en_zonder_soort(ingelogd):  # noqa: F811

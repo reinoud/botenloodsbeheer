@@ -68,9 +68,8 @@ def test_vrije_plaatsen_indeling_op_telefoon_en_export(page):
 def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     wachtwoord_instellen(page, "leden")
     page.goto("/leden")
-    page.get_by_label("Zoek op naam of lidnummer").fill("1001")
-    page.locator("main").get_by_role("button", name="Zoeken").click()
-    leden = page.locator("main > ul.bl-lijst > li")
+    page.get_by_label("Zoek op naam of lidnummer").fill("1001")  # filtert zonder knop (#395)
+    leden = page.locator("main ul.bl-lijst > li")
     expect(leden).to_have_count(1)
     leden.get_by_role("link").click()
     expect(page.get_by_role("heading", name="Boten in de loods")).to_be_visible()
