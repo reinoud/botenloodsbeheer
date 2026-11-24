@@ -101,8 +101,8 @@ def test_filters_zonder_knop_op_alle_lijsten(page, browser, base_url):
         page.wait_for_timeout(PAUZE_MS)
         assert not verzoeken, verzoeken
         veld.press_sequentially("xq", delay=50)
-        expect(page.locator("main").get_by_text(leeg)).to_be_visible()
-        expect(page.get_by_role("status").filter(has_text=leeg)).to_have_count(1)
+        expect(page.locator("[data-lijstdeel]").get_by_text(leeg)).to_be_visible()
+        expect(page.locator("[data-lijststatus]")).to_have_text(leeg)  # ook de melding zelf is role=status (#151)
         expect(page).to_have_url(re.compile(rf"{pad}\?zoek=Qzxq$"))
         expect(veld).to_be_focused()
     assert not meldingen, meldingen
