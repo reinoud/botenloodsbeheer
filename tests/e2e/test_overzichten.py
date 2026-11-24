@@ -76,7 +76,7 @@ def test_lid_zoeken_en_plaatsen_van_opgezegde_leden(page):
     expect(page.locator("main")).to_contain_text("Lidnummer 1001")
 
     page.goto("/opgezegd")
-    rijen = page.locator("main > ul.bl-lijst > li")
+    rijen = page.locator("main ul.bl-lijst > li")
     expect(rijen.first).to_be_visible()  # de seed heeft oud-leden met een plaats
     datums = [re.sub(r"(\d+)-(\d+)-(\d+)", r"\3\2\1", t)
               for t in rijen.locator("[data-label='Opgezegd op']").all_inner_texts()]

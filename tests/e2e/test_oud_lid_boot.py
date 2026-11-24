@@ -49,7 +49,7 @@ def test_boot_voor_een_oud_lid_vastleggen_een_plaats_geven_en_wachtlijst_geweige
     expect(page.get_by_role("link", name=code, exact=True)).to_be_visible()
 
     page.goto("/opgezegd")  # besluit 6: een boot van een oud-lid met een plaats staat hier
-    rij = page.locator("main > ul.bl-lijst > li").filter(has=page.locator("[data-label='Plaats']", has_text=code))
+    rij = page.locator("main ul.bl-lijst > li").filter(has=page.locator("[data-label='Plaats']", has_text=code))
     expect(rij.locator("[data-label='Boot']")).to_have_text(boot)
 
     boot_vastleggen_voor_oud_lid(page, tweede, oud["lidnummer"])

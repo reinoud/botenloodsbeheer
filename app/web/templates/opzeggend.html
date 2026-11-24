@@ -6,13 +6,16 @@
 <h1>Boten van leden die gaan opzeggen</h1>
 <p>Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste opzegdatum bovenaan. Deze boten horen vóór die datum weg te zijn.</p>
 
-<form class="bl-filter" method="get" action="{{ url_for('web.opzeggend') }}" role="search" aria-label="Zoeken in Gaan opzeggen">
+<form class="bl-filter" method="get" action="{{ url_for('web.opzeggend') }}" role="search" aria-label="Zoeken in Gaan opzeggen" data-lijstfilter>
   <div class="ds-field">
     <label class="ds-field__label" for="opzeggen-zoek">Zoek op boot of lid</label>
     <input class="ds-input" type="search" id="opzeggen-zoek" name="zoek" value="{{ zoek }}" maxlength="100">
+    <p class="ds-field__hint" id="opzeggen-zoek-hint" data-zoekhint hidden>Het zoeken start vanaf 3 tekens.</p>
   </div>
   <button type="submit" class="ds-btn ds-btn--primary">Toon boten</button>
 </form>
+<p class="dj-sr-only" role="status" data-lijststatus></p>
+<div data-lijstdeel>
 {% if plaatsen %}
 <p class="bl-aantal">{{ plaatsen|length }} {{ 'boot' if plaatsen|length == 1 else 'boten' }}</p>
 <ul class="bl-lijst">
@@ -26,6 +29,8 @@
 {% else %}
 {% call meldingblok() %}{{ 'Geen boten gevonden.' if zoek else 'Er zijn geen boten van leden die gaan opzeggen.' }}{% endcall %}
 {% endif %}
+</div>
 
 {{ logblok(regels) }}
 {% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='lijstfilter.js') }}"></script>{% endblock %}
