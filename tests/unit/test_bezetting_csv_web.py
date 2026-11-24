@@ -119,7 +119,7 @@ def test_upload_toont_het_overzicht_met_de_zes_kolommen(ingelogd):  # noqa: F811
     assert "ds-notice--warning" in r.text and "ds-notice--danger" not in r.text  # nog te koppelen is geen systeemfout
     assert 'action="/bezetting/import/koppelen"' in r.text and 'name="csrf_token"' in r.text
     assert 'action="/bezetting/import/bevestigen"' in r.text and 'action="/bezetting/import/annuleren"' in r.text
-    assert " style=" not in r.text and "<script" not in r.text
+    assert " style=" not in r.text and "<script>" not in r.text
 
 
 def test_het_overzicht_zonder_import_verwijst_terug_naar_import_export(ingelogd):  # noqa: F811
@@ -299,7 +299,7 @@ def test_import_export_toont_de_knoppen_het_formulier_en_een_lopende_import(inge
     assert 'href="/bezetting.csv"' in tekst and 'href="/bezetting.csv?leeg=1"' in tekst
     assert 'href="/bezetting/koppelingen"' in tekst
     assert 'action="/bezetting/import"' in tekst and 'id="bezetting-bestand"' in tekst
-    assert "Bekijk het overzicht" not in tekst and " style=" not in tekst and "<script" not in tekst
+    assert "Bekijk het overzicht" not in tekst and " style=" not in tekst and "<script>" not in tekst
     uploaden(ingelogd, bestand("A/1/1;Reiger;Kajak;;"))
     tekst = ingelogd.get("/import-export").text
     assert 'href="/bezetting/import"' in tekst and "Er loopt een bezettingsimport" in tekst

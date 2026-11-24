@@ -6,6 +6,7 @@ from datetime import timedelta
 
 from app.domein import CLI, toewijzing, vandaag, wachtlijst
 from tests.unit.hulp import lid, plaats
+from tests.unit.test_blok1_schermen import menu_koppen
 from tests.unit.test_indeling_en_toewijzing import boot
 from tests.unit.test_kijkers import kijker, main  # noqa: F401 (fixture)
 from tests.unit.test_overzichten_en_instellingen import opzeggen
@@ -74,11 +75,11 @@ def test_lege_lijst_zegt_het(ingelogd):  # noqa: F811
     assert "Alle boten hebben een plaats." in ingelogd.get(PAD).text
 
 
-def test_menu_item_staat_na_boten_zonder_eigenaar_zonder_telling_en_met_aria_current(ingelogd):  # noqa: F811
+def test_menu_item_staat_in_boten_zonder_telling_en_met_aria_current(ingelogd):  # noqa: F811
     vier_boten()
     tekst = ingelogd.get(PAD).text
     menu = re.search(r'<nav class="dj-menu__panel".*?</nav>', tekst, re.DOTALL).group(0)
-    assert menu.index("Boten zonder eigenaar") < menu.index("Boten zonder plaats") < menu.index("Gaan opzeggen")
+    assert menu_koppen(menu)[0]["Boten"] == ["Boten", "Wachtlijst", "Boten zonder plaats", "Boten zonder eigenaar", "Boten zonder foto"]
     assert 'href="/boten/zonder-plaats" aria-current="page">Boten zonder plaats</a>' in menu
 
 

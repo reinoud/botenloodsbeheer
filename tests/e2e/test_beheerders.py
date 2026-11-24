@@ -8,6 +8,7 @@ from conftest import (
     WACHTWOORD,
     blok_openen,
     gebruikersnaam,
+    menu_kiezen,
     uitloggen,
     wachtwoord_instellen,
 )
@@ -24,7 +25,7 @@ def wachtwoord_inloggen(page, naam):
 
 
 def passkey_toevoegen(page):
-    page.get_by_role("link", name="Profiel").click()
+    menu_kiezen(page, "Account", "Profiel")
     blok_openen(page, "passkey")  # "Passkey toevoegen" zonder passkey, "Nog een passkey" met een
     page.get_by_role("button", name="Passkey toevoegen").click()
     expect(page.get_by_text("De passkey is toegevoegd.")).to_be_visible()
@@ -59,7 +60,7 @@ def test_methode_intrekken_beeindigt_sessie_laatste_blijft(page, authenticator):
     expect(page.get_by_role("alert")).to_contain_text(MISLUKT)
     page.get_by_role("button", name="Inloggen met passkey").click()
     expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
-    page.get_by_role("link", name="Profiel").click()
+    menu_kiezen(page, "Account", "Profiel")
     page.get_by_role("button", name="Passkey 1 intrekken").click()
     expect(page.get_by_role("alert")).to_contain_text("Dit is je enige inlogmethode")
     page.goto("/log/techniek")
@@ -81,7 +82,7 @@ def qr_zichtbaar(page):
 def test_uitnodigen_herstellen_en_blokkeren(page, browser, base_url):
     wachtwoord_instellen(page, "beheerders")
     nieuw = f"e2e-nieuw-{STEMPEL}"
-    page.get_by_role("link", name="Gebruikers").click()
+    menu_kiezen(page, "Beheer", "Gebruikers")
     page.get_by_label("Gebruikersnaam").fill(nieuw)
     page.get_by_role("radio", name="Beheerder: ziet en wijzigt alles").check()
     page.get_by_role("button", name="Uitnodigen").click()

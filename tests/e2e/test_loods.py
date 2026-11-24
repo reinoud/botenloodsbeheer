@@ -8,7 +8,7 @@ import re
 import struct
 import zlib
 
-from conftest import reknaam, uitloggen, wachtwoord_instellen
+from conftest import menu_kiezen, reknaam, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 
 
@@ -156,10 +156,10 @@ def test_indeling_boot_toewijzen_log_en_openbare_pagina(page):
     # BLB-043: de toewijzing staat alleen in het log van de bootmutaties, het nieuwe token (vlak
     # voor deze aanroep gemaakt door draai.sh) alleen in het technische log.
     token = os.environ["E2E_TOKEN_NIEUW_NAAM"]
-    page.get_by_role("link", name="Log", exact=True).click()
+    menu_kiezen(page, "Loods", "Log")
     expect(page.locator("section.log")).to_contain_text(f"boot: {bootnaam}; plaats: {code}")
     expect(page.locator("section.log")).not_to_contain_text(token)
-    page.get_by_role("link", name="Technisch log").click()
+    menu_kiezen(page, "Beheer", "Technisch log")
     expect(page.locator("section.log")).to_contain_text(token)
     expect(page.locator("section.log")).not_to_contain_text("plaats.toegewezen")  # technisch log: opgeslagen namen
     page.goto(detail)

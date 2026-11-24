@@ -1,6 +1,6 @@
 """Rekoverzicht (issue #87): per plaats één vak met het verwachte plaatje en de alt-tekst."""
 
-from conftest import reknaam, wachtwoord_instellen
+from conftest import menu_kiezen, reknaam, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen, plaats_instellen, rek_aanmaken, sectie_van, toewijzen
 
@@ -15,7 +15,7 @@ def test_rekoverzicht_toont_per_plaats_een_plaatje_met_alt(page):
     toewijzen(page, f"{rek}/1/1", bootnaam)
     expect(page.get_by_text("De boot heeft de plaats gekregen.")).to_be_visible()
 
-    page.get_by_role("link", name="Rekoverzicht", exact=True).click()
+    menu_kiezen(page, "Loods", "Rekoverzicht")
     sectie = sectie_van(page, rek)
     expect(sectie.locator("a.bl-vak")).to_have_count(4)
     verwacht = {

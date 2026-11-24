@@ -12,7 +12,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.parse import urlsplit
 
-from conftest import wachtwoord_instellen
+from conftest import menu_kiezen, wachtwoord_instellen
 from playwright.sync_api import expect
 
 API = os.environ["E2E_API_URL"]
@@ -114,7 +114,7 @@ def test_boten_van_leden_die_gaan_opzeggen(page):
     later = [r | {"opzegdatum": "2099-12-31"} if not r["opzegdatum"] else r for r in FIXTURE]
     try:
         assert roep("PUT", "/leden", {"leden": later})[0] == 200
-        page.get_by_role("link", name="Gaan opzeggen").click()
+        menu_kiezen(page, "Leden", "Gaan opzeggen")
         rijen = page.locator("main ul.bl-lijst > li")
         expect(rijen.first).to_be_visible()
         assert set(rijen.locator("[data-label='Opzegdatum']").all_inner_texts()) == {"31-12-2099"}

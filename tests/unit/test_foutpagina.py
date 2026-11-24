@@ -22,7 +22,8 @@ def pagina(r, code, terug_naar, kop_met_menu):
     assert f"Foutcode {code}" in tekst
     assert re.findall(r'<a class="ds-btn ds-btn--primary" href="([^"]+)"', tekst) == [terug_naar]
     assert ('role="search"' in tekst) is kop_met_menu
-    assert ('class="dj-menu"' in tekst) is kop_met_menu
+    assert ('class="dj-menu dj-menu--koppen"' in tekst) is kop_met_menu
+    assert " open>" not in tekst.split("<main")[0].replace('<details class="dj-menu dj-menu--koppen">', "")  # geen kop open (BV-95)
     assert "Werkzeug" not in tekst and "requested URL" not in tekst
     assert "aria-current" not in tekst.split("<main")[0]  # geen pagina gemarkeerd (BV-95)
     assert r.headers["Cache-Control"] == "no-store"
@@ -31,7 +32,7 @@ def pagina(r, code, terug_naar, kop_met_menu):
 def test_beheerder_krijgt_404_met_menu_en_link_naar_het_rekoverzicht(beheerder):  # noqa: F811
     r = beheerder.get("/bestaatniet")
     pagina(r, 404, "/rekoverzicht", True)
-    assert 'aria-label="Hoofdmenu"' in r.text and ">Technisch log<" in r.text  # menu met vier groepen
+    assert 'aria-label="Hoofdmenu"' in r.text and ">Technisch log<" in r.text  # menu met vijf koppen
 
 
 def test_kijker_krijgt_403_met_menu_2b_zonder_de_pagina_te_verraden(app):

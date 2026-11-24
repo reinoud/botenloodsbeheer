@@ -11,7 +11,7 @@ from app.domein import CLI, boten, indeling, toewijzing, vandaag
 from app.models import Boot, db
 from tests.unit.conftest import EIGENAAR
 from tests.unit.hulp import lid, plaats, png
-from tests.unit.test_blok1_schermen import tekst_met_current
+from tests.unit.test_blok1_schermen import menu_koppen, tekst_met_current
 from tests.unit.test_web_beheer import ingelogd  # noqa: F401  fixture
 
 PAD = "/boten-zonder-foto"
@@ -181,10 +181,10 @@ def test_zonder_boten_staat_er_de_lege_toestand(ingelogd):  # noqa: F811
 # Menu
 
 
-def test_menu_heeft_het_item_in_beheer_direct_na_kaartjes_en_markeert_het_op_dit_scherm(ingelogd):  # noqa: F811
+def test_menu_heeft_het_item_als_laatste_in_boten_en_markeert_het_op_dit_scherm(ingelogd):  # noqa: F811
     # Mutant: een andere href of plek valt op de eerste assert; aria-current weglaten op de tweede.
     menu = ingelogd.get("/rekoverzicht").text
-    assert re.search(r'href="/kaartjes"[^>]*>Kaartjes</a></li>\s*<li><a class="dj-nav__link" href="/boten-zonder-foto">Boten zonder foto</a>', menu)
+    assert menu_koppen(menu)[0]["Boten"][-1] == "Boten zonder foto" and 'href="/boten-zonder-foto"' in menu
     assert tekst_met_current(ingelogd, PAD) == ["Boten zonder foto"]
     assert tekst_met_current(ingelogd, "/boten") == ["Boten"]
 

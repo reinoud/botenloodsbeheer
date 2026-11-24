@@ -5,13 +5,13 @@ entrypoint intern, zoals de route in issue #51. Twee inloggen per test, ruim ond
 import json
 import os
 
-from conftest import gebruikersnaam, uitloggen, wachtwoord_instellen
+from conftest import gebruikersnaam, menu_kiezen, uitloggen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_api import API, roep
 
 
 def token_maken(page, naam, rechten, soort="Persoonlijk"):
-    page.get_by_role("link", name="Tokens").click()
+    menu_kiezen(page, "Beheer", "Tokens")
     page.get_by_role("link", name="Token maken").click()
     page.get_by_role("radio", name=soort).check()
     expect(page.get_by_role("radio", name=soort)).to_have_css("border-radius", "50%")  # #191
@@ -61,10 +61,10 @@ def test_persoonlijk_token_maken_wijzigen_en_intrekken(page):
     status, _, tekst = roep(f"{API}/leden", waarde)
     assert status == 200 and "adres" not in json.loads(tekst)[0]
 
-    page.get_by_role("link", name="Technisch log").click()
+    menu_kiezen(page, "Beheer", "Technisch log")
     expect(page.locator("li", has_text="token.rechten_gewijzigd").first).to_contain_text(naam)
 
-    page.get_by_role("link", name="Tokens").click()
+    menu_kiezen(page, "Beheer", "Tokens")
     rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}").click()
     expect(page.get_by_text("Het token is ingetrokken.")).to_be_visible()
     assert roep(f"{API}/boten", waarde)[0] == 401
@@ -83,7 +83,7 @@ def test_token_van_een_collega_intrekken(page, browser, base_url):
     collega.context.close()
 
     wachtwoord_instellen(page, "tokensintrekken")
-    page.get_by_role("link", name="Tokens").click()
+    menu_kiezen(page, "Beheer", "Tokens")
     expect(rij(page, naam).locator('td[data-label="Eigenaar of maker"]')).to_have_text(
         gebruikersnaam("tokenscollega"))
     intrekken = rij(page, naam).get_by_role("button", name=f"Intrekken: {naam}")

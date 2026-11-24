@@ -3,7 +3,15 @@
 import re
 import time
 
-from conftest import WACHTWOORD, blok_openen, gebruikersnaam, link, uitloggen, wachtwoord_instellen
+from conftest import (
+    WACHTWOORD,
+    blok_openen,
+    gebruikersnaam,
+    link,
+    menu_kiezen,
+    uitloggen,
+    wachtwoord_instellen,
+)
 from playwright.sync_api import expect
 
 MISLUKT = "Inloggen is mislukt"
@@ -25,7 +33,7 @@ def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
     expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
 
     # Het technische log toont de uitnodiging en de passkey, zonder de code uit de link.
-    page.get_by_role("link", name="Technisch log").click()
+    menu_kiezen(page, "Beheer", "Technisch log")
     expect(page.locator("section.log")).to_contain_text("methode: passkey")
     assert link("passkey").rsplit("/", 1)[1] not in page.content()
     # De uitnodiging maakte draai.sh vóór alle tests; zoek haar over de pagina's heen (#213).

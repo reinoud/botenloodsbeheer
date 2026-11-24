@@ -2,7 +2,7 @@
 
 Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en van wie die is. Deze handleiding beschrijft per taak wat je kunt doen en hoe. Ze geldt voor een loods van 11 rekken, 229 plaatsen, ongeveer 210 leden en 180 boten, met gebruikers in twee rollen: de beheerder ziet en wijzigt alles, de kijker ziet de loods en wijzigt niets. Beheerders hebben onderling dezelfde rechten. Er is geen aparte systeembeheerder in de applicatie. De handleiding gaat uit van een beheerder; wat een kijker anders ziet, staat onder [Kijkers](#kijkers).
 
-Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat het open. Het heeft voor een beheerder vier groepen: Dagelijks, Lijsten, Beheer en Account. De pagina waar je bent, is gemarkeerd. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
+Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat de rij koppen in de kopbalk. Het menu heeft voor een beheerder vijf koppen: Loods, Boten, Leden, Beheer en Account. Kies een kop om de lijst met schermen te openen en kies een scherm. Open je een andere kop, dan sluit de vorige. Een klik buiten het menu of de toets Escape sluit de open kop. De kop en het scherm waar je bent, zijn gemarkeerd; op een telefoon staat die kop open. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
 ## Inloggen
 
@@ -18,7 +18,7 @@ Na het inloggen sta je op het rekoverzicht, tenzij je via een link, een bladwijz
 
 ![Het scherm waar je de code van zes cijfers uit je authenticator-app invult.](afbeeldingen/code.png)
 
-Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (groep Account) sluit je hem eerder af.
+Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (kop Account) sluit je hem eerder af.
 
 Een paar handelingen vragen een inlog van hooguit 10 minuten oud: een gebruiker uitnodigen, zijn rol wijzigen, hem herstellen, blokkeren, deblokkeren of verwijderen, inlogmethodes wijzigen en de instellingen opslaan. Is je inlog ouder, dan vraagt de applicatie je opnieuw in te loggen.
 
@@ -77,7 +77,7 @@ Op `/profiel` staan je inlogmethodes met een knop **Intrekken** per methode. Daa
 
 De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een verdieping heeft geen gaten: de vakken zijn altijd 1 tot en met n. Een verdieping met alleen vak 1 en 3 weigert de applicatie, met een melding die de verdieping en het ontbrekende vak noemt.
 
-De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen. Exporteren en importeren doe je op de pagina Import/export, die in het menu onder Beheer staat.
+De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen. Exporteren en importeren doe je op de pagina Import/export, die in het menu onder de kop Beheer staat.
 
 ![De pagina Indeling met het formulier voor een nieuw rek, met het raster van verdiepingen en vakken, en het eerste rek.](afbeeldingen/indeling.png)
 
@@ -91,7 +91,7 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ### Rekoverzicht
 
-De pagina `/rekoverzicht` (menu **Rekoverzicht**, groep Dagelijks) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen. Een rek met veel vakken schuift op een telefoon opzij; de verdiepingen blijven in beeld.
+De pagina `/rekoverzicht` (menu **Rekoverzicht**, kop Loods) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen. Een rek met veel vakken schuift op een telefoon opzij; de verdiepingen blijven in beeld.
 
 ![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
 
@@ -135,19 +135,19 @@ Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de b
 
 ## Boten zonder eigenaar
 
-Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder Dagelijks; bij nul staat er geen aantal. Klik op de naam van een boot om een eigenaar toe te kennen: kies de eigenaar bij **Boot wijzigen** op de pagina van de boot (zie hierboven). Daarna staat de boot niet meer op de lijst. De plaats is een link naar de plaats. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers.
+Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder de kop Boten; bij nul staat er geen aantal. Klik op de naam van een boot om een eigenaar toe te kennen: kies de eigenaar bij **Boot wijzigen** op de pagina van de boot (zie hierboven). Daarna staat de boot niet meer op de lijst. De plaats is een link naar de plaats. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers.
 
 ![De pagina Boten zonder eigenaar met een lijst van boten, met bootsoort en plaats.](afbeeldingen/boten-zonder-eigenaar.png)
 
 ## Boten zonder plaats
 
-Op `/boten/zonder-plaats` staan alle boten zonder plaats, ook die op de wachtlijst, een clubboot en de boot van een oud-lid. Je vindt de lijst in het menu onder Dagelijks, na **Boten zonder eigenaar**; het menu toont hier geen aantal. Boven de lijst staat hoeveel boten het zijn. Bij elke boot staan de bootsoort en de eigenaar, met de tag **oud-lid** bij een oud-lid. Klik op de naam van een boot om op de pagina van de boot een plaats toe te wijzen; daarna staat de boot niet meer op de lijst. Staat een boot op de wachtlijst, dan staat er "op de wachtlijst sinds" met de datum. Bij een boot die er nog niet op staat, zet **Zet [boot] op de wachtlijst** hem op de lijst van zijn bootsoort, met de datum van vandaag, en kom je terug op dit scherm met de melding "De boot staat op de wachtlijst." Een eerdere aanmelddatum kies je op de pagina van de boot. Bij een clubboot of de boot van een oud-lid staat geen knop maar "kan niet op de wachtlijst". Zijn er geen boten zonder plaats, dan staat er "Alle boten hebben een plaats." Een kijker ziet dezelfde lijst met de eigenaar als platte tekst, zonder uitleg boven de lijst, zonder knop, zonder wachtliststatus, zonder de tag oud-lid en zonder link naar een lid; het menu van een kijker heeft geen item voor dit scherm.
+Op `/boten/zonder-plaats` staan alle boten zonder plaats, ook die op de wachtlijst, een clubboot en de boot van een oud-lid. Je vindt de lijst in het menu onder de kop Boten, na **Wachtlijst**; het menu toont hier geen aantal. Boven de lijst staat hoeveel boten het zijn. Bij elke boot staan de bootsoort en de eigenaar, met de tag **oud-lid** bij een oud-lid. Klik op de naam van een boot om op de pagina van de boot een plaats toe te wijzen; daarna staat de boot niet meer op de lijst. Staat een boot op de wachtlijst, dan staat er "op de wachtlijst sinds" met de datum. Bij een boot die er nog niet op staat, zet **Zet [boot] op de wachtlijst** hem op de lijst van zijn bootsoort, met de datum van vandaag, en kom je terug op dit scherm met de melding "De boot staat op de wachtlijst." Een eerdere aanmelddatum kies je op de pagina van de boot. Bij een clubboot of de boot van een oud-lid staat geen knop maar "kan niet op de wachtlijst". Zijn er geen boten zonder plaats, dan staat er "Alle boten hebben een plaats." Een kijker ziet dezelfde lijst met de eigenaar als platte tekst, zonder uitleg boven de lijst, zonder knop, zonder wachtliststatus, zonder de tag oud-lid en zonder link naar een lid; het menu van een kijker heeft dit scherm onder de kop Boten.
 
 ![De pagina Boten zonder plaats met een lijst van boten, met bootsoort, eigenaar en de knop Zet op de wachtlijst.](afbeeldingen/boten-zonder-plaats.png)
 
 ## Boten zonder foto
 
-Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met **Boten zonder foto** in het menu, onder Beheer direct na **Kaartjes**; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
+Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met **Boten zonder foto** in het menu, onder de kop Boten, als laatste item; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
 
 Open een boot uit de lijst en voeg bij **Foto vervangen** een foto toe (zie Boten). Daarna staat de boot niet meer op de lijst. Hebben alle boten een foto, dan staat er "Alle boten hebben een foto."
 
@@ -386,7 +386,7 @@ Maken, rechten wijzigen en intrekken vragen een inlog van hooguit 10 minuten oud
 
 Een kijker is een gebruiker die de loods ziet en niets wijzigt. Een beheerder nodigt hem uit of zet een account om (zie [Gebruikers](#gebruikers)). Een kijker logt in zoals een beheerder, met een passkey of een wachtwoord met code.
 
-Het menu van een kijker is één lijst, zonder groepskoppen: Rekoverzicht, Vrije plaatsen, Boten, Profiel en Uitloggen, met het zoekveld in de kop. Er staan geen tellingen in.
+Het menu van een kijker heeft dezelfde koppen, met alleen de schermen die hij mag openen: Loods (Rekoverzicht, Vrije plaatsen), Boten (Boten, Boten zonder plaats) en Account (Profiel, Uitloggen). Een kop zonder schermen ontbreekt. Het zoekveld staat in de kop. Er staan geen tellingen in.
 
 | Scherm | Wat een kijker ziet |
 |---|---|

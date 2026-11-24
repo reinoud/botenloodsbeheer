@@ -1,10 +1,10 @@
-"""Boten zonder plaats (#399), de route voor een mens: kies in het menu onder Dagelijks de lijst, zet een boot met
+"""Boten zonder plaats (#399), de route voor een mens: kies in het menu onder Boten de lijst, zet een boot met
 één klik op de wachtlijst (vandaag) en zie dat een clubboot geen knop heeft. Daarna leest een kijker dezelfde
 lijst zonder knop en zonder status. De selectie en de knopregels staan in de unittests."""
 
 from datetime import date
 
-from conftest import STEMPEL, gebruikersnaam, wachtwoord_instellen
+from conftest import STEMPEL, gebruikersnaam, menu_kiezen, menu_openen, wachtwoord_instellen
 from playwright.sync_api import expect
 from test_loods import boot_vastleggen
 
@@ -20,11 +20,10 @@ def test_beheerder_zet_een_boot_op_de_wachtlijst_en_een_kijker_leest_mee(page, b
     boot_vastleggen(page, club, "Kajak")
 
     page.goto("/rekoverzicht")
-    dagelijks = page.locator("nav[aria-label='Hoofdmenu'] ul[aria-labelledby='menu-0'] a")
-    namen = dagelijks.all_inner_texts()  # achter Boten zonder eigenaar kan een aantal staan
-    eigenaar = next(i for i, n in enumerate(namen) if n.startswith("Boten zonder eigenaar"))
-    assert namen[eigenaar + 1] == "Boten zonder plaats"
-    page.get_by_role("link", name="Boten zonder plaats", exact=True).evaluate("e => e.click()")
+    boten = menu_openen(page, "Boten")
+    namen = boten.get_by_role("link").all_inner_texts()  # achter Boten zonder eigenaar kan een aantal staan
+    assert [n.rstrip(" 0123456789") for n in namen] == ["Boten", "Wachtlijst", "Boten zonder plaats", "Boten zonder eigenaar", "Boten zonder foto"]
+    menu_kiezen(page, "Boten", "Boten zonder plaats")
     expect(page.get_by_role("heading", level=1)).to_have_text("Boten zonder plaats")
     expect(page.locator("a[aria-current='page']", has_text="Boten zonder plaats")).to_have_count(1)
     expect(regel_van(page, club)).to_contain_text("kan niet op de wachtlijst")
@@ -45,7 +44,9 @@ def test_beheerder_zet_een_boot_op_de_wachtlijst_en_een_kijker_leest_mee(page, b
     uitnodiging = page.locator("#uitnodigingslink").inner_text()
     kijker = browser.new_context(base_url=base_url).new_page()
     wachtwoord_instellen(kijker, None, url=uitnodiging)
-    kijker.goto("/boten/zonder-plaats")
+    # De kijker bereikt de lijst via het menu: onder Boten, naast Boten.
+    expect(menu_openen(kijker, "Boten").get_by_role("link")).to_have_text(["Boten", "Boten zonder plaats"])
+    menu_kiezen(kijker, "Boten", "Boten zonder plaats")
     expect(regel_van(kijker, gewoon)).to_be_visible()
     expect(kijker.locator("main button")).to_have_count(0)
     expect(kijker.locator("main a[href^='/leden']")).to_have_count(0)
