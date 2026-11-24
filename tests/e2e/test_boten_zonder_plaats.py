@@ -22,7 +22,7 @@ def test_beheerder_zet_een_boot_op_de_wachtlijst_en_een_kijker_leest_mee(page, b
     page.goto("/rekoverzicht")
     boten = menu_openen(page, "Boten")
     namen = boten.get_by_role("link").all_inner_texts()  # achter Boten zonder eigenaar kan een aantal staan
-    assert [n.strip().rstrip(" 0123456789") for n in namen] == ["Boten", "Wachtlijst", "Boten zonder plaats", "Boten zonder eigenaar", "Boten zonder foto"]
+    assert [" ".join(n.split()).rstrip(" 0123456789") for n in namen] == ["Boten", "Wachtlijst", "Boten zonder plaats", "Boten zonder eigenaar", "Boten zonder foto"]
     menu_kiezen(page, "Boten", "Boten zonder plaats")
     expect(page.get_by_role("heading", level=1)).to_have_text("Boten zonder plaats")
     expect(page.locator("a[aria-current='page']", has_text="Boten zonder plaats")).to_have_count(1)
