@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.33
+**Versie overlay:** v0.6.34
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -233,6 +233,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een reeks zoekstappen (zoals lidnummer, koppeling, naam) wat een onbekende waarde in een stap doet: doorvallen naar de volgende stap of een fout.
 - Elk antwoord uit een toets van Design System krijgt een eigen unittest en een mutant, ook zonder preview. Noem in de opdracht welke ontwerpkeuze geldt voor een toestand die de README niet noemt, en welke toestanden uit eerdere issues (zoals #137) een nieuwe tak in een sjabloon anders toont.
 - Beschrijft de README van een ontwerp bestaand gedrag anders dan de code (zoals een flash waar de route al een 422 geeft), noem dan in de opdracht welke van de twee voorgaat. Rendert een andere route een scherm (zoals een 422 uit een importroute), dan toetst een test ook het huidige menu-item op dat antwoord (#262).
+- Een schermafbeelding van het menu opent eerst een kop (bijvoorbeeld Loods) en wacht tot een menulink zichtbaar is; op een pagina zonder open kop staat geen menulink in beeld (#422).
+- Een Playwright-script dat inlogt via een uitnodiging, bewaart na het inloggen de `storage_state`, zodat een tweede run geen nieuwe beheerder vraagt (#422).
 - Een volledige schermafbeelding van Indeling op 360 px is ruim 78000 px hoog; noem voor de visuele controle een uitsnede van de bovenste 1500 px (#262).
 - Een `|safe`-mutant krijgt een testgeval per tak van het sjabloon die het veld toont, ook in een attribuut als `alt` (dan met een foto in de test).
 - Een bouwer met mutanten controleert vóór de oplevering met `ls` dat `commando.txt` naast de mutanten staat. Draai een reeks mutanten met `docker compose run --rm -T` en `</dev/null` in een `while read`-lus.
@@ -613,6 +615,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.34 | 2026-11-25 | Twee regels (Bouw): kop openen voor een schermafbeelding van het menu, `storage_state` bewaren; uit de terugblik van sentinel bij #422 | Lessen |
 | v0.6.33 | 2026-11-25 | Drie regels (Review): overlayregel met zoekterm, eigen test via `/scratch`, sessiewaarden ter plekke gewijzigd; uit de terugblikken van sentinel en aegis bij #419 | Lessen |
 | v0.6.32 | 2026-11-24 | Twee regels (Security en proxy): bron van de cooldowndatum, alle plekken van een image; uit de terugblik van sentinel bij #410 tot #415 | Lessen |
 | v0.6.31 | 2026-11-24 | Twee regels (E2E): bewijs voor de dev-integratie zonder 401, geen `rm -rf` in de scratchpad; uit de terugblik van pipeline bij #421 | Lessen |
