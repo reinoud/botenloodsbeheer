@@ -78,9 +78,9 @@ def test_filters_zonder_knop_op_alle_lijsten(page, browser, base_url):
     assert not verzoeken, verzoeken
     veld.fill(nr_a)
     expect(page.get_by_role("link", name=a, exact=True)).to_be_visible()
-    # #400: het aantal boten staat na de live zoekactie achter de naam, buiten de link.
+    # #400, #406: het aantal boten staat na de live zoekactie in de grijze regel, buiten de link.
     rij = page.locator("li.bl-item").filter(has=page.get_by_role("link", name=a, exact=True)).first
-    expect(rij.get_by_text(re.compile(r"^\((1 boot|(0|[2-9]|\d{2,}) boten)\)$"))).to_be_visible()
+    expect(rij.locator(".bl-item__sub [data-label='Aantal boten']")).to_have_text(re.compile(r"^(1 boot|(0|[2-9]|\d{2,}) boten)$"))
     if nr_a not in nr_b:
         expect(page.get_by_role("link", name=b, exact=True)).to_have_count(0)
     expect(page).to_have_url(re.compile(rf"/leden\?zoek={nr_a}$"))

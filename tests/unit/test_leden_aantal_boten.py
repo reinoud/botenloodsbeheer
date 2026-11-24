@@ -1,5 +1,7 @@
 """Het aantal boten per lid op /leden (#400): alle boten van het lid, in één query."""
 
+import re
+
 from sqlalchemy import event
 
 from app.domein import CLI, leden, toewijzing, wachtlijst
@@ -47,10 +49,12 @@ def test_een_query_voor_de_hele_lijst(app):
     assert len(regels) == 1  # mutant: een telling per lid geeft 7
 
 
-def test_leden_pagina_toont_aantal_na_de_link(ingelogd):  # noqa: F811
-    # Mutant: de tekst in de link zetten maakt de linknaam "Vier (4 boten)"; enkelvoud/meervoud vallen op "1 boten".
+def test_leden_pagina_toont_aantal_als_laatste_in_de_grijze_regel(ingelogd):  # noqa: F811
+    # #406: in bl-item__sub na het lidnummer (en lid sinds), zonder haakjes; de link blijft alleen de naam.
+    # Mutant: enkelvoud/meervoud vallen op "1 boten".
     lid("1", "Nul")
     boot(lid("2", "Een").id, naam="B1")
     html = ingelogd.get("/leden").text
-    assert ">Nul</a> <span data-label=\"Aantal boten\">(0 boten)</span>" in html
-    assert ">Een</a> <span data-label=\"Aantal boten\">(1 boot)</span>" in html
+    for naam, nummer, aantal in (("Nul", "1", "0 boten"), ("Een", "2", "1 boot")):
+        assert re.search(rf'>{naam}</a> <span class="bl-item__sub">Lidnummer <span data-label="Lidnummer">{nummer}</span>'
+                         rf'[^\n]*? · <span data-label="Aantal boten">{aantal}</span></span></div>', html), naam
