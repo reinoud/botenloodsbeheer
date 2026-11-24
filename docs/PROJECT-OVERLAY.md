@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.27
+**Versie overlay:** v0.6.28
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-23
@@ -403,6 +403,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
+- Komt een native image voor de release-E2E volledig uit de cache, noem dan de aanmaakdatum en bevestig met `git log <vorige tag>..<releasecommit> -- <map>` dat de map niet is gewijzigd; anders bouw je met `--no-cache` (#398).
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
 
 #### Migratie en database
@@ -596,6 +597,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.28 | 2026-11-24 | Eén regel (E2E): native image uit de cache alleen bij een ongewijzigde map; uit de terugblik van pipeline bij #398 | Lessen |
 | v0.6.27 | 2026-11-24 | Eén regel (Bouw): `main >`-selectors zoeken en draaien na een omhullende `div`; uit de terugblik van sentinel bij #395 | Lessen |
 | v0.6.26 | 2026-11-23 | E2E: tijdstip na het opruimen in UTC, wachtlus zonder `date -j`; uit de terugblik bij #387 | Lessen |
 | v0.6.25 | 2026-11-23 | Vier regels (Algemeen): kijkerrechten in `KIJKER_TOEGESTAAN`, bewaarduur van persoonsgegevens getoetst in de database, E2E bij een worktree, unittests bij twee reviewers; uit de terugblikken bij #381 | Lessen |
