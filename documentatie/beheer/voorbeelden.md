@@ -32,6 +32,10 @@ c="docker compose -f docker-compose.yml -f compose.images.yml"
 $c pull && $c up -d
 ```
 
+## Vangnet en gedeelde Traefik
+
+Naast deze twee manieren staan er twee voorbeelden voor de omgeving rond de botenloods: `voorbeelden/traefik/compose.yml` (een gedeelde Traefik) en `voorbeelden/vangnet/compose.yml` (een 503-pagina zolang `web` of `api` ontbreekt). Beide zijn aparte stacks; zie [installatie](installatie.md).
+
 ## Bouwen uit een git-checkout
 
 `voorbeelden/compose.git.yml` bouwt de images op de host en zet de versie, een git-tag, in hun naam. De vorige versie blijft zo staan om naar terug te gaan.

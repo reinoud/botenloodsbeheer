@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.39
+**Versie overlay:** v0.6.40
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -378,6 +378,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Toetst een test dat twee bestanden gelijk blijven, noem dan in de brief welke mutant de regie al draaide en laat de reviewer de mutant op het andere bestand draaien (#425).
 - Een mutant op een template draait als bind mount van alleen dat template (`-v <scratchpad>/base.html:/app/app/web/templates/base.html:ro`), niet als kopie van heel `app` (#428).
 
+- Krijgt een router een lage prioriteit (zoals een vangnet), toets dan ook welke paden de app bewust niet routeert (zoals `!PathPrefix(/api/)` op `-web`): bouwer en reviewer doen per entrypoint een verzoek terwijl de app draait en kijken of de nieuwe router dat nu beantwoordt (#418).
+
+- Bewijst een test dat een dienst niets beantwoordt, vergelijk dan een reeks verzoeken per entrypoint met en zonder die dienst, en laat met een mutant zien dat de vergelijking een verschil ziet (#418).
+- Zeg in een reviewbrief hoe de reviewer een losse unittest draait als de gedeelde stack bezet is, of dat de regie die test zelf draait (#418).
+
 #### E2E
 
 - Een proef op volgorde of volume van het technische log schrijft vooraf minstens 50 regels van een andere actie dan de gezochte, met `log.schrijf` via `docker compose exec web`, niet via de interface; dan blijven er geen beheerders of andere gegevens achter. De oude test moet aantoonbaar falen op die ruis voordat het herstel telt.
@@ -423,6 +428,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Het bewijs dat de dev-integratie na de release-E2E zonder 401 werkt, is de leesquery op `token.laatst_gebruikt_op` na het opruimen plus nul regels met `mislukt` of `401` in het integratielog sinds de laatste start. Een nieuwe regel `Import geslaagd` verschijnt alleen bij een importverzoek of de dagelijkse import (#421).
 - Begin een commando niet met `rm -rf` van een map in de scratchpad, ook niet als die nog niet bestaat: de hook Blast Radius houdt het hele commando tegen. Maak een nieuwe map met een eigen naam (#421).
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
+
+- Een E2E-stap die containers stopt, wacht met een lus die ook verbindingsfouten opnieuw probeert (Traefik stuurt kort naar een gestopte container), en zet de containers in een trap terug, ook na een fout (#418).
 
 #### Migratie en database
 
@@ -484,7 +491,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59). Van hetzelfde image maakt hetzelfde Trivy-image vóór de push een SBOM in CycloneDX JSON. De job `sbom` zet die na de push als `botenloods-app-<versie>.cdx.json` en `botenloods-integratie-<versie>.cdx.json` bij de release; alleen die job heeft `contents: write`. Mist een bijlage, draai dan die job opnieuw (#297).
-- Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
+- Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199). Scan daarbij ook het vangnetimage uit `documentatie/beheer/voorbeelden/vangnet/compose.yml` (`ghcr.io/reinoud/traefik-unavailable`, op de digest in dat bestand; haal het op, bouw het niet): dezelfde Trivy-regel, zonder SBOM. Een melding met oplossing vraagt een nieuwe digest in dat bestand vóór de tag (#418).
 - Bouw de images voor die scan met `--no-cache`, zoals de release-workflow sinds #272. Een apt-laag uit de cache mist de beveiligingsupdates van Debian.
 - Bouw voor die scan met alle velden van de matrix in `images.yml`: de app met `-f docker/Dockerfile --target app --build-arg APP_VERSIE=<tag>`, de integratie met context `integratie` en `-f integratie/Dockerfile`. Controleer een herstelde versie met `dpkg-query -W <pakket>` in het image (#432).
 - Tel `mislukt` en `401` in het integratielog na een E2E-run met `docker compose logs --since <StartedAt van integratie>`; zonder `--since` tellen eerdere starts mee (#431).
@@ -529,6 +536,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een veiligheidsgrens telt een record met een onbekende of ongeldige waarde naar de veilige kant: de kant die de import stopt. Noem in de opdracht het bronveld en of het vrije tekst is (#307).
 - Een proef via de proxy met sessie: teken de cookie direct voor de proef (`recent_ingelogd` is 10 minuten), gebruik geen `rm` in proefscripts, en werk met `curl --resolve localhost:8080:127.0.0.1` en `http://localhost:8080`, zodat de cookiejar werkt (#322).
 - Kies voor een live proef een object dat de E2E-suite niet opruimt, of zoek het object direct voor de proef op (#322).
+
+- Wijzigt wat een client van Traefik terugkrijgt (404, 503, headers), zoek dan in `integratie/` en `tests/` naar de code die op dat antwoord reageert (zoals `TRAEFIK_404` in `integratie/koppeling/__init__.py`) en noem die in de opdracht (#418).
 
 #### Documentatie, backlog en ADR's
 
@@ -625,6 +634,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.40 | 2026-11-25 | Trivy-scan vóór een release neemt het vangnetimage mee; vijf regels (Review, E2E, Security en proxy) uit de terugblikken van pipeline, sentinel en aegis bij #418 | Lessen |
 | v0.6.39 | 2026-11-25 | Twee regels (Review): mutant op het andere bestand bij een gelijkheidstest, mutant op een template als bind mount; uit de terugblikken van sentinel bij #425 en #428 | Lessen |
 | v0.6.38 | 2026-11-25 | Bouwregel voor de trivyscan met `-f` aangevuld en regel over het tellen in het integratielog (Security en proxy); uit de terugblik van pipeline bij #431 | Lessen |
 | v0.6.37 | 2026-11-25 | Twee regels (Security en proxy): bouwen voor de trivyscan zoals de matrix met controle via `dpkg-query`, en trivy vóór de E2E met stoppen bij een melding; uit de terugblikken van pipeline (#431) en sentinel (#432) | Lessen |

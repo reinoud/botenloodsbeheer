@@ -2,6 +2,11 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## Unreleased
+
+**Nieuw**
+- Vangnet: een eigen stack (`documentatie/beheer/voorbeelden/vangnet/compose.yml`) die een nette 503-pagina met `Retry-After` toont zolang `web` niet healthy is, en een JSON-fout 503 op het entrypoint `intern` zolang `api` niet healthy is. Traefik antwoordt anders met een kale 404. Het image is `ghcr.io/reinoud/traefik-unavailable:1.0.0`, vastgepind op een digest en opgenomen in Dependabot en in de Trivy-scan vóór een release. Het vangnet is optioneel en wijzigt `docker-compose.yml` niet (#418).
+
 ## 2.6.2 (2026-11-25)
 
 Onderhoudsversie (milestone "Restpunten menu, Dependabot en architectuur, v2.6.2"). Geen migratie en geen nieuwe functies.

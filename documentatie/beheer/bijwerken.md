@@ -53,6 +53,8 @@ Versie 2.6.1 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet.
 
 Versie 2.6.2 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen de app verandert inhoudelijk (de markering in het menu); het image van de integratie is opnieuw gebouwd zonder wijziging in `integratie/`. Terug naar 2.6.1 kan zonder downgrade van de database.
 
+Het vangnet (nieuw na 2.6.2, `vangnet/compose.yml` naast `.env`, zie installatie) is een aparte stack met één dienst, `vangnet`. Het is optioneel en wijzigt `docker-compose.yml` en `.env` niet. De stack van de botenloods herstart het niet: bij een update van de botenloods blijft het vangnet staan en vangt het de verzoeken op terwijl `web` en `api` opstarten. Het image staat op een digest. Een nieuwe digest in het voorbeeld haal je op met `docker compose --env-file .env -f vangnet/compose.yml pull` en `up -d`. Zie [installatie](installatie.md#vangnet).
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
