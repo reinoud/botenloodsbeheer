@@ -14,6 +14,7 @@ Ook beschikbaar onder de tags `2.6` en `latest`. Bij de release staat per image 
 
 **Opgelost**
 - De sessiecookie gaat alleen mee als de sessie gewijzigd is. Een laat antwoord van een gewone pagina zet zo geen oudere sessie meer terug, waardoor bijvoorbeeld een melding of het toevoegen van een passkey verloren kon gaan (#419).
+- Beide images hebben `libzstd1` met de beveiligingsupdate uit Debian (CVE-2026-124851) (#432).
 
 **Overig**
 - Traefik v3.7.17 staat op de nieuwe digest, in het voorbeeld `documentatie/beheer/voorbeelden/traefik/compose.yml` en in de ontwikkelstack (#412, #413).
