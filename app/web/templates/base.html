@@ -28,7 +28,10 @@
       {# Een kijker ziet dezelfde koppen met alleen de items die hij mag openen (kijker_mag); een kop zonder items valt weg. Uitloggen staat in Account. #}
       {# BV-47: op het detail van een boot of lid is Boten of Leden gemarkeerd (BV-96: bij Lid koppelen Gebruikers) met aria-current="true". #}
       {# Op de foutpagina (BV-95) is niets de huidige pagina en is geen kop open. #}
-      {% set detail = {"web.boten_overzicht": "web.boot_detail", "web.leden_overzicht": "web.lid_detail", "web.beheerders_overzicht": "web.beheerder_lid"} %}
+      {# #428: ook pagina's na een formulier (Zoeken, uitnodigen, token maken, kaartjes printen) markeren hun kop. #}
+      {% set detail = {"web.boten_overzicht": ("web.boot_detail", "web.boot_aanmaken"), "web.leden_overzicht": ("web.lid_detail",),
+                       "web.beheerders_overzicht": ("web.beheerder_lid", "web.beheerder_uitnodigen", "web.beheerder_herstellen"),
+                       "web.kaartjes_kiezen": ("web.kaartjes_print",), "web.tokens_overzicht": ("web.token_nieuw",)} %}
       {% set menu = [
         ("Loods", [("web.rekoverzicht", "Rekoverzicht"), ("web.vrije_plaatsen", "Vrije plaatsen"), ("web.logboek", "Log")]),
         ("Boten", [("web.boten_overzicht", "Boten"), ("web.wachtlijst_overzicht", "Wachtlijst"), ("web.boten_zonder_plaats", "Boten zonder plaats"),
@@ -39,7 +42,7 @@
                     ("web.statuspagina", "Status"), ("web.technisch_log", "Technisch log")]),
         ("Account", [("web.profiel", "Profiel")])] %}
       {% set nu = namespace(kop="") %}
-      {% if not foutcode %}{% for kop, items in menu %}{% for endpoint, naam in items %}{% if (huidig or request.endpoint) == endpoint or request.endpoint == detail.get(endpoint) %}{% set nu.kop = kop %}{% endif %}{% endfor %}{% endfor %}{% endif %}
+      {% if not foutcode %}{% for kop, items in menu %}{% for endpoint, naam in items %}{% if (huidig or request.endpoint) == endpoint or request.endpoint in detail.get(endpoint, ()) %}{% set nu.kop = kop %}{% endif %}{% endfor %}{% endfor %}{% endif %}
       <details class="dj-menu dj-menu--koppen">
         <summary class="dj-menu__button">Menu</summary>
         <nav class="dj-menu__panel" aria-label="Hoofdmenu">
@@ -52,7 +55,7 @@
                 <summary{% if kop == nu.kop %} aria-current="true"{% endif %}>{{ kop }}</summary>
                 <ul class="dj-menu__lijst">
                   {% for endpoint, naam in zichtbaar %}
-                  <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if foutcode %}{% elif (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint == detail.get(endpoint) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
+                  <li><a class="dj-nav__link" href="{{ url_for(endpoint) }}"{% if foutcode %}{% elif (huidig or request.endpoint) == endpoint %} aria-current="page"{% elif request.endpoint in detail.get(endpoint, ()) %} aria-current="true"{% endif %}>{{ naam }}{% if endpoint == "web.boten_zonder_eigenaar" and zonder_eigenaar %} <span class="ds-tag ds-tag--telling bl-nav__aantal">{{ zonder_eigenaar }}</span>{% endif %}</a></li>
                   {% endfor %}
                   {% if kop == "Account" %}
                   <li>

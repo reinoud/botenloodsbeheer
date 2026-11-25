@@ -59,8 +59,9 @@ def test_menu_markeert_de_huidige_kop_en_het_huidige_item(ingelogd, pad, kop, it
 
 
 def test_menu_zonder_huidige_pagina_heeft_geen_open_kop(ingelogd):
-    # /tokens/nieuw staat niet in het menu (en de foutpagina, BV-95, toetst test_foutpagina).
-    assert menu_koppen(ingelogd.get("/tokens/nieuw").text)[1] == []
+    # De zoekresultaten horen bij geen kop (/tokens/nieuw wel, #428; de foutpagina, BV-95, toetst test_foutpagina).
+    r = ingelogd.get("/zoeken?q=zzz")
+    assert r.status_code == 200 and menu_koppen(r.text)[1] == []
 
 
 def test_menu_markeert_de_huidige_pagina_en_alleen_die(ingelogd):
