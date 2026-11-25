@@ -25,11 +25,12 @@ De installatie bestaat uit zes containers in één `docker-compose.yml`, verdeel
 | `api` | Hetzelfde applicatie-image, `DIENST=api` | API `/api/v1`, import van leden, health endpoints | Nee, alleen via het entrypoint `intern` van Traefik (8081) |
 | `worker` | Hetzelfde applicatie-image, ander startcommando | Heartbeat, dagelijkse opschoning | Nee |
 | `integratie` | Eigen klein image uit `integratie/`, vervangbaar | Leden ophalen uit de bron en importeren via de API; terugschrijven van de bootaantallen naar e-boekhouden achter een schakelaar, standaard uit | Nee; alleen uitgaand naar de bron |
+| `migrate` | Hetzelfde applicatie-image, eenmalig startcommando | Databasemigraties bij het starten, daarna stopt hij | Nee |
 | `db` | PostgreSQL 17 | Alle gegevens, ook foto's | Nee, alleen intern netwerk |
 
 Er is één applicatie-image. `web`, `api` en `worker` verschillen alleen in startcommando, `DIENST` en databaserol. Zo gebruiken ze dezelfde domeinlaag en hetzelfde mutatielog. `integratie` is bewust een eigen image zonder applicatiecode, zodat een andere vereniging het kan vervangen.
 
-Configuratie komt uit de omgeving (ADR-009). Logs gaan als JSON-regels naar stdout. Elke applicatiecontainer heeft een healthcheck in compose: `web` en `api` op `/health/live`, `db` met `pg_isready`, `worker` op een heartbeat in de database (ADR-010). Of `integratie` werkt, toont de statuspagina.
+Configuratie komt uit de omgeving (ADR-009). Logs gaan als JSON-regels naar stdout. Elke applicatiecontainer heeft een healthcheck in compose: `web` en `api` op `/health/live`, `db` met `pg_isready`, `worker` op een heartbeat in de database (ADR-010). `integratie` start pas als `api` gezond is, want hij importeert via de API. Of `integratie` werkt, toont de statuspagina.
 
 Databasemigraties draaien als een eenmalige stap bij het starten (`alembic upgrade head` in een init-container `migrate` van hetzelfde image, die `web`, `api` en `worker` afwachten). Zo draaien twee Gunicorn-workers nooit tegelijk een migratie.
 
