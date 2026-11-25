@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.37
+**Versie overlay:** v0.6.38
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -484,7 +484,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59). Van hetzelfde image maakt hetzelfde Trivy-image vóór de push een SBOM in CycloneDX JSON. De job `sbom` zet die na de push als `botenloods-app-<versie>.cdx.json` en `botenloods-integratie-<versie>.cdx.json` bij de release; alleen die job heeft `contents: write`. Mist een bijlage, draai dan die job opnieuw (#297).
 - Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199).
 - Bouw de images voor die scan met `--no-cache`, zoals de release-workflow sinds #272. Een apt-laag uit de cache mist de beveiligingsupdates van Debian.
-- Bouw voor die scan zoals de matrix in `images.yml`: de app met `--target app --build-arg APP_VERSIE=<tag>`, de integratie met context `integratie`. Controleer een herstelde versie met `dpkg-query -W <pakket>` in het image (#432).
+- Bouw voor die scan met alle velden van de matrix in `images.yml`: de app met `-f docker/Dockerfile --target app --build-arg APP_VERSIE=<tag>`, de integratie met context `integratie` en `-f integratie/Dockerfile`. Controleer een herstelde versie met `dpkg-query -W <pakket>` in het image (#432).
+- Tel `mislukt` en `401` in het integratielog na een E2E-run met `docker compose logs --since <StartedAt van integratie>`; zonder `--since` tellen eerdere starts mee (#431).
 - Scan vóór de release eerst met trivy en draai de E2E pas daarna. Geeft trivy een melding CRITICAL of HIGH, stop dan vóór de E2E, maak een issue met de melding en het herstel volgens #199, en meld het; de E2E draait op de nieuwe releasecommit (#431).
 - Het releaseissue noemt per E2E-run vóór de tag de commit en de aantallen geslaagd, mislukt en overgeslagen, ook als de stakeholder de runs draaide. Ontbreken de aantallen, dan zegt het slotcommentaar dat (#257).
 - Een melding in een Debian-pakket waarvan de nieuwste digest van het basisimage de fix nog niet heeft, los je op met `apt-get install` van dat pakket in de eindstage, met een `shortcut:`-comment die alle CVE's noemt (#199).
@@ -622,6 +623,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.38 | 2026-11-25 | Bouwregel voor de trivyscan met `-f` aangevuld en regel over het tellen in het integratielog (Security en proxy); uit de terugblik van pipeline bij #431 | Lessen |
 | v0.6.37 | 2026-11-25 | Twee regels (Security en proxy): bouwen voor de trivyscan zoals de matrix met controle via `dpkg-query`, en trivy vóór de E2E met stoppen bij een melding; uit de terugblikken van pipeline (#431) en sentinel (#432) | Lessen |
 | v0.6.36 | 2026-11-25 | Gemergde remote branches verwijdert de sessie zelf, zonder akkoord per keer (Algemeen) | Besluit stakeholder 2026-11-25 |
 | v0.6.35 | 2026-11-25 | Vijf regels (Documentatie): afbeeldingen in de README uit het script en in de handleiding, controle op het menu, tellen met een script, diagram tegen de overrides, script zonder `main()` toetsen; uit #423 en de terugblikken van prism en sentinel | Issue #423, lessen |
