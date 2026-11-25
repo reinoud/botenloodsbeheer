@@ -49,7 +49,7 @@ Versie 2.5.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet.
 
 Versie 2.6.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Terug naar 2.5.0 kan zonder downgrade van de database.
 
-Versie 2.6.1 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Het voorbeeld `voorbeelden/traefik/compose.yml` heeft een nieuwe digest voor dezelfde Traefik v3.7.17; wie dat voorbeeld volgt, haalt het image opnieuw op. Terug naar 2.6.0 kan zonder downgrade van de database.
+Versie 2.6.1 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Beide images veranderen: de app door de herstelling in de sessie, beide door een beveiligingsupdate van `libzstd1`. Het voorbeeld `voorbeelden/traefik/compose.yml` heeft een nieuwe digest voor dezelfde Traefik v3.7.17; wie dat voorbeeld volgt, haalt het image opnieuw op. Terug naar 2.6.0 kan zonder downgrade van de database.
 
 ## Tokens
 
