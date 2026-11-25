@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.38
+**Versie overlay:** v0.6.39
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -375,6 +375,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een regelnummer in een brief altijd het bestand (`app/domein/bezetting_csv.py:155`), en zeg bij een oordeel dat steunt op een mutant van een ander agent of het oordeel op die uitkomst mag wachten of statisch moet zijn (#298).
 - Een volgordetest op een laatste sleutel `id` maakt de rijen met expliciete id's, het hoogste eerst ingevoegd. Een mutant zonder die sleutel heet pas gelijkwaardig na die proef (#315).
 - Haalt een wijziging een sleutel weg uit een dict die met `**` naar een sjabloon gaat, noem dan ook de macro's die met `with context` worden geïmporteerd (#323).
+- Toetst een test dat twee bestanden gelijk blijven, noem dan in de brief welke mutant de regie al draaide en laat de reviewer de mutant op het andere bestand draaien (#425).
+- Een mutant op een template draait als bind mount van alleen dat template (`-v <scratchpad>/base.html:/app/app/web/templates/base.html:ro`), niet als kopie van heel `app` (#428).
 
 #### E2E
 
@@ -623,6 +625,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.39 | 2026-11-25 | Twee regels (Review): mutant op het andere bestand bij een gelijkheidstest, mutant op een template als bind mount; uit de terugblikken van sentinel bij #425 en #428 | Lessen |
 | v0.6.38 | 2026-11-25 | Bouwregel voor de trivyscan met `-f` aangevuld en regel over het tellen in het integratielog (Security en proxy); uit de terugblik van pipeline bij #431 | Lessen |
 | v0.6.37 | 2026-11-25 | Twee regels (Security en proxy): bouwen voor de trivyscan zoals de matrix met controle via `dpkg-query`, en trivy vóór de E2E met stoppen bij een melding; uit de terugblikken van pipeline (#431) en sentinel (#432) | Lessen |
 | v0.6.36 | 2026-11-25 | Gemergde remote branches verwijdert de sessie zelf, zonder akkoord per keer (Algemeen) | Besluit stakeholder 2026-11-25 |
