@@ -55,6 +55,29 @@ def test_menu_markeert_boten_op_een_boot_en_leden_op_een_lid(ingelogd):
     assert 'href="/boten" aria-current="page">Boten' in ingelogd.get("/boten").text  # het overzicht zelf blijft "page"
 
 
+
+def test_menu_markeert_de_kop_na_een_formulier(ingelogd):
+    """#428: Zoeken bij Nieuwe boot, uitnodigen, toegang herstellen, token maken en kaartjes printen
+    markeren hun kop en het menu-item met aria-current="true"."""
+    # Mutant: een endpoint uit detail in base.html weghalen laat zijn aanroep hier vallen.
+    bert, _ = beheerder_met_wachtwoord("bert")
+    p = plaats()
+    aanroepen = {
+        "Boten": ingelogd.post("/boten", data={"actie": "zoeken", "zoek": "vries"}),
+        "Gebruikers": ingelogd.post("/gebruikers", data={"gebruikersnaam": "carla", "rol": "beheerder"}),
+        "Gebruikers (herstellen)": ingelogd.post(f"/gebruikers/{bert.id}/herstellen"),
+        "Tokens": ingelogd.get("/tokens/nieuw"),
+        "Tokens (waarde)": ingelogd.post("/tokens/nieuw", data={"soort": "persoonlijk", "naam": "laptop",
+                                                                 "dagen": "30", "recht": ["boten:lezen"]}),
+        "Kaartjes": ingelogd.get(f"/kaartjes/print?plaats={p.id}"),
+    }
+    kop = {"Boten": "Boten", "Gebruikers": "Beheer", "Tokens": "Beheer", "Kaartjes": "Beheer"}
+    for wat, r in aanroepen.items():
+        naam = wat.split(" (")[0]
+        assert r.status_code == 200, wat
+        assert re.findall(r'<a class="dj-nav__link" href="[^"]*" aria-current="true">([^<]*)</a>', r.text) == [naam], wat
+        assert menu_koppen(r.text)[1] == [kop[naam]], wat
+
 # Plaats: eigenaar (issue #234)
 
 
