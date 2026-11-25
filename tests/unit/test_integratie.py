@@ -662,3 +662,11 @@ def test_api_van_buiten_alleen_met_compose_api_extern():
     bronnen = labels[f"traefik.http.middlewares.{i}-externtoegang.ipallowlist.sourcerange"]
     assert bronnen.startswith("${API_EXTERN_BRONNEN:?")
     assert not [k for k in labels if "ipstrategy" in k.lower()]  # het verbindingsadres telt
+
+
+def test_proxytest_draait_dezelfde_traefik_als_de_stack():
+    """#425: Dependabot werkt tests/proxy niet bij; deze test faalt als de digest achterblijft."""
+    def traefik(pad):  # regex: compose.dev.yml heeft !override, dat yaml.safe_load niet kent
+        return re.findall(r"image: (traefik:\S+)", (ROOT / pad).read_text())
+    stack = traefik("compose.dev.yml")
+    assert len(stack) == 1 and traefik("tests/proxy/compose.traefik.yml") == stack
