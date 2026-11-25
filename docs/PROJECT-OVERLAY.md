@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.34
+**Versie overlay:** v0.6.35
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -547,6 +547,11 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Elke slice werkt `documentatie/` bij (handleiding, beheerdocumentatie, screenshots waar een scherm verandert); de reviewer controleert dat. Voorbeeldbestanden in `documentatie/` (zoals `voorbeelden/traefik/compose.yml`) mag een agent bijwerken als een ADR verandert; ze gaan wel langs de review vóór de commit.
 - `documentatie/gebruikers/schermafbeeldingen.sh` maakt alle afbeeldingen opnieuw; zet afbeeldingen van schermen die niet veranderd zijn terug met `git checkout`. Een nieuw menu-item verandert alle schermafbeeldingen met de kopbalk; die blijven dan staan en worden niet teruggezet.
 - Schermafbeeldingen tonen het testlogo (`tests/fixtures/logo.png`, door `schermafbeeldingen.py` geüpload op Instellingen na het inloggen); de reviewer vergelijkt de kopbalk van één afbeelding met de versie in `HEAD`. Werk niet met twee agents tegelijk in `documentatie/gebruikers/afbeeldingen/` en draai tijdens het script geen checkout of stash. Geeft het script een `FileNotFoundError` op de mount, draai het opnieuw en meld een oorzaak pas als die bewezen is.
+- Een opname met kop krijgt in `schermafbeeldingen.py` de controle op `nav .dj-menu__koppen`; een pagina zonder login geeft `kop=False` mee (#423).
+- Tel afbeeldingen, regels en gewijzigde zinnen met een script (`git diff --cached -U0 <bestand>`), ook in een issuecommentaar. Uitsneden voor een visuele controle maak je met `magick -crop WxH+0+0`; `sips` knipt vanuit het midden (#423).
+- Een architectuurdiagram toets je ook tegen de compose-overrides (`compose.api-extern.yml`) en `documentatie/beheer/api-van-buiten.md`: welke route geldt standaard en welke alleen met een override. Zeg of de pijllabels een netwerk of een entrypoint noemen, en houd dat gelijk voor alle pijlen naar Traefik (#423).
+- Een script dat bij het laden `main()` aanroept, toets je als kopie zonder die regel in het e2e-image; mount `tests/fixtures/leden.json` op `/fixtures/leden.json` (#423).
+- Een afbeelding in de README komt uit `schermafbeeldingen.py` in `documentatie/gebruikers/afbeeldingen/` en staat ook in de handleiding; `tests/unit/test_readme_afbeeldingen.py` bewaakt dat (#423).
 - Screenshots en andere opnamen komen uit een eigen stack met een lege, geseede database, nooit uit de gedeelde lokale stack; het agent kiest een eigen projectnaam en een vrij subnet. Noem bij een review van screenshots welke schermen geheimen of persoonsgegevens kunnen tonen; de reviewer bekijkt die eerst en de rest steekproefsgewijs.
 - Zeg bij het opschonen van een tekst of regels korter geformuleerd mogen of alleen samengevoegd, met een doel in woorden (bijvoorbeeld 25 procent korter).
 - Zeg bij een woordbudget of verplaatste tekst meetelt; de telling met `--word-diff` telt verplaatste tekst als nieuw. Laat het agent de omvang van verplaatste tekst apart noemen (#216).
@@ -615,6 +620,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.35 | 2026-11-25 | Vijf regels (Documentatie): afbeeldingen in de README uit het script en in de handleiding, controle op het menu, tellen met een script, diagram tegen de overrides, script zonder `main()` toetsen; uit #423 en de terugblikken van prism en sentinel | Issue #423, lessen |
 | v0.6.34 | 2026-11-25 | Twee regels (Bouw): kop openen voor een schermafbeelding van het menu, `storage_state` bewaren; uit de terugblik van sentinel bij #422 | Lessen |
 | v0.6.33 | 2026-11-25 | Drie regels (Review): overlayregel met zoekterm, eigen test via `/scratch`, sessiewaarden ter plekke gewijzigd; uit de terugblikken van sentinel en aegis bij #419 | Lessen |
 | v0.6.32 | 2026-11-24 | Twee regels (Security en proxy): bron van de cooldowndatum, alle plekken van een image; uit de terugblik van sentinel bij #410 tot #415 | Lessen |

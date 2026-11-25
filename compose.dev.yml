@@ -107,6 +107,7 @@ services:
       - ./.github:/app/.github:ro
       - ./documentatie:/app/documentatie:ro
       - ./.env.example:/app/.env.example:ro
+      - ./README.md:/app/README.md:ro
       - ./docker-compose.yml:/app/docker-compose.yml:ro
       - ./compose.dev.yml:/app/compose.dev.yml:ro
       - ./compose.api-extern.yml:/app/compose.api-extern.yml:ro

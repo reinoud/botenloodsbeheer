@@ -4,6 +4,8 @@ Met botenloodsbeheer houd je bij welke boot op welke plaats in de loods ligt en 
 
 Alle schermen werken in een gewone browser, ook op een telefoon. Schermen over boten en plaatsen tonen onderaan de bootmutaties die erbij horen. Op een telefoon zit het menu achter de knop **Menu** in de kopbalk; op een groter scherm staat de rij koppen in de kopbalk. Het menu heeft voor een beheerder vijf koppen: Loods, Boten, Leden, Beheer en Account. Kies een kop om de lijst met schermen te openen en kies een scherm. Open je een andere kop, dan sluit de vorige. Een klik buiten het menu of de toets Escape sluit de open kop. De kop en het scherm waar je bent, zijn gemarkeerd; op een telefoon staat die kop open. De voorbeelden en afbeeldingen gebruiken verzonnen gegevens.
 
+![De kopbalk met het zoekveld en het menu met vijf koppen; de kop Boten is open en toont de vijf schermen eronder.](afbeeldingen/menu.png)
+
 ## Inloggen
 
 Je logt in met een passkey (telefoon, vingerafdruk of beveiligingssleutel) of met een wachtwoord plus een code uit een authenticator-app. Een passkey is het eenvoudigst en niet te phishen, daarom staat hij bovenaan.
@@ -18,13 +20,13 @@ Na het inloggen sta je op het rekoverzicht, tenzij je via een link, een bladwijz
 
 ![Het scherm waar je de code van zes cijfers uit je authenticator-app invult.](afbeeldingen/code.png)
 
-Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** onderaan het menu (kop Account) sluit je hem eerder af.
+Na vijf mislukte pogingen kun je 15 minuten niet met je wachtwoord inloggen. Met een passkey lukt het wel. De applicatie zegt niet of de gebruikersnaam of het wachtwoord fout was. Een sessie duurt 12 uur. Met **Uitloggen** (Account > Uitloggen) sluit je hem eerder af.
 
 Een paar handelingen vragen een inlog van hooguit 10 minuten oud: een gebruiker uitnodigen, zijn rol wijzigen, hem herstellen, blokkeren, deblokkeren of verwijderen, inlogmethodes wijzigen en de instellingen opslaan. Is je inlog ouder, dan vraagt de applicatie je opnieuw in te loggen.
 
 ## Gebruikers
 
-Het scherm `/gebruikers` toont alle accounts met hun rol, status en inlogmethodes. Een beheerder ziet en wijzigt alles; een kijker ziet de loods en wijzigt niets. De eerste beheerder maakt wie de installatie beheert (zie de beheerdocumentatie). Daarna nodigen jullie elkaar uit. De oude url `/beheerders` verwijst door naar `/gebruikers`.
+Het scherm `/gebruikers` (Beheer > Gebruikers) toont alle accounts met hun rol, status en inlogmethodes. Een beheerder ziet en wijzigt alles; een kijker ziet de loods en wijzigt niets. De eerste beheerder maakt wie de installatie beheert (zie de beheerdocumentatie). Daarna nodigen jullie elkaar uit. De oude url `/beheerders` verwijst door naar `/gebruikers`.
 
 ![De pagina Gebruikers met het formulier om uit te nodigen en de lijst met accounts.](afbeeldingen/beheerders.png)
 
@@ -69,7 +71,7 @@ Achter elk ander account staan naast de rolknop drie knoppen. Je eigen account k
 
 ### Je eigen inlogmethodes
 
-Op `/profiel` staan je inlogmethodes met een knop **Intrekken** per methode. Daaronder voeg je een passkey toe (het blok heet **Passkey toevoegen**, en **Nog een passkey** als je er al een hebt) of, als je er nog geen hebt, een wachtwoord met authenticator-app. Intrekken beëindigt al je sessies. Je houdt altijd minstens één methode.
+Op `/profiel` (Account > Profiel) staan je inlogmethodes met een knop **Intrekken** per methode. Daaronder voeg je een passkey toe (het blok heet **Passkey toevoegen**, en **Nog een passkey** als je er al een hebt) of, als je er nog geen hebt, een wachtwoord met authenticator-app. Intrekken beëindigt al je sessies. Je houdt altijd minstens één methode.
 
 ![Het profiel met de lijst van inlogmethodes en het blok om nog een passkey toe te voegen.](afbeeldingen/profiel.png)
 
@@ -77,7 +79,7 @@ Op `/profiel` staan je inlogmethodes met een knop **Intrekken** per methode. Daa
 
 De loods is ingedeeld in rekken. Een rek heeft een korte naam, een omschrijving en vakken op 1 tot en met 5 verdiepingen, met per verdieping 1 tot en met 12 vakken. Elk vak dat aan staat is een plaats. De aanduiding van een plaats volgt uit rek, verdieping en vak: `A/1/1` is rek A, verdieping 1, vak 1. Een verdieping heeft geen gaten: de vakken zijn altijd 1 tot en met n. Een verdieping met alleen vak 1 en 3 weigert de applicatie, met een melding die de verdieping en het ontbrekende vak noemt.
 
-De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen. Exporteren en importeren doe je op de pagina Import/export, die in het menu onder de kop Beheer staat.
+De pagina `/indeling` (Beheer > Indeling) toont elk rek met zijn omschrijving en plaatsen. Per plaats staan de aanduiding, de status (vrij, bezet of clubplaats), de boot, de eigenaar en de bootsoorten waarvoor de plaats geschikt is. Een clubplaats is alleen voor boten van de vereniging. Kies een aanduiding om de plaats te openen. Exporteren en importeren doe je op de pagina Import/export, die je opent met Beheer > Import/export.
 
 ![De pagina Indeling met het formulier voor een nieuw rek, met het raster van verdiepingen en vakken, en het eerste rek.](afbeeldingen/indeling.png)
 
@@ -91,7 +93,7 @@ De pagina `/indeling` toont elk rek met zijn omschrijving en plaatsen. Per plaat
 
 ### Rekoverzicht
 
-De pagina `/rekoverzicht` (menu **Rekoverzicht**, kop Loods) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen. Een rek met veel vakken schuift op een telefoon opzij; de verdiepingen blijven in beeld.
+De pagina `/rekoverzicht` (Loods > Rekoverzicht) toont elk rek zoals het in de loods staat: een rij per verdieping tot en met de hoogste verdieping met een plaats (verdieping 1 onderaan; een lege verdieping daaronder blijft staan), een kolom per vak tot en met het hoogste vak van dat rek, met een plaatje per plaats. Je ziet in één blik waar nog plek is. Kies een plaatje om de plaats te openen. Een rek met veel vakken schuift op een telefoon opzij; de verdiepingen blijven in beeld.
 
 ![Het Rekoverzicht van één rek, met een plaatje per plaats.](afbeeldingen/rekoverzicht.png)
 
@@ -115,7 +117,7 @@ Is er precies één treffer, dan opent die meteen: de boot, het lid of de plaats
 
 ## Boten
 
-Op `/boten` staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**. De lijst verandert direct: bij een andere keuze, en bij het zoeken zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal boten. Zonder JavaScript staat er een knop **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
+Op `/boten` (Boten > Boten) staan alle boten met bootsoort, eigenaar en plaats, met het aantal boten erboven. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee: `jose` vindt ook `José`, en `josé` ook `Jose`) en beperk de lijst met **Alleen soort**. De lijst verandert direct: bij een andere keuze, en bij het zoeken zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal boten. Zonder JavaScript staat er een knop **Toon boten**. Zonder zoektekst en zonder soort staan alle boten in de lijst. Een boot heeft een naam, een bootsoort en een eigenaar: een actief lid, de vereniging zelf (clubboot) of nog niemand (eigenaar onbekend, zie Boten zonder eigenaar hieronder). Het blok **Nieuwe boot** staat bovenaan, onder de kop, als knop.
 
 ![De pagina Boten met de lijst met boten en het uitgeklapte formulier voor een nieuwe boot.](afbeeldingen/boten.png)
 
@@ -135,25 +137,25 @@ Een nieuwe boot heeft nog geen plaats. Bovenaan de pagina van de boot staan de b
 
 ## Boten zonder eigenaar
 
-Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. In het menu staat het aantal naast **Boten zonder eigenaar**, onder de kop Boten; bij nul staat er geen aantal. Klik op de naam van een boot om een eigenaar toe te kennen: kies de eigenaar bij **Boot wijzigen** op de pagina van de boot (zie hierboven). Daarna staat de boot niet meer op de lijst. De plaats is een link naar de plaats. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers.
+Op `/boten/zonder-eigenaar` staan de boten waarvan de eigenaar onbekend is, met bootsoort en plaats. Zo'n boot ontstaat door een bezettingsimport met een lege eigenaar, of doordat je bij **Nieuwe boot** de eigenaar open laat. Je opent de lijst met Boten > Boten zonder eigenaar. Daar staat het aantal naast de naam; bij nul staat er geen aantal. Klik op de naam van een boot om een eigenaar toe te kennen: kies de eigenaar bij **Boot wijzigen** op de pagina van de boot (zie hierboven). Daarna staat de boot niet meer op de lijst. De plaats is een link naar de plaats. Zijn er geen boten meer, dan staat er "Alle boten hebben een eigenaar." Een boot op de wachtlijst houdt zijn plek als hij een eigenaar krijgt, behalve bij een oud-lid: dan gaat hij van de lijst, met een melding en de reden `oud-lid` in het log. Een oud-lid van hooguit 5 jaar geleden is te kiezen, met de tag **oud-lid** in de treffers.
 
 ![De pagina Boten zonder eigenaar met een lijst van boten, met bootsoort en plaats.](afbeeldingen/boten-zonder-eigenaar.png)
 
 ## Boten zonder plaats
 
-Op `/boten/zonder-plaats` staan alle boten zonder plaats, ook die op de wachtlijst, een clubboot en de boot van een oud-lid. Je vindt de lijst in het menu onder de kop Boten, na **Wachtlijst**; het menu toont hier geen aantal. Boven de lijst staat hoeveel boten het zijn. Bij elke boot staan de bootsoort en de eigenaar, met de tag **oud-lid** bij een oud-lid. Klik op de naam van een boot om op de pagina van de boot een plaats toe te wijzen; daarna staat de boot niet meer op de lijst. Staat een boot op de wachtlijst, dan staat er "op de wachtlijst sinds" met de datum. Bij een boot die er nog niet op staat, zet **Zet [boot] op de wachtlijst** hem op de lijst van zijn bootsoort, met de datum van vandaag, en kom je terug op dit scherm met de melding "De boot staat op de wachtlijst." Een eerdere aanmelddatum kies je op de pagina van de boot. Bij een clubboot of de boot van een oud-lid staat geen knop maar "kan niet op de wachtlijst". Zijn er geen boten zonder plaats, dan staat er "Alle boten hebben een plaats." Een kijker ziet dezelfde lijst met de eigenaar als platte tekst, zonder uitleg boven de lijst, zonder knop, zonder wachtliststatus, zonder de tag oud-lid en zonder link naar een lid; het menu van een kijker heeft dit scherm onder de kop Boten.
+Op `/boten/zonder-plaats` staan alle boten zonder plaats, ook die op de wachtlijst, een clubboot en de boot van een oud-lid. Je opent de lijst met Boten > Boten zonder plaats; het menu toont hier geen aantal. Boven de lijst staat hoeveel boten het zijn. Bij elke boot staan de bootsoort en de eigenaar, met de tag **oud-lid** bij een oud-lid. Klik op de naam van een boot om op de pagina van de boot een plaats toe te wijzen; daarna staat de boot niet meer op de lijst. Staat een boot op de wachtlijst, dan staat er "op de wachtlijst sinds" met de datum. Bij een boot die er nog niet op staat, zet **Zet [boot] op de wachtlijst** hem op de lijst van zijn bootsoort, met de datum van vandaag, en kom je terug op dit scherm met de melding "De boot staat op de wachtlijst." Een eerdere aanmelddatum kies je op de pagina van de boot. Bij een clubboot of de boot van een oud-lid staat geen knop maar "kan niet op de wachtlijst". Zijn er geen boten zonder plaats, dan staat er "Alle boten hebben een plaats." Een kijker ziet dezelfde lijst met de eigenaar als platte tekst, zonder uitleg boven de lijst, zonder knop, zonder wachtliststatus, zonder de tag oud-lid en zonder link naar een lid; het menu van een kijker heeft dit scherm onder de kop Boten.
 
 ![De pagina Boten zonder plaats met een lijst van boten, met bootsoort, eigenaar en de knop Zet op de wachtlijst.](afbeeldingen/boten-zonder-plaats.png)
 
 ## Boten zonder foto
 
-Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met **Boten zonder foto** in het menu, onder de kop Boten, als laatste item; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
+Op `/boten-zonder-foto` staan de boten die nog geen foto hebben, zodat je tijdens een ronde door de loods gericht foto's maakt. Je opent de lijst met Boten > Boten zonder foto; het menu toont hier geen aantal. Boven de lijst staat het aantal, bijvoorbeeld "6 boten zonder foto". Per boot staan de naam (een link naar de pagina van de boot), de bootsoort, de eigenaar en de plaats. De eigenaar staat als tekst: de naam van het lid, "clubboot" of "eigenaar onbekend"; bij een oud-lid staat de tag **oud-lid** erachter. Eerst staan de boten met een plaats, in de volgorde van de loods (rek, verdieping, vak); daarna staan de boten zonder plaats ("geen plaats"), op naam.
 
 Open een boot uit de lijst en voeg bij **Foto vervangen** een foto toe (zie Boten). Daarna staat de boot niet meer op de lijst. Hebben alle boten een foto, dan staat er "Alle boten hebben een foto."
 
 ## De wachtlijst
 
-Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort. De lijst verandert direct, bij het zoeken vanaf drie tekens; zonder JavaScript staat er een knop **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
+Een boot van een lid of met een onbekende eigenaar, zonder plaats, kan op de wachtlijst van zijn bootsoort. Op `/wachtlijst` (Boten > Wachtlijst) staat per bootsoort een eigen lijst, met per boot het lid (of "eigenaar onbekend"), de aanmelddatum en de wachttijd, en het aantal boten op de wachtlijst erboven. De langst wachtende staat bovenaan. Zoek met **Zoek op boot of lid** (hoofdletters en accenten tellen niet mee) of kies bij **Alleen soort** één bootsoort. De lijst verandert direct, bij het zoeken vanaf drie tekens; zonder JavaScript staat er een knop **Toon wachtlijst**. Die volgorde is informatie: jij kiest welke boot een vrije plaats krijgt.
 
 ![De wachtlijst met per bootsoort de boten, het lid, de aanmelddatum en de wachttijd.](afbeeldingen/wachtlijst.png)
 
@@ -197,13 +199,13 @@ Na het toewijzen toont de plaats de boot, de eigenaar met lidnummer, en de link 
 
 ## Overzichten
 
-In het menu staan drie overzichten. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf. Opgezegd en Gaan opzeggen hebben een zoekveld en tonen het aantal erboven; de lijst verandert direct, zoals bij Boten en Leden.
+Drie overzichten staan onder twee koppen: Loods en Leden. Ze zijn alleen om te lezen; je werkt vanuit de plaats zelf. Opgezegd en Gaan opzeggen hebben een zoekveld en tonen het aantal erboven; de lijst verandert direct, zoals bij Boten en Leden.
 
 | Menu | Adres | Wat je ziet |
 |---|---|---|
-| Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort; de lijst verandert direct. Zonder JavaScript staat er een knop **Toon vrije plaatsen**. |
-| Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon plaatsen**. |
-| Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon boten**. |
+| Loods > Vrije plaatsen | `/vrij` | Vrije plaatsen voor boten van leden, clubplaatsen niet, met het aantal erboven. Kies bij **Geschikt voor** een bootsoort; de lijst verandert direct. Zonder JavaScript staat er een knop **Toon vrije plaatsen**. |
+| Leden > Opgezegd | `/opgezegd` | Boten van oud-leden die nog een plaats hebben, de oudste opzegging bovenaan. Zoek op boot of oud-lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon plaatsen**. |
+| Leden > Gaan opzeggen | `/opzeggend` | Boten met een plaats van leden met een opzegdatum in de toekomst, de vroegste bovenaan. Zoek op boot of lid; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen), en een schermlezer hoort het aantal. Zonder JavaScript staat er een knop **Toon boten**. |
 
 ![De vrije plaatsen voor kajaks, met rek, aanduiding en geschikte bootsoorten.](afbeeldingen/vrij.png)
 
@@ -215,13 +217,13 @@ Een lid verhuist van **Gaan opzeggen** naar **Opgezegd** zodra de opzegdatum is 
 
 ## Export naar Excel
 
-Op `/import-export` staat onder **Indeling als Excel** de link **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
+Op `/import-export` (Beheer > Import/export) staat onder **Indeling als Excel** de link **Indeling exporteren naar Excel**. Je krijgt het bestand `indeling.xlsx` met een rij per plaats. De kolommen zijn Rek, Code, Status, Bootsoort, Bootnaam, Eigenaar en Lidnummer. Bij een vrije plaats staat in de kolom Bootsoort waarvoor de plaats geschikt is, tussen haakjes. Adres, telefoon, e-mail en foto zitten er bewust niet in.
 
 ![De pagina Import/export met vier panelen: Leden uit e-boekhouden, Indeling als Excel, Indeling als CSV en Bezetting als CSV.](afbeeldingen/import-export.png)
 
 ## Indeling als CSV exporteren en importeren
 
-Op `/import-export` staan onder **Indeling als CSV** twee downloads en een uploadformulier. **Indeling exporteren als CSV** geeft `rekindeling.csv` met een regel per plaats. **Leeg sjabloon met uitleg downloaden** geeft `rekindeling-leeg.csv`: de kopregel, de uitleg en een voorbeeldregel, alles als commentaar.
+Op `/import-export` (Beheer > Import/export) staan onder **Indeling als CSV** twee downloads en een uploadformulier. **Indeling exporteren als CSV** geeft `rekindeling.csv` met een regel per plaats. **Leeg sjabloon met uitleg downloaden** geeft `rekindeling-leeg.csv`: de kopregel, de uitleg en een voorbeeldregel, alles als commentaar.
 
 De kolommen zijn `rek`, `omschrijving`, `verdieping`, `vak`, `bootsoorten` en `clubplaats`. Zet bij `bootsoorten` de namen zoals de applicatie ze toont, gescheiden door een `/`, bijvoorbeeld `Kajak/Surfski`. Een lege cel betekent "geen bootsoort"; dat kan alleen bij een nieuwe plaats of een plaats die al geen bootsoort heeft. Bij `clubplaats` staat `ja` of `nee`. De omschrijving is op alle regels van hetzelfde rek gelijk.
 
@@ -233,7 +235,7 @@ Staat er een fout in het bestand, dan verandert er niets en noemt het scherm elk
 
 ## Bezetting als CSV exporteren en importeren
 
-Op `/import-export` staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Heet een lid zelf "clubboot", dan staat in de export het lidnummer erbij en koppelt de import op dat lidnummer. Een clubboot met een lidnummer dat bij geen lid hoort, weigert de import. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
+Op `/import-export` (Beheer > Import/export) staat onder **Bezetting als CSV** een export, een leeg sjabloon, een uploadformulier en een link naar de onthouden koppelingen. De export geeft `bezetting.csv` met een regel per bezette plaats. De kolommen zijn `plaats` (zoals `A/1/1`), `boot`, `bootsoort`, `eigenaar` en `lidnummer`. Een clubboot heeft in de kolom `eigenaar` het woord `clubboot` (hoofdletters tellen niet mee) en een leeg lidnummer. Heet een lid zelf "clubboot", dan staat in de export het lidnummer erbij en koppelt de import op dat lidnummer. Een clubboot met een lidnummer dat bij geen lid hoort, weigert de import. Zijn eigenaar en lidnummer beide leeg, dan is de eigenaar onbekend: de boot komt op Boten zonder eigenaar en past op een gewone plaats. Voor het bestand gelden dezelfde regels als bij de indeling: UTF-8, puntkomma's, commentaar met `#`, hooguit 256 kB.
 
 Na het uploaden zie je een overzicht, en er verandert nog niets. Elke regel heeft een uitkomst:
 
@@ -256,7 +258,7 @@ Staat er in het bestand een bootsoort die de applicatie niet kent, bijvoorbeeld 
 
 ## Kaartjes printen
 
-Op `/kaartjes` kies je voor welke plaatsen je een kaartje wilt. Elk rek heeft een eigen vak dat altijd open staat. Vink losse plaatsen aan, een heel rek (**Heel** en de naam van het rek) of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
+Op `/kaartjes` (Beheer > Kaartjes) kies je voor welke plaatsen je een kaartje wilt. Elk rek heeft een eigen vak dat altijd open staat. Vink losse plaatsen aan, een heel rek (**Heel** en de naam van het rek) of **Alle plaatsen**, en kies **Kaartjes maken**. Je krijgt de printpagina `/kaartjes/print` met acht kaartjes per A4, in twee kolommen en vier rijen.
 
 Elk kaartje toont het logo (zonder logo de naam van de vereniging), de aanduiding van de plaats, de bootsoorten waarvoor de plaats geschikt is (bijvoorbeeld "Geschikt voor Kajak/Canadese kano") en een QR-code. Heeft de plaats geen bootsoort, dan valt die regel weg. De omschrijving van het rek en de naam van de eigenaar staan er niet op, zodat je geen nieuw kaartje hoeft te printen als een plaats een andere boot krijgt. Wie op de plaats ligt, staat op de openbare pagina achter de QR-code. Adres, telefoon, e-mail en lidnummer staan nooit op een kaartje.
 
@@ -276,13 +278,13 @@ Elke plaats heeft een openbare pagina op `/p/` met een lange, niet te raden sleu
 
 De ledenlijst komt uit de ledenbron. Je maakt of wijzigt leden niet in de applicatie. De integratiecontainer haalt de lijst dagelijks op en stuurt haar naar de applicatie.
 
-Op `/leden` staat per lid de naam, met in de regel eronder het lidnummer, de datum van lid sinds en het aantal boten (zoals "4 boten", "1 boot" of "0 boten"; alle boten van het lid tellen, ook zonder plaats of op de wachtlijst), met bij een oud-lid de tag **oud-lid** achter de naam, en het aantal leden erboven. Zoek op naam of lidnummer; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal leden. Zonder JavaScript staat er een knop **Toon leden**. De import van leden staat niet op deze pagina, maar bij Import/export. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt een oud-lid dat nog niet in de applicatie stond op als de opzegdatum hooguit 5 jaar geleden is (precies 5 jaar valt er nog binnen), zodat je het kunt kiezen als eigenaar van een boot. Een lid dat langer geleden opzegde, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt ook binnen.
+Op `/leden` (Leden > Leden) staat per lid de naam, met in de regel eronder het lidnummer, de datum van lid sinds en het aantal boten (zoals "4 boten", "1 boot" of "0 boten"; alle boten van het lid tellen, ook zonder plaats of op de wachtlijst), met bij een oud-lid de tag **oud-lid** achter de naam, en het aantal leden erboven. Zoek op naam of lidnummer; hoofdletters en accenten tellen niet mee. De lijst verandert direct, zodra er drie tekens staan (even na het typen). Een schermlezer hoort het aantal leden. Zonder JavaScript staat er een knop **Toon leden**. De import van leden staat niet op deze pagina, maar bij Import/export. Een lid opent op `/leden/` met zijn boten en plaatsen. Een lid met een opzegdatum van vandaag of eerder heet oud-lid; zijn gegevens en plaatsen blijven staan. De import neemt een oud-lid dat nog niet in de applicatie stond op als de opzegdatum hooguit 5 jaar geleden is (precies 5 jaar valt er nog binnen), zodat je het kunt kiezen als eigenaar van een boot. Een lid dat langer geleden opzegde, komt er niet in en telt als overgeslagen. Een lid dat later opzegt, blijft staan, zodat zijn boot als boot van een oud-lid wordt herkend. Een opzegdatum in de toekomst komt ook binnen.
 
 Op de pagina van een lid staan de boten als lijst, met bootsoort en plaats. De aantallen per bootsoort staan niet op deze pagina. De integratiecontainer haalt ze op via de API: alleen boten met een plaats tellen, een boot op de wachtlijst of zonder plaats telt niet, een clubboot ook niet, en een oud-lid staat er niet in, ook niet als zijn boot een plaats heeft. De ledenadministratie kan ze later overnemen. Terugschrijven naar de ledenbron staat standaard uit; de beheerder kan het aanzetten.
 
 **Bewaartermijn.** Elke nacht om 04:00 verwijdert de applicatie gegevens die ouder zijn dan 5 jaar. Een oud-lid verdwijnt 5 jaar na de opzegdatum, met zijn boten en foto's. Heeft een boot van het oud-lid nog een plaats, dan blijft alles staan tot je de plaats vrijgeeft. Een regel in een log verdwijnt 5 jaar na de wijziging. Een verwijderd oud-lid komt niet terug met de volgende import, want de import neemt geen lid op dat langer dan 5 jaar geleden opzegde. De termijn van 5 jaar geldt ook voor wat je kunt kiezen: een oud-lid daarbuiten staat niet in de treffers van **Eigenaar** en krijgt geen plaats meer. In de logs blijft een verwijderd lid staan als `lid:` met een nummer, zonder naam.
 
-**Een import aanvragen.** Kies op `/import-export` in het paneel **Leden uit e-boekhouden** de knop **Leden nu ophalen**. Je komt terug op Import/export, met de melding en de laatste importruns eronder. De integratiecontainer begint binnen een minuut. Ververs daarna de pagina. Een tweede verzoek terwijl er al een klaarstaat, weigert de applicatie.
+**Een import aanvragen.** Kies op `/import-export` (Beheer > Import/export) in het paneel **Leden uit e-boekhouden** de knop **Leden nu ophalen**. Je komt terug op Import/export, met de melding en de laatste importruns eronder. De integratiecontainer begint binnen een minuut. Ververs daarna de pagina. Een tweede verzoek terwijl er al een klaarstaat, weigert de applicatie.
 
 ![Het paneel Leden uit e-boekhouden op Import/export, met de melding dat de import is aangevraagd en de uitkomsten van eerdere imports.](afbeeldingen/import-export.png)
 
@@ -304,8 +306,8 @@ Er zijn twee logs. Elke beheerder ziet ze allebei; een kijker ziet geen van beid
 
 | Log | Menu | Inhoud |
 |---|---|---|
-| Mutatielog (`/log`) | **Log** | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot verplaatst ("boot verplaatst"), een boot op de wachtlijst gezet ("wachtlijst toegevoegd", met de aanmelddatum) of eraf gehaald ("wachtlijst verwijderd") |
-| Technisch log (`/log/techniek`) | **Technisch log** | Tokens, geweigerde API-aanroepen, gebruikers (ook een rolwijziging, `beheerder.rol_gewijzigd`) en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen), en het koppelen van een gebruiker aan een lid (`beheerder.lid_gewijzigd`) |
+| Mutatielog (`/log`) | Loods > Log | Boten aangemaakt, gewijzigd of verwijderd, een foto toegevoegd of vervangen, een plaats toegewezen of vrijgegeven, een boot verplaatst ("boot verplaatst"), een boot op de wachtlijst gezet ("wachtlijst toegevoegd", met de aanmelddatum) of eraf gehaald ("wachtlijst verwijderd") |
+| Technisch log (`/log/techniek`) | Beheer > Technisch log | Tokens, geweigerde API-aanroepen, gebruikers (ook een rolwijziging, `beheerder.rol_gewijzigd`) en inlogmethodes, instellingen, importverzoeken, de indeling (rekken aanmaken, wijzigen of verwijderen, en plaatsen die erbij komen, wijzigen of verdwijnen), de bootsoorten en de nachtelijke opschoning (`opschoning.uitgevoerd`, met alleen de aantallen), en het koppelen van een gebruiker aan een lid (`beheerder.lid_gewijzigd`) |
 
 Het mutatielog toont bij elke regel waarop de handeling betrekking had als tekst: "Plaats B/2/2", "Rek B", "Boot Zeemeeuw", "Lid Anna de Vries (1001)" en "Gebruiker anna" (een account). Een kijker ziet het lid zonder lidnummer, geen regels over de wachtlijst ("wachtlijst toegevoegd" en "wachtlijst verwijderd"), en niet de link **Meer in het log**. Bestaat een boot of lid niet meer, dan staat de verwijzing er zoals opgeslagen, bijvoorbeeld `boot:183`. Het technische log toont de verwijzingen zoals opgeslagen. Beide tonen per pagina 50 regels, de nieuwste bovenaan, onder een kop per dag met de weekdag (in de tijdzone van de installatie, niet in UTC); met **Oudere regels** en **Nieuwere regels** blader je verder. Onder een overzicht staat het log in een uitklapblok **Log** dat dicht begint; open het met een klik. Een overzicht toont hooguit 50 regels; toont het er 50, dan opent **Meer in het log** het hele log. Onder een boot staan de mutaties van die boot, onder een lid de mutaties van de boten van dat lid en onder een plaats de toewijzingen, vrijgaven en verplaatsingen op die plaats. De wachtlijst toont de handelingen op de wachtlijst. De overzichten van vrije plaatsen en van (gaan) opzeggen tonen de toewijzingen, vrijgaven en verplaatsingen op hun plaatsen. Onder `/indeling` en de schermen voor gebruikers, profiel, leden en instellingen staat geen log; zoek die wijzigingen in het technische log.
 
@@ -315,7 +317,7 @@ Het mutatielog toont bij elke regel waarop de handeling betrekking had als tekst
 
 ## De technische status
 
-Onder **Status** (`/status`) zie je of de installatie goed draait. Elk onderdeel heeft de status ok, waarschuwing of fout.
+Onder Beheer > Status (`/status`) zie je of de installatie goed draait. Elk onderdeel heeft de status ok, waarschuwing of fout.
 
 | Onderdeel | Wat je ziet | Waarschuwing als |
 |---|---|---|
@@ -339,7 +341,7 @@ Een waarschuwing bij de import betekent meestal dat de integratiecontainer niet 
 
 ## Tokens voor de API
 
-Met een token gebruik je de API (`/api/v1`) zonder je wachtwoord te delen. Onder **Tokens** (`/tokens`) staan alle tokens van de installatie, met naam, soort, eigenaar of maker, rechten, whitelist, vervaldatum, laatste gebruik en de datum van intrekken. De waarde van een token staat er nooit. Elke beheerder ziet en beheert alle tokens, ook die van een collega.
+Met een token gebruik je de API (`/api/v1`) zonder je wachtwoord te delen. Onder Beheer > Tokens (`/tokens`) staan alle tokens van de installatie, met naam, soort, eigenaar of maker, rechten, whitelist, vervaldatum, laatste gebruik en de datum van intrekken. De waarde van een token staat er nooit. Elke beheerder ziet en beheert alle tokens, ook die van een collega.
 
 ![De pagina Tokens met een persoonlijk token en een robottoken, hun rechten en de knop Intrekken.](afbeeldingen/tokens.png)
 
@@ -404,7 +406,7 @@ Een kijker ziet nergens een lidnummer, een opzegdatum of de melding dat een eige
 
 ## Naam, logo en bootsoorten
 
-Op `/instellingen` pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud.
+Op `/instellingen` (Beheer > Instellingen) pas je de naam van de vereniging aan. Ze staat op elke pagina, ook de openbare. De kleuren zijn vast en niet in te stellen. Opslaan vraagt een inlog van hooguit 10 minuten oud.
 
 In het blok **Logo** upload je het logo van de vereniging: kies een bestand in JPEG, PNG of WebP tot 10 MB en kies **Logo opslaan**. De applicatie verkleint het tot 800 pixels en haalt de gegevens uit het bestand weg, zoals de locatie. Het logo staat direct in de kopbalk, op de openbare pagina's en op de kaartjes, en een nieuw logo vervangt het vorige. **Logo verwijderen** haalt het weg; dan toont de kopbalk alleen de naam. Beide vragen een inlog van hooguit 10 minuten oud. Is het bestand groter dan 10 MB of geen geldige afbeelding, dan blijft het vorige logo staan, als er een is, en staat het blok open met de melding. Een bestand boven 25 MB weigert de server met een foutpagina zonder uitleg.
 

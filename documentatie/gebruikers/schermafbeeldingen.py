@@ -59,8 +59,23 @@ class Opnamen:
     def __init__(self, page):
         self.page = page
 
-    def maak(self, naam, hoogte=None, element=None):
-        """Eerste scherm van de pagina (hooguit `hoogte` pixels), of alleen `element`."""
+    def controleer_menu(self, naam):
+        """Een opname met kop toont het menu met koppen (#423); anders stopt het script, zodat het oude
+        menu niet ongemerkt terugkomt."""
+        koppen = self.page.locator("nav .dj-menu__koppen")
+        try:
+            if BREEDTE >= 900:
+                expect(koppen).to_be_visible(timeout=5000)
+            else:  # onder 900 px staan de koppen achter de knop Menu: dan telt aanwezig
+                expect(koppen).to_have_count(1, timeout=5000)
+        except AssertionError:
+            sys.exit(f"Opname {naam}: nav .dj-menu__koppen staat niet in beeld; geen opname gemaakt.")
+
+    def maak(self, naam, hoogte=None, element=None, kop=True):
+        """Eerste scherm van de pagina (hooguit `hoogte` pixels), of alleen `element`.
+        `kop=False` voor een pagina zonder login en dus zonder menu."""
+        if kop and element is None:
+            self.controleer_menu(naam)
         UIT.mkdir(parents=True, exist_ok=True)
         pad = UIT / f"{naam}.png"
         if element is not None:
@@ -111,7 +126,7 @@ def schermen(browser):
     page.get_by_label("Wachtwoord nog een keer").fill(WACHTWOORD)
     page.get_by_label("Code van zes cijfers uit de app").fill("123456")
     verberg_geheimen(page)
-    Opnamen(page).maak("uitnodiging")
+    Opnamen(page).maak("uitnodiging", kop=False)
     page.get_by_label("Code van zes cijfers uit de app").fill(eerste)
     page.get_by_role("button", name="Wachtwoord instellen").click()
     expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
@@ -123,12 +138,12 @@ def schermen(browser):
     page = ctx.new_page()
     o = Opnamen(page)
     page.goto("/inloggen")
-    o.maak("inloggen")
+    o.maak("inloggen", kop=False)
     page.locator("summary", has_text="Met wachtwoord en code").click()
     page.get_by_label("Gebruikersnaam").fill("beheerder.een")
     page.get_by_label("Wachtwoord", exact=True).fill(WACHTWOORD)
     page.get_by_role("button", name="Verder").click()
-    o.maak("code")
+    o.maak("code", kop=False)
     page.get_by_label("Code van zes cijfers").fill(nieuwe_code(totp, eerste))
     page.get_by_role("button", name="Inloggen").click()
     expect(page.get_by_role("heading", level=1)).to_have_text("Rekoverzicht")
@@ -256,6 +271,10 @@ def schermen(browser):
     o.maak("vrij", hoogte=700)
     page.goto("/wachtlijst")
     o.maak("wachtlijst", hoogte=1000)
+    # Het menu met een open kop (#423); de handleiding legt het uit in de inleiding. Op een groot scherm sluit menu.js de kop bij het laden.
+    page.get_by_role("navigation", name="Hoofdmenu").locator("summary", has_text="Boten").click()
+    expect(page.get_by_role("link", name="Boten zonder foto")).to_be_visible()
+    o.maak("menu", hoogte=450)
     page.goto("/opgezegd")
     o.maak("opgezegd", hoogte=900)  # 600 knipt de rijen onder de teller af (#220)
     page.goto("/opzeggend")

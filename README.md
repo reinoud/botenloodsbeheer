@@ -26,6 +26,46 @@ Een webapplicatie waarmee een kanovereniging bijhoudt welke boot op welke plaats
 
 **Inloggen en API.** Beheerders loggen in met een passkey of met een wachtwoord en een authenticator-app. Er is een API (`/api/v1`, met OpenAPI-specificatie) met persoonlijke tokens en robottokens, rechten per token en een IP-whitelist.
 
+## Architectuur
+
+De applicatie draait als zes containers in één `docker-compose.yml`, achter een gedeelde Traefik op de host. `web` toont de schermen en de openbare pagina. `api` biedt `/api/v1` aan de integratiecontainer. Een client met een persoonlijk token komt er alleen bij als de beheerder de API met `compose.api-extern.yml` van buiten openzet. `worker` doet de nachtelijke opschoning. `migrate` past bij elke start de databasemigraties toe en stopt dan. `db` is PostgreSQL en bewaart alle gegevens.
+
+Vier netwerken scheiden het verkeer. `voorkant` en `koppeling` zijn extern aangemaakt en verbinden de containers met Traefik. `achterkant` is intern: daar staan `db`, `migrate`, `web`, `api` en `worker`, zonder weg naar buiten. `buiten` heeft alleen `integratie`, de enige container die naar internet mag.
+
+De ledenlijst komt uit e-boekhouden. De container `integratie` haalt haar op en stuurt haar via Traefik naar de API, met een robottoken uit het secret `api_token`. Hij kent alleen de API en heeft geen toegang tot de database. Een vereniging met een andere ledenbron vervangt alleen deze container; de rest blijft gelijk.
+
+Een beheerder werkt in de browser. Die gaat via Traefik naar `web`.
+
+```mermaid
+flowchart LR
+  bron([e-boekhouden])
+  browser([Browser])
+  client([Client met persoonlijk token])
+  subgraph host[Host]
+    traefik{{Traefik, gedeeld}}
+    integratie[integratie]
+    subgraph achterkant[achterkant, intern]
+      web[web]
+      api["api (/api/v1)"]
+      worker[worker]
+      migrate[migrate]
+      db[(db)]
+    end
+  end
+  bron -->|buiten| integratie
+  integratie -->|"koppeling, entrypoint intern (8081), robottoken"| traefik
+  client -.->|"websecure, alleen met compose.api-extern.yml"| traefik
+  browser -->|voorkant| traefik
+  traefik -->|voorkant| web
+  traefik -->|voorkant| api
+  web --> db
+  api --> db
+  worker --> db
+  migrate --> db
+```
+
+De details staan in [`docs/architecture/architectuur.md`](docs/architecture/architectuur.md).
+
 ## Documentatie
 
 - Projectregels: `docs/PROJECT-OVERLAY.md`. Architectuur: `docs/architecture/architectuur.md`.
