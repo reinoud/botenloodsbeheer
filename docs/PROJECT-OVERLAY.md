@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.35
+**Versie overlay:** v0.6.36
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-25
@@ -108,7 +108,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noemt een contract een domeinfunctie, zoek dan eerst of ze bestaat (`grep -n 'def <naam>' app/domein/`) en zeg of hergebruik mag (#399).
 - E2E-bootnamen krijgen een voorvoegsel dat uniek is per testbestand (#399).
 - Krijgt de kijker een nieuwe route, zeg dan of er een menu-item bij komt (het kijkermenu in `base.html` is een vaste lijst) en noem de test met de omvang van `KIJKER_TOEGESTAAN` in `tests/unit/test_kijkers.py`. Wijzigt het menu, zoek dan met `grep -rn 'Hoofdmenu\|menu-[0-9]' tests/e2e/ documentatie/gebruikers/schermafbeeldingen.py` en draai die bestanden (#399).
-- Geef bij een merge nooit `--delete-branch` mee: het verwijderen van een remote branch vraagt per keer akkoord van de stakeholder.
+- Geef bij een merge geen `--delete-branch` mee. Na de merge verwijdert de sessie de remote branch zelf als `gh pr list --head <branch> --state all` de PR als MERGED toont; een ongemergde branch verwijderen vraagt akkoord. Besluit van de stakeholder, 2026-11-25.
 - Zet een besluit van de stakeholder in het issue vóór de brief, en controleer met `gh issue view <nr> --json comments` dat het commentaar er staat. Staat het er niet, zet dan de tekst van het besluit in de brief (#372).
 - Zeg bij "hooguit N keer" of het om N pogingen of N herhalingen gaat (#372).
 - Keert een besluit een eerder besluit om, noem dan welke documenten meegaan: ADR, criteria in de backlog, handleiding, en het besluit bij Design System (#380).
@@ -620,6 +620,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.36 | 2026-11-25 | Gemergde remote branches verwijdert de sessie zelf, zonder akkoord per keer (Algemeen) | Besluit stakeholder 2026-11-25 |
 | v0.6.35 | 2026-11-25 | Vijf regels (Documentatie): afbeeldingen in de README uit het script en in de handleiding, controle op het menu, tellen met een script, diagram tegen de overrides, script zonder `main()` toetsen; uit #423 en de terugblikken van prism en sentinel | Issue #423, lessen |
 | v0.6.34 | 2026-11-25 | Twee regels (Bouw): kop openen voor een schermafbeelding van het menu, `storage_state` bewaren; uit de terugblik van sentinel bij #422 | Lessen |
 | v0.6.33 | 2026-11-25 | Drie regels (Review): overlayregel met zoekterm, eigen test via `/scratch`, sessiewaarden ter plekke gewijzigd; uit de terugblikken van sentinel en aegis bij #419 | Lessen |
