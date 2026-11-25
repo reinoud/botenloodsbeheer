@@ -2,6 +2,24 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.6.1 (2026-11-25)
+
+Onderhoudsversie (milestone "Onderhoud en sessie, v2.6.1"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.6.1`
+- `ghcr.io/reinoud/botenloods-integratie:2.6.1`
+
+Ook beschikbaar onder de tags `2.6` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.6.1.cdx.json` en `botenloods-integratie-2.6.1.cdx.json`.
+
+**Opgelost**
+- De sessiecookie gaat alleen mee als de sessie gewijzigd is. Een laat antwoord van een gewone pagina zet zo geen oudere sessie meer terug, waardoor bijvoorbeeld een melding of het toevoegen van een passkey verloren kon gaan (#419).
+
+**Overig**
+- Traefik v3.7.17 staat op de nieuwe digest, in het voorbeeld `documentatie/beheer/voorbeelden/traefik/compose.yml` en in de ontwikkelstack (#412, #413).
+- De regels van het oude menu zijn uit `stijl.css`; het uiterlijk is gelijk (#422).
+- De release-workflow gebruikt trivy 0.76.2 en docker/login-action 4.8.0 (#415, #410).
+
 ## 2.6.0 (2026-11-24)
 
 Minorversie (milestone "Hoofdmenu met vijf koppen en v2.6.0"). Geen migratie.

@@ -49,6 +49,8 @@ Versie 2.5.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet.
 
 Versie 2.6.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Terug naar 2.5.0 kan zonder downgrade van de database.
 
+Versie 2.6.1 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Alleen het image van de app verandert. Het voorbeeld `voorbeelden/traefik/compose.yml` heeft een nieuwe digest voor dezelfde Traefik v3.7.17; wie dat voorbeeld volgt, haalt het image opnieuw op. Terug naar 2.6.0 kan zonder downgrade van de database.
+
 ## Tokens
 
 - Beheerders maken, wijzigen en trekken tokens in op het scherm Tokens (`/tokens`), ook persoonlijke tokens; zie de handleiding. Een kijker heeft geen tokens: wordt een account kijker, dan vervallen zijn persoonlijke tokens en weigert de API ze, met dezelfde 401 als bij een geblokkeerde eigenaar.
