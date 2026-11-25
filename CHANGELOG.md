@@ -2,7 +2,15 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
-## Unreleased
+## 2.7.0 (2026-11-25)
+
+Minorversie (milestone "Vangnetcontainer, v2.7.0"). Geen migratie. De images zijn opnieuw gebouwd zonder wijziging in `app/` of `integratie/`.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.7.0`
+- `ghcr.io/reinoud/botenloods-integratie:2.7.0`
+
+Ook beschikbaar onder de tags `2.7` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.7.0.cdx.json` en `botenloods-integratie-2.7.0.cdx.json`.
 
 **Nieuw**
 - Vangnet: een eigen stack (`documentatie/beheer/voorbeelden/vangnet/compose.yml`) die een nette 503-pagina met `Retry-After` toont zolang `web` niet healthy is, en een JSON-fout 503 op het entrypoint `intern` zolang `api` niet healthy is. Traefik antwoordt anders met een kale 404. Het image is `ghcr.io/reinoud/traefik-unavailable:1.0.0`, vastgepind op een digest en opgenomen in Dependabot en in de Trivy-scan vóór een release. Het vangnet is optioneel en wijzigt `docker-compose.yml` niet (#418).
