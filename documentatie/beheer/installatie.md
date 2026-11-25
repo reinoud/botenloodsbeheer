@@ -39,6 +39,33 @@ Het voorbeeld pint beide images op een digest en draait beide diensten met een a
 
 Staat er een load balancer vóór Traefik, laat die dan het clientadres doorgeven met het PROXY protocol. Vertrouw dat in Traefik alleen van de load balancer: `--entrypoints.websecure.proxyprotocol.trustedips=<adressen van de load balancer>`, en op `web` als die ook poort 80 doorstuurt (zie het voorbeeld). Zet de optie alleen als de load balancer op elke verbinding zelf een PROXY-kop zet (zoals `send-proxy`), en alleen met de exacte adressen van de load balancer (`/32` of `/128`), nooit met een subnet waarin ook andere machines staan. Anders kan een client zelf een PROXY-kop sturen en elk adres opgeven; dan omzeilt hij `externtoegang`, `iprem` en de rem op inloggen. Zet de optie niet op `intern` en zet nergens `proxyProtocol.insecure`. `PROXY_HOPS` blijft 1 en de middlewares krijgen geen `ipStrategy`. Een load balancer met alleen `X-Forwarded-For` wordt niet ondersteund ([API van buiten](api-van-buiten.md)).
 
+## Vangnet
+
+Zolang `web` of `api` niet healthy is (opstarten, herstart, crash), haalt Traefik hun routers weg en antwoordt hij met een kale `404 page not found`. Het vangnet is een klein container dat dan antwoordt met `503 Service Unavailable`, `Retry-After: 30` en `Cache-Control: no-store`. Een browser krijgt een pagina met een kop en één alinea, een andere client JSON (`{"fout": "..."}`). Het is optioneel. Het voorbeeld staat in `documentatie/beheer/voorbeelden/vangnet/compose.yml` in de repository; de uitleg van het image staat in de README van [traefik-unavailable](https://github.com/reinoud/traefik-unavailable).
+
+Het vangnet draait in een eigen stack, zodat het blijft staan als de stack van de botenloods herstart. Het gebruikt het netwerk `<INSTALLATIE>_voorkant` uit stap 1. Kopieer het bestand naar `vangnet/compose.yml` naast `.env` en start het met dezelfde `.env` (`DOMEIN`, `INSTALLATIE`, `KOPPELNET`, `TRAEFIK_CERTRESOLVER`):
+
+```sh
+docker compose --env-file .env -f vangnet/compose.yml up -d
+```
+
+Het voorbeeld heeft twee routers, beide met `priority=1`:
+
+- `<INSTALLATIE>-vangnet` op `websecure` met `Host(DOMEIN)` zonder `/api/` (net als de router `-web`), met dezelfde certresolver als de app;
+- `<INSTALLATIE>-vangnet-intern` op `intern` met `ClientIP(KOPPELNET)` en `PathPrefix(/api/v1/)`, dezelfde voorwaarde als de router `-api`.
+
+De router `-http` (doorverwijzing naar https) blijft zoals hij was. Een route van de app heeft altijd een hogere prioriteit (een expliciete, of de lengte van haar regel), dus het vangnet beantwoordt niets zolang `web` en `api` draaien. Met `compose.api-extern.yml` vangt het vangnet de publieke API niet op; daar blijft het de 404 van Traefik. De beveiligingsheaders (CSP, `nosniff`, `Referrer-Policy`) zet het vangnet zelf, want de middleware `-kop` valt met `web` weg. Het zet geen HSTS; dat blijft bij de app. Het image draait als niet-root met een alleen-lezen bestandssysteem, zonder capabilities en met `no-new-privileges`, en heeft een eigen healthcheck.
+
+Let op de integratiecontainer: hij herkent alleen de platte 404 van Traefik als "API nog niet bereikbaar" en probeert het dan elke minuut opnieuw. Een 503 van het vangnet telt voor hem als gewone fout van de API, en hij wacht dan een uur (een nieuw token of een nieuw verzoek van een beheerder heft dat op). Dat raakt alleen een import die precies valt in de minuten dat `api` ontbreekt.
+
+Controle:
+
+```sh
+curl -i -H 'Accept: text/html' https://DOMEIN/willekeurig   # 503 zolang web ontbreekt
+```
+
+Stop `web` om het te proberen en start hem daarna weer. Draai het vangnet niet naast een eigen router die ook prioriteit 1 of lager heeft op `DOMEIN`.
+
 ## Stap 1: netwerken aanmaken
 
 Kies een naam voor de installatie (`INSTALLATIE`, standaard `botenloods`) en een vrij subnet voor `koppeling` (`KOPPELNET`, standaard `10.203.0.0/24`). Beide netwerken zijn intern:
@@ -89,7 +116,7 @@ docker compose up -d
 docker compose ps
 ```
 
-Traefik stuurt pas verkeer naar `web` en `api` als hun healthcheck slaagt. Tot dan geeft het domein 404.
+Traefik stuurt pas verkeer naar `web` en `api` als hun healthcheck slaagt. Tot dan geeft het domein 404, tenzij je het [vangnet](#vangnet) draait.
 
 De eerste beheerder komt van de commandoregel; het commando maakt altijd een beheerder. Volgende gebruikers, beheerder of kijker, nodigt een beheerder uit via `/gebruikers`:
 

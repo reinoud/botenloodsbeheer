@@ -1,0 +1,45 @@
+# Vangnet voor de botenloods (#418): een nette 503-pagina zolang web of api niet healthy is.
+# Traefik haalt dan de routers van de app weg en antwoordt zelf met een kale 404. Dit container
+# vangt dat op met routers met prioriteit 1; elke router van de app wint, zolang die bestaat.
+# Eigen stack, zodat het vangnet blijft draaien als de stack van de botenloods herstart.
+# Het netwerk voorkant maakt de beheerder vooraf (installatie.md, stap 1). Kopieer dit bestand naar
+# vangnet/compose.yml naast .env en start het met dezelfde .env:
+#   docker compose --env-file .env -f vangnet/compose.yml up -d
+name: ${INSTALLATIE:-botenloods}-vangnet
+
+services:
+  vangnet:
+    image: ghcr.io/reinoud/traefik-unavailable:1.0.0@sha256:ce7cc79b85aa86235061c7d14031a6b0037c438864da90cb551611476bdd566f
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    # Het image heeft een eigen healthcheck op poort 8081; die poort heeft geen router.
+    environment:
+      TITEL: "Even geduld"
+      TEKST: "De botenloods is even niet bereikbaar. Probeer het over een minuut opnieuw."
+    networks: [voorkant]
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=${INSTALLATIE:-botenloods}_voorkant
+      - traefik.http.services.${INSTALLATIE:-botenloods}-vangnet.loadbalancer.server.port=8080
+      # Gebruikers: dezelfde host als de app, op websecure, zonder /api/ (net als router -web).
+      # Met compose.api-extern.yml vangt het vangnet de publieke API dus niet op. Met dezelfde certresolver als de app,
+      # zodat het certificaat er ook is als de app nog nooit heeft gedraaid.
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.rule=Host(`${DOMEIN:?DOMEIN ontbreekt}`) && !PathPrefix(`/api/`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.priority=1
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.entrypoints=websecure
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.tls=true
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.tls.certresolver=${TRAEFIK_CERTRESOLVER:-}
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.observability.accesslogs=false
+      # De API: dezelfde voorwaarde als router -api in docker-compose.yml. Zonder Accept antwoordt
+      # het vangnet in JSON, voor de integratiecontainer.
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet-intern.rule=ClientIP(`${KOPPELNET:-10.203.0.0/24}`) && PathPrefix(`/api/v1/`)
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet-intern.priority=1
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet-intern.entrypoints=intern
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet-intern.observability.accesslogs=false
+
+networks:
+  voorkant:
+    external: true
+    name: ${INSTALLATIE:-botenloods}_voorkant

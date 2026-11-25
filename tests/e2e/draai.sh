@@ -162,4 +162,6 @@ for bestand in tests/e2e/test_*.py; do
   e2e "$(basename "$bestand")" || status=1
   sleep 40
 done
+# Het vangnet (#418) stopt web en api; dat kan alleen op de host. Los: tests/e2e/vangnet.sh.
+tests/e2e/vangnet.sh || status=1
 exit $status

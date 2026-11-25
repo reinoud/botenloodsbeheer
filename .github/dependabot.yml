@@ -53,3 +53,10 @@ updates:
       interval: weekly
     cooldown:
       default-days: 14
+  # Het vangnet (#418): één image op een digest, in een eigen map voor een eigen ingang.
+  - package-ecosystem: docker-compose
+    directory: /documentatie/beheer/voorbeelden/vangnet
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14

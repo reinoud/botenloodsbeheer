@@ -1,0 +1,8 @@
+# Lokaal en voor de E2E (tests/e2e/vangnet.sh): het vangnet op het entrypoint web, zonder TLS,
+# zoals compose.dev.yml dat voor web doet. Naast het voorbeeld, niet in plaats ervan:
+#   docker compose --env-file .env -f documentatie/beheer/voorbeelden/vangnet/compose.yml -f compose.vangnet.dev.yml up -d
+services:
+  vangnet:
+    labels:
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.entrypoints=web
+      - traefik.http.routers.${INSTALLATIE:-botenloods}-vangnet.tls=false

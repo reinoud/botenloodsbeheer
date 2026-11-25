@@ -670,3 +670,36 @@ def test_proxytest_draait_dezelfde_traefik_als_de_stack():
         return re.findall(r"image: (traefik:\S+)", (ROOT / pad).read_text())
     stack = traefik("compose.dev.yml")
     assert len(stack) == 1 and traefik("tests/proxy/compose.traefik.yml") == stack
+
+
+def test_vangnet_neemt_geen_route_van_de_app_over():
+    """#418: elke router van het vangnet heeft priority 1; elke router van de app (ook die van
+    compose.api-extern.yml) heeft een hogere of, zonder priority, de lengte van zijn regel. Zo
+    wint de app zolang haar routers bestaan. Dat het vangnet dan niets beantwoordt, toetst
+    tests/e2e/vangnet.sh."""
+    vangnet = yaml.safe_load(
+        (ROOT / "documentatie/beheer/voorbeelden/vangnet/compose.yml").read_text())
+    extern = yaml.safe_load((ROOT / "compose.api-extern.yml").read_text())
+
+    def routers(labels):
+        r = {}
+        for regel in labels:
+            sleutel, waarde = regel.split("=", 1)
+            if sleutel.startswith("traefik.http.routers."):
+                naam, optie = sleutel[len("traefik.http.routers."):].split(".", 1)
+                r.setdefault(naam, {})[optie] = waarde
+        return r
+
+    eigen = routers(vangnet["services"]["vangnet"]["labels"])
+    assert set(eigen) == {"${INSTALLATIE:-botenloods}-vangnet", "${INSTALLATIE:-botenloods}-vangnet-intern"}
+    assert {r["priority"] for r in eigen.values()} == {"1"}
+    assert {r["entrypoints"] for r in eigen.values()} == {"websecure", "intern"}
+    # Zoals -web: zonder api-extern heeft geen router van de app /api/ op websecure.
+    assert eigen["${INSTALLATIE:-botenloods}-vangnet"]["rule"].endswith(" && !PathPrefix(`/api/`)")
+    app = {}
+    for dienst in (*DIENSTEN.values(), *extern["services"].values()):
+        app |= routers(dienst.get("labels", []))
+    assert len(app) >= 6
+    for naam, r in app.items():
+        assert int(r.get("priority", len(r["rule"]))) > 1, naam
+
