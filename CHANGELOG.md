@@ -2,6 +2,23 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.6.2 (2026-11-25)
+
+Onderhoudsversie (milestone "Restpunten menu, Dependabot en architectuur, v2.6.2"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.6.2`
+- `ghcr.io/reinoud/botenloods-integratie:2.6.2`
+
+Ook beschikbaar onder de tags `2.6` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.6.2.cdx.json` en `botenloods-integratie-2.6.2.cdx.json`.
+
+**Opgelost**
+- Het menu markeert de kop ook op pagina's na een formulier: Boten na Zoeken bij een nieuwe boot, en Beheer bij de uitnodigingslink, Toegang hersteld, een nieuw token, de waarde van het token en de geprinte kaartjes (#428).
+
+**Overig**
+- Een test houdt de Traefik van de proxytest gelijk aan die van de ontwikkelstack (#425).
+- De architectuurbeschrijving noemt alle zes containers en dat `integratie` op een gezonde `api` wacht (#429).
+
 ## 2.6.1 (2026-11-25)
 
 Onderhoudsversie (milestone "Onderhoud en sessie, v2.6.1"). Geen migratie en geen nieuwe functies.
