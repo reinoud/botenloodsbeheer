@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.40
+**Versie overlay:** v0.6.41
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-25
+**Bijgewerkt:** 2026-11-26
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -38,7 +38,7 @@ Bronnen: `docs/business/intake.md` (leidend, inclusief de besluiten van 2026-10-
 - Volgorde: apex (backlog en user stories), foundation (architectuur en ADR's), forge (delivery in slices).
 - Open werk staat in GitHub-issues van `reinoud/botenloodsbeheer`, met dezelfde regels als de Forgejo-afspraak in `~/.claude/CLAUDE.md`: type en label, sluiten met commit, test en bewijs.
 - Review vóór elke codecommit volgens `~/.claude/CLAUDE.md`. Voor inloggen, tokens, autorisatie en de koppeling met e-boekhouden reviewt aegis mee.
-- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. Zet het slotcommentaar (gewijzigd, getest, bewijs) vóór de merge op het issue: `Closes` sluit het issue bij de merge zonder commentaar. Is een criterium pas na de merge te toetsen (zoals Dependabot), gebruik dan `Refs #<nr>` in plaats van `Closes` en sluit het issue zelf na die controle. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Commits met alleen documentatie mogen tot de beveiliging van `main` nog direct op `main`; daarna gaan ook die via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
+- Elke feature, bug of taak met code komt in een eigen branch van `main` (`feature/<issue>-<kort>`, `fix/<issue>-<kort>`). De review vóór de commit gebeurt op die branch. Na akkoord van de reviewers en een geslaagde testsuite pusht de sessie de branch en opent een pull request naar `main` met `gh pr create`; de beschrijving noemt het issue (`Closes #<nr>`), de reviewers met hun oordeel en de testuitkomst. Zet het slotcommentaar (gewijzigd, getest, bewijs) vóór de merge op het issue: `Closes` sluit het issue bij de merge zonder commentaar. Is een criterium pas na de merge te toetsen (zoals Dependabot), gebruik dan `Refs #<nr>` in plaats van `Closes` en sluit het issue zelf na die controle. De sessie mag dat pull request zelf mergen (`gh pr merge --squash --delete-branch`), zoals eerder de push naar `main`; GitHub laat de auteur geen eigen goedkeuring geven, de review van de agents geldt als vierogenprincipe. Sinds 2026-11-26 is `main` op GitHub beveiligd (pull request verplicht zonder goedkeuring, ook voor beheerders; rechte geschiedenis; geen force-push of verwijderen). Ook commits met alleen documentatie gaan daarom via een pull request. Een force-push en het verwijderen van andere branches dan de eigen, gemergde branch vragen akkoord. Besluit van de stakeholder, 2026-11-05.
 - Elk agent dat code schrijft of reviewt, gebruikt de skill `ponytail`.
 - Teksten volgen de skill `schrijfstijl`.
 - Elke open pull request van Dependabot krijgt een issue (`taak`, `dependencies`), tenzij er al een is. Het issue noemt wat de PR mist, zoals een pakketversie die niet meebeweegt. Besluit van de stakeholder, 2026-11-05.
@@ -423,6 +423,8 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
+- Start een release-E2E niet tussen 23:00 en 01:00 Nederlandse tijd zolang #449 open is: de e2e-container rekent in UTC, de app in Europe/Amsterdam (#445).
+- Start de unitsuite voor een release (circa 18 minuten) als eerste in de achtergrond; de trivy-builds mogen ernaast, de E2E pas daarna (#445).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
 - Komt een native image voor de release-E2E volledig uit de cache, noem dan de aanmaakdatum en bevestig met `git log <vorige tag>..<releasecommit> -- <map>` dat de map niet is gewijzigd; anders bouw je met `--no-cache` (#398).
 - Het bewijs dat de dev-integratie na de release-E2E zonder 401 werkt, is de leesquery op `token.laatst_gebruikt_op` na het opruimen plus nul regels met `mislukt` of `401` in het integratielog sinds de laatste start. Een nieuwe regel `Import geslaagd` verschijnt alleen bij een importverzoek of de dagelijkse import (#421).
@@ -491,7 +493,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een wijziging van `.github/dependabot.yml` hoe na de merge wordt gecontroleerd dat elk manifest gevonden is (Insights, Dependency graph, Dependabot), en wie dat doet. Dependabot leest in een Dockerfile alleen `FROM`; een image in `RUN --mount=from=` of `docker run` krijgt geen updates.
 - `exclude-newer` in `pyproject.toml` is een vaste datum. Dependabot lockt binnen die grens, dus een voorstel voor uv komt pas nadat de regie de datum ophoogt (#59). Noem bij een supply-chainwijziging hoe `exclude-newer` wordt bijgehouden en of Dependabot daarbinnen nog iets kan voorstellen.
 - De release-workflow scant met trivy en pusht alleen het gescande image; een melding critical of high met een oplossing stopt de release (#59). Van hetzelfde image maakt hetzelfde Trivy-image vóór de push een SBOM in CycloneDX JSON. De job `sbom` zet die na de push als `botenloods-app-<versie>.cdx.json` en `botenloods-integratie-<versie>.cdx.json` bij de release; alleen die job heeft `contents: write`. Mist een bijlage, draai dan die job opnieuw (#297).
-- Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199). Scan daarbij ook het vangnetimage uit `documentatie/beheer/voorbeelden/vangnet/compose.yml` (`ghcr.io/reinoud/traefik-unavailable`, op de digest in dat bestand; haal het op, bouw het niet): dezelfde Trivy-regel, zonder SBOM. Een melding met oplossing vraagt een nieuwe digest in dat bestand vóór de tag (#418).
+- Scan vóór het taggen van een release beide images lokaal (amd64) met de Trivy-regel uit `images.yml`. Een melding blokkeert anders pas na het taggen, en dan moet de release opnieuw (#199). Scan daarbij ook het vangnetimage uit `documentatie/beheer/voorbeelden/vangnet/compose.yml` (`ghcr.io/reinoud/traefik-unavailable`, op de digest in dat bestand; haal het op, bouw het niet): dezelfde Trivy-regel, zonder SBOM, op het amd64-manifest met `--image-src remote --platform linux/amd64 <image>@<digest>` (een lokale pull geeft op de Mac arm64; #445). Een melding met oplossing vraagt een nieuwe digest in dat bestand vóór de tag (#418).
 - Bouw de images voor die scan met `--no-cache`, zoals de release-workflow sinds #272. Een apt-laag uit de cache mist de beveiligingsupdates van Debian.
 - Bouw voor die scan met alle velden van de matrix in `images.yml`: de app met `-f docker/Dockerfile --target app --build-arg APP_VERSIE=<tag>`, de integratie met context `integratie` en `-f integratie/Dockerfile`. Controleer een herstelde versie met `dpkg-query -W <pakket>` in het image (#432).
 - Tel `mislukt` en `401` in het integratielog na een E2E-run met `docker compose logs --since <StartedAt van integratie>`; zonder `--since` tellen eerdere starts mee (#431).
@@ -634,6 +636,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.41 | 2026-11-26 | `main` beveiligd, documentatie ook via een pull request (§4); drie regels (E2E, Security en proxy) uit de terugblik van pipeline bij release v2.7.0 (#445) | Besluit stakeholder, lessen |
 | v0.6.40 | 2026-11-25 | Trivy-scan vóór een release neemt het vangnetimage mee; vijf regels (Review, E2E, Security en proxy) uit de terugblikken van pipeline, sentinel en aegis bij #418 | Lessen |
 | v0.6.39 | 2026-11-25 | Twee regels (Review): mutant op het andere bestand bij een gelijkheidstest, mutant op een template als bind mount; uit de terugblikken van sentinel bij #425 en #428 | Lessen |
 | v0.6.38 | 2026-11-25 | Bouwregel voor de trivyscan met `-f` aangevuld en regel over het tellen in het integratielog (Security en proxy); uit de terugblik van pipeline bij #431 | Lessen |
