@@ -4,8 +4,8 @@ Naar de API alleen met de standaardbibliotheek en alleen de aanroepen uit
 documentatie/beheer/integratiecontainer.md; zeep is alleen voor de bron e-boekhouden.
 Elke ronde: is er een importverzoek, of is SYNC_TIJDSTIP gepasseerd zonder geslaagde import die
 dag, dan importeert hij. Na een fout hooguit één geplande poging per uur; een verzoek van een
-beheerder wacht niet (#28). Een 404 van Traefik (geen router geladen) telt niet als fout van de
-API: elke minuut opnieuw, hooguit vijf keer, daarna het gewone uur (#372). De log bevat nooit het
+beheerder wacht niet (#28). Een 404 van Traefik (geen router geladen) of een 503 van het vangnet
+telt niet als fout van de API: elke minuut opnieuw, hooguit vijf keer, daarna het gewone uur (#372). De log bevat nooit het
 token, inloggegevens van de bron of gegevens van leden.
 """
 
@@ -100,7 +100,10 @@ class Koppeling:
         except urllib.error.HTTPError as fout:
             # Een lopende import houdt het slot vast en sluit het verzoek niet (#31).
             slot = fout.code == 409 and IMPORT_LOOPT in fout.read(ANTWOORD_MAX)
-            traefik = fout.code == 404 and fout.read(ANTWOORD_MAX).strip() == TRAEFIK_404
+            traefik = (fout.code == 404 and fout.read(ANTWOORD_MAX).strip() == TRAEFIK_404
+                       # Het vangnet (#440): de 503 van de app (/health/ready) heeft geen Retry-After; de
+                       # JSON-sleutel "fout" deelt het vangnet met de app, dus die onderscheidt niets.
+                       or fout.code == 503 and fout.headers.get("Retry-After") is not None)
             raise ApiFout(f"HTTP {fout.code}" + (" importslot" if slot else "")
                           + (" traefik" if traefik else "")) from None
         except (OSError, ValueError) as fout:  # URLError en time-out zijn OSError
@@ -171,7 +174,7 @@ class Koppeling:
             self._fout(nu, token, type(fout).__name__, van_api=True)
 
     def _fout(self, nu, token, tekst, van_api):
-        # Een 404 van Traefik: vijf keer een minuut wachten, de zesde keer het gewone uur (#372).
+        # Een 404 van Traefik of een 503 van het vangnet: vijf keer een minuut wachten, de zesde keer het gewone uur (#372).
         # Alleen een geslaagde ronde zet de telling terug; een andere fout ertussen telt dus niet
         # opnieuw vanaf nul (tweede review aegis).
         traefik = tekst.endswith(" traefik")
