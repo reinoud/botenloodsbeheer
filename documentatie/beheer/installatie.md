@@ -56,7 +56,7 @@ Het voorbeeld heeft twee routers, beide met `priority=1`:
 
 De router `-http` (doorverwijzing naar https) blijft zoals hij was. Een route van de app heeft altijd een hogere prioriteit (een expliciete, of de lengte van haar regel), dus het vangnet beantwoordt niets zolang `web` en `api` draaien. Met `compose.api-extern.yml` vangt het vangnet de publieke API niet op; daar blijft het de 404 van Traefik. De beveiligingsheaders (CSP, `nosniff`, `Referrer-Policy`) zet het vangnet zelf, want de middleware `-kop` valt met `web` weg. Het zet geen HSTS; dat blijft bij de app. Het image draait als niet-root met een alleen-lezen bestandssysteem, zonder capabilities en met `no-new-privileges`, en heeft een eigen healthcheck.
 
-Let op de integratiecontainer: hij herkent alleen de platte 404 van Traefik als "API nog niet bereikbaar" en probeert het dan elke minuut opnieuw. Een 503 van het vangnet telt voor hem als gewone fout van de API, en hij wacht dan een uur (een nieuw token of een nieuw verzoek van een beheerder heft dat op). Dat raakt alleen een import die precies valt in de minuten dat `api` ontbreekt.
+Let op de integratiecontainer: hij herkent de platte 404 van Traefik en de 503 van het vangnet (een 503 met `Retry-After`; de 503 van de app zelf heeft die header niet) als "API nog niet bereikbaar". Hij probeert het dan vijf keer na een minuut opnieuw en wacht de zesde keer het gewone uur. Een andere 503, bijvoorbeeld van de app zelf, telt als gewone fout en geeft direct het uur; alleen een nieuw token heft dat op (zie [Integratiecontainer](integratiecontainer.md#werking)).
 
 Controle:
 

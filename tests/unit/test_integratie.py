@@ -36,6 +36,7 @@ class NepApi(ThreadingHTTPServer):
         self.aanroepen, self.verzoek, self.status, self.fout = [], False, {}, "Geen toegang."
         self.groot, self.vrij, self.klaar = False, threading.Event(), False
         self.traefik = False  # een 404 antwoordt als Traefik zonder router: platte tekst
+        self.vangnet = False  # een 503 antwoordt als het vangnet (#440): Retry-After
         self.bootaantallen = [{"lidnummer": "1001", "aantallen": {"Kajak": 1, "Surfski": 0}}]
         threading.Thread(target=self.serve_forever, daemon=True).start()
 
@@ -73,6 +74,8 @@ class Handler(BaseHTTPRequestHandler):
         soort = "application/json"
         if self.server.traefik and status == 404:
             tekst, soort = b"404 page not found\n", "text/plain; charset=utf-8"
+        if self.server.vangnet and status == 503:
+            self.send_header("Retry-After", "30")
         self.send_header("Content-Type", soort)
         self.send_header("Content-Length", str(len(tekst)))
         self.end_headers()
@@ -205,6 +208,32 @@ def test_404_van_traefik_binnen_de_minuut_geen_nieuwe_aanroep_en_daarna_herstel(
     del api.status["/leden/importverzoek"]
     koppeling.ronde(OCHTEND + timedelta(minutes=1))
     assert paden(api)[1:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+
+
+def test_503_van_het_vangnet_elke_minuut_opnieuw_en_na_de_vijfde_herhaling_het_uur(api, koppeling):
+    """#440: zes 503's met Retry-After (de eerste en vijf herhalingen), dan het gewone uur."""
+    api.status["/leden/importverzoek"], api.vangnet, api.verzoek = 503, True, True
+    for minuut in range(6):
+        koppeling.ronde(OCHTEND + timedelta(minutes=minuut))
+    assert len(api.aanroepen) == 6
+    koppeling.ronde(OCHTEND + timedelta(minutes=6))
+    koppeling.ronde(OCHTEND + timedelta(minutes=64))
+    assert len(api.aanroepen) == 6
+    del api.status["/leden/importverzoek"]
+    koppeling.ronde(OCHTEND + timedelta(minutes=5 + 60))
+    assert paden(api)[6:] == [("GET", "/leden/importverzoek"), ("PUT", "/leden")]
+
+
+def test_503_van_de_app_zonder_retry_after_wacht_het_uur_en_probeert_dan_opnieuw(
+        api, koppeling, caplog):
+    api.status["/leden/importverzoek"], api.verzoek = 503, True
+    koppeling.ronde(OCHTEND)
+    koppeling.ronde(OCHTEND + timedelta(minutes=1))
+    assert len(api.aanroepen) == 1 and "nieuwe poging over een uur" in caplog.text
+    koppeling.ronde(OCHTEND + timedelta(minutes=59))
+    assert len(api.aanroepen) == 1
+    koppeling.ronde(OCHTEND + timedelta(minutes=60))  # na het uur weer een poging
+    assert len(api.aanroepen) == 2
 
 
 def test_telling_van_traefik_begint_opnieuw_na_een_geslaagde_aanroep(api, koppeling):
