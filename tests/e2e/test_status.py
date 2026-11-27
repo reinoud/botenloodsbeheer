@@ -54,8 +54,9 @@ def test_ongeldige_records_van_de_laatste_import_op_de_statuspagina(page):
         wachtwoord_instellen(page, "ongeldigeleden")
         menu_kiezen(page, "Beheer", "Status")
         lijst = page.locator("#ongeldige-leden li")
-        assert lijst.all_inner_texts() == [f"{dubbel}: lidnummer dubbel", "E2E381A: naam ontbreekt",
-                                           "E2E381B: datum niet als JJJJ-MM-DD", "1 zonder lidnummer"]
+        # to_have_text wacht op de pagina; all_inner_texts las de vorige pagina nog (#458)
+        expect(lijst).to_have_text([f"{dubbel}: lidnummer dubbel", "E2E381A: naam ontbreekt",
+                                    "E2E381B: datum niet als JJJJ-MM-DD", "1 zonder lidnummer"])
         assert page.request.get("/status.json").json()["import"]["ongeldige_leden"] == {
             "lijst": [[dubbel, "lidnummer dubbel"], ["E2E381A", "naam ontbreekt"],
                       ["E2E381B", "datum niet als JJJJ-MM-DD"]], "niet_getoond": 0, "zonder_lidnummer": 1}
