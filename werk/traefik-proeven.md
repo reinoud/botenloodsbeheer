@@ -47,3 +47,30 @@ Tokens en codes staan hieronder niet; ze kwamen uit `flask token robot` en `flas
 
 - Een geldig certificaat van een echte certresolver (ACME) voor `DOMEIN`: lokaal geen publieke DNS.
 - Poort 443 en 80 op een echte host achter een gedeelde Traefik met socketproxy. Het voorbeeld `documentatie/beheer/voorbeelden/traefik/compose.yml` is met `docker compose config` en een korte start gecontroleerd, zie het antwoord van forge.
+
+## Herhaling v3.7.18
+
+**Datum:** 2026-11-27
+**Uitgevoerd door:** pipeline
+**Versie Traefik:** `traefik:v3.7.18` op `sha256:9c437ac4...` (`traefik version`: 3.7.18), gelijk aan v3.7.17 op `sha256:f4bb143d...` als vergelijking.
+
+De migratienotitie van v3.7.18 noemt drie punten: een lengtegrens voor BasicAuth (niet in gebruik), TLS-opties van de Ingress-NGINX-provider (niet in gebruik) en dot-segments met padparameters. De releasenotes noemen daarnaast validatie van Host-matcherwaarden. Alleen de laatste twee raken onze routers (`Host`, `PathPrefix`, `Method`, `ClientIP`).
+
+**Opzet.** `tests/proxy/draai.sh` vanuit de worktree, met `botenloods-app:latest` (arm64). Daarnaast een losse Traefik met de routerregels van `docker-compose.yml` voor `web`, `inloggen` (met de rate limit 30 per minuut, burst 20) en `api`, en Gunicorn met Flask als upstream die het pad toont dat hij ontvangt. Vier configuraties per versie: opties voor gecodeerde tekens aan of uit, laag in de applicatie aan of uit. v3.7.17 en v3.7.18 kregen dezelfde verzoeken. Alleen `PathPrefix` en `Host` zijn nagebootst; `ClientIP` staat in de proxytest.
+
+| Proef | Uitkomst v3.7.18 | Gelijk aan v3.7.17 |
+|-------|------------------|--------------------|
+| `tests/proxy/draai.sh` | 24 controles geslaagd in 184 s, exitcode 0, geen restanten van `proxytest` in `docker ps -a` en `docker network ls` | Ja (alle controles slagen) |
+| Gecodeerd pad (ADR-013): `/%2Finloggen`, `/%2finloggen/code`, `/%2Fuitnodiging/abc`, `%5C`, `%00`, `%252F`, `/.%2F`, `GET /api%2Fv1/ik`, `/api/v1/%2Fik` | 400 met de opties aan, ook zonder de laag in de applicatie; met alleen de laag in de applicatie ook 400; zonder beide verwerkt Flask het pad | Ja, in alle vier de configuraties |
+| `/%69nloggen`, `/%61pi/v1/ik`, `/%2E%2E/inloggen` | Traefik decodeert vóór de routering: `/%69nloggen` valt onder de rate limit van `inloggen` (429 na de burst), de andere twee komen als `/api/v1/ik` en `/inloggen` binnen | Ja |
+| Host-matcher met `proef.invalid`, met poort, in hoofdletters, met punt | 200 | Ja |
+| Host met `%20` achter de naam | 404 | Ja |
+| Padparameters: `/foo/.;bar/baz`, `/foo/..;bar/baz`, `/foo/;bar/baz`, `/;a/inloggen`, `/inloggen/..;x/api/v1/ik`, `/api/..;x/inloggen`, `//inloggen`, `/inloggen/./x` | Traefik lost `.;`, `..;` en `;` op als gewone dot-segments en lege segmenten, zoals de migratienotitie zegt: `/foo/..;bar/baz` komt als `/baz` binnen, `/;a/inloggen` als `/inloggen`. De router kiest op het opgeloste pad | Nee, bedoeld: v3.7.17 stuurde `/;a/inloggen` en `/foo/.;bar/baz` ongewijzigd door |
+| Rate limit `POST /;a/inloggen` | v3.7.18: de router `inloggen` telt het verzoek mee, 429 na de burst. v3.7.17: geen enkele 429, het verzoek viel onder `web` zonder rem | Nee, een verbetering |
+| `/api;x/v1/ik`, `/inloggen;x` (padparameter in het laatste segment) | Ongewijzigd doorgestuurd, geen padwijziging | Ja |
+
+**Gevolg voor onze routers.** Geen router wijzigt. Het gedrag verschuift naar de veilige kant: `POST /;a/inloggen` valt nu ook onder de rate limit van `inloggen`. Dat is extra hardening en geen gedicht lek, want onder v3.7.17 gaf Flask op dat pad een 404 en werd er niets ingelogd (review aegis). `ClientIP` van `api` hangt niet af van het pad; die regel staat in de proxytest. De applicatielaag (`%` in `RAW_URI`) blijft nodig voor gecodeerde tekens en is ongewijzigd.
+
+**CVE's in v3.7.18.** Geen van de vijf raakt ons (review aegis): we gebruiken geen Ingress-NGINX, ForwardAuth, Compress of BasicAuth, en GHSA-cp28-5662-543f vraagt een backend die padparameters weghaalt, wat Werkzeug niet doet.
+
+**Kanttekening.** De tellingen van de rate limit in de losse proef verschillen een paar verzoeken per run, omdat de zeven configuraties tegelijk draaiden en een eerdere POST een deel van de burst opmaakt. Elke serie bereikt de 429; de grens zelf is niet opnieuw geijkt (dat doet `draai.sh`). De lokale ontwikkelstack `botenloods` draaide ondertussen op v3.7.17 en is niet aangeraakt.
