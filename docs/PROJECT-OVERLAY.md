@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.43
+**Versie overlay:** v0.6.44
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-27
@@ -392,6 +392,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### E2E
 
+- Leverde de server bij een E2E-fout het goede antwoord (weblog: volgorde en paginagrootte), zoek de oorzaak dan eerst in de test. Grep dan op elke lezing die niet wacht direct na `click()`: `all_inner_texts`, `all_text_contents`, `count()`, `is_visible()`, `content()`. `inner_text()` en `expect(...)` wachten wel. Herstel met `expect(...).to_have_text(...)` of `to_have_count(...)` (#458).
+- Zeg in een opdracht voor een release-E2E wat er gebeurt bij een testfout die niet door de release komt: melden en doorgeven, de regie beslist (#456).
+- De vier vangnetfasen staan in het log als vier aparte pytest-runs van `vangnet/test_fase.py` (#456).
 - Een proef op volgorde of volume van het technische log schrijft vooraf minstens 50 regels van een andere actie dan de gezochte, met `log.schrijf` via `docker compose exec web`, niet via de interface; dan blijven er geen beheerders of andere gegevens achter. De oude test moet aantoonbaar falen op die ruis voordat het herstel telt.
 - Elke E2E-test draait ook los: `tests/e2e/draai.sh -k <testnaam>`, zonder pad, want de e2e-container werkt vanuit `tests/e2e`. Laat de reviewer één test met `-k` draaien als controle op de volgorde.
 - Een E2E-test leunt niet op gegevens van een eerder testbestand. Bestaat er geen route om ze in de test te maken (zoals een token), dan maakt `tests/e2e/draai.sh` ze vers vóór elke aanroep van pytest. Een E2E-test die gedeelde instellingen wijzigt, zet ze ook terug als hij faalt (try/finally), of krijgt een eigen installatie.
@@ -645,6 +648,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.44 | 2026-11-27 | Drie regels (E2E) uit de terugblikken van pipeline bij #456 en van bedrock en sentinel bij #458 | Lessen |
 | v0.6.43 | 2026-11-27 | Vijf regels (Bouw, Review, Security en proxy) uit de terugblikken van sentinel bij #440 en van pipeline, sentinel en aegis bij #447 | Lessen |
 | v0.6.42 | 2026-11-27 | Regel over release-E2E rond middernacht (E2E) vervangen: de e2e-container rekent nu in de tijdzone van de app (#449); drie regels (Algemeen, Bouw, Security en proxy) uit de terugblikken bij #440 en #449 | Herstel #449, lessen |
 | v0.6.41 | 2026-11-26 | `main` beveiligd, documentatie ook via een pull request (§4); drie regels (E2E, Security en proxy) uit de terugblik van pipeline bij release v2.7.0 (#445) | Besluit stakeholder, lessen |
