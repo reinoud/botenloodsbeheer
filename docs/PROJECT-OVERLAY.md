@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.41
+**Versie overlay:** v0.6.42
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-26
+**Bijgewerkt:** 2026-11-27
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -120,6 +120,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bouwt een agent in een worktree en hoort er een E2E-test bij, zeg dan vooraf of hij een eigen project mag starten (akkoord stakeholder) of dat de regie de test na overname op de lokale stack draait (#381).
 - Draaien twee reviewers tegelijk, zeg dan wie de unittests draait op de gedeelde testdatabase; de ander gebruikt een eigen `TEST_DB` (zie Bouw) of draait niets, en ruimt een eigen database na afloop op (#381).
 - Noem een aanname over wie welk element ziet (beheerder, kijker) met het bestand waar die vandaan komt, zoals `app/web/templates/base.html` of `tests/e2e/test_kijkers.py`; een aanname uit het hoofd is geen bron. Noem een vermoedelijke oorzaak alleen als vermoeden en laat eerst meten (#379).
+- Kan een acceptatiecriterium niet letterlijk worden nagespeeld, noem dan in de opdracht de reden die de regie bij het sluiten in het issue zet, zodat de reviewer die kan toetsen (#449).
 
 #### Bouw
 
@@ -266,6 +267,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Bij een vervallen route zegt de test welke code hij bewijst: 404 als de route weg is, 405 als het pad nog andere methodes kent (#321).
 - Een E2E-selector op een formulierveld noemt het type (`input[type=radio][name=...]`); rij-acties met verborgen velden van dezelfde naam tellen anders mee (#322).
 - Een teller of wachttijd die een herhaling begrenst, gaat pas terug naar nul als de ronde slaagt én het eigenlijke werk gedaan is. Noem in de opdracht elke manier waarop de teller terugspringt en elke toestand waarin een ronde slaagt zonder het werk (zoals een GET zonder import tijdens een wachttijd). Lever per manier een mutant met de test die erop valt. De reviewer loopt herhalende patronen van uitkomsten systematisch af (lengte 1 tot 4, 24 uur) in plaats van losse gevallen; #372 had vier rondes nodig omdat elke ronde één nieuw patroon vond. Een open verzoek sluit in zo'n proef zoals de API het sluit; een verzoek dat een beheerder telkens opnieuw opent, is een aparte bovengrens, vergeleken met de code uit `HEAD`.
+- De unittests van de integratiecontainer staan in `tests/unit/test_integratie.py` en draaien met `--profile test run --rm --no-deps test pytest -q tests/unit/test_integratie.py`; `test-integratie` draait alleen `tests/integratie` (zeep). `--build` op de dienst `test` herbouwt de tag `botenloods-dev` (#440).
 
 #### Review
 
@@ -423,7 +425,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
 - Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
-- Start een release-E2E niet tussen 23:00 en 01:00 Nederlandse tijd zolang #449 open is: de e2e-container rekent in UTC, de app in Europe/Amsterdam (#445).
+- De e2e-container krijgt dezelfde `TZ` als de app (`compose.dev.yml`), zodat `date.today()` in een E2E-test dezelfde dag geeft als de app (#449).
 - Start de unitsuite voor een release (circa 18 minuten) als eerste in de achtergrond; de trivy-builds mogen ernaast, de E2E pas daarna (#445).
 - Voor een release volstaat één E2E-run op een verse stack vanaf de releasecommit, zonder herhaling van een mislukte test. Besluit van de stakeholder, 2026-11-21 (#356); vervangt de twee runs uit #344 en #347.
 - Komt een native image voor de release-E2E volledig uit de cache, noem dan de aanmaakdatum en bevestig met `git log <vorige tag>..<releasecommit> -- <map>` dat de map niet is gewijzigd; anders bouw je met `--no-cache` (#398).
@@ -540,6 +542,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Kies voor een live proef een object dat de E2E-suite niet opruimt, of zoek het object direct voor de proef op (#322).
 
 - Wijzigt wat een client van Traefik terugkrijgt (404, 503, headers), zoek dan in `integratie/` en `tests/` naar de code die op dat antwoord reageert (zoals `TRAEFIK_404` in `integratie/koppeling/__init__.py`) en noem die in de opdracht (#418).
+- Noem bij een herkenning op een header welke component die header zet (app, middleware of proxy), met bestand (#440).
 
 #### Documentatie, backlog en ADR's
 
@@ -636,6 +639,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.42 | 2026-11-27 | Regel over release-E2E rond middernacht (E2E) vervangen: de e2e-container rekent nu in de tijdzone van de app (#449); drie regels (Algemeen, Bouw, Security en proxy) uit de terugblikken bij #440 en #449 | Herstel #449, lessen |
 | v0.6.41 | 2026-11-26 | `main` beveiligd, documentatie ook via een pull request (§4); drie regels (E2E, Security en proxy) uit de terugblik van pipeline bij release v2.7.0 (#445) | Besluit stakeholder, lessen |
 | v0.6.40 | 2026-11-25 | Trivy-scan vóór een release neemt het vangnetimage mee; vijf regels (Review, E2E, Security en proxy) uit de terugblikken van pipeline, sentinel en aegis bij #418 | Lessen |
 | v0.6.39 | 2026-11-25 | Twee regels (Review): mutant op het andere bestand bij een gelijkheidstest, mutant op een template als bind mount; uit de terugblikken van sentinel bij #425 en #428 | Lessen |

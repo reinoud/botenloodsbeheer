@@ -123,6 +123,7 @@ services:
     network_mode: "service:traefik"
     environment:
       E2E_BASIS_URL: http://localhost:8080
+      TZ: ${TZ:-Europe/Amsterdam}  # date.today() in de tests rekent zo in dezelfde dag als de app (#449)
     volumes:
       - ./tests/e2e:/e2e
       - ./tests/fixtures/leden.json:/fixtures/leden.json:ro
