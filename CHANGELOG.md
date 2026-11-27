@@ -2,6 +2,24 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.7.1 (2026-11-27)
+
+Onderhoudsversie (milestone "Restpunten vangnet, Dependabot en E2E-tijdzone, v2.7.1"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.7.1`
+- `ghcr.io/reinoud/botenloods-integratie:2.7.1`
+
+Ook beschikbaar onder de tags `2.7` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.7.1.cdx.json` en `botenloods-integratie-2.7.1.cdx.json`.
+
+**Opgelost**
+- De integratiecontainer behandelt een 503 van het vangnet als tijdelijk, net als de 404 van Traefik: vijf keer na een minuut opnieuw, de zesde keer het gewone uur. Een 503 van de app zelf blijft een gewone fout (#440).
+- De E2E-tests rekenen in de tijdzone van de app, zodat een run rond middernacht niet meer faalt (#449).
+
+**Onderhoud**
+- Traefik v3.7.18 in het voorbeeld `voorbeelden/traefik/compose.yml` en de ontwikkelstack; de proeven uit ADR-013 zijn herhaald (#447).
+- uv 0.13.8 in het build-image van de app (#448).
+
 ## 2.7.0 (2026-11-25)
 
 Minorversie (milestone "Vangnetcontainer, v2.7.0"). Geen migratie. De images zijn opnieuw gebouwd zonder wijziging in `app/` of `integratie/`.
