@@ -7,7 +7,7 @@
 # het token in de applicatie. Clients draaien in containers met een vast adres.
 #
 # Images: bouwt niets. Gebruikt botenloods-app zoals het lokaal staat (bouw het eerst als app/ is
-# gewijzigd), postgres:17 en traefik:v3.7.17 op de digest uit de compose-bestanden; laat ze staan.
+# gewijzigd), postgres:17 en traefik:v3.7.18 op de digest uit de compose-bestanden; laat ze staan.
 # Eigen compose-project botenloods-proxytest, INSTALLATIE=proxytest en eigen subnetten
 # 10.213.53-55.0/24; raakt de dev-stack niet. Ruimt containers, volume en netwerken altijd op.
 # EXTERN_BESTAND kiest een ander bestand dan compose.api-extern.yml (voor een mutant).

@@ -19,7 +19,7 @@ Andere delen: [voorbeelden](voorbeelden.md) (images binnenhalen of zelf bouwen),
 
 ## Eisen aan de gedeelde Traefik
 
-De labels zijn getest met `traefik:v3.7.17`. Een andere versie vraagt dat de proeven uit ADR-013 opnieuw slagen. Een voorbeeld van zo'n stack staat in `voorbeelden/traefik/compose.yml`. De Traefik moet:
+De labels zijn getest met `traefik:v3.7.18`. Een andere versie vraagt dat de proeven uit ADR-013 opnieuw slagen. Een voorbeeld van zo'n stack staat in `voorbeelden/traefik/compose.yml`. De Traefik moet:
 
 - de Docker-provider gebruiken met `exposedByDefault=false`;
 - de entrypoints `web` (80), `websecure` (443) en `intern` (8081) hebben, met precies die namen;

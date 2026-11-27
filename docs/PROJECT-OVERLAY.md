@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.42
+**Versie overlay:** v0.6.43
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-27
@@ -269,6 +269,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een teller of wachttijd die een herhaling begrenst, gaat pas terug naar nul als de ronde slaagt én het eigenlijke werk gedaan is. Noem in de opdracht elke manier waarop de teller terugspringt en elke toestand waarin een ronde slaagt zonder het werk (zoals een GET zonder import tijdens een wachttijd). Lever per manier een mutant met de test die erop valt. De reviewer loopt herhalende patronen van uitkomsten systematisch af (lengte 1 tot 4, 24 uur) in plaats van losse gevallen; #372 had vier rondes nodig omdat elke ronde één nieuw patroon vond. Een open verzoek sluit in zo'n proef zoals de API het sluit; een verzoek dat een beheerder telkens opnieuw opent, is een aparte bovengrens, vergeleken met de code uit `HEAD`.
 - De unittests van de integratiecontainer staan in `tests/unit/test_integratie.py` en draaien met `--profile test run --rm --no-deps test pytest -q tests/unit/test_integratie.py`; `test-integratie` draait alleen `tests/integratie` (zeep). `--build` op de dienst `test` herbouwt de tag `botenloods-dev` (#440).
 
+- Houd commentaar en docstrings binnen `line-length` uit `pyproject.toml` (100); controleer met `awk 'length>100' <bestand>` vóór de review (#440).
+- Draai je `compose run test` vanuit een worktree, gebruik dan een override met een eigen imagetag: `image: botenloods-dev` hertagt anders het image van de regie (#447).
+- Elk acceptatiecriterium krijgt een eigen regel in een log, ook als een andere stap het al afdekt (zoals `uv lock --check` naast `uv sync --locked`). Wijkt de regie af van de versie in een issue, werk dan de issuetekst bij (#447).
+
 #### Review
 
 - Verwijs in een brief naar een overlayregel met een zoekterm (zoals `grep -n get_signing_serializer docs/PROJECT-OVERLAY.md`), niet met een regelnummer.
@@ -384,6 +388,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 - Bewijst een test dat een dienst niets beantwoordt, vergelijk dan een reeks verzoeken per entrypoint met en zonder die dienst, en laat met een mutant zien dat de vergelijking een verschil ziet (#418).
 - Zeg in een reviewbrief hoe de reviewer een losse unittest draait als de gedeelde stack bezet is, of dat de regie die test zelf draait (#418).
+- Wijzigt het gedrag van de integratiecontainer, laat bouwer en reviewer dan ook `documentatie/beheer/integratiecontainer.md` en de docstring van `integratie/koppeling/__init__.py` nalopen (#440).
 
 #### E2E
 
@@ -542,6 +547,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Kies voor een live proef een object dat de E2E-suite niet opruimt, of zoek het object direct voor de proef op (#322).
 
 - Wijzigt wat een client van Traefik terugkrijgt (404, 503, headers), zoek dan in `integratie/` en `tests/` naar de code die op dat antwoord reageert (zoals `TRAEFIK_404` in `integratie/koppeling/__init__.py`) en noem die in de opdracht (#418).
+- Noem bij een Traefik-update de GHSA-nummers; de proefsectie krijgt per advisory één regel "raakt ons wel of niet, omdat ..." (#447).
 - Noem bij een herkenning op een header welke component die header zet (app, middleware of proxy), met bestand (#440).
 
 #### Documentatie, backlog en ADR's
@@ -639,6 +645,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.43 | 2026-11-27 | Vijf regels (Bouw, Review, Security en proxy) uit de terugblikken van sentinel bij #440 en van pipeline, sentinel en aegis bij #447 | Lessen |
 | v0.6.42 | 2026-11-27 | Regel over release-E2E rond middernacht (E2E) vervangen: de e2e-container rekent nu in de tijdzone van de app (#449); drie regels (Algemeen, Bouw, Security en proxy) uit de terugblikken bij #440 en #449 | Herstel #449, lessen |
 | v0.6.41 | 2026-11-26 | `main` beveiligd, documentatie ook via een pull request (§4); drie regels (E2E, Security en proxy) uit de terugblik van pipeline bij release v2.7.0 (#445) | Besluit stakeholder, lessen |
 | v0.6.40 | 2026-11-25 | Trivy-scan vóór een release neemt het vangnetimage mee; vijf regels (Review, E2E, Security en proxy) uit de terugblikken van pipeline, sentinel en aegis bij #418 | Lessen |
