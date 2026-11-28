@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.46
+**Versie overlay:** v0.6.47
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-28
@@ -393,7 +393,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 
 #### E2E
 
-- Leverde de server bij een E2E-fout het goede antwoord (weblog: volgorde en paginagrootte), zoek de oorzaak dan eerst in de test. Grep dan op elke lezing die niet wacht direct na `click()`: `all_inner_texts`, `all_text_contents`, `count()`, `is_visible()`, `content()`. `inner_text()` en `expect(...)` wachten wel. Herstel met `expect(...).to_have_text(...)` of `to_have_count(...)` (#458).
+- Leverde de server bij een E2E-fout het goede antwoord (weblog: volgorde en paginagrootte), zoek de oorzaak dan eerst in de test. Grep dan op elke lezing die niet wacht direct na `click()`: `all_inner_texts`, `all_text_contents`, `count()`, `is_visible()`, `content()`. `inner_text()` en `expect(...)` wachten wel. Herstel met `expect(...).to_have_text(...)` of `to_have_count(...)` (#458). Dat geldt ook voor een telling in een helper (zoals `blok_openen`, `opties()`) en in een `while`-lus na een klik. Bepaal bij elke wachtregel welke pagina er vóór de klik stond, ook als een helper eerst `page.goto` doet; een `expect` die op die pagina al slaagt, wacht niet (#459).
 - Zeg in een opdracht voor een release-E2E wat er gebeurt bij een testfout die niet door de release komt: melden en doorgeven, de regie beslist (#456).
 - De vier vangnetfasen staan in het log als vier aparte pytest-runs van `vangnet/test_fase.py` (#456).
 - Een proef op volgorde of volume van het technische log schrijft vooraf minstens 50 regels van een andere actie dan de gezochte, met `log.schrijf` via `docker compose exec web`, niet via de interface; dan blijven er geen beheerders of andere gegevens achter. De oude test moet aantoonbaar falen op die ruis voordat het herstel telt.
@@ -411,7 +411,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een reviewer schrijft de volledige uitvoer van elke E2E-run naar zijn scratchpad en filtert daarna; een mislukte run zonder uitvoer telt als niet onderzocht. Een E2E-scenario dat een criterium bewijst, draait hij minstens twee keer; een fout die los staat van de diff meldt hij apart, met test en regel.
 - Eerdere runs laten rijen achter. Een E2E-test op een gedeelde lijst controleert daarom de volgorde over de hele kolom, niet op de eerste rij. Een nieuwe plaatscode in een E2E-test krijgt een letter die nog niet voorkomt; controleer met `grep -rn 'f"[A-Z]{STEMPEL}"' tests/e2e`.
 - Een letter van `reknaam()` mag binnen één test vaker voorkomen (hetzelfde rek), maar niet in twee verschillende tests; controleer met `grep -rn 'reknaam(' tests/e2e`.
-- Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een klik met `page.wait_for_load_state()` voordat je elementen telt.
+- Een E2E-selector op een tabel gebruikt geen `columnheader`; onder 40rem verbergt de CSS de `thead`. In een E2E-test met `page.pdf()` zet je de media terug met `emulate_media(media="no-override")`, niet met `"screen"`, en wacht je na een navigerende klik met `with page.expect_navigation():` om de klik voordat je elementen telt; `page.wait_for_load_state()` direct na `click()` kan op de oude pagina slagen (#459).
 - Voedt de functie van een mutant ook de keuzelijst of het formulier (zoals `controleer_past` via `past()`), muteer dan alleen de aanroep in de serverroute, één mutant per kant, en noem per mutant de assert die moet falen als bestand:regel.
 - Controleer bij een mutant via tekstvervanging met een telling dat de vervangen tekst precies één keer voorkomt; anders raakt de mutant ook andere functies.
 - Kies in een test op volgorde gegevens waarbij de bedoelde volgorde (zoals op id) afwijkt van de alfabetische.
@@ -652,6 +652,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.47 | 2026-11-28 | Twee E2E-regels aangevuld: tellingen in helpers en lussen, de pagina vóór de klik bepalen, `expect_navigation()` in plaats van `wait_for_load_state()`; uit de terugblikken van bedrock en sentinel bij #459 | Lessen |
 | v0.6.46 | 2026-11-28 | Regel over regellengte (Bouw) aangevuld: in tekens tellen met python3, uitkomst in de brief; regel over tijd- en datumcode (Review); uit de terugblikken van aegis en sentinel bij #452 | Lessen |
 | v0.6.45 | 2026-11-28 | Drie regels (E2E): hosttoestand vooraf, time-out door hapering van de host, `--since` met UTC-datum; tokenbestand blijft staan voor de stakeholder; uit de terugblikken van pipeline bij #456 (pl456b, pl456c) | Lessen |
 | v0.6.44 | 2026-11-27 | Drie regels (E2E) uit de terugblikken van pipeline bij #456 en van bedrock en sentinel bij #458 | Lessen |
