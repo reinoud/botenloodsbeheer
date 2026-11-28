@@ -13,7 +13,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
-from datetime import datetime, time, timedelta
+from datetime import UTC, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
 from koppeling import bronnen
@@ -181,7 +181,9 @@ class Koppeling:
         self.traefik_404 += traefik
         kort = traefik and self.traefik_404 <= TRAEFIK_HERHALINGEN
         self.wacht = TRAEFIK_POGING if kort else NIEUWE_POGING
-        self.fout_op, self.fout_token, self.fout_van_api = nu, token, van_api
+        # In UTC: binnen één tijdzone negeert aftrekken fold, dus klopt het uur niet rond
+        # de overgang van zomer- en wintertijd (#452).
+        self.fout_op, self.fout_token, self.fout_van_api = nu.astimezone(UTC), token, van_api
         log.warning("Import mislukt (%s); nieuwe poging over %s%s.", tekst,
                     "een minuut" if self.wacht == TRAEFIK_POGING else "een uur",
                     "" if van_api else ", of direct na een verzoek van een beheerder")

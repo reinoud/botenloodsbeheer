@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -153,6 +153,26 @@ def test_fout_van_de_bron_gemeld_en_hooguit_een_poging_per_uur(api, koppeling, t
     assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
     koppeling.ronde(OCHTEND + timedelta(minutes=60))
     assert paden(api)[3:] == [("GET", "/leden/importverzoek"), ("POST", "/leden/import-mislukt")]
+
+
+def test_wachttijd_na_een_fout_in_het_dubbele_uur_van_de_wintertijd_is_een_uur(api, koppeling,
+                                                                               tmp_path):
+    """#452: 02:30 zomertijd en 02:30 wintertijd liggen een uur uiteen, niet nul."""
+    koppeling.cfg["bron"] = bronnen.StubBron(str(tmp_path / "ontbreekt.json"))
+    koppeling.cfg["tijdstip"] = time(2, 0)
+    zomer = datetime(2026, 10, 25, 2, 30, tzinfo=TZ)
+    koppeling.ronde(zomer)
+    koppeling.ronde(zomer.replace(fold=1))
+    assert paden(api)[2:] == [("GET", "/leden/importverzoek"), ("POST", "/leden/import-mislukt")]
+
+
+def test_wachttijd_na_een_fout_voor_de_overgang_naar_zomertijd_is_een_uur(api, koppeling, tmp_path):
+    """#452: van 01:45 wintertijd tot 03:15 zomertijd is een half uur, dus nog wachten."""
+    koppeling.cfg["bron"] = bronnen.StubBron(str(tmp_path / "ontbreekt.json"))
+    koppeling.cfg["tijdstip"] = time(1, 0)
+    koppeling.ronde(datetime(2026, 3, 29, 1, 45, tzinfo=TZ))
+    koppeling.ronde(datetime(2026, 3, 29, 3, 15, tzinfo=TZ))
+    assert paden(api)[2:] == [("GET", "/leden/importverzoek")]
 
 
 def test_verzoek_van_een_beheerder_wacht_het_uur_na_een_fout_niet_af(api, koppeling, tmp_path):
