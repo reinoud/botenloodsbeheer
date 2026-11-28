@@ -5,6 +5,10 @@
     klant.py tempo [code]                       12 aanroepen: eerst code (standaard 200), dan 429
     klant.py iprem                              60 aanroepen vanaf een adres, dan 429 van iprem
     klant.py sein                               wacht op het sein van iprem, dan drie aanroepen
+    klant.py pad <METHODE> <code> <pad>         padproef (padproeven.sh): één aanroep op PAD; bij
+                                                200 moet de upstream dit pad ontvangen hebben
+    klant.py rem <METHODE> <ja|nee>             25 aanroepen op PAD over één verbinding: ja is
+                                                een 429 van Traefik, nee is 25 keer 200
 
 Omgeving: DOEL (adres:poort van Traefik), SCHEMA (https of http), DOMEIN (Host-kop),
 TOKEN (optioneel), PAD (standaard /api/v1/ik), WACHT=1 (wacht tot Traefik de router kent),
@@ -25,8 +29,9 @@ TOKEN = os.environ.get("TOKEN")
 PAD = os.environ.get("PAD") or "/api/v1/ik"
 PROXY, ANDER, SEIN = (os.environ.get(n) for n in ("PROXY", "ANDER", "SEIN"))
 # Platte tekst die Traefik zelf geeft; elk ander antwoord komt van de applicatie of is onbekend.
-TRAEFIK = {400: b"Bad Request", 403: b"Forbidden", 404: b"404 page not found\n",
-           429: b"Too Many Requests"}
+# De 400 om een gecodeerd teken (allowencoded...=false) heeft een leeg lichaam.
+TRAEFIK = {400: (b"Bad Request", b""), 403: (b"Forbidden",), 404: (b"404 page not found\n",),
+           429: (b"Too Many Requests",)}
 # Het standaardcertificaat van een losse Traefik is zelf ondertekend.
 CONTEXT = ssl._create_unverified_context()
 
@@ -44,13 +49,15 @@ def verbind(proxy=PROXY):
     return verbinding
 
 
-def aanroep(kop=None, token=TOKEN, proxy=PROXY, pad=PAD, verbinding=None):
+def aanroep(kop=None, token=TOKEN, proxy=PROXY, pad=PAD, verbinding=None, methode="GET"):
     """Een aanroep over een nieuwe verbinding, of over de meegegeven (keep-alive)."""
     eigen = verbinding is None
     verbinding = verbinding or verbind(proxy)
     # skip_host: met een eigen Host-kop naast die van http.client geeft Traefik 400.
-    verbinding.putrequest("GET", pad, skip_host=True)
+    verbinding.putrequest(methode, pad, skip_host=True)
     verbinding.putheader("Host", DOMEIN)
+    if methode == "POST":
+        verbinding.putheader("Content-Length", "0")
     if token:
         verbinding.putheader("Authorization", f"Bearer {token}")
     if kop:
@@ -70,18 +77,22 @@ def herkomst(code, antwoord, lichaam):
     if soort.startswith("application/json"):
         return "applicatie"
     # De 403 en 429 van Traefik hebben geen Content-Type, de 404 wel text/plain.
-    if soort in ("", "text/plain; charset=utf-8") and lichaam == TRAEFIK.get(code):
+    if soort in ("", "text/plain; charset=utf-8") and lichaam in TRAEFIK.get(code, ()):
         return "Traefik"
     return f"onbekend ({soort!r}, {lichaam[:30]!r})"
 
 
-def status(verwacht, koppen):
+def wacht():
     if os.environ.get("WACHT") == "1":
         # Traefik kent de router pas als api gezond is en het event verwerkt is; tot dan 404.
         for _ in range(40):
             if aanroep()[0] != 404:
                 break
             time.sleep(0.5)
+
+
+def status(verwacht, koppen):
+    wacht()
     goed = True
     for kop in koppen or ["-"]:
         code, antwoord, lichaam = aanroep(None if kop == "-" else kop)
@@ -106,6 +117,35 @@ def tempo(eerst="200"):
                   for a, l in remmen))
     print(f"{'OK ' if ok else 'FOUT'} {PAD}: 12 aanroepen met hetzelfde token: {codes}; "
           f"Retry-After: {[a.getheader('Retry-After') for a, _ in remmen]}")
+    return ok
+
+
+def pad(methode, code, echo):
+    """Een aanroep op PAD. 200 komt van de upstream (echo.py) met het pad dat Traefik doorstuurde;
+    een andere status moet van Traefik zelf komen."""
+    wacht()
+    status_, antwoord, lichaam = aanroep(methode=methode)
+    bron = herkomst(status_, antwoord, lichaam)
+    ontvangen = json.loads(lichaam)["pad"] if bron == "applicatie" else None
+    ok = status_ == int(code) and (ontvangen == echo if status_ == 200 else bron == "Traefik")
+    print(f"{'OK ' if ok else 'FOUT'} {methode} {PAD} Host {DOMEIN}: verwacht {code} "
+          f"{echo if code == '200' else ''}, kreeg {status_} van {bron}; upstream: {ontvangen}")
+    return ok
+
+
+def rem(methode, verwacht):
+    """25 aanroepen over één keep-alive verbinding (een TLS-handdruk per aanroep zou de grens
+    laten bijvullen). ja: Traefik remt (429); de burst telt hier niet, want routers delen een teller
+    en het aantal tokens hangt af van de tijd sinds de vorige proef. nee: 25 keer 200."""
+    verbinding = verbind()
+    codes = []
+    for _ in range(25):
+        status_, antwoord, lichaam = aanroep(verbinding=verbinding, methode=methode)
+        codes.append(status_ if status_ != 429 or herkomst(429, antwoord, lichaam) == "Traefik"
+                     else "429 van elders")
+    verbinding.close()
+    ok = (429 in codes and set(codes) <= {200, 429} if verwacht == "ja" else codes == [200] * 25)
+    print(f"{'OK ' if ok else 'FOUT'} {methode} {PAD}: rem verwacht {verwacht}; {codes}")
     return ok
 
 
@@ -171,7 +211,7 @@ def sein():
 
 
 if __name__ == "__main__":
-    if sys.argv[1] in ("tempo", "iprem", "sein"):
+    if sys.argv[1] in ("tempo", "iprem", "sein", "pad", "rem"):
         geslaagd = globals()[sys.argv[1]](*sys.argv[2:])
     else:
         geslaagd = status([int(c) for c in sys.argv[1].split(",")], sys.argv[2:])
