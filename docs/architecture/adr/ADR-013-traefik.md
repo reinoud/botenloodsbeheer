@@ -2,7 +2,7 @@
 
 **Status:** Besloten door Foundation (besluit stakeholder 2026-10-31, issue #29)
 **Datum:** 2026-10-31
-**Versie:** v1.5.3
+**Versie:** v1.5.4
 **Raakt:** ADR-001, ADR-002, ADR-005, ADR-008, ADR-009, ADR-010, ADR-012
 
 ## Context
@@ -57,7 +57,7 @@ De rate limit gebruikt dezelfde middlewares als `intern`, dus dezelfde grenzen. 
 
 Proeven met een losse Traefik: zonder het bestand 404; met het bestand 200 vanaf een adres in `API_EXTERN_BRONNEN` en in de whitelist van het token; 403 vanaf een adres buiten `API_EXTERN_BRONNEN`; 401 vanaf een adres binnen de bronnen maar buiten de tokenwhitelist, ook met `X-Forwarded-For` op een adres in die whitelist; 429 na 11 aanroepen in een seconde; compose start niet zonder `API_EXTERN_BRONNEN`. Forge schrijft `documentatie/beheer/api-van-buiten.md`.
 
-**Versie.** Getest en vereist is `traefik:v3.7.18` (proeven herhaald op 2026-11-27, zie `werk/traefik-proeven.md`). Een andere versie vraagt dat de proeven opnieuw slagen.
+**Versie.** Getest en vereist is `traefik:v3.7.18` (proeven herhaald op 2026-11-27, zie `werk/traefik-proeven.md`). Een andere versie vraagt dat de proeven opnieuw slagen; `tests/proxy/padproeven.sh` herhaalt de padproeven met één commando.
 
 **Eisen aan de gedeelde Traefik.** Docker-provider met `exposedByDefault=false`, entrypoints `web` (80), `websecure` (443) en `intern` (8081, niet gepubliceerd), geen `forwardedHeaders.trustedIPs` of `insecure` op die drie, `http.aliasHeadersStrategy=delete` op die drie, aangesloten op beide netwerken, en een certresolver die certificaten bij Let's Encrypt aanvraagt (besluit stakeholder 2026-11-01).
 
@@ -80,7 +80,7 @@ Proef (losse Traefik met de optie op `websecure`, een client als load balancer):
 
 De applicatielaag beschermt elke installatie vanzelf, ook achter een bestaande Traefik zonder de opties. Geen route van de botenloods heeft procentcodering in het pad nodig: padparameters zijn getallen of tokens. Een nieuwe route met vrije tekst in het pad vraagt een nieuw besluit. De opties op het entrypoint zijn geen eis aan de gedeelde Traefik, omdat ze ook andere diensten op die entrypoints raken. `allowEncodedSemicolon`, `allowEncodedQuestionMark` en `allowEncodedHash` blijven bewust aan: de applicatielaag weigert ze al, aegis vond er geen omweg mee, en elke extra weigering raakt die andere diensten ook (review #65).
 
-Proef (losse Traefik v3.7.17, herhaald op v3.7.18 met dezelfde uitkomst; Gunicorn met Flask, lege bucket): `/%2Finloggen`, `/%2finloggen/code`, `/%2Fuitnodiging/abc`, `%5C`, `%00`, `%252F`, `/.%2F` en `GET /api%2Fv1/ik` geven 400 met elk van beide lagen; zonder lagen verwerkt Flask de inlog. Traefik decodeert `%2E` en gecodeerde letters zelf, dus `/%69nloggen` krijgt 429.
+Proef (losse Traefik v3.7.17, herhaald op v3.7.18 met dezelfde uitkomst; Gunicorn met Flask, lege bucket): `/%2Finloggen`, `/%2finloggen/code`, `/%2Fuitnodiging/abc`, `%5C`, `%00`, `%252F`, `/.%2F` en `GET /api%2Fv1/ik` geven 400 met elk van beide lagen; zonder lagen verwerkt Flask de inlog. Traefik decodeert `%2E` en gecodeerde letters zelf, dus `/%69nloggen` krijgt 429. `tests/proxy/padproeven.sh` herhaalt deze proeven en die met padparameters met één commando.
 
 **Nieuwe omgevingsvariabelen.** `DOMEIN` (verplicht, gelijk aan de host uit `BASIS_URL`), `INSTALLATIE` (standaard `botenloods`, voor netwerk- en routernamen, uniek per host) en `TRAEFIK_CERTRESOLVER` (verplicht voor `web` in productie). `app/config.py` controleert `DOMEIN` en `TRAEFIK_CERTRESOLVER`. `INSTALLATIE` staat alleen in compose: de applicatie gebruikt de waarde niet, en bij een verkeerde waarde start compose niet, omdat het netwerk niet bestaat. `API_URL` wordt instelbaar in de config van de integratiecontainer, standaard `http://traefik:8081/api/v1`.
 
@@ -115,6 +115,7 @@ Proef (losse Traefik v3.7.17, herhaald op v3.7.18 met dezelfde uitkomst; Gunicor
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v1.5.4 | 2026-11-28 | Verwijzing naar `tests/proxy/padproeven.sh`, dat de padproeven herhaalt | Issue #454 |
 | v1.5.3 | 2026-11-27 | Versie van de proef: Traefik v3.7.18; padproeven herhaald met dezelfde uitkomst | Issue #447 |
 | v1.5.2 | 2026-11-23 | Na een 404 van Traefik probeert de integratiecontainer het elke minuut opnieuw, hooguit vijf keer | Issue #372 |
 | v1.5.1 | 2026-11-11 | Voorbeeld van de gedeelde Traefik: images op een digest, onder Dependabot, `read_only`, `cap_drop` en `no-new-privileges` | Issue #230, AEG-08 |

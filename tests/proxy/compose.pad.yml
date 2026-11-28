@@ -1,0 +1,8 @@
+# Upstream voor tests/proxy/padproeven.sh: web uit docker-compose.yml met zijn eigen labels, maar
+# met echo.py in plaats van de applicatie. De routers en middlewares zijn dus die van productie.
+services:
+  web:
+    command: [python, -I, /proef/echo.py]
+    depends_on: !reset {}
+    volumes:
+      - ./tests/proxy:/proef:ro
