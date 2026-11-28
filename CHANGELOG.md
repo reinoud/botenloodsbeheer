@@ -2,6 +2,23 @@
 
 Per versie de wijzigingen, gelijk aan de releasenotes op GitHub (https://github.com/reinoud/botenloodsbeheer/releases). De nieuwste versie staat bovenaan.
 
+## 2.7.2 (2026-11-28)
+
+Onderhoudsversie (milestone "Restpunten tijd, E2E en proxyproeven, v2.7.2"). Geen migratie en geen nieuwe functies.
+
+**Images** (linux/amd64), gescand met trivy vóór de push:
+- `ghcr.io/reinoud/botenloods-app:2.7.2`
+- `ghcr.io/reinoud/botenloods-integratie:2.7.2`
+
+Ook beschikbaar onder de tags `2.7` en `latest`. Bij de release staat per image een SBOM in CycloneDX-formaat: `botenloods-app-2.7.2.cdx.json` en `botenloods-integratie-2.7.2.cdx.json`.
+
+**Opgelost**
+- De wachttijd van de integratiecontainer na een fout is ook rond de overgang van zomer- en wintertijd een uur. Eerst kon die bij de wintertijd twee uur worden en bij de zomertijd een half uur (#452).
+
+**Onderhoud**
+- De E2E-tests wachten na een klik op de nieuwe pagina voordat ze tellen (#459).
+- De padproeven van ADR-013 staan in het script `tests/proxy/padproeven.sh`, dat bij elke nieuwe Traefik-versie opnieuw draait (#454).
+
 ## 2.7.1 (2026-11-27)
 
 Onderhoudsversie (milestone "Restpunten vangnet, Dependabot en E2E-tijdzone, v2.7.1"). Geen migratie en geen nieuwe functies.
