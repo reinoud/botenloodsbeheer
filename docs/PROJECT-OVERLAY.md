@@ -2,10 +2,10 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.44
+**Versie overlay:** v0.6.45
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-27
+**Bijgewerkt:** 2026-11-28
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
@@ -431,7 +431,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een opdracht voor een release-E2E laat vóór de start de toestand van de dev-integratie vastleggen (de laatste regel `Import geslaagd` of `Import mislukt` in het log van `integratie`). Een 401 van vóór de run wordt gemeld, niet in de opdracht opgelost (#369).
 - Sinds #374 zet `draai.sh` op de dev-stack het oorspronkelijke tokenbestand terug en herstart `integratie`; een nieuw robottoken na de run is niet meer nodig. Bewijs voor "ook na het opruimen" bij een token is een leesquery op `naam` en `laatst_gebruikt_op` in `token` met een tijdstip na het opruimen, niet alleen de import direct na de herstart (#374). Noteer daarvoor het eindtijdstip van `down -v` of van het opruimen en wacht tot twee minuten erna (#377). De database en de containerlogs gebruiken UTC, de hostklok CET: reken het tijdstip om, en wacht in een lus met `date +%s` of python3, niet met `date -j` (#387).
 - Moet een wijziging aan `tests/e2e/draai.sh` op de dev-stack getoetst worden terwijl de agent in een worktree werkt, zeg dan of hij het script tijdelijk naar de hoofdwerkmap mag kopiëren (en terugzetten), of dat de regie de toets zelf doet (#374).
-- Verwijder het tokenbestand van een eigen project als losse stap na `down -v`, niet in een script of heredoc, zodat de hook het als één actie ziet (#369).
+- Het agent laat het tokenbestand van een eigen project (`secrets/api_token.<project>`) na `down -v` staan en meldt het pad; de hook Blast Radius houdt ook een losse `rm` tegen. De stakeholder verwijdert het met `! rm <pad>` (#369, #456).
 - Houdt de hook die `rm` tegen, dan probeert het agent niet opnieuw en meldt het pad; de regie ruimt het bestand op of laat het met de worktree verdwijnen. Een agent in een worktree zet commando's met lussen of `$(...)` als script in zijn scratchpad; de worktree-guard weigert ze anders (#378).
 - De e2e-container krijgt dezelfde `TZ` als de app (`compose.dev.yml`), zodat `date.today()` in een E2E-test dezelfde dag geeft als de app (#449).
 - Start de unitsuite voor een release (circa 18 minuten) als eerste in de achtergrond; de trivy-builds mogen ernaast, de E2E pas daarna (#445).
@@ -440,6 +440,9 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Het bewijs dat de dev-integratie na de release-E2E zonder 401 werkt, is de leesquery op `token.laatst_gebruikt_op` na het opruimen plus nul regels met `mislukt` of `401` in het integratielog sinds de laatste start. Een nieuwe regel `Import geslaagd` verschijnt alleen bij een importverzoek of de dagelijkse import (#421).
 - Begin een commando niet met `rm -rf` van een map in de scratchpad, ook niet als die nog niet bestaat: de hook Blast Radius houdt het hele commando tegen. Maak een nieuwe map met een eigen naam (#421).
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
+- Een opdracht voor een release-E2E laat vooraf de hosttoestand vastleggen (`tmutil status`, `docker stats --no-stream`). Loopt er een Time Machine-backup, dan wacht het agent tot die klaar is en bouwt pas daarna; reken op ruim een uur extra (#461).
+- Geeft een E2E-test een time-out, kijk dan of alle containerlogs in dat venster stilvallen (ook het minuutritme van `integratie`). Zo ja, dan is het een hapering van de host en geen fout in de app; meld het in #461 (#461).
+- `docker compose logs --since` neemt een duur of een volledige UTC-datum (`2026-11-28T01:10:29Z`), geen losse kloktijd (#456).
 
 - Een E2E-stap die containers stopt, wacht met een lus die ook verbindingsfouten opnieuw probeert (Traefik stuurt kort naar een gestopte container), en zet de containers in een trap terug, ook na een fout (#418).
 
@@ -648,6 +651,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.45 | 2026-11-28 | Drie regels (E2E): hosttoestand vooraf, time-out door hapering van de host, `--since` met UTC-datum; tokenbestand blijft staan voor de stakeholder; uit de terugblikken van pipeline bij #456 (pl456b, pl456c) | Lessen |
 | v0.6.44 | 2026-11-27 | Drie regels (E2E) uit de terugblikken van pipeline bij #456 en van bedrock en sentinel bij #458 | Lessen |
 | v0.6.43 | 2026-11-27 | Vijf regels (Bouw, Review, Security en proxy) uit de terugblikken van sentinel bij #440 en van pipeline, sentinel en aegis bij #447 | Lessen |
 | v0.6.42 | 2026-11-27 | Regel over release-E2E rond middernacht (E2E) vervangen: de e2e-container rekent nu in de tijdzone van de app (#449); drie regels (Algemeen, Bouw, Security en proxy) uit de terugblikken bij #440 en #449 | Herstel #449, lessen |
