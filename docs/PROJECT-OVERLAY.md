@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.45
+**Versie overlay:** v0.6.46
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-28
@@ -269,7 +269,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Een teller of wachttijd die een herhaling begrenst, gaat pas terug naar nul als de ronde slaagt én het eigenlijke werk gedaan is. Noem in de opdracht elke manier waarop de teller terugspringt en elke toestand waarin een ronde slaagt zonder het werk (zoals een GET zonder import tijdens een wachttijd). Lever per manier een mutant met de test die erop valt. De reviewer loopt herhalende patronen van uitkomsten systematisch af (lengte 1 tot 4, 24 uur) in plaats van losse gevallen; #372 had vier rondes nodig omdat elke ronde één nieuw patroon vond. Een open verzoek sluit in zo'n proef zoals de API het sluit; een verzoek dat een beheerder telkens opnieuw opent, is een aparte bovengrens, vergeleken met de code uit `HEAD`.
 - De unittests van de integratiecontainer staan in `tests/unit/test_integratie.py` en draaien met `--profile test run --rm --no-deps test pytest -q tests/unit/test_integratie.py`; `test-integratie` draait alleen `tests/integratie` (zeep). `--build` op de dienst `test` herbouwt de tag `botenloods-dev` (#440).
 
-- Houd commentaar en docstrings binnen `line-length` uit `pyproject.toml` (100); controleer met `awk 'length>100' <bestand>` vóór de review (#440).
+- Houd commentaar en docstrings binnen `line-length` uit `pyproject.toml` (100); ruff controleert dat niet (E501 staat uit). Tel vóór de review in tekens met python3, niet met `awk`: de awk van macOS telt bytes. Noem de uitkomst in de reviewbrief (#440, #452).
 - Draai je `compose run test` vanuit een worktree, gebruik dan een override met een eigen imagetag: `image: botenloods-dev` hertagt anders het image van de regie (#447).
 - Elk acceptatiecriterium krijgt een eigen regel in een log, ook als een andere stap het al afdekt (zoals `uv lock --check` naast `uv sync --locked`). Wijkt de regie af van de versie in een issue, werk dan de issuetekst bij (#447).
 
@@ -283,6 +283,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Noem bij een securityreview per bestaande controle die de reviewer moet terugzien de functie of het bestand (bijvoorbeeld stuurtekens in `csvbestand.lees`).
 - Noem bij een securityreview of de testbestanden in de diff meegetoetst worden, en zo ja op welk punt.
 - Noem per id-parameter of de route `<int:>` of `getal` gebruikt, zodat de reviewer de juiste grenscontrole toetst (#353).
+- Noem bij een review van tijd- of datumcode de Python-versie van het onderdeel (`pyproject.toml` en Dockerfile) en of tijdstippen in die code altijd een tijdzone hebben (#452).
 - Leg bij een nareview de stand van de eerste review vast als ref of patchbestand in de scratchpad, zodat de reviewer met `git diff` alleen de nieuwe wijzigingen ziet.
 - Wacht op `draai.sh` met `pgrep -f '^bash tests/e2e/draai.sh'` of op het uitvoerbestand; `pgrep -f tests/e2e/draai.sh` en `'[d]raai.sh'` vinden ook wachtlussen van andere agents.
 - Een mutant op een gemounte map draai je met `docker compose ... run -v <kopie>:/app/<map>:ro test pytest ...`, zonder de werkmap te wijzigen. Wis niets in de scratchpad; gebruik voor een nieuwe poging een nieuwe map.
@@ -651,6 +652,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.46 | 2026-11-28 | Regel over regellengte (Bouw) aangevuld: in tekens tellen met python3, uitkomst in de brief; regel over tijd- en datumcode (Review); uit de terugblikken van aegis en sentinel bij #452 | Lessen |
 | v0.6.45 | 2026-11-28 | Drie regels (E2E): hosttoestand vooraf, time-out door hapering van de host, `--since` met UTC-datum; tokenbestand blijft staan voor de stakeholder; uit de terugblikken van pipeline bij #456 (pl456b, pl456c) | Lessen |
 | v0.6.44 | 2026-11-27 | Drie regels (E2E) uit de terugblikken van pipeline bij #456 en van bedrock en sentinel bij #458 | Lessen |
 | v0.6.43 | 2026-11-27 | Vijf regels (Bouw, Review, Security en proxy) uit de terugblikken van sentinel bij #440 en van pipeline, sentinel en aegis bij #447 | Lessen |
