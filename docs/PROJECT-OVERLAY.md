@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.47
+**Versie overlay:** v0.6.48
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-28
@@ -480,6 +480,10 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 #### Security en proxy
 
 - Een wijziging in `.github/dependabot.yml` valideert de reviewer met `check-jsonschema --builtin-schema vendor.dependabot` in een venv in zijn scratchpad. Na de merge laat de regie de stakeholder per ecosysteem de eerstvolgende run in Insights, Dependabot nakijken ("Check for updates"). Bij `docker-compose` gaf `directories` een "unknown error" zonder log; gebruik daar één ingang per map (#230).
+- Een proefscript van langer dan twee minuten (zoals `tests/proxy/padproeven.sh`, ±5 min) draait met `run_in_background`; start geen tweede run zolang `pgrep -f <script>` iets toont. Twee runs tegelijk laten elkaar falen (#454).
+- Gebruikt een proefscript een omgevingsvariabele van `tests/proxy/klant.py` (zoals `WACHT`), noem dan in de opdracht de functie die hem leest. Een herstel van een wacht- of herhaallus toets je eerst tegen een nep-upstream in de scratchpad (eerst 404, dan 200), met en zonder de variabele (#454).
+- Een rate-limitproef die op de burst rekent, noemt of routers een teller delen (`inloggen` en `uitnodiging` doen dat); kies bij twijfel "er komt een 429 van Traefik" in plaats van "na precies N" (#454).
+- Mag een reviewer geen Docker-proeven draaien, dan mag hij wel `--help` of `version` uit een lokaal image lezen met `--network none --pull never`, om een standaardwaarde vast te stellen (#454).
 - Een proef op de socketproxy noemt de bron van de eerdere proef met nummer en plek (slotcommentaar van #230 en #251). Een mutant met schrijfrecht gebruikt een aanroep zonder effect, zoals `POST /containers/<bestaat-niet>/stop`, nooit `POST /containers/create` (#251).
 - Een brief voor een update van een afhankelijkheid noemt de bron voor de hashes (de JSON van PyPI) en het exacte testcommando per plek waar de versie staat: `uv.lock`, `integratie/requirements-test.txt` en `tests/e2e/requirements.txt` (#258).
 - Wijkt de bouwer af van een ADR op een securitycontrole (sleutel van de rate limit, adres voor de whitelist), dan toont hij met een proef dat de eigenschap uit de ADR blijft gelden; anders legt hij de afwijking vóór de bouw aan foundation voor.
@@ -652,6 +656,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.48 | 2026-11-28 | Vier regels (Security en proxy): lange proefscripts in de achtergrond, de functie die een variabele van `klant.py` leest, rate limit met gedeelde teller, `--help` uit een lokaal image; uit de terugblikken van pipeline, sentinel en aegis bij #454 | Lessen |
 | v0.6.47 | 2026-11-28 | Twee E2E-regels aangevuld: tellingen in helpers en lussen, de pagina vóór de klik bepalen, `expect_navigation()` in plaats van `wait_for_load_state()`; uit de terugblikken van bedrock en sentinel bij #459 | Lessen |
 | v0.6.46 | 2026-11-28 | Regel over regellengte (Bouw) aangevuld: in tekens tellen met python3, uitkomst in de brief; regel over tijd- en datumcode (Review); uit de terugblikken van aegis en sentinel bij #452 | Lessen |
 | v0.6.45 | 2026-11-28 | Drie regels (E2E): hosttoestand vooraf, time-out door hapering van de host, `--since` met UTC-datum; tokenbestand blijft staan voor de stakeholder; uit de terugblikken van pipeline bij #456 (pl456b, pl456c) | Lessen |
