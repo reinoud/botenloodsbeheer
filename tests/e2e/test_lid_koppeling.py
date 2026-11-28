@@ -101,7 +101,8 @@ def test_koppelen_oud_lid_status_en_loskoppelen(page):
 
         # Koppelen zonder keuze: de fout bij het zoekveld en niets losgemaakt. Mutant: lid None valt door naar loskoppelen.
         lid_zoeken(page, ACTIEF["naam"].split()[0])
-        assert page.locator("main fieldset.dj-choices input[type=radio]").count() >= 2
+        radios = page.locator("main fieldset.dj-choices input[type=radio]")
+        expect(radios.nth(1)).to_be_attached()  # minstens twee treffers
         page.get_by_role("button", name="Koppelen", exact=True).click()
         expect(page.locator("#lid-zoek-fout")).to_have_text("Kies een lid uit de treffers. Zoek eerst met de knop Zoeken.")
         page.goto("/gebruikers")

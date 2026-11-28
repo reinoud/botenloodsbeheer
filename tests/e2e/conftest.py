@@ -52,6 +52,8 @@ def authenticator(page):
 def blok_openen(page, titel):
     """Opent een uitklapblok met deze titel alleen als het dicht is: een klik op een open blok klapt
     het dicht. Een `summary` telt in Playwright niet als knop, dus de titel mag gelijk zijn aan een knop."""
+    # count() wacht niet op een nieuwe pagina: wacht eerst op het blok.
+    expect(page.locator("details.dj-disclosure > summary", has_text=titel).first).to_be_attached()
     dicht = page.locator("details.dj-disclosure:not([open]) > summary", has_text=titel)
     if dicht.count():
         dicht.click()

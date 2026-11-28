@@ -41,8 +41,8 @@ def test_passkey_instellen_uitloggen_en_inloggen(page, authenticator):
     while not uitnodiging.count():
         oudere = page.get_by_role("link", name="Oudere regels")
         assert oudere.count(), "de uitnodiging staat niet in het technische log"
-        oudere.click()
-        page.wait_for_load_state()
+        with page.expect_navigation():
+            oudere.click()
 
 
 def test_zonder_passkeys_staat_het_wachtwoordblok_open(page):

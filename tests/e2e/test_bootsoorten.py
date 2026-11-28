@@ -66,5 +66,7 @@ def test_bootsoort_toevoegen_hernoemen_en_verwijderen(page):
         for naam in (nieuw, ander):
             if rij(page, naam).count():
                 rij(page, naam).get_by_role("button", name=f"{naam} verwijderen").click()
+                # De volgende count() leest de nieuwe pagina.
+                expect(page.get_by_text("De bootsoort is verwijderd.")).to_be_visible()
     expect(page.get_by_text("De bootsoort is verwijderd.")).to_be_visible()
     expect(rij(page, ander)).to_have_count(0)
