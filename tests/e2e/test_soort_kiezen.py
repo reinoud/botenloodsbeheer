@@ -60,6 +60,7 @@ def test_bij_een_onbekende_bootsoort_de_juiste_soort_kiezen_en_importeren(page):
     expect(page.get_by_label("Keuze voor regel 4", exact=True)).to_have_count(0)
     regel(page, reiger).get_by_label("Regel overslaan").uncheck()
     page.get_by_role("button", name="Keuzes opslaan").click()
+    expect(page.get_by_label("Keuze voor regel 4", exact=True)).to_be_visible()
     assert opties(page.get_by_label("Keuze voor regel 4", exact=True)) == ["Geen keuze", "Kajak"]
     page.get_by_label("Keuze voor regel 4", exact=True).select_option(label="Kajak")
     page.get_by_role("button", name="Keuzes opslaan").click()

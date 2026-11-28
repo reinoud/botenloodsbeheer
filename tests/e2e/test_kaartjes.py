@@ -23,8 +23,8 @@ def kiezen(page, *labels):
     page.goto("/kaartjes")
     for label in labels:
         page.get_by_label(label, exact=True).check()
-    page.get_by_role("button", name="Kaartjes maken").click()
-    page.wait_for_load_state()  # alle plaatsen is een grote pagina; tel pas als hij er helemaal is
+    with page.expect_navigation():  # alle plaatsen is een grote pagina; tel pas als hij er is
+        page.get_by_role("button", name="Kaartjes maken").click()
 
 
 def past_op_a4(page):
