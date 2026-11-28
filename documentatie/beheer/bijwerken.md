@@ -57,6 +57,8 @@ Versie 2.7.0 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet.
 
 Versie 2.7.1 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Het image van de integratie verandert (een 503 van het vangnet telt als tijdelijk); het image van de app is opnieuw gebouwd zonder wijziging in `app/`. Het voorbeeld `voorbeelden/traefik/compose.yml` noemt Traefik v3.7.18; draai je die stack, werk dan ook de Traefik daarin bij naar die versie. Terug naar 2.7.0 kan zonder downgrade van de database.
 
+Versie 2.7.2 heeft geen migratie en wijzigt `.env` en `docker-compose.yml` niet. Het image van de integratie verandert (de wachttijd na een fout rond zomer- en wintertijd); het image van de app is opnieuw gebouwd zonder wijziging in `app/`. Terug naar 2.7.1 kan zonder downgrade van de database.
+
 Het vangnet (nieuw in 2.7.0, `vangnet/compose.yml` naast `.env`, zie installatie) is een aparte stack met één dienst, `vangnet`. Het is optioneel en wijzigt `docker-compose.yml` en `.env` niet. De stack van de botenloods herstart het niet: bij een update van de botenloods blijft het vangnet staan en vangt het de verzoeken op terwijl `web` en `api` opstarten. Het image staat op een digest. Een nieuwe digest in het voorbeeld haal je op met `docker compose --env-file .env -f vangnet/compose.yml pull` en `up -d`. Zie [installatie](installatie.md#vangnet).
 
 ## Tokens
