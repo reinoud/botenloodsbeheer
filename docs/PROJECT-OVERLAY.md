@@ -5,7 +5,7 @@
 **Versie overlay:** v0.6.45
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
-**Bijgewerkt:** 2026-11-27
+**Bijgewerkt:** 2026-11-28
 
 Sjabloon: `/Users/reinoud/Projects/AI/Prompt Pack/00c. Project Overlay Template - v1.14.0.md`.
 
