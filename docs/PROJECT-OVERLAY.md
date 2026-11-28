@@ -2,7 +2,7 @@
 
 **Project:** botenloodsbeheer
 **Geldt voor:** alle agents in dit project
-**Versie overlay:** v0.6.48
+**Versie overlay:** v0.6.49
 **Beheer:** regie (hoofdsessie), na akkoord van de stakeholder
 **Status:** concept
 **Bijgewerkt:** 2026-11-28
@@ -441,7 +441,7 @@ De regie loopt deze lijst na bij elke agentopdracht: altijd het deel Algemeen, d
 - Het bewijs dat de dev-integratie na de release-E2E zonder 401 werkt, is de leesquery op `token.laatst_gebruikt_op` na het opruimen plus nul regels met `mislukt` of `401` in het integratielog sinds de laatste start. Een nieuwe regel `Import geslaagd` verschijnt alleen bij een importverzoek of de dagelijkse import (#421).
 - Begin een commando niet met `rm -rf` van een map in de scratchpad, ook niet als die nog niet bestaat: de hook Blast Radius houdt het hele commando tegen. Maak een nieuwe map met een eigen naam (#421).
 - Vraag de stakeholder vóór de opdracht akkoord voor de release-E2E (de hook Blast Radius houdt `up` met de dienst `migrate` tegen): `up`, `draai.sh` en `down -v` in project pl<nr>, en zeg of een mislukte test daarna een nieuwe volledige run krijgt. Noem dat akkoord in de opdracht (#356).
-- Een opdracht voor een release-E2E laat vooraf de hosttoestand vastleggen (`tmutil status`, `docker stats --no-stream`). Loopt er een Time Machine-backup, dan wacht het agent tot die klaar is en bouwt pas daarna; reken op ruim een uur extra (#461).
+- Een opdracht voor een release-E2E laat vooraf de hosttoestand vastleggen (`tmutil status`, `docker stats --no-stream`). Loopt er een Time Machine-backup, dan wacht het agent tot die klaar is en bouwt pas daarna; reken op ruim een uur extra (#461). Leg ook de stroombron vast met `pmset -g batt`; loopt de Mac op de accu onder 50%, dan wacht het agent op netstroom voordat het bouwt (#472).
 - Geeft een E2E-test een time-out, kijk dan of alle containerlogs in dat venster stilvallen (ook het minuutritme van `integratie`). Zo ja, dan is het een hapering van de host en geen fout in de app; meld het in #461 (#461).
 - `docker compose logs --since` neemt een duur of een volledige UTC-datum (`2026-11-28T01:10:29Z`), geen losse kloktijd (#456).
 
@@ -656,6 +656,7 @@ Nog geen. Format: `/Users/reinoud/Projects/AI/Prompt Pack/00d. Generic Improveme
 
 | Versie | Datum | Wijziging | Reden |
 |--------|-------|-----------|-------|
+| v0.6.49 | 2026-11-28 | Regel over de hosttoestand (E2E) aangevuld: stroombron vastleggen, onder 50% accu wachten op netstroom; uit de terugblik van pipeline bij #472 | Lessen |
 | v0.6.48 | 2026-11-28 | Vier regels (Security en proxy): lange proefscripts in de achtergrond, de functie die een variabele van `klant.py` leest, rate limit met gedeelde teller, `--help` uit een lokaal image; uit de terugblikken van pipeline, sentinel en aegis bij #454 | Lessen |
 | v0.6.47 | 2026-11-28 | Twee E2E-regels aangevuld: tellingen in helpers en lussen, de pagina vóór de klik bepalen, `expect_navigation()` in plaats van `wait_for_load_state()`; uit de terugblikken van bedrock en sentinel bij #459 | Lessen |
 | v0.6.46 | 2026-11-28 | Regel over regellengte (Bouw) aangevuld: in tekens tellen met python3, uitkomst in de brief; regel over tijd- en datumcode (Review); uit de terugblikken van aegis en sentinel bij #452 | Lessen |
